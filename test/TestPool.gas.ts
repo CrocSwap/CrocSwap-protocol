@@ -118,6 +118,43 @@ describe('Pool', () => {
         await expectGas(test.testBurn(-100, 100, 10000), 152000)
     })
 
+    it("burn outside", async() => {
+        await test.testMint(-200, -100, 10000)
+        await expectGas(test.testBurn(-200, -100, 10000), 75000)
+    })
+
+    it("burn outside left", async() => {
+        await test.testMint(-200, -100, 10000)
+        await test2.testMint(-200, -100, 10000)
+        await expectGas(test.testBurn(-200, -100, 10000), 96000)
+    })
+
+    it("burn liq rewards", async() => {
+        await test.testMint(-100, 100, 10000000)
+        await test2.testSwap(false, 1000, toSqrtPrice(1.1))
+        await expectGas(test.testBurn(-100, 100, 10000), 173000)
+    })
+
+    it("burn liq level left", async() => {
+        await test.testMint(-100, 100, 10000000)
+        await test2.testMint(-100, 100, 10000000)
+        await test2.testSwap(false, 1000, toSqrtPrice(1.1))
+        await expectGas(test.testBurn(-100, 100, 10000), 173000)
+    })
+
+    it("burn flipped", async() => {
+        await test.testMint(-100, 100, 10000000)
+        await test2.testSwap(false, 1000000, toSqrtPrice(1.1))
+        await expectGas(test.testBurn(-100, 100, 10000), 131000)
+    })
+
+    it("burn flipped level left", async() => {
+        await test.testMint(-100, 100, 10000000)
+        await test2.testMint(-100, 100, 10000000)
+        await test2.testSwap(false, 1000000, toSqrtPrice(1.1))
+        await expectGas(test.testBurn(-100, 100, 10000), 131000)
+    })
+
     it("swap small", async() => {
         await test.testMint(-100, 100, 1000000)
         await expectGas(test2.testSwap(false, 1000, toSqrtPrice(1.1)), 247000)
