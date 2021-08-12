@@ -20,6 +20,7 @@ describe('Pool', () => {
     let test2: TestPool
     let baseToken: MockERC20
     let quoteToken: MockERC20
+    let offToken: MockERC20
     let poolFactory: MockFactory
     const feeRate = 225 * 100
 
@@ -27,6 +28,7 @@ describe('Pool', () => {
        let factory = await ethers.getContractFactory("MockERC20")
        baseToken = await factory.deploy() as MockERC20
        quoteToken = await factory.deploy() as MockERC20
+       offToken = await factory.deploy() as MockERC20
 
        let baseAddr = baseToken.address
        let quoteAddr = quoteToken.address
@@ -62,7 +64,12 @@ describe('Pool', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    it("mint virgin pool", async() => {
+    it("create pool", async() => {
+        await expectGas(poolFactory.createPool
+            (offToken.address, baseToken.address, feeRate), 3500000)
+    })
+
+    it("mint in virgin pool", async() => {
         await expectGas(test.testMint(-100, 100, 10000), 430000)
     })
 
