@@ -25,6 +25,7 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
 
     uint256 public debtHaircutQuote;
     uint256 public debtHaircutBase;
+    bool public gasProfileMode;
     
     address public pool;
     address public base;
@@ -37,18 +38,27 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
     }
     
     function testSwap (bool isBuy, int256 qty, uint160 limitPrice) public {
-        (snapQuoteSwap, snapBaseSwap) = CrocSwapPool(pool).swap
+        (int quoteSwap, int baseSwap) = CrocSwapPool(pool).swap
             (address(this), isBuy, qty, limitPrice, testCalldata);
+        if (!gasProfileMode) {
+            (snapQuoteSwap, snapBaseSwap) = (quoteSwap, baseSwap);
+        }
     }
 
     function testMint (int24 lowerTick, int24 upperTick, uint128 liqAdded) public {
-        (snapQuoteMint, snapBaseMint) = CrocSwapPool(pool).mint
+        (uint quoteMint, uint baseMint) = CrocSwapPool(pool).mint
             (address(this), lowerTick, upperTick, liqAdded, testCalldata);
+        if (!gasProfileMode) {
+            (snapQuoteMint, snapBaseMint) = (quoteMint, baseMint);
+        }
     }
-
+    
     function testBurn (int24 lowerTick, int24 upperTick, uint128 liqBurn) public {
-        (snapQuoteBurn, snapBaseBurn) = CrocSwapPool(pool).burn
+        (uint quoteBurn, uint baseBurn) = CrocSwapPool(pool).burn
             (address(this), lowerTick, upperTick, liqBurn);
+        if (!gasProfileMode) {            
+            (snapQuoteBurn, snapBaseBurn) = (quoteBurn, baseBurn);
+        }
     }
 
     function testProtocolSetFee (uint8 protoFee) public {
@@ -67,12 +77,18 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
     function setCalldata (bytes calldata data) public {
         testCalldata = data;
     }
+
+    function turnOnGasMode() public {
+        gasProfileMode = true;
+    }
     
     function uniswapV3MintCallback (uint256 quoteOwed, uint256 baseOwed,
                                     bytes calldata data) override public {
-        snapBaseOwed = baseOwed;
-        snapQuoteOwed = quoteOwed;
-        snapCalldata = data;
+        if (!gasProfileMode) {
+            snapBaseOwed = baseOwed;
+            snapQuoteOwed = quoteOwed;
+            snapCalldata = data;
+        }
 
         if (baseOwed > 0) {
             IERC20Minimal(base).transfer(pool, baseOwed - debtHaircutBase);
@@ -84,9 +100,11 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
 
     function uniswapV3SwapCallback (int256 quoteFlow, int256 baseFlow,
                                     bytes calldata data) override public {
-        snapBaseFlow = baseFlow;
-        snapQuoteFlow = quoteFlow;
-        snapCalldata = data;
+        if (!gasProfileMode) {
+            snapBaseFlow = baseFlow;
+            snapQuoteFlow = quoteFlow;
+            snapCalldata = data;
+        }
 
         if (baseFlow > 0) {
             IERC20Minimal(base).transfer(pool, uint256(baseFlow) - debtHaircutBase);
