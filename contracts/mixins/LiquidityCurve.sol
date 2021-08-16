@@ -29,9 +29,9 @@ contract LiquidityCurve {
         return curve_.accum_.concTokenGrowth_;
     }
 
-    function snapCurve() view internal returns (CurveMath.CurveState memory) {
-        require(curve_.priceRoot_ > 0, "J");
-        return curve_;
+    function snapCurve() view internal returns (CurveMath.CurveState memory curve) {
+        curve = curve_;
+        require(curve.priceRoot_ > 0, "J");
     }
 
     function commitSwapCurve (CurveMath.CurveState memory curve) internal {
