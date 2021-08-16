@@ -180,16 +180,15 @@ describe('Pool', () => {
 
     it("swap tick w/o cross", async() => {
         await test.testMint(-100, 100, 1000000)
-        await test2.testSwap(false, 1000, toSqrtPrice(1.1))
-        await expectGas(test2.testSwap(false, 10000000, toSqrtPrice(1.05)), 184000)
+        await test2.testSwap(false, 1000, toSqrtPrice(1.0005))
+        await expectGas(test2.testSwap(false, 10000000, toSqrtPrice(1.005)), 122000)
         expect(await pool.liquidity()).to.be.gt(100000)
     })
 
-
     it("swap spill w/o cross", async() => {
-        await test.testMint(-100, 100, 1000000)
+        await test.testMint(-500, 500, 1000000)
         await test2.testSwap(false, 1000, toSqrtPrice(1.1))
-        await expectGas(test2.testSwap(false, 10000000, toSqrtPrice(1.03)), 184000)
+        await expectGas(test2.testSwap(false, 10000000, toSqrtPrice(1.04)), 174000)
         expect(await pool.liquidity()).to.be.gt(100000)
     })
 
