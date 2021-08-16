@@ -163,8 +163,8 @@ library CurveMath {
             reserve.sub(uint256(-flow));
 
         uint256 curvePrice = cntx.inBaseQty_ ?
-            mulDivReserve(price, nextReserve, reserve) :
-            mulDivReserve(price, reserve, nextReserve);
+            FullMath.mulDivTrapZero(price, nextReserve, reserve) :
+            FullMath.mulDivTrapZero(price, reserve, nextReserve);
         if (curvePrice > TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO; }
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
         return uint160(curvePrice);
@@ -202,15 +202,9 @@ library CurveMath {
             initReserve.add(denomFlow) : initReserve.sub(denomFlow);
         if (endReserve == 0) { return type(uint128).max; }
         
-        uint256 endInvert = mulDivReserve(liq, liq, endReserve);
+        uint256 endInvert = FullMath.mulDivTrapZero(liq, liq, endReserve);
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
-    }
-
-    function mulDivReserve (uint256 base, uint256 mult, uint256 div)
-        private pure returns (uint256) {
-        if (div == 0) { return type(uint128).max; }
-        return FullMath.mulDiv(base, mult, div);
     }
 
 

@@ -121,4 +121,16 @@ library FullMath {
             result++;
         }
     }
+
+    // @notice Calculates mulDiv() with a trapdoor for zero-deominators
+    // @params a The multiplicand
+    // @params b The multiplier
+    // @params denominator The divisor
+    // @return The 256-bit result or max int for zero denominaotrs
+    function mulDivTrapZero (uint256 a, uint256 b,
+                             uint256 denominator)
+        internal pure returns (uint256 result) {
+        if (denominator == 0) { return type(uint256).max; }
+        else { return FullMath.mulDiv(a, b, denominator); }
+    }
 }
