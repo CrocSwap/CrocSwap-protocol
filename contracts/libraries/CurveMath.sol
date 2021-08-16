@@ -87,7 +87,7 @@ library CurveMath {
     }
 
     function reserveAtPrice (uint128 liq, uint160 price, bool inBaseQty)
-        private pure returns (uint256) {
+        internal pure returns (uint256) {
         return inBaseQty ?
             FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
             FullMath.mulDiv(liq, FixedPoint96.Q96, price);
@@ -205,55 +205,5 @@ library CurveMath {
         uint256 endInvert = FullMath.mulDivTrapZero(liq, liq, endReserve);
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
-    }
-
-
-    function assimilateLiq (CurveState memory curve, uint256 feesPaid,
-                            SwapFrame memory cntx) internal pure {
-        // In zero liquidity curves, it makes no sense to assimilate, since
-        // it will run prices to infinity. 
-        if (activeLiquidity(curve) == 0) { return; }
-        
-        bool feesInBase = !cntx.inBaseQty_;
-        uint256 inflator = calcLiqInflator(curve, feesPaid, feesInBase);
-        stepToPrice(curve, inflator, feesInBase);
-        stepToLiquidity(curve, inflator);
-    }
-
-    function calcLiqInflator (CurveState memory curve, uint256 feesPaid,
-                              bool inBaseQty) private pure returns (uint256) {
-        uint128 liq = activeLiquidity(curve);
-        uint256 reserve = reserveAtPrice(liq, curve.priceRoot_, inBaseQty);
-        return calcReserveInflator(reserve, feesPaid);
-    }
-
-    function calcReserveInflator (uint256 reserve, uint256 feesPaid)
-        private pure returns (uint256) {
-        uint256 nextReserve = reserve.add(feesPaid);
-        uint256 inflator = nextReserve.compoundDivide(reserve);
-        return inflator.approxSqrtCompound();
-    }
-
-    function stepToPrice (CurveState memory curve, uint256 inflator,
-                          bool inBaseQty) private pure {
-        uint256 nextPrice = inBaseQty ?
-            CompoundMath.compoundGrow(curve.priceRoot_, inflator) :
-            CompoundMath.compoundShrink(curve.priceRoot_, inflator);
-        curve.priceRoot_ = uint160(nextPrice);
-    }
-
-    
-    function stepToLiquidity (CurveState memory curve, uint256 inflator) private pure {
-        curve.accum_.ambientGrowth_ = curve.accum_.ambientGrowth_
-            .compoundAdd(inflator);
-
-        uint256 tokenGrowth = inflator.compoundShrink(curve.accum_.ambientGrowth_);
-        curve.accum_.concTokenGrowth_ = curve.accum_.concTokenGrowth_
-            .add(tokenGrowth);
-
-        uint256 ambientInject = FullMath.mulDiv
-            (tokenGrowth, curve.liq_.concentrated_, FixedPoint128.Q128);
-        curve.liq_.ambientSeed_ = curve.liq_.ambientSeed_
-            .addDelta(uint128(ambientInject));
     }
 }

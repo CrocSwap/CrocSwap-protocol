@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0;
     
 import "../libraries/CurveMath.sol";
+import "../libraries/CurveAssimilate.sol";
 
 contract TestCurveMath {
 
@@ -149,8 +150,7 @@ contract TestCurveMath {
         public pure returns (uint160 shiftPrice, uint128 shiftSeed,
                              uint256 shiftGrowth, uint256 concGrowth) {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
-        CurveMath.SwapAccum memory swap = buildSwap(0, true, inBase);
-        CurveMath.assimilateLiq(curve, feesPaid, swap.cntx_);
+        CurveAssimilate.assimilateLiq(curve, feesPaid, inBase);
         
         (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.liq_.ambientSeed_);
         (shiftGrowth, concGrowth) = (curve.accum_.ambientGrowth_,

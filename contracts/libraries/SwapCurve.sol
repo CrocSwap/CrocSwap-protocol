@@ -10,11 +10,13 @@ import './LiquidityMath.sol';
 import './SafeCast.sol';
 import './LowGasSafeMath.sol';
 import './CurveMath.sol';
+import './CurveAssimilate.sol';
 
 library SwapCurve {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
     using CurveMath for CurveMath.CurveState;
+    using CurveAssimilate for CurveMath.CurveState;
     
     function swapToLimit (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
@@ -50,7 +52,7 @@ library SwapCurve {
                            uint160 limitPrice) pure private {
         (uint256 liqFees, uint256 exchFees) =
             CurveMath.vigOverFlow(curve, accum, limitPrice);
-        curve.assimilateLiq(liqFees, accum.cntx_);
+        curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
         assignFees(liqFees, exchFees, accum);
     }
 
