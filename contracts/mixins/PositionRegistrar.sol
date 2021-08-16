@@ -43,6 +43,9 @@ contract PositionRegistrar {
 
         if (feeMileage > oldMileage) {
             rewards = feeMileage.sub(oldMileage);
+
+            // Gas optimization. No point wasting an SSTORE if we're
+            // fully burning the position.
             if (nextLiq > 0) {
                 pos.feeMileage_ = feeMileage;
             }
