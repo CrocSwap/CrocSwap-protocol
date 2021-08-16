@@ -207,7 +207,7 @@ describe('Pool', () => {
         await test.testMint(-500, 500, 1000000)
         await test2.testSwap(false, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test2.testSwap(false, 2000000, toSqrtPrice(1.04)), 256000)
+        await expectGas(test2.testSwap(false, 2000000, toSqrtPrice(1.04)), 257000)
         expect(await pool.liquidity()).to.be.lt(1010000)
         expect(await pool.liquidity()).to.be.gt(1000000)
     })
@@ -223,7 +223,7 @@ describe('Pool', () => {
         await test.testMint(-500, 500, 100000)
         await test2.testSwap(false, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test2.testSwap(false, 2000000, toSqrtPrice(1.04)), 462000)
+        await expectGas(test2.testSwap(false, 2000000, toSqrtPrice(1.04)), 463000)
         expect(await pool.liquidity()).to.be.lt(101000)
         expect(await pool.liquidity()).to.be.gt(100000)
     })
