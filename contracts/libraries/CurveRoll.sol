@@ -11,6 +11,9 @@ import './LiquidityMath.sol';
 import './CompoundMath.sol';
 import './CurveMath.sol';
 
+/* @title Curve roll library
+ * @notice Provides functionality for rolling the price or up or down along
+ *         a locally stable constant product liquidity curve. */
 library CurveRoll {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
@@ -25,18 +28,6 @@ library CurveRoll {
         shaveRoundDown(swap);
     }
 
-    function shaveRoundDown (CurveMath.SwapAccum memory swap) private pure {
-        if (isFlowInput(swap.cntx_)) {
-            swap.qtyLeft_ = swap.qtyLeft_ - 1;
-        }
-        
-        if (swap.paidQuote_ > 0) {
-            swap.paidQuote_ = swap.paidQuote_ + 1;
-        } else {
-            swap.paidBase_ = swap.paidBase_ + 1;
-        }
-    }
-    
     function rollLiq (CurveMath.CurveState memory curve, uint256 flow,
                       CurveMath.SwapAccum memory swap) internal pure {
         uint128 liq = curve.activeLiquidity();
@@ -54,6 +45,18 @@ library CurveRoll {
             (swap.cntx_.inBaseQty_ ? inverseFlow : paidFlow);
     }
 
+    function shaveRoundDown (CurveMath.SwapAccum memory swap) private pure {
+        if (isFlowInput(swap.cntx_)) {
+            swap.qtyLeft_ = swap.qtyLeft_ - 1;
+        }
+        
+        if (swap.paidQuote_ > 0) {
+            swap.paidQuote_ = swap.paidQuote_ + 1;
+        } else {
+            swap.paidBase_ = swap.paidBase_ + 1;
+        }
+    }
+    
     function deriveFlowPrice (uint160 price, uint256 reserve,
                               uint256 flowMagn, CurveMath.SwapFrame memory cntx)
         private pure returns (uint160) {
