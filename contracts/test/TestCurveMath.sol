@@ -3,6 +3,8 @@ pragma solidity >=0.7.0;
     
 import "../libraries/CurveMath.sol";
 import "../libraries/CurveAssimilate.sol";
+import "../libraries/CurveRoll.sol";
+import "../libraries/SwapCurve.sol";
 
 contract TestCurveMath {
 
@@ -18,7 +20,7 @@ contract TestCurveMath {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
         CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, feeRate, protoCut);
         CurveMath.SwapAccum memory swap = CurveMath.SwapAccum(swapQty, 0, 0, 0, cntx);
-        return CurveMath.vigOverFlow(curve, swap, limitPrice);
+        return SwapCurve.vigOverFlow(curve, swap, limitPrice);
     }
 
     function testVigMin (uint128 liq, uint24 feeRate, uint8 protoCut,
@@ -129,7 +131,7 @@ contract TestCurveMath {
                              int256 paidBase, int256 paidQuote) {
         CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.rollLiq(curve, flow, swap);
+        CurveRoll.rollLiq(curve, flow, swap);
         (rollPrice, qtyLeft, paidBase, paidQuote) =
             (curve.priceRoot_, swap.qtyLeft_, swap.paidBase_, swap.paidQuote_);
     }

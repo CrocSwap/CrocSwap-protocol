@@ -11,12 +11,14 @@ import './SafeCast.sol';
 import './LowGasSafeMath.sol';
 import './CurveMath.sol';
 import './CurveAssimilate.sol';
+import './CurveRoll.sol';
 
 library SwapCurve {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;
+    using CurveRoll for CurveMath.CurveState;
     
     function swapToLimit (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
@@ -50,8 +52,7 @@ library SwapCurve {
     function bookExchFees (CurveMath.CurveState memory curve,
                            CurveMath.SwapAccum memory accum,
                            uint160 limitPrice) pure private {
-        (uint256 liqFees, uint256 exchFees) =
-            CurveMath.vigOverFlow(curve, accum, limitPrice);
+        (uint256 liqFees, uint256 exchFees) = vigOverFlow(curve, accum, limitPrice);
         curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
         assignFees(liqFees, exchFees, accum);
     }
@@ -79,5 +80,26 @@ library SwapCurve {
         } else {
             curve.rollLiq(realFlows, accum);
         }
+    }
+
+    function vigOverFlow (CurveMath.CurveState memory curve,
+                          CurveMath.SwapAccum memory swap,
+                          uint160 limitPrice)
+        internal pure returns (uint256 liqFee, uint256 protoFee) {
+        uint256 flow = curve.calcLimitCounter(swap, limitPrice);
+        (liqFee, protoFee) = vigOverFlow(flow, swap);
+    }
+    
+    function vigOverFlow (uint256 flow, uint24 feeRate, uint8 protoProp)
+        private pure returns (uint256 liqFee, uint256 protoFee) {
+        uint128 FEE_BP_MULT = 100 * 100 * 100;
+        uint256 totalFee = FullMath.mulDiv(flow, feeRate, FEE_BP_MULT);
+        protoFee = protoProp == 0 ? 0 : totalFee / protoProp;
+        liqFee = totalFee - protoFee;
+    }
+
+    function vigOverFlow (uint256 flow, CurveMath.SwapAccum memory swap)
+        private pure returns (uint256, uint256) {
+        return vigOverFlow(flow, swap.cntx_.feeRate_, swap.cntx_.protoCut_);
     }
 }
