@@ -10,7 +10,10 @@ import './FixedPoint96.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
 
-/// @title Math library for liquidity curve transformation
+/* @title Curve and swap math library
+ * @notice Library that defines locally stable constant liquidity curves and
+ *         swap struct, as well as functions to derive impact and aggregate 
+ *         liquidity measures on these objects. */
 library CurveMath {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
