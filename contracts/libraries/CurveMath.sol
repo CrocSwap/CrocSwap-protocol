@@ -100,7 +100,7 @@ library CurveMath {
     }
 
     function reverseFlow (uint128 liq, uint160 startPrice, uint160 nextPrice,
-                          CurveMath.SwapFrame memory cntx)
+                          SwapFrame memory cntx)
         internal pure returns (int256) {
         uint256 initReserve = reserveAtPrice(liq, startPrice, !cntx.inBaseQty_);
         uint256 endReserve = reserveAtPrice(liq, nextPrice, !cntx.inBaseQty_);
