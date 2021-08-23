@@ -20,15 +20,28 @@ library LiquidityMath {
         }
     }
 
+    /// @notice Add an unsigned liquidity delta to liquidity and revert if it overflows or underflows
+    /// @param x The liquidity before change
+    /// @param y The delta by which liquidity should be changed
+    /// @return z The liquidity delta
     function addDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
         require((z = x + y) >= x, 'LA');
     }
 
+    /// @notice Subtract an unsigned liquidity delta to liquidity and revert if it overflows or underflows
+    /// @param x The liquidity before change
+    /// @param y The delta by which liquidity should be changed
+    /// @return z The liquidity delta
     function minusDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
         require(y <= x, 'LS');
         z = x - y;
     }
 
+    /* @notice Inflates a starting value by a cumulative growth rate.
+     * @param seed The pre-inflated starting value as unsigned integer
+     * @param growth Cumulative growth rate as 128-bit fixed-point value.
+     * @return The ending value = seed * (1 + growth). Rounded down to nearest
+     *         integer value */
     function inflateSeed (uint128 seed, uint256 growth)
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint128.Q128;
@@ -39,11 +52,16 @@ library LiquidityMath {
             uint128(inflated);
     }
 
-    function deflateSeed (uint128 seed, uint256 growth)
+    /* @notice Deflates a value by a cumulative growth rate (inverse of inflateSeed())
+     * @param term The post-inflated value that we want to shrink (as unsigned integer)
+     * @growth growth Cumulative growth rate as 128-bit fixed-point value
+     * @return The deflated value = seed / (1 + growth). Rounded down to nearest 
+     *         integeger value. */
+    function deflateSeed (uint128 term, uint256 growth)
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint128.Q128;
         uint256 multFactor = ONE + growth;
-        uint256 deflated = FullMath.mulDiv(uint256(seed), ONE, multFactor);
+        uint256 deflated = FullMath.mulDiv(uint256(term), ONE, multFactor);
         return uint128(deflated);
     }
 }
