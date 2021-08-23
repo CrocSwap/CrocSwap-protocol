@@ -13,13 +13,43 @@ import './CurveMath.sol';
 import './CurveAssimilate.sol';
 import './CurveRoll.sol';
 
+/* @title Swap Curve library.
+ * @notice Library contains functionality for fully applying a swap directive to 
+ *         a locally stable liquidty curve within the bounds of the stable range
+ *         and in a way that accumulates fees onto the curve's liquidity. */
 library SwapCurve {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
-    
+
+    /* @notice Applies the swap on to the liquidity curve, either fully exhausting
+     *   the swap or reaching the concentrated liquidity bounds or the user-specified
+     *   limit price. After calling the curve and swap objects will be updated with
+     *   the swap price impact, the liquidity fees assimilated into the curve's ambient
+     *   liquidity, and the swap accumulators incremented with the cumulative flows.
+     * 
+     * @params curve - The current in-range liquidity curve. After calling, price and
+     *    fee accumulation will be adjusted based on the swap processed in this leg.
+     * @params accum - The in-process swap to cross against the liquidity curve. After
+     *    the call, the accumulator fields will be adjusted with the amount of flow
+     *    processed on this leg. The swap may or may not be fully exhausted. Caller 
+     *    should check qtyLeft_ field.
+     *
+     * @param bumpTick - The tick boundary, past which the constant product AMM 
+     *    liquidity curve is no longer valid because liquidity gets knocked in or
+     *    out. The curve will never move past this tick boundary in the call. Caller's
+     *    responsibility is to set this parameter in the correct direction. I.e. buys
+     *    should be the boundary from above and sells from below. Represneted as a
+     *    24-bit tick index. (See TickMath.sol)
+     *
+     * @param swapLimit - The user-specified limit price on the swap. Like all prices
+     *    in CrocSwap, this is represented as a 96-bit fixed point of the *square root*
+     *    of the real price. Note that this the limit on the ending *curve price* not 
+     *    the realized swap price. Because the swap fills liquidity up to this point, 
+     *    the realized swap price will never be worse than this limitPrice. If 
+     *    limitPrice is inside the starting curvePrice 0 quantity will execute. */
     function swapToLimit (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
                           int24 bumpTick, uint160 swapLimit) pure internal {
