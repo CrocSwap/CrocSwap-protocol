@@ -52,6 +52,12 @@ library CurveMath {
     }
 
 
+    function activeLiquidity (CurveState memory curve) internal pure returns (uint128) {
+        uint128 ambient = LiquidityMath.inflateSeed
+            (curve.liq_.ambientSeed_, curve.accum_.ambientGrowth_);
+        return LiquidityMath.addDelta(ambient, curve.liq_.concentrated_);
+    }
+
     function calcLimitCounter (CurveState memory curve, SwapAccum memory swap,
                                uint160 limitPrice) internal pure returns (uint256) {
         bool isBuy = limitPrice > curve.priceRoot_;
@@ -94,12 +100,6 @@ library CurveMath {
         return inBaseQty ?
             FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
             FullMath.mulDiv(liq, FixedPoint96.Q96, price);
-    }
-
-    function activeLiquidity (CurveState memory curve) internal pure returns (uint128) {
-        uint128 ambient = LiquidityMath.inflateSeed
-            (curve.liq_.ambientSeed_, curve.accum_.ambientGrowth_);
-        return LiquidityMath.addDelta(ambient, curve.liq_.concentrated_);
     }
 
     function reverseFlow (uint128 liq, uint160 startPrice, uint160 nextPrice,
