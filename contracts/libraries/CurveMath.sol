@@ -226,17 +226,18 @@ library CurveMath {
      * @params targetPrice - The assumed ending price of the curve.
      * @params inBaseQty - Whether to represent the result in base or quote tokens.
      *
-     * @return The magnitude of tokens that would have to be swapped to move the
-     *   liquidity curve to the targetPrice. Returned as an unsigned integer. Because
-     *   of rounding this can be +/- 1 of the real valued answer. */
+     * @return The flow of tokens that would have to be swapped to move the liquidity
+     *    curve to the targetPrice. Positive implies pools receives tokens, and negative
+     *    that the pool would pay tokens. Because of rounding this can be +/- 1 of the
+     *    real valued answer. */
     function deltaFlow (uint128 liq, uint160 startPrice, uint160 targetPrice,
                         bool inBaseQty)
-        internal pure returns (uint256) {
+        internal pure returns (int256) {
         uint256 initReserve = reserveAtPrice(liq, startPrice, inBaseQty);
         uint256 endReserve = reserveAtPrice(liq, targetPrice, inBaseQty);
         return (initReserve > endReserve) ?
-            initReserve - endReserve :
-            endReserve - initReserve;
+            -int256(initReserve - endReserve) :
+            int256(endReserve - initReserve);
     }
 
     function invertFlow (uint128 liq, uint160 price, uint256 denomFlow,
