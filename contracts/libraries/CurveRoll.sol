@@ -21,28 +21,24 @@ library CurveRoll {
     using CompoundMath for uint256;
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
-    
-    function rollLiqRounded (CurveMath.CurveState memory curve, uint256 flow,
-                             CurveMath.SwapAccum memory swap) internal pure {
-        rollLiq(curve, flow, swap);
-        shaveRoundDown(swap);
-    }
 
     function rollLiq (CurveMath.CurveState memory curve, uint256 flow,
                       CurveMath.SwapAccum memory swap) internal pure {
-        uint128 liq = curve.activeLiquidity();
-        uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
-
-        uint160 nextPrice = deriveFlowPrice(curve.priceRoot_, reserve, flow, swap.cntx_);
-        int256 inverseFlow = liq.reverseFlow(curve.priceRoot_, nextPrice, swap.cntx_);
+        (int256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap);
         int256 paidFlow = signFlow(flow, swap.cntx_);
 
         curve.priceRoot_ = nextPrice;
         swap.qtyLeft_ = swap.qtyLeft_.sub(flow);
         swap.paidBase_ = swap.paidBase_.add
-            (swap.cntx_.inBaseQty_ ? paidFlow : inverseFlow);
+            (swap.cntx_.inBaseQty_ ? paidFlow : counterFlow);
         swap.paidQuote_ = swap.paidQuote_.add
-            (swap.cntx_.inBaseQty_ ? inverseFlow : paidFlow);
+            (swap.cntx_.inBaseQty_ ? counterFlow : paidFlow);
+    }
+    
+    function rollLiqRounded (CurveMath.CurveState memory curve, uint256 flow,
+                             CurveMath.SwapAccum memory swap) internal pure {
+        rollLiq(curve, flow, swap);
+        shaveRoundDown(swap);
     }
 
     function shaveRoundDown (CurveMath.SwapAccum memory swap) private pure {
@@ -55,6 +51,15 @@ library CurveRoll {
         } else {
             swap.paidBase_ = swap.paidBase_ + 1;
         }
+    }
+
+    function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
+                           CurveMath.SwapAccum memory swap) internal pure
+        returns (int256 counterFlow, uint160 nextPrice) {
+        uint128 liq = curve.activeLiquidity();
+        uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
+        nextPrice = deriveFlowPrice(curve.priceRoot_, reserve, flow, swap.cntx_);
+        counterFlow = liq.deltaFlow(curve.priceRoot_, nextPrice, !swap.cntx_.inBaseQty_);
     }
     
     function deriveFlowPrice (uint160 price, uint256 reserve,
