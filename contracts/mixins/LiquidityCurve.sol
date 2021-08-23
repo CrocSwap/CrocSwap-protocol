@@ -124,7 +124,7 @@ contract LiquidityCurve {
     function liquidityFlows (uint128 seeds)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
         uint160 price  = curve_.priceRoot_;
-        uint128 liq = LiquidityMath.inflateSeed(seeds, curve_.accum_.ambientGrowth_);
+        uint128 liq = CompoundMath.inflateLiqSeed(seeds, curve_.accum_.ambientGrowth_);
         baseDebit = FullMath.mulDiv(liq, price, FixedPoint96.Q96);
         quoteDebit = (uint256(liq) << FixedPoint96.RESOLUTION) / price;
     }

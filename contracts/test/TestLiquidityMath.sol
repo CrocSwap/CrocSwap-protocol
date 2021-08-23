@@ -17,12 +17,4 @@ contract TestLiquidityMath {
     function testMinus (uint128 x, uint128 y) public pure returns (uint128) {
         return x.minusDelta(y);
     }
-
-    function testInflate (uint128 seed, uint256 growth) public pure returns (uint128) {
-        return seed.inflateSeed(growth);
-    }
-
-    function testDeflate (uint128 seed, uint256 growth) public pure returns (uint128) {
-        return seed.deflateSeed(growth);
-    }
 }

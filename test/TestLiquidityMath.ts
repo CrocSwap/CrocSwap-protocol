@@ -39,32 +39,5 @@ describe('LiquidityMath', () => {
    })
 
 
-   it("inflate", async () => {
-      let resultOne = await liq.testInflate(100000, 0);
-      let resultTwo = await liq.testInflate(100000, toFixedGrowth(0.0001256));
-      let resultThree = await liq.testInflate(100000, toFixedGrowth(0.0352));
-      let resultFour = await liq.testInflate(100000, toFixedGrowth(2.5956843));
-      let resultFive = await liq.testInflate(100000, toFixedGrowth(486.493));
-      
-      expect(resultOne.toNumber()).to.equal(100000);
-      expect(resultTwo.toNumber()).to.equal(100012);
-      expect(resultThree.toNumber()).to.within(103519, 103520);
-      expect(resultFour.toNumber()).to.within(359567, 359568);
-      expect(resultFive.toNumber()).to.within(48749299, 48749300);
-   })
-
-   it("deflate", async () => {
-      let resultOne = await liq.testDeflate(100000, 0);
-      let resultTwo = await liq.testDeflate(100000, toFixedGrowth(0.0001256));
-      let resultThree = await liq.testDeflate(100000, toFixedGrowth(0.0352));
-      let resultFour = await liq.testDeflate(100000, toFixedGrowth(2.5956843));
-      let resultFive = await liq.testDeflate(100000, toFixedGrowth(486.493));
-      
-      expect(resultOne.toNumber()).to.equal(100000);
-      expect(resultTwo.toNumber()).to.equal(99987);
-      expect(resultThree.toNumber()).to.equal(96599);
-      expect(resultFour.toNumber()).to.equal(27811);
-      expect(resultFive.toNumber()).to.equal(205);
-   })
 
 })

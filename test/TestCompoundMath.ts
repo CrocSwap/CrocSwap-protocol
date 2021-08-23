@@ -62,4 +62,19 @@ describe('TestCompoundMath', () => {
       expect(fromFixedGrowth(result)).to.gte(0.22727271);
       expect(fromFixedGrowth(result)).to.lte(0.22727273);
    })
+
+
+   it("inflate", async () => {
+      let resultOne = await comp.testInflate(100000, 0);
+      let resultTwo = await comp.testInflate(100000, toFixedGrowth(0.0001256));
+      let resultThree = await comp.testInflate(100000, toFixedGrowth(0.0352));
+      let resultFour = await comp.testInflate(100000, toFixedGrowth(2.5956843));
+      let resultFive = await comp.testInflate(100000, toFixedGrowth(486.493));
+      
+      expect(resultOne.toNumber()).to.equal(100000);
+      expect(resultTwo.toNumber()).to.equal(100012);
+      expect(resultThree.toNumber()).to.within(103519, 103520);
+      expect(resultFour.toNumber()).to.within(359567, 359568);
+      expect(resultFive.toNumber()).to.within(48749299, 48749300);
+   })
 })
