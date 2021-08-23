@@ -12,8 +12,8 @@ import './CompoundMath.sol';
 import './CurveMath.sol';
 
 /* @title Curve roll library
- * @notice Provides functionality for rolling the price or up or down along
- *         a locally stable constant product liquidity curve. */
+ * @notice Provides functionality for rolling swap flows onto a constant-product
+ *         AMM liquidity curve. */
 library CurveRoll {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
@@ -22,6 +22,21 @@ library CurveRoll {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
 
+    /* @notice Applies a given swap flow onto a constant product AMM curve and adjusts
+     *   the swap accumulator. Note that this function does *NOT* check whether the 
+     *   curve is liquidity stable through the swap impact. It's the callers job to make
+     *   sure that the impact doesn't cross through any tick barrier that knocks 
+     *   concentrated liquidity in/out. 
+     *
+     * @params curve - The current state of the active liquidity curve. After calling
+     *   this struct will be updated with the post-swap price. Note that none of the
+     *   fee accumulator fields are adjusted. This function does *not* collect or apply
+     *   liquidity fees. It's the callers responsibility to handle fees outside this
+     *   call.
+     * @params flow - The amount of tokens to swap on this leg. Denominated in quote or
+     *   base tokens based on the swap object context.
+     * @params swap - The in-progress swap object. The accumulator fields will be 
+     *   incremented based on the swapped flow and its relevant impact. */
     function rollLiq (CurveMath.CurveState memory curve, uint256 flow,
                       CurveMath.SwapAccum memory swap) internal pure {
         (int256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap);
@@ -34,7 +49,11 @@ library CurveRoll {
         swap.paidQuote_ = swap.paidQuote_.add
             (swap.cntx_.inBaseQty_ ? counterFlow : paidFlow);
     }
-    
+
+    /* @notice Same as rollLiq(), but receivable token flows in the swap accumulator
+     *   are rounded up by 1 wei. 
+     * @dev Used for a context where you you're targeting a price instead of a flow,
+     *   and need the extra collateral for the fractional flow. */
     function rollLiqRounded (CurveMath.CurveState memory curve, uint256 flow,
                              CurveMath.SwapAccum memory swap) internal pure {
         rollLiq(curve, flow, swap);
@@ -54,12 +73,13 @@ library CurveRoll {
     }
 
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
-                           CurveMath.SwapAccum memory swap) internal pure
+                           CurveMath.SwapAccum memory swap) private pure
         returns (int256 counterFlow, uint160 nextPrice) {
         uint128 liq = curve.activeLiquidity();
         uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
         nextPrice = deriveFlowPrice(curve.priceRoot_, reserve, flow, swap.cntx_);
-        counterFlow = liq.deltaFlow(curve.priceRoot_, nextPrice, !swap.cntx_.inBaseQty_);
+        counterFlow = liq.deltaFlow(curve.priceRoot_, nextPrice,
+                                    !swap.cntx_.inBaseQty_);
     }
     
     function deriveFlowPrice (uint160 price, uint256 reserve,
