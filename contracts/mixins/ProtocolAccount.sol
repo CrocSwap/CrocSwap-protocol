@@ -3,8 +3,6 @@
 import '../libraries/TransferHelper.sol';
 import '../libraries/CurveMath.sol';
 
-import "hardhat/console.sol";
-
 pragma solidity >0.7.1;
 
 contract ProtocolAccount {

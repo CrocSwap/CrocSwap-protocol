@@ -17,7 +17,7 @@ library CompoundMath {
      *         based on a two-term Taylor series expansion.
      * @dev    Due to approximation error, only safe to use on input in the range of 
      *         [0,1)
-     * @params x  The value of x in (1+x). Represented as a 128-bit fixed-point
+     * @param x  The value of x in (1+x). Represented as a 128-bit fixed-point
      * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
      *            fixed point. */
     function approxSqrtCompound (uint256 x) internal pure returns (uint256) {
@@ -32,9 +32,9 @@ library CompoundMath {
     }
     
     /* @notice Computes the result from compounding two cumulative growth rates.
-     * @params x The compounded growth rate as in (1+x). Represted as 128-bit 
+     * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
      *           fixed-point. 
-     * @params y The compounded growth rate as in (1+y). Represted as 128-bit 
+     * @param y The compounded growth rate as in (1+y). Represted as 128-bit 
      *           fixed-point.
      * @returns The cumulative compounded growth rate as in (1+z) = (1+x)*(1+y).
      *          Represented as 128-bit fixed-point. */
@@ -46,9 +46,9 @@ library CompoundMath {
 
     /* @notice Computes the result from starting with a given compounded growth
      *         rate and subtracting out another fixed amount of compound growth.
-     * @params x The compounded growth rate as in (1+x). Represted as 128-bit 
+     * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
      *           fixed-point. 
-     * @params y The compounded growth rate to shrink by as in (1+y). Represted as 
+     * @param y The compounded growth rate to shrink by as in (1+y). Represted as 
      *           128-bit fixed-point.
      * @returns The cumulative compounded growth rate as in (1+z) = (1+x)/(1+y).
      *          Represented as 128-bit fixed-point. */
@@ -60,9 +60,9 @@ library CompoundMath {
 
     /* @notice Computes the result from applying a compound growth rate to a fixed
      *         quantity.
-     * @params seed The fixed quantity to start with, growth to be applied on top.
+     * @param seed The fixed quantity to start with, growth to be applied on top.
      *              Represented as an unsigned integer.
-     * @params growth The compounded growth rate to apply, as in (1+g). Represented
+     * @param growth The compounded growth rate to apply, as in (1+g). Represented
      *                as 128-bit fixed-point.
      * @returns The post-growth value as in seed*(1+g). Rounded down to an unsigned
      *          integer. Round */
@@ -75,9 +75,9 @@ library CompoundMath {
 
     /* @notice Computes the result from backing out a compounded growth value from
      *         an existing value. The inverse of compoundGrow().
-     * @params val The fixed quantity representing the starting value that we want
+     * @param val The fixed quantity representing the starting value that we want
      *             to back out a pre-growth seed from.
-     * @params growth The compounded growth rate to back out, as in (1+g). Represented
+     * @param growth The compounded growth rate to back out, as in (1+g). Represented
      *                as 128-bit fixed-point.
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */

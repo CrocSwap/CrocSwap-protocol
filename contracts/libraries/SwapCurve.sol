@@ -30,9 +30,9 @@ library SwapCurve {
      *   the swap price impact, the liquidity fees assimilated into the curve's ambient
      *   liquidity, and the swap accumulators incremented with the cumulative flows.
      * 
-     * @params curve - The current in-range liquidity curve. After calling, price and
+     * @param curve - The current in-range liquidity curve. After calling, price and
      *    fee accumulation will be adjusted based on the swap processed in this leg.
-     * @params accum - The in-process swap to cross against the liquidity curve. After
+     * @param accum - The in-process swap to cross against the liquidity curve. After
      *    the call, the accumulator fields will be adjusted with the amount of flow
      *    processed on this leg. The swap may or may not be fully exhausted. Caller 
      *    should check qtyLeft_ field.

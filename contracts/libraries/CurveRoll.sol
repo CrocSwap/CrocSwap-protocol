@@ -28,14 +28,14 @@ library CurveRoll {
      *   sure that the impact doesn't cross through any tick barrier that knocks 
      *   concentrated liquidity in/out. 
      *
-     * @params curve - The current state of the active liquidity curve. After calling
+     * @param curve - The current state of the active liquidity curve. After calling
      *   this struct will be updated with the post-swap price. Note that none of the
      *   fee accumulator fields are adjusted. This function does *not* collect or apply
      *   liquidity fees. It's the callers responsibility to handle fees outside this
      *   call.
-     * @params flow - The amount of tokens to swap on this leg. Denominated in quote or
+     * @param flow - The amount of tokens to swap on this leg. Denominated in quote or
      *   base tokens based on the swap object context.
-     * @params swap - The in-progress swap object. The accumulator fields will be 
+     * @param swap - The in-progress swap object. The accumulator fields will be 
      *   incremented based on the swapped flow and its relevant impact. */
     function rollLiq (CurveMath.CurveState memory curve, uint256 flow,
                       CurveMath.SwapAccum memory swap) internal pure {

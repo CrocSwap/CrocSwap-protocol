@@ -55,10 +55,10 @@ library CurveMath {
         uint128 concentrated_;
     }
 
-    /* @params ambientGrowth_ The cumulative growth rate (represented as 128-bit fixed
+    /* @param ambientGrowth_ The cumulative growth rate (represented as 128-bit fixed
      *    point) of 1 ambient liquidity seed since the beggining of the pool.
      *    
-     * @params concTokenGrowth_ The cumulative rewards growth rate (represented as 128-
+     * @param concTokenGrowth_ The cumulative rewards growth rate (represented as 128-
      *   bit fixed point) of 1 unit of concentrated liquidity that was active since the
      *   beggining of the pool. */
     struct CurveFeeAccum {
@@ -66,7 +66,7 @@ library CurveMath {
         uint256 concTokenGrowth_;
     }
 
-    /* @params priceRoot_ The square root of the active price of the AMM curve 
+    /* @param priceRoot_ The square root of the active price of the AMM curve 
      *   (represented in 96-bit fixed point). Stored as a square root to make fixed-
      *   point liquidity math linear. */
     struct CurveState {
@@ -77,9 +77,9 @@ library CurveMath {
 
     /* @notice Represents the general context for an in-process swap being executed
      *    through the liquidity curve.
-     * @params isBuy_ - Set to true if the swap is increasing the curve price-- that is 
+     * @param isBuy_ - Set to true if the swap is increasing the curve price-- that is 
      *     the user is paying base token and receiving quote token.
-     * @params inBaseQty_ - Set to true if qty of the swap is represented in terms of 
+     * @param inBaseQty_ - Set to true if qty of the swap is represented in terms of 
      *     base token. Note that any combination with @isBuy_ is possible:
      *
      *                 isBuy    /   inBaseQty    /   Result
@@ -88,9 +88,9 @@ library CurveMath {
      *                   T              T              Selling for a fixed payment
      *                   T              F              Selling with a fixed payment
      *
-     * @params feeRate_ - The exchange fee of the pool represented in hundreths of a 
+     * @param feeRate_ - The exchange fee of the pool represented in hundreths of a 
      *     basis point (i.e. 0.0001%) applied to the notional traded.
-     * @params protoCut_ - The proportion of the exchange fee that accumulates to the 
+     * @param protoCut_ - The proportion of the exchange fee that accumulates to the 
      *     protocol (instead of the liquidity providers). Represnted as an integer N for 
      *     which 1/N of the fee goes to the protocol. (If N=0, then none of the fee goes
      *     to the protocol. */
@@ -104,13 +104,13 @@ library CurveMath {
     /* @notice Represents the accumulated state of an in-progress swap being executed
      *    against the liquidity curve. The swap could be none, partially or fully 
      *    processed
-     * @params qtyLeft_ - The total amount of notional left remaining unfilled in the
+     * @param qtyLeft_ - The total amount of notional left remaining unfilled in the
      *    swap. (Denominated on the side from inBaseQty_ (see above comments))
-     * @params paidBase_ - The total accumulated number of base tokens filled by the swap.
+     * @param paidBase_ - The total accumulated number of base tokens filled by the swap.
      *    Negative represents tokens paid from the pool to the user. Positive vice versa.
-     * @params paidBase_ - The total accumulated number of quote tokens filled by swap.
+     * @param paidBase_ - The total accumulated number of quote tokens filled by swap.
      *    Negative represents tokens paid from the pool to the user. Positive vice versa.
-     * @params paidProto_ - The total amount of tokens collected in the form of protocol
+     * @param paidProto_ - The total amount of tokens collected in the form of protocol
      *    fees. (Denominated on the side from inBaseQty_ (see above comments)) */
     struct SwapAccum {
         uint256 qtyLeft_;
@@ -123,7 +123,7 @@ library CurveMath {
     
     /* @notice Calculates the total scalar amount of liquidity currently active on the 
      *    curve.
-     * @params curve - The currently active liqudity curve state. Remember this curve 
+     * @param curve - The currently active liqudity curve state. Remember this curve 
      *    state is only known valid within the current tick.
      * @return - The total scalar liquidity. Equivalent to sqrt(X*Y) in a constant-
      *           product AMM. */
@@ -153,11 +153,11 @@ library CurveMath {
      *   It's the responsibility of the caller to properly check whether the limit price
      *   is within the bounds of the locally stable curve.
      *
-     * @params curve - The current state of the liquidity curve. No guarantee that it's
+     * @param curve - The current state of the liquidity curve. No guarantee that it's
      *   liquidity stable through the entire limit range (see @dev above). Note that this
      *   function does *not* update the curve struct object.    
-     * @params swap - The swap against which we want to calculate the limit flow.
-     * @params limitPrice - The highest (lowest) acceptable ending price of the AMM curve
+     * @param swap - The swap against which we want to calculate the limit flow.
+     * @param limitPrice - The highest (lowest) acceptable ending price of the AMM curve
      *   for a buy (sell) swap. Represented as 96-bit fixed point. 
      *
      * @return - The maximum executable swap flow (rounded down to the next integer).
@@ -198,10 +198,10 @@ library CurveMath {
      * @dev The actual pool probably holds significantly less collateral because of the 
      *   use of concentrated liquidity. 
      * 
-     * @params liq - The total active liquidity in AMM curve. Represented as sqrt(X*Y)
-     * @params price - The current active (square root of) price of the AMM curve. 
+     * @param liq - The total active liquidity in AMM curve. Represented as sqrt(X*Y)
+     * @param price - The current active (square root of) price of the AMM curve. 
      *                 represnted as 96-bit fixed point.
-     * @params inBaseQty - The side of the pool to calculate the virtual reserves for.
+     * @param inBaseQty - The side of the pool to calculate the virtual reserves for.
      *
      * @returns The virtual reserves of the token (rounded down to nearest integer). 
      *   Equivalent to the amount of tokens that would be held for an equivalent 
@@ -221,10 +221,10 @@ library CurveMath {
      *   would cross a concentrated liquidity tick bump, which would invalidate
      *   the result.
      *
-     * @params liq - The total liquidity (in sqrt(X*Y)) active in the curve. 
-     * @params startPrice - The current active price of the curve.
-     * @params targetPrice - The assumed ending price of the curve.
-     * @params inBaseQty - Whether to represent the result in base or quote tokens.
+     * @param liq - The total liquidity (in sqrt(X*Y)) active in the curve. 
+     * @param startPrice - The current active price of the curve.
+     * @param targetPrice - The assumed ending price of the curve.
+     * @param inBaseQty - Whether to represent the result in base or quote tokens.
      *
      * @return The flow of tokens that would have to be swapped to move the liquidity
      *    curve to the targetPrice. Positive implies pools receives tokens, and negative

@@ -33,13 +33,13 @@ library CurveAssimilate {
      *      a swap spans multiple bumps, then call this function separtely on a
      *      per-segment basis.
 
-     * @params curve  The pre-assimilated state of the consant-product AMM liquidity
+     * @param curve  The pre-assimilated state of the consant-product AMM liquidity
      *    curve. This in memory structure will be updated to reflect the impact of 
      *    the assimilation.
-     * @params feesPaid  The pre-calculated fees to be collected and incorporated
+     * @param feesPaid  The pre-calculated fees to be collected and incorporated
      *    as liquidity into the curve. Must be denominated (and colleted) on the
      *    opposite pair side as the swap denomination.
-     * @params isSwapInBase  Set to true, if the swap is denominated in the base
+     * @param isSwapInBase  Set to true, if the swap is denominated in the base
      *    token of the pair. (And therefore fees are denominated in quote token) */
     function assimilateLiq (CurveMath.CurveState memory curve, uint256 feesPaid,
                             bool isSwapInBase) internal pure {

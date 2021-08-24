@@ -5,14 +5,20 @@ import '../libraries/BitMath.sol';
 import '../libraries/Bitmaps.sol';
 import '../libraries/TickMath.sol';
 
+/* @title Tick bitmap census mixin.
+ * @notice Tracks which tick indices have an active liquidity bump, making it gas
+ *   efficient for random read and writes, and to find the next bump tick boundary
+ *   on the curve. */
 contract TickCensus {
     using Bitmaps for uint256;
     using Bitmaps for int24;
-    
+
+    /* Tick indices are 24-bit integers. Bit flags 
+     */
     uint256 private rootBitmap_;
     mapping(int8 => uint256) private lobby_;
     mapping(int16 => uint256) private mezzanine_;
-    
+
     function mezzanineBitmap (int24 tick)
         internal view returns (uint256) {
         int16 wordPos = tick.mezzKey();
@@ -24,7 +30,7 @@ contract TickCensus {
         return lobby_[wordPos];
     }
 
-    function rootBitmap () internal view returns (uint256) {
+    function rootBitmap() internal view returns (uint256) {
         return rootBitmap_;
     }
 
@@ -56,7 +62,7 @@ contract TickCensus {
         int16 stepMezz = isBuy ? tickMezz + 1 : tickMezz - 1;
         return tickMezz == Bitmaps.zeroMezz(isBuy) ?
             Bitmaps.zeroTick(isBuy) :
-            Bitmaps.weldMezzTerm(stepMezz, Bitmaps.zeroBit(!isBuy));
+            Bitmaps.weldMezzTerm(stepMezz, Bitmaps.zeroTerm(!isBuy));
     }
 
     
@@ -98,7 +104,7 @@ contract TickCensus {
 
     function seekFromLobby (uint8 lobbyBit, bool isBuy)
         private view returns (int24, uint256) {
-        return seekAtMezz(lobbyBit, Bitmaps.zeroBit(!isBuy), isBuy);
+        return seekAtMezz(lobbyBit, Bitmaps.zeroTerm(!isBuy), isBuy);
     }
 
     function seekAtMezz (uint8 lobbyBit, uint8 mezzBit, bool isBuy)
@@ -109,7 +115,7 @@ contract TickCensus {
         int16 mezzIdx = Bitmaps.weldLobbyMezz(Bitmaps.uncastBitmapIndex(lobbyBit), newMezz);
         uint256 mezzBitmap = mezzanine_[mezzIdx];
         require(mezzBitmap != 0, "M");
-        return (Bitmaps.weldMezzTerm(mezzIdx, Bitmaps.zeroBit(!isBuy)), mezzBitmap);
+        return (Bitmaps.weldMezzTerm(mezzIdx, Bitmaps.zeroTerm(!isBuy)), mezzBitmap);
     }
 
     function bookmarkTick (int24 tick) internal {
@@ -136,5 +142,6 @@ contract TickCensus {
             }
         }
     }
+
 }
 
