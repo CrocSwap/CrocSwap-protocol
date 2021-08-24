@@ -15,7 +15,7 @@ chai.use(solidity);
 // If set to true, every test will fail and therefore print the actual gas spend. 
 const METRIC_PROFILE = false
 
-describe('Pool', () => {
+describe('Pool Gas Benchamrks', () => {
     let pool: CrocSwapPool
     let test: TestPool
     let test2: TestPool

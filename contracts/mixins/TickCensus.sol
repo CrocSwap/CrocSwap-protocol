@@ -55,9 +55,9 @@ contract TickCensus {
 
     /* @notice Returns true if the tick index is currently set. */
     function hasTickBookmark (int24 tick) internal view returns (bool) {
-        uint256 mezz = mezzanineBitmap(tick);
+        uint256 bitmap = terminusBitmap(tick);
         uint8 term = tick.termBit();
-        return mezz.isBitSet(term);
+        return bitmap.isBitSet(term);
     }
 
     /* @notice Mark the tick index as active.
