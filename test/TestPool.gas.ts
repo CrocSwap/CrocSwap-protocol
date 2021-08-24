@@ -69,7 +69,7 @@ describe('Pool Gas Benchamrks', () => {
 
     it("create pool", async() => {
         await expectGas(poolFactory.createPool
-            (offToken.address, baseToken.address, feeRate), 4203000)
+            (offToken.address, baseToken.address, feeRate), 4220000)
     })
 
     it("mint in virgin pool", async() => {
