@@ -27,6 +27,14 @@ import './mixins/ProtocolAccount.sol';
 
 import "hardhat/console.sol";
 
+/* @title CrocSwap Pool
+ * @notice The top level object represenitng a liquidity pool. A unique pool can exist
+ *         for each possible combination of token pairs and fee tiers. The pool is 
+ *         responsible for supporting individually staked concentrated and ambient 
+ *         liquidity postions, aggregating those positions into a curve that behaves
+ *         locally like a constant product AMM, bumping liquidity as concentrated 
+ *         positions move in and out of range, and paying everyone's pro-rata shares
+ *         of the mined liquidity rewards. */
 contract CrocSwapPool is ICrocSwapPool,
     PositionRegistrar, LiquidityCurve, LevelBook, ProtocolAccount {
     
@@ -37,13 +45,29 @@ contract CrocSwapPool is ICrocSwapPool,
     using SwapCurve for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
+    /* @param factoryRef The address of the CrocSwap factory object, which is owned
+     *                   by the protocol and used to set protocol wide configurations. 
+     *                   The factory controls the owner of the pool.
+     * @param tokenQuote The address of the token on the quote side of the pair. Prices
+     *                   are quoted with the value of the quote token in the numerator.
+     *                   E.g. we say that ETH/USDT is 3300. The side of the quote token
+     *                   is determined mechanically and arbitrarily. Front-ends can and
+     *                   should represnet their own quotes based on the logical pair.
+     * @param tokenBase  The address of the token on the base side of the pair.
+     * @param feeRate    The fee tier of the pool. Represented as in integer in terms
+     *                   of hundreths of a basis point (i.e. 0.0001%). This is the total
+     *                   fee rate paid by swappers, and is divided between liquidity 
+     *                   miners and the CrocSwap protocol.
+     * @param tickUnits  The minimum granularity of valid tick spacings in terms of basis
+     *                   points (0.01%). Unlike the other params, this value can be 
+     *                   changed by the pool owner after the pool is created. */
     constructor (address factoryRef, address tokenQuote, address tokenBase,
                  uint24 feeRate, int24 tickUnits) {
         (factory_, tokenBase_, tokenQuote_, feeRate_) =
             (factoryRef, tokenBase, tokenQuote, feeRate);
         setTickSize(tickUnits);
     }
-        
+
     function factory() external view override returns (address) {
         return factory_;
     }
@@ -87,6 +111,29 @@ contract CrocSwapPool is ICrocSwapPool,
     }
 
 
+    /* @notice Mints new concentrated liquidity into the pool, either creating a new 
+     *         position or adding liquidity to a previously existing position.
+     * @dev Note that msg.sender address must support IUniswapV3MintCallback methods.
+     *
+     * @param owner The address which will own the staked liquidity.
+     * @param lowerTick The tick index of the lower bound of the concentrated liquidity
+     *        range. Represented as a tick index integer where (1.0001)^T equals the 
+     *        price of the tick.
+     * @param upperTick The tick index of the lower bound of the concentrated liquidity
+     *        range. Represented as a tick index integer where (1.0001)^T equals the 
+     *        price of the tick.
+     * @param liqAdded The amount of stacked liquidity to be added to the pool. 
+     *                 Represented as sqrt(X*Y) where X,Y are the virtual token reserves
+     *                 in a constant-product AMM.
+     * @param data Arbitrary byte data that will be sent to the user's internally defined
+     *             callback implementation. 
+     *
+     * @return quoteOwed The number of quote tokens required as collateral to support
+     *                   this liquidity. (Will already have been collected by the 
+     *                   callback during the method run.)
+     * @return baseOwed The number of base tokens required as collateral to support
+     *                   this liquidity. (Will already have been collected by the 
+     *                   callback during the method run.) */
     function mint (address owner, int24 lowerTick, int24 upperTick,
                    uint128 liqAdded, bytes calldata data)
         external override reEntrantLock returns (uint256 quoteOwed, uint256 baseOwed) {
@@ -120,7 +167,30 @@ contract CrocSwapPool is ICrocSwapPool,
         require(quoteOwed == 0 || balanceQuote() >= initQuote.add(quoteOwed), "Q");
     }
 
-    
+
+    /* @notice Burns previously staked concentrated liqudity and returns the collateral
+     *         and accumulated rewareds to the user.
+     *         position or adding liquidity to a previously existing position.
+     *
+     * @param recipient The address to send the payout to. Note that the position paid
+     *                  out will be the one tied to msg.sender, and this value may be
+     *                  different.
+     * @param lowerTick The tick index of the lower bound of the concentrated liquidity
+     *        range. Represented as a tick index integer where (1.0001)^T equals the 
+     *        price of the tick.
+     * @param upperTick The tick index of the lower bound of the concentrated liquidity
+     *        range. Represented as a tick index integer where (1.0001)^T equals the 
+     *        price of the tick.
+     * @param liqRemoved The amount of stacked liquidity to be removed from the pool. 
+     *                   Represented as sqrt(X*Y) where X,Y are the virtual token 
+     *                   reserves in a constant-product AMM.
+     *
+     * @return quotePaid The number of quote tokens, from collateral and rewards, paid
+     *                   out to the receipient from burning this liquidity. (Note that
+     *                   these tokens will have already been sent after this method
+     *                   completes.)
+     * @return basePaid The number of base tokens, from collateral and rewards, paid
+     *                   out to the receipient from burning this liquidity. */
     function burn (address recipient, int24 lowerTick, int24 upperTick,
                    uint128 liqRemoved)
         external override reEntrantLock returns (uint256 quotePaid, uint256 basePaid) {
@@ -149,9 +219,34 @@ contract CrocSwapPool is ICrocSwapPool,
     }
     
 
+    /* @notice Uses the liquidity in the pool to convert tokens from one side of the
+     *         pair to the opposite type of tokens. 
+     * @dev Note that msg.sender address must support IUniswapV3SwapCallback methods.
+     *
+     * @param recipient The address that the pool will send the tokens to.
+     * @param quoteToBase If true the swap will collect quote tokens from the user and
+     *                    pay out base tokens. (I.e. a "sell" that pushes the price down)
+     * @param qty The size of the swap in number of tokens. If negative, then the swap
+     *            is denominated in terms of "output" tokens to be received by the user.
+     *            If positive, then denominated on the "input" token side being paid by
+     *            the user.
+     * @param limitPrice Used to cap the price the user pays in the swap. Represents the
+     *    worst possible final price of the pool. Any impact beyond this is not executed
+     *    regardless of the amount of qty left. Worst is defined relative to the 
+     *    direction the swap. Note that the limit price is defined in terms of the final
+     *    price of the pool, *not* the realized price of the swap. The latter will
+     *    always occur at a better price than the former. So this can be seen as a 
+     *    relatively tight upper bound on the realized swap price (excluding exchange
+     *    fee costs.)
+     * @param data Arbitrary calldata supplied by the user that is fed back into the
+     *             calling contract's swap callback function.
+     *
+     * @param quoteFlow - The amount of quote tokens exchanged in the swap. Negative
+     *                    indicates tokens paid from the pool to the recipient.
+     * @param baseFlow - The amount of base tokens exchanged in the swap. */
     function swap (address recipient, bool quoteToBase, int256 qty,
                    uint160 limitPrice, bytes calldata data)
-        external override reEntrantLock returns (int256, int256) {
+        external override reEntrantLock returns (int256 quoteFlow, int256 baseFlow) {
 
         /* A swap operation is a potentially long and iterative process that
          * repeatedly writes updates data on both the curve state and the swap
@@ -171,8 +266,7 @@ contract CrocSwapPool is ICrocSwapPool,
         commitSwapCurve(curve);
         accumProtocolFees(accum);
         settleSwapFlows(recipient, curve, accum, data);
-        
-        return (accum.paidQuote_, accum.paidBase_);
+        (quoteFlow, baseFlow) = (accum.paidQuote_, accum.paidBase_);
     }
 
 
@@ -247,7 +341,6 @@ contract CrocSwapPool is ICrocSwapPool,
         }        
     }
 
-
     function hasSwapLeft (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
                           uint160 limitPrice) private pure returns (bool) {
@@ -316,10 +409,11 @@ contract CrocSwapPool is ICrocSwapPool,
                   curve.priceRoot_, TickMath.getTickAtSqrtRatio(curve.priceRoot_));
     }
     
-    
+    // @inheritdoc ICrocSwapV3PoolOwnerActions   
     function setFeeProtocol (uint8 protocolFee)
         protocolAuth external override { protocolCut_ = protocolFee; }
-    
+
+    // @inheritdoc ICrocSwapV3PoolOwnerActions  
     function collectProtocol (address recipient)
         protocolAuth external override returns (uint128, uint128) {
         (uint128 baseFees, uint128 quoteFees) = disburseProtocol
@@ -327,7 +421,8 @@ contract CrocSwapPool is ICrocSwapPool,
         emit CollectProtocol(msg.sender, recipient, quoteFees, baseFees);
         return (quoteFees, baseFees);
     }
-    
+
+    // @inheritdoc ICrocSwapV3PoolState
     function protocolFees() external view override returns (uint128, uint128) {
         (uint128 baseFees, uint128 quoteFees) = protoFeeAccum();
         return (quoteFees, baseFees);
