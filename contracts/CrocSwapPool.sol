@@ -202,7 +202,7 @@ contract CrocSwapPool is ICrocSwapPool,
                            uint160 limitPrice) internal {
         bool isBuy = accum.cntx_.isBuy_;
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
-        uint256 mezzBitmap = mezzanineBitmap(midTick);
+        uint256 termBitmap = terminusBitmap(midTick);
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
@@ -212,7 +212,7 @@ contract CrocSwapPool is ICrocSwapPool,
             // would bump the liquidity in the curve. Or B) we reach the end of our
             // locally visible bitmap. In either case we know that within this range,
             // we can execute the swap on a locallys stable constant-product AMM curve.
-            (int24 bumpTick, bool spillsOver) = pinBitmap(isBuy, midTick, mezzBitmap);
+            (int24 bumpTick, bool spillsOver) = pinBitmap(isBuy, midTick, termBitmap);
             curve.swapToLimit(accum, bumpTick, limitPrice);
 
             // This check is redundant since we check it in the loop condition anyway.
@@ -226,7 +226,7 @@ contract CrocSwapPool is ICrocSwapPool,
                 // keep swapping on the constant-product curve until we hit that point.
                 if (spillsOver) {
                     int24 borderTick = bumpTick;
-                    (bumpTick, mezzBitmap) = seekMezzSpill(borderTick, isBuy);
+                    (bumpTick, termBitmap) = seekMezzSpill(borderTick, isBuy);
 
                     // In some corner cases the local bitmap border also happens to
                     // be the next level bump. In which case we're done. Otherwise,
