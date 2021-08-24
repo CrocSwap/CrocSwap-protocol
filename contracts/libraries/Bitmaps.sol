@@ -124,24 +124,24 @@ library Bitmaps {
 
     /* @notice Converts a 16-bit tick base and an 8-bit terminus tick to a full 24-bit
      *   tick index. */
-    function weldMezzTerm (int16 mezzBase, uint8 termBit)
+    function weldMezzTerm (int16 mezzBase, uint8 termBitArg)
         internal pure returns (int24) {
-        return (int24(mezzBase) << 8) + termBit;
+        return (int24(mezzBase) << 8) + termBitArg;
     }
 
     /* @notice Converts an 8-bit lobby index and an 8-bit mezzanine bit into a 16-bit 
      *   tick base root. */
-    function weldLobbyMezz (int8 lobbyIdx, uint8 mezzBit)
+    function weldLobbyMezz (int8 lobbyIdx, uint8 mezzBitArg)
         internal pure returns (int16) {
-        return (int16(lobbyIdx) << 8) + mezzBit;
+        return (int16(lobbyIdx) << 8) + mezzBitArg;
     }
 
     /* @notice Converts an 8-bit lobby index, an 8-bit mezzanine bit, and an 8-bit
      *   terminus bit into a full 24-bit tick index. */
-    function weldLobbyMezzTerm (int8 lobbyIdx, uint8 mezzDigit, uint8 termDigit)
+    function weldLobbyMezzTerm (int8 lobbyIdx, uint8 mezzBitArg, uint8 termBitArg)
         internal pure returns (int24) {
         return (int24(lobbyIdx) << 16) +
-            (int24(mezzDigit) << 8) + termDigit;
+            (int24(mezzBitArg) << 8) + termBitArg;
     }
 
     /* @notice The minimum and maximum 24-bit integers are used to represent -/+ 

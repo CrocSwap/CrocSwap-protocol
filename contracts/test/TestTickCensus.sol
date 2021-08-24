@@ -6,10 +6,10 @@ import "../mixins/TickCensus.sol";
 contract TestTickCensus is TickCensus {
 
     function getBitmaps (int24 tick) public view returns
-        (uint256 root, uint256 lobby, uint256 mezz) {
-        root = rootBitmap();
-        lobby = lobbyBitmap(tick);
+        (uint256 lobby, uint256 mezz, uint256 term) {
+        lobby = lobbyBitmap();
         mezz = mezzanineBitmap(tick);
+        term = terminusBitmap(tick);
     }
 
     function testPinBuy (int24 tick, uint256 bitmap) public pure
