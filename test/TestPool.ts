@@ -13,8 +13,10 @@ chai.use(solidity);
 
 describe('Pool', () => {
     let pool: CrocSwapPool
+    let poolZero: CrocSwapPool
     let test: TestPool
     let test2: TestPool
+    let testZero: TestPool
     let baseToken: MockERC20
     let quoteToken: MockERC20
     let poolFactory: MockFactory
@@ -37,11 +39,18 @@ describe('Pool', () => {
        test = await factory.deploy(poolAddr, quoteAddr, baseAddr) as TestPool
        test2 = await factory.deploy(poolAddr, quoteAddr, baseAddr) as TestPool
 
+       await poolFactory.createPool(quoteAddr, baseAddr, 0)
+       let poolAddrZero = await poolFactory.getPool(quoteAddr, baseAddr, feeRate)
+       testZero = await factory.deploy(poolAddrZero, quoteAddr, baseAddr) as TestPool
+
        factory = await ethers.getContractFactory("CrocSwapPool")
        pool = await factory.attach(poolAddr) as CrocSwapPool
+       poolZero = await factory.attach(poolAddrZero) as CrocSwapPool
        
        await baseToken.deposit(test.address, 100000000);
        await quoteToken.deposit(test.address, 100000000); 
+       await baseToken.deposit(testZero.address, 100000000);
+       await quoteToken.deposit(testZero.address, 100000000); 
     })
 
 
@@ -526,6 +535,96 @@ describe('Pool', () => {
         expect((await pool.slot0()).sqrtPriceX96).to.gte(toSqrtPrice(1.49999999))
         expect((await pool.slot0()).sqrtPriceX96).to.lte(toSqrtPrice(1.50))
     })
+
+
+    it("burn payout rewards", async() => {
+        await pool.initialize(toSqrtPrice(1.5))
+        await test.testMint(-10000, 25000, 1000000);
+
+        // Estabilish the pre-reward collateral commitment...
+        let startBase = await baseToken.balanceOf(test.address)
+        let startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 100000)
+        let collateralBase = ((await baseToken.balanceOf(test.address)).sub(startBase))
+        let collateralQuote = ((await quoteToken.balanceOf(test.address)).sub(startQuote))
+
+        // Collect rewards and bring back to original price
+        await test.testSwap(false, 10000, toSqrtPrice(1.7))
+        await test.testSwap(true, 100000, toSqrtPrice(1.5))
+
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 100000)
+        // The formula below backs out the rewards portion of the burn
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(16)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(24)
+
+        // Subsequent burns should collect rewards at same rate.
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 100000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(16)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(24)
+
+        // Subsequent burns should stack upon previously unredeemed fraction of the rewards. I.e. not reset
+        // rewards for the unburned liquidity.
+        await test.testSwap(false, 10000, toSqrtPrice(1.7))
+        await test.testSwap(true, 100000, toSqrtPrice(1.5))
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 100000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(36)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(55)
+    })
+
+
+    it("mint blends rewards", async() => {
+        await pool.initialize(toSqrtPrice(1.5))
+        await test.testMint(-10000, 25000, 1000000);
+
+        // Estabilish the pre-reward collateral commitment...
+        let startBase = await baseToken.balanceOf(test.address)
+        let startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 250000)
+        let collateralBase = ((await baseToken.balanceOf(test.address)).sub(startBase))
+        let collateralQuote = ((await quoteToken.balanceOf(test.address)).sub(startQuote))
+
+        await test.testSwap(false, 10000, toSqrtPrice(1.7))
+        await test.testSwap(true, 100000, toSqrtPrice(1.5))
+
+        // Minting on top of previously rewarded liquidity should require the same collateral commitment
+        // (Roughtly accounting for minor differences in price...)
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testMint(-10000, 25000, 250000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(-collateralQuote)).to.gte(-1)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(-collateralQuote)).to.lte(0)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(-collateralBase)).to.gte(-1)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(-collateralBase)).to.lte(0)
+
+        // Burn should collect rewards at the blended rate of the previously stacked liquidity
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 250000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(35)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(53)
+
+        // Adding more liquidity at higher rewards mark should blend down the rewards rate per unit burned 
+        await test.testMint(-10000, 25000, 250000)
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 250000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(26)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(40)        
+
+        // Rewards rate on subsequent burns should remain the at the same blended rate
+        startBase = await baseToken.balanceOf(test.address)
+        startQuote = await quoteToken.balanceOf(test.address)
+        await test.testBurn(-10000, 25000, 250000)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(26)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(40)        
+    })
+
 
     it("transfer liquidity", async() => {
         await pool.initialize(toSqrtPrice(1.0))

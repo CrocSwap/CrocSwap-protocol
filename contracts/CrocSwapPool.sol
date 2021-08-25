@@ -338,7 +338,7 @@ contract CrocSwapPool is ICrocSwapPool,
                 knockInTick(bumpTick, isBuy, curve);
                 midTick = bumpTick;
             }
-        }        
+        }
     }
 
     function hasSwapLeft (CurveMath.CurveState memory curve,
@@ -408,8 +408,8 @@ contract CrocSwapPool is ICrocSwapPool,
                   curve.priceRoot_, TickMath.getTickAtSqrtRatio(curve.priceRoot_));
     }
 
-    /* @notice Transfer ownership of a concentrated liquidity position from sender address
-     *         to another. Range, liquidity, and accumulated rewards will remain 
+    /* @notice Transfer ownership of a concentrated liquidity position from sender 
+     *         address to another. Range, liquidity, and accumulated rewards remain 
      *         unchanged.
      * @dev    Note that the receipient must have no position active at the range, 
      *         otherwise the transfer will fail.
