@@ -42,13 +42,15 @@ describe('PositionRegistrar', () => {
 
 
     it("add stack", async() => {
+        let mileageMean = (12500 * 275 + 17500 * 175) / (275 + 175)
         await reg.testAdd(owner, -100, 100, 250000, 12500);
+        await reg.testAdd(owner, -100, 100, 25000, 12500);
         await reg.testAdd(owner, -100, 100, 175000, 17500);
-        await reg.testAdd(owner, -100, 100, 25000, 11500);
         
         let result = await reg.getPos(owner, -100, 100);
         expect(result[0].toNumber()).to.equal(450000);
-        expect(result[1].toNumber()).to.equal(17500);
+        expect(result[1].toNumber()).to.gt(mileageMean);
+        expect(result[1].toNumber()).to.lte(mileageMean + 1);
     })
 
     it("add multi pos", async() => {
@@ -76,7 +78,7 @@ describe('PositionRegistrar', () => {
         await reg.testBurn(owner, -100, 100, 10000, 12800);
         let result = await reg.getPos(owner, -100, 100);
         expect(result[0].toNumber()).to.equal(115000);
-        expect(result[1].toNumber()).to.equal(14500);
+        expect(result[1].toNumber()).to.equal(12500);
     })
 
     it("burn full", async() => {
@@ -85,7 +87,7 @@ describe('PositionRegistrar', () => {
         await reg.testBurn(owner, -100, 100, 150000, 12800);
         let result = await reg.getPos(owner, -100, 100);
         expect(result[0].toNumber()).to.equal(0);
-        expect(result[1].toNumber()).to.equal(13500);
+        expect(result[1].toNumber()).to.equal(12500);
     })
 
     it("burn position only", async() => {
@@ -105,10 +107,16 @@ describe('PositionRegistrar', () => {
         let rewardTwo = await reg.lastRewards();
         await reg.testBurn(owner, -100, 100, 10000, 14800);
         let rewardThree = await reg.lastRewards();
-        
+
+        await reg.testAdd(owner, -100, 100, 220000, 16500);
+        await reg.testBurn(owner, -100, 100, 10000, 20500);
+        let rewardFour = await reg.lastRewards();
+
         expect(rewardOne.toNumber()).to.equal(1000);
         expect(rewardTwo.toNumber()).to.equal(0);
-        expect(rewardThree.toNumber()).to.equal(1300);
+        expect(rewardThree.toNumber()).to.equal(2300);
+        expect(rewardFour.toNumber()).to.lte(6000);
+        expect(rewardFour.toNumber()).to.gte(6000-3);
     })
 
     it("transfer position", async() => {

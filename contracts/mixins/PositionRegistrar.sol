@@ -78,12 +78,9 @@ contract PositionRegistrar {
 
         if (feeMileage > oldMileage) {
             rewards = feeMileage.sub(oldMileage);
-
-            // Gas optimization. No point wasting an SSTORE if we're
-            // fully burning the position.
-            if (nextLiq > 0) {
-                pos.feeMileage_ = feeMileage;
-            }
+            // No need to adjust the position's mileage checkpoint. Rewards are in per
+            // unit of liquidity, so the pro-rata rewards of the remaining liquidity
+            // (if any) remain unnaffected. 
         }
         pos.liquidity_ = nextLiq;
     }
@@ -112,10 +109,25 @@ contract PositionRegistrar {
             oldMileage = 0;
         }
 
-        if (feeMileage > oldMileage) {
-            pos.feeMileage_ = feeMileage;
+        // Save an SSTORE if there's no mileage change
+        if (feeMileage != oldMileage) {
+            pos.feeMileage_ = blendMileage(feeMileage, liqAdd, oldMileage, liq);
         }
         pos.liquidity_ = LiquidityMath.addDelta(liq, liqAdd);
+    }
+    
+    function blendMileage (uint256 mileageX, uint128 liqX, uint256 mileageY, uint liqY)
+        private pure returns (uint256) {
+        if (liqY == 0) { return mileageX; }
+        if (liqX == 0) { return mileageY; }
+        uint256 termX = FullMath.mulDiv(mileageX, liqX, liqX + liqY);
+        uint256 termY = FullMath.mulDiv(mileageY, liqY, liqX + liqY);
+
+        // With mileage we want to be conservative on the upside. Under-estimating
+        // mileage means overpaying rewards. So, round up the fractional weights.
+        termX = termX + 1;
+        termY = termY + 1;
+        return termX + termY;
     }
 
     /* @notice Changes the owner of an existing position without altering its properties
