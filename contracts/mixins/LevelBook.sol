@@ -8,6 +8,8 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 
+import "hardhat/console.sol";
+
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
@@ -30,6 +32,10 @@ contract LevelBook is TickCensus {
         uint256 feeOdometer_;
     }
 
+    // Added to all feeOdometer entries so we can easily distinguish between
+    // unininitialized levels and levels initialized with 0 global fees.
+    uint256 constant private FEE_ODOMETER_OFFSET = 1;
+    
     mapping(int24 => BookLevel) private levels_;
 
     uint16 private tickSize_;
@@ -64,8 +70,10 @@ contract LevelBook is TickCensus {
         int256 crossDelta = int256(lvl.bidLiq_) - int256(lvl.askLiq_);
         liqDelta = isBuy ? crossDelta : -crossDelta;
         
-        if (feeGlobal != lvl.feeOdometer_) {
-            levels_[tick].feeOdometer_ = feeGlobal - levels_[tick].feeOdometer_;
+        if (feeGlobal != lvl.feeOdometer_ - FEE_ODOMETER_OFFSET) {
+            levels_[tick].feeOdometer_ = feeGlobal -
+                (levels_[tick].feeOdometer_ - FEE_ODOMETER_OFFSET) +
+                FEE_ODOMETER_OFFSET;
         }
     }
 
@@ -147,7 +155,7 @@ contract LevelBook is TickCensus {
     function initLevel (int24 midTick, int24 tick, uint256 feeGlobal) private {
         if (levels_[tick].feeOdometer_ == 0) {
             if (tick >= midTick) {
-                levels_[tick].feeOdometer_ = feeGlobal;
+                levels_[tick].feeOdometer_ = feeGlobal + FEE_ODOMETER_OFFSET;
             }
             bookmarkTick(tick);
         }
@@ -224,8 +232,8 @@ contract LevelBook is TickCensus {
         private view returns (uint256) {
         BookLevel storage lvl = levels_[lvlTick];
         return lvlTick <= currentTick ?
-            lvl.feeOdometer_ :
-            (feeGlobal - lvl.feeOdometer_);            
+            lvl.feeOdometer_ - FEE_ODOMETER_OFFSET :
+            (feeGlobal - (lvl.feeOdometer_ - FEE_ODOMETER_OFFSET));            
     }
 }
 

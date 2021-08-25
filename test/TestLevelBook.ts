@@ -236,6 +236,17 @@ describe('LevelBook', () => {
         expect(fromFixedGrowth(end.sub(start))).to.equal(0)
     })
 
+    // Levels may be initialized with zero global fee accumulation. It's tempting to use
+    // use zero odometer as an initialization condition, but this may not be the case for these
+    // levels. Verify that we don't erroneously re-initialize in these cases.
+    it("odometer zero init", async() => {
+        await book.testAdd(100, 95, 105, 10000, toFixedGrowth(0))
+        let start = await book.odometer()
+        await book.testAdd(100, 95, 105, 10000, toFixedGrowth(0.75))
+        let end = await book.odometer()        
+        expect(fromFixedGrowth(end.sub(start))).to.equal(0.75)
+    })
+
     it("below re-clock", async() => {
         await book.testAdd(110, 95, 105, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
