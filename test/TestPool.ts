@@ -14,6 +14,7 @@ chai.use(solidity);
 describe('Pool', () => {
     let pool: CrocSwapPool
     let test: TestPool
+    let test2: TestPool
     let baseToken: MockERC20
     let quoteToken: MockERC20
     let poolFactory: MockFactory
@@ -34,6 +35,7 @@ describe('Pool', () => {
        let poolAddr = await poolFactory.getPool(quoteAddr, baseAddr, feeRate)
        factory = await ethers.getContractFactory("TestPool")
        test = await factory.deploy(poolAddr, quoteAddr, baseAddr) as TestPool
+       test2 = await factory.deploy(poolAddr, quoteAddr, baseAddr) as TestPool
 
        factory = await ethers.getContractFactory("CrocSwapPool")
        pool = await factory.attach(poolAddr) as CrocSwapPool
@@ -523,5 +525,22 @@ describe('Pool', () => {
         expect(await pool.liquidity()).to.equal(4000)
         expect((await pool.slot0()).sqrtPriceX96).to.gte(toSqrtPrice(1.49999999))
         expect((await pool.slot0()).sqrtPriceX96).to.lte(toSqrtPrice(1.50))
+    })
+
+    it("transfer liquidity", async() => {
+        await pool.initialize(toSqrtPrice(1.0))
+        await test.testMint(-100, 100, 5000);
+        await test.testMint(-100, 100, 5000);
+        await test.testTransfer(test2.address, -100, 100)
+        expect(await pool.liquidity()).to.equal(10000)
+        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.0))
+        
+        await test2.testBurn(-100, 100, 10000)
+        expect((await quoteToken.balanceOf(test2.address))).to.equal(49)
+        expect((await baseToken.balanceOf(test2.address))).to.equal(49)
+        expect(await pool.liquidity()).to.equal(0)
+
+        // Verify liqudity was destroyed at the old address
+        expect(test.testBurn(-100, 100, 1)).to.be.reverted
     })
 })

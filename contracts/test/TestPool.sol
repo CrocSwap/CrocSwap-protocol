@@ -60,6 +60,10 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
             (snapQuoteBurn, snapBaseBurn) = (quoteBurn, baseBurn);
         }
     }
+    
+    function testTransfer (address receipient, int24 lowerTick, int24 upperTick) public {
+        CrocSwapPool(pool).transfer(receipient, lowerTick, upperTick);
+    }
 
     function testProtocolSetFee (uint8 protoFee) public {
         CrocSwapPool(pool).setFeeProtocol(protoFee);

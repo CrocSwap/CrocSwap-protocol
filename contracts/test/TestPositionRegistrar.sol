@@ -16,6 +16,11 @@ contract TestPositionRegistrar is PositionRegistrar {
         lastRewards = burnPosLiq(owner, lower, upper, liq, mileage);
     }
 
+    function testTransfer (address owner, address receipient,
+                           int24 lower, int24 upper) public {
+        changePosOwner(owner, receipient, lower, upper);
+    }
+
     function getPos (address owner, int24 lower, int24 upper)
         public view returns (uint128, uint256) {
         Position storage pos = lookupPosition(owner, lower, upper);

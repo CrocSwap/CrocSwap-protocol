@@ -63,18 +63,16 @@ interface ICrocSwapPoolEvents {
         int24 tick
     );
 
-    event FlashNumerator(
+    /// @notice Emitted by the pool when a concentrated liquidity position is transfered
+    ///         unaltered from one address to another.
+    /// @param sender The previous owner of the position.
+    /// @param receipient The new owner of the position.
+    /// @param tickLower The lower tick of the position
+    /// @param tickUpper The upper tick of the position
+    event Transfer(
         address indexed sender,
-        address indexed recipient,
-        uint256 qty,
-        uint256 interest);
-
-    event FlashDenominator(
-        address indexed sender,
-        address indexed recipient,
-        uint256 qty,
-        uint256 interest);
-
+        address indexed receipient,
+        int24 tickLower, int24 tickUpper);
 
     /// @notice Emitted when the protocol fee is changed by the pool
     /// @param feeProtocol0Old The previous value of the token0 protocol fee

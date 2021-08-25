@@ -117,4 +117,26 @@ contract PositionRegistrar {
         }
         pos.liquidity_ = LiquidityMath.addDelta(liq, liqAdd);
     }
+
+    /* @notice Changes the owner of an existing position without altering its properties
+     *         in any other way. This has no impact from an aggregate liquidity and fee
+     *         accumulation standpoint, and can otherwise be ignored downstream.
+     * @param owner The address which currently owns the position.
+     * @param receiver The address that ownership is being transferred to.
+     * @param lowerTick The tick index of the lower boundary of the position. This
+     *                  does *not* change during the ownership process.
+     * @param upperTick The tick index of the upper boundary of the position. This
+     *                  does *not* change during the ownership process. */
+    function changePosOwner (address owner, address receiver,
+                             int24 lowerTick, int24 upperTick) internal {
+        Position storage pos = lookupPosition(owner, lowerTick, upperTick);
+        Position storage newPos = lookupPosition(receiver, lowerTick, upperTick);
+
+        // For now we only allow transfers to positions with uninitialized liquidity.
+        // Otherwise the fee mileage on the existing liquidity will be set incorrectly.
+        require(newPos.liquidity_ == 0, "G");
+        newPos.liquidity_ = pos.liquidity_;
+        newPos.feeMileage_ = pos.feeMileage_;
+        pos.liquidity_ = 0;
+    }
 }

@@ -106,6 +106,14 @@ describe('Pool Security', () => {
         expect(test.testBurn(5000, 6000, 31000)).to.reverted
     })
 
+    it("transfer pre-existing", async() => {
+        await pool.initialize(toSqrtPrice(1.0))
+        await test.testMint(-100, 100, 10000);
+        await test2.testMint(-100, 100, 200);
+        
+        expect(test.testTransfer(test2.address, -100, 100)).to.be.reverted
+    })
+
     it("protocol auth", async() => {
         await poolFactory.setOwner(test.address)
         expect(test2.testProtocolSetFee(5)).to.be.reverted

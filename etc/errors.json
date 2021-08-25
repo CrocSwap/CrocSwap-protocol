@@ -2,7 +2,8 @@
     "A": "Unauthorized",
     "B": "Insufficient base token",
     "C", "Oversized sqrt approx",
-    "D", "Tick size below minimum increment"
+    "D", "Tick size below minimum increment",
+    "G", "Overwriting a non-zero position on transfer",
     "I": "Tick below min",
     "J": "Pool not initialized",
     "L": "Max liquidity exceeded",

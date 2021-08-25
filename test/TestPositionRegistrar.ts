@@ -2,6 +2,10 @@ import { TestPositionRegistrar } from '../typechain/TestPositionRegistrar'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
+import { solidity } from "ethereum-waffle";
+import chai from "chai";
+
+chai.use(solidity);
 
 describe('PositionRegistrar', () => {
     let reg: TestPositionRegistrar
@@ -105,5 +109,21 @@ describe('PositionRegistrar', () => {
         expect(rewardOne.toNumber()).to.equal(1000);
         expect(rewardTwo.toNumber()).to.equal(0);
         expect(rewardThree.toNumber()).to.equal(1300);
+    })
+
+    it("transfer position", async() => {
+        await reg.testAdd(owner, -100, 100, 250000, 12500);
+        await reg.testTransfer(owner, ownerTwo, -100, 100);
+        let resultPrev = await reg.getPos(owner, -100, 100)
+        let result = await reg.getPos(ownerTwo, -100, 100)
+        expect(resultPrev[0]).to.equal(0)
+        expect(result[0]).to.equal(250000)
+        expect(result[1]).to.equal(12500)
+    })
+
+    it("transfer collision", async() => {
+        await reg.testAdd(owner, -100, 100, 250000, 12500);
+        await reg.testAdd(ownerTwo, -100, 100, 250000, 12500);
+        expect(reg.testTransfer(owner, ownerTwo, -100, 100)).to.be.reverted
     })
 })

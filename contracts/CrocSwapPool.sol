@@ -380,7 +380,6 @@ contract CrocSwapPool is ICrocSwapPool,
         }
     }
     
-    
     function settleSwapFlows (address recipient,
                               CurveMath.CurveState memory curve,
                               CurveMath.SwapAccum memory accum,
@@ -407,6 +406,21 @@ contract CrocSwapPool is ICrocSwapPool,
         
         emit Swap(msg.sender, recipient, accum.paidQuote_, accum.paidBase_,
                   curve.priceRoot_, TickMath.getTickAtSqrtRatio(curve.priceRoot_));
+    }
+
+    /* @notice Transfer ownership of a concentrated liquidity position from sender address
+     *         to another. Range, liquidity, and accumulated rewards will remain 
+     *         unchanged.
+     * @dev    Note that the receipient must have no position active at the range, 
+     *         otherwise the transfer will fail.
+     * @param recipient The address who will own the position after the transfer.
+     * @param lowerTick The tick index of the lower bound of the range for the 
+     *        concentrated liquidity position. 
+     * @param upperTick The tick index of the upper bound of the range for the
+     *        concentrated liquidity position. */
+    function transfer (address receipient, int24 lowerTick, int24 upperTick) external {
+        changePosOwner(msg.sender, receipient, lowerTick, upperTick);
+        emit Transfer(msg.sender, receipient, lowerTick, upperTick);
     }
     
     // @inheritdoc ICrocSwapV3PoolOwnerActions   
