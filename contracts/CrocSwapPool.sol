@@ -43,6 +43,7 @@ contract CrocSwapPool is ICrocSwapPool,
     using SafeCast for uint256;
     using SafeCast for int256;
     using SwapCurve for CurveMath.CurveState;
+    using SwapCurve for CurveMath.SwapAccum;
     using CurveMath for CurveMath.CurveState;
 
     /* @param factoryRef The address of the CrocSwap factory object, which is owned
@@ -263,6 +264,7 @@ contract CrocSwapPool is ICrocSwapPool,
                     cntx_: cntx, paidBase_: 0, paidQuote_: 0, paidProto_: 0});
 
         sweepSwapLiq(curve, accum, limitPrice);
+        accum.padSwapFlows();
         commitSwapCurve(curve);
         accumProtocolFees(accum);
         settleSwapFlows(recipient, curve, accum, data);
