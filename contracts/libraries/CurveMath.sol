@@ -167,8 +167,8 @@ library CurveMath {
      *
      * @dev As long as CurveState's fee accum fields are conservatively lower bounded,
      *   and as long as limitPrice is accurate, then this function rounds down from the
-     *   true real value. However if limitPrice is approximated, then results could be
-     *   rounded up or down (should be predictable from internal logic).
+     *   true real value. At most this round down loss of precision is tightly bounded at
+     *   2 wei. (See comments in limitQuoteDelta())
      * 
      * @param curve - The current state of the liquidity curve. No guarantee that it's
      *   liquidity stable through the entire limit range (see @dev above). Note that this
@@ -195,6 +195,9 @@ library CurveMath {
             limitQuoteDelta(liq, limitPrice, curve.priceRoot_);
     }
 
+    /* @dev Result is a tight lower-bound for fixed-point precision. Meaning if the
+     *   the returned limit is X, then X will be inside the limit price and (X+1)
+     *   will be outside the limit price. */
     function limitBaseDelta (uint128 liq, uint160 price, uint160 limitPrice)
         private pure returns (uint256) {
         uint160 priceDelta = limitPrice > price ?
@@ -202,12 +205,59 @@ library CurveMath {
         return reserveAtPrice(liq, priceDelta, true);
     }
 
+    /* @dev Result is almost always within a fixed-point precision unit from the true
+     *   real value. However in certain very rare cases, the result could be up to 2
+     *   wei below the true real value. Caller should account for this upstream. */
     function limitQuoteDelta (uint128 liq, uint160 price, uint160 limitPrice)
         private pure returns (uint256) {
         uint160 priceDelta = limitPrice > price ?
             limitPrice - price : price - limitPrice;
-        uint256 partTerm = FullMath.mulDiv(liq, priceDelta, price);
-        return FullMath.mulDiv(partTerm, FixedPoint96.Q96, limitPrice);
+        
+        /* The formula calculated is
+         *    F = L * d / (P*P')
+         *   (where F is the flow to the limit price, where L is liquidity, d is delta, 
+         *    P is price and P' is limit price)
+         *
+         * Calculating this requires two stacked mulDiv. To meet the function' contract
+         * we need to compute the result with tight fixed point boundaries at or below
+         * 2 wei to conform to the function's contract.
+         * 
+         * The fixed point calculation of flow is
+         *    F = mulDiv(mulDiv(...)) = FR - FF
+         *  (where F is the fixed point result of the formula, FR is the true real valued
+         *   result with inifnite precision, FF is the loss of precision fractional round
+         *   down, mulDiv(...) is a fixed point mulDiv call of the form X*Y/Z)
+         *
+         * The individual fixed point terms are
+         *    T1 = mulDiv(X1, Y1, Z1) = T1R - T1F
+         *    T2 = mulDiv(T1, Y2, Z2) = T2R - T2F
+         *  (where T1 and T2 are the fixed point results from the first and second term,
+         *   T1R and T2R are the real valued results from an infinite precision mulDiv,
+         *   T1F and T2F are the fractional round downs, X1/Y1/Z1/Y2/Z2 are the arbitrary
+         *   input terms in the fixed point calculation)
+         *
+         * Therefore the total loss of precision is
+         *    FF = T2F + T1F * T2R/T1
+         *
+         * To guarantee a 2 wei precision loss boundary:
+         *    FF <= 2
+         *    T2F + T1F * T2R/T1 <= 2
+         *    T1F * T2R/T1 <=  1      (since T2F as a round-down is always < 1)
+         *    T2R/T1 <= 1             (since T1F as a round-down is always < 1)
+         *    Y2/Z1 <= 1   
+         *
+         * Therefore the order that we calculate mulDiv for the original formula
+         * matters. Depending on the relative sizes of the inputs, we want to arrange
+         * the order of multiply/divides to assure the second mulDiv bounds the precision
+         * loss from the first mulDiv() */
+        if (limitPrice > priceDelta) {
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint96.Q96, price);
+            return FullMath.mulDiv(partTerm, priceDelta, limitPrice);
+        } else {
+            // Implies priceDelta < price
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint96.Q96, limitPrice);
+            return FullMath.mulDiv(partTerm, priceDelta, price);
+        }
     }
 
     /* @notice Returns the amount of virtual reserves give the price and liquidity of the
@@ -275,5 +325,71 @@ library CurveMath {
         uint256 endInvert = FullMath.mulDivTrapZero(liq, liq, endReserve);
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
+    }
+
+    /* @notice Computes the amount of token over-collateralization needed to buffer any 
+     *   loss of precision rounding in the fixed price arithmetic on curve price. This
+     *   is necessary because price occurs in different units than tokens, and we can't
+     *   assume a single wei is sufficient to buffer one price unit.
+     * 
+     * @dev In practice the price unit precision is almost always smaller than the token
+     *   token precision. Therefore the result is usually just 1 wei. The exception are
+     *   pools where liquidity is very high or price is very low. 
+     *
+     * @param liq The total liquidity in the curve.
+     * @param price The (square root) price of the curve in 96-bit fixed point.
+     * @param isRoundUp If true, we're buffering collateral for fixed point rounds to
+     *   the upside (i.e. collateral burn in the base token).
+     *
+     * @return The conservative upper bound in number of tokens that should be 
+     *   burned to over-collateralize a single precision unit of price rounding. If
+     *   the price arithmetic involves multiple units of precision loss, this number
+     *   should be multiplied by that factor. */
+    function priceToTokenPrecision (uint128 liq, uint160 price,
+                                    bool isRoundUp) internal pure returns (uint256) {
+        uint256 MULT_OVERHEAD = 4;
+        uint256 shift = deriveTokenPrecision(MULT_OVERHEAD * uint256(liq),
+                                             price, isRoundUp);
+        return shift + 1; // Round up by 1 wei to be conservative
+    }
+
+    /* @notice Derives the amount of tokens it would take buffer the curve by one price
+     *   precision unit. */
+    function deriveTokenPrecision (uint256 liqWeight, uint160 price,
+                                   bool inBaseToken) private pure returns (uint256) {
+        // To provide more base token collateral than price precision rounding:
+        //     delta(B) >= L * delta(P)
+        //     delta(P) <= 2^-96  (96 bit precision rounding)
+        //     delta(B) >= L * 2^-96
+        //  (where L is liquidity, B is base token reserves, P is price)
+        if (inBaseToken) {
+            return liqWeight / FixedPoint96.Q96;
+        } else {
+            // Proivde quote token collateral to buffer price precision roudning:
+            //    delta(Q) >= L * delta(1/P)
+            //    delta(P) <= 2^-96  (96 bit precision rounding)
+            //          P  >= 2^-96  (minimum precision)
+            //    delta(Q) >= L * (1/P - 1/(P+2^-96))
+            //             >= L * 2^-96/(P^2 + P * 2^-96)
+            //             >= L * 2^-96/P^2        (upper bound to above)
+            if (price <= FixedPoint96.Q96) {
+                // The fixed point representation of Price in bits is
+                //    Pb = P * 2^96
+                // Therefore
+                //    delta(Q) >= L * 2^-96/(P/2^96)^2
+                //             >= L * 2^96/Pb^2
+                //
+                return FullMath.mulDiv(liqWeight, FixedPoint96.Q96,
+                                       // Price^2 fits in 256 bits since price < 96 bits
+                                       uint256(price)*uint256(price));
+            } else {
+                // If price is greater than 1, Can reduce to this (potentially loose,
+                // but still economically small) upper bound:
+                //           P >= 1
+                //    delta(Q) >= L * 2^-96/P^2
+                //             >= L * 2^-96
+                return liqWeight / FixedPoint96.Q96;
+            }
+        }
     }
 }

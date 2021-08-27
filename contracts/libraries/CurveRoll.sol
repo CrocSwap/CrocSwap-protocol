@@ -17,6 +17,7 @@ import './CurveMath.sol';
 library CurveRoll {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
+    using SafeCast for uint256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
     using CurveMath for CurveMath.CurveState;
@@ -28,17 +29,34 @@ library CurveRoll {
      *   sure that the impact doesn't cross through any tick barrier that knocks 
      *   concentrated liquidity in/out. 
      *
+     * @dev In certain cases the flow target may be derived from a fixed price target.
+     *   in this case, we have to support over-collaterization of the swap to account
+     *   for loss of precision. This function buffers swap call with up to 8 wei of 
+     *   collateral which is economically meaningless, but accounts for the necessary
+     *   fixed point round down in flow. (See CurveMath calcLimitFlow())
+     *
      * @param curve - The current state of the active liquidity curve. After calling
      *   this struct will be updated with the post-swap price. Note that none of the
      *   fee accumulator fields are adjusted. This function does *not* collect or apply
      *   liquidity fees. It's the callers responsibility to handle fees outside this
      *   call.
      * @param flow - The amount of tokens to swap on this leg. Denominated in quote or
-     *   base tokens based on the swap object context.
+     *   base tokens based on the swap object context. In certain cases this number
+     *   may be a fixed point estimate based on a price target. Collateral safety
+     *   is guaranteed with up to 2 wei of precision loss.
      * @param swap - The in-progress swap object. The accumulator fields will be 
      *   incremented based on the swapped flow and its relevant impact. */
     function rollLiq (CurveMath.CurveState memory curve, uint256 flow,
                       CurveMath.SwapAccum memory swap) internal pure {
+        rollLiqPrecise(curve, flow, swap);
+        shaveRoundDown(curve, swap);
+    }
+
+    /* @notice Calculates the precise curve price and swap flows, but not directly 
+     *   consumable because it doesn't account for round-down loss of collateral
+     *   precision from upstream flow calculations. */
+    function rollLiqPrecise (CurveMath.CurveState memory curve, uint256 flow,
+                             CurveMath.SwapAccum memory swap) private pure {        
         (int256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap);
         int256 paidFlow = signFlow(flow, swap.cntx_);
 
@@ -50,28 +68,59 @@ library CurveRoll {
             (swap.cntx_.inBaseQty_ ? counterFlow : paidFlow);
     }
 
-    /* @notice Same as rollLiq(), but receivable token flows in the swap accumulator
-     *   are rounded up by 1 wei. 
-     * @dev Used for a context where you you're targeting a price instead of a flow,
-     *   and need the extra collateral for the fractional flow. */
-    function rollLiqRounded (CurveMath.CurveState memory curve, uint256 flow,
-                             CurveMath.SwapAccum memory swap) internal pure {
-        rollLiq(curve, flow, swap);
-        shaveRoundDown(swap);
-    }
-
-    function shaveRoundDown (CurveMath.SwapAccum memory swap) private pure {
+    /* @notice Bumps both sides of the swap flow in favor of the pool to nuke any fixed
+     *   point rounding that could under-collateralize. */
+    function shaveRoundDown (CurveMath.CurveState memory curve,
+                             CurveMath.SwapAccum memory swap) private pure {
+        (uint128 baseShave, uint128 quoteShave) = sizePrecisionBuffer(curve, swap);
+        
         if (isFlowInput(swap.cntx_)) {
-            swap.qtyLeft_ = swap.qtyLeft_ - 1;
+            uint256 flowShave = swap.cntx_.inBaseQty_ ? baseShave : quoteShave;
+            // In very rare corner cases, the swap may demand an economically
+            // meaningless amount more token wei than what the user specified. They can
+            // always reject this condition at the time of settlement callback.
+            swap.qtyLeft_ = swap.qtyLeft_ > flowShave ?
+                swap.qtyLeft_ - flowShave : 0;
         }
         
         if (swap.paidQuote_ > 0) {
-            swap.paidQuote_ = swap.paidQuote_ + 1;
+            swap.paidQuote_ = swap.paidQuote_ + quoteShave;
         } else {
-            swap.paidBase_ = swap.paidBase_ + 1;
+            swap.paidBase_ = swap.paidBase_ + baseShave;
         }
     }
 
+    /* @dev Calculates a conservative upper bound of token bound to guarantee collateral
+     *    safety with regards to any fixed-point rounding affects on either token flow
+     *    or price precision. */
+    function sizePrecisionBuffer (CurveMath.CurveState memory curve,
+                                  CurveMath.SwapAccum memory swap)
+        private pure returns (uint128 baseToken, uint128 quoteToken) {
+        /* Give us enough room to account for the 2 wei of round down allowed by the
+         * rollDown() function's contract on the flow input(), and another wei of round
+         * down onthe counter flow calculation in deriveImpact(). Then double that to
+         * be conservative, because 8 wei is virtually meaningless. */
+        uint128 TOKEN_PRECISION = 8;
+
+        // Price is rounded to the inside of the swap direction.
+        bool priceMovesUp = swap.cntx_.isBuy_;
+        bool priceRoundsUp = !priceMovesUp;
+        uint128 pricePrecision = CurveMath.priceToTokenPrecision
+            (curve.activeLiquidity(), curve.priceRoot_, priceRoundsUp)
+            .toUint128();
+
+        // Price collateral is provided on the side of the virtual reserves being
+        // rounded towards.
+        if (priceRoundsUp) {
+            (baseToken,quoteToken) = (TOKEN_PRECISION + pricePrecision, TOKEN_PRECISION);
+        } else {
+            (baseToken,quoteToken) = (TOKEN_PRECISION, TOKEN_PRECISION + pricePrecision);
+        }
+    }
+
+    /* @dev counterFlow is always rounded down to the nearest integer. nextPrice is
+     *   rounded to the minimum precision unit (2^-96) of the inside of the direction
+     *   of the swap. */
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
                            CurveMath.SwapAccum memory swap) private pure
         returns (int256 counterFlow, uint160 nextPrice) {
@@ -89,12 +138,19 @@ library CurveRoll {
         uint256 nextReserve = flow > 0 ? reserve.add(uint256(flow)) :
             reserve.sub(uint256(-flow));
 
-        uint256 curvePrice = cntx.inBaseQty_ ?
+        uint256 curvePrec = cntx.inBaseQty_ ?
             FullMath.mulDivTrapZero(price, nextReserve, reserve) :
             FullMath.mulDivTrapZero(price, reserve, nextReserve);
+
+        // To be conservative, round the curve precision to the inside of the price
+        // move. That prevents us from inadvertantly crossing a fixed limit price.
+        uint160 curvePrice = curvePrec < price ?
+            uint160(curvePrec) + 1 :
+            uint160(curvePrec);
+        
         if (curvePrice > TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO; }
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
-        return uint160(curvePrice);
+        return curvePrice;
     }
 
     function signFlow (uint256 flow, CurveMath.SwapFrame memory cntx)

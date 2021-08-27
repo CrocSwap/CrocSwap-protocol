@@ -67,6 +67,21 @@ library SwapCurve {
         swap.paidProto_ -= 1;
     }
 
+    function swapOverCurve (CurveMath.CurveState memory curve,
+                            CurveMath.SwapAccum memory accum,
+                            uint160 limitPrice) pure private {
+        uint256 realFlows = curve.calcLimitFlows(accum, limitPrice);
+        bool hitsLimit = realFlows < accum.qtyLeft_;
+
+        curve.rollLiq(realFlows, accum);
+        if (hitsLimit) {
+            // In the limit price, the flow will slightly undershoot the price...
+            // It's safe to pin the price directly, because rollLiq() has over-
+            // collateralized for loss of precision in the realFlows calculation.
+            curve.priceRoot_ = limitPrice;
+        }
+    }
+
     function determineLimit (int24 bumpTick, uint160 limitPrice, bool isBuy)
         pure private returns (uint160) {
         uint160 bounded = boundLimit(bumpTick, limitPrice, isBuy);
@@ -105,20 +120,6 @@ library SwapCurve {
             accum.paidBase_ = accum.paidBase_.add(int256(totalFees));
         }
         accum.paidProto_ = accum.paidProto_.add(exchFees);
-    }
-
-    function swapOverCurve (CurveMath.CurveState memory curve,
-                            CurveMath.SwapAccum memory accum,
-                            uint160 limitPrice) pure private {
-        uint256 realFlows = curve.calcLimitFlows(accum, limitPrice);
-        bool hitsLimit = realFlows < accum.qtyLeft_;
-
-        if (hitsLimit) {
-            curve.rollLiqRounded(realFlows, accum);
-            curve.priceRoot_ = limitPrice;
-        } else {
-            curve.rollLiq(realFlows, accum);
-        }
     }
 
     function vigOverFlow (CurveMath.CurveState memory curve,

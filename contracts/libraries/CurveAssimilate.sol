@@ -48,7 +48,7 @@ library CurveAssimilate {
         if (CurveMath.activeLiquidity(curve) == 0) { return; }
         
         bool feesInBase = !isSwapInBase;        
-        uint256 feesToLiq = shaveForPrecision(curve, feesPaid);
+        uint256 feesToLiq = shaveForPrecision(curve, feesPaid, feesInBase);
         uint256 inflator = calcLiqInflator(curve, feesToLiq, feesInBase);
 
         if (inflator > 0) {
@@ -101,15 +101,14 @@ library CurveAssimilate {
      *
      * @return The amount of reward fees available to assimilate into the liquidity
      *    curve after deducting the precision over-collaterilization allocation. */
-    function shaveForPrecision (CurveMath.CurveState memory curve, uint256 feesPaid)
+    function shaveForPrecision (CurveMath.CurveState memory curve, uint256 feesPaid,
+                                bool isFeesInBase)
         private pure returns (uint256) {
-        // To be conservative in arithmetic apply a large multiplier
-        uint256 MULT_OVERHEAD = 4; 
         uint128 liq = CurveMath.activeLiquidity(curve);
-        uint256 bufferTokens = 1 +  // Round up so we over-provision the collateral
-            FullMath.mulDiv(MULT_OVERHEAD, liq, FixedPoint96.Q96);
-        return feesPaid <= bufferTokens ? 0 :
-            feesPaid - bufferTokens;
+        uint256 bufferTokens = CurveMath.priceToTokenPrecision
+            (liq, curve.priceRoot_, isFeesInBase);
+        return feesPaid <= bufferTokens ?
+            0 : feesPaid - bufferTokens;
     }
 
     /* @notice Given a liquidity inflator driven by increasing the reserves on one side,
