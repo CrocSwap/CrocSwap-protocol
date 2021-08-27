@@ -16,7 +16,7 @@ library CompoundMath {
     /* @notice Provides a safe lower-bound approximation of the square root of 1+x
      *         based on a two-term Taylor series expansion.
      * @dev    Due to approximation error, only safe to use on input in the range of 
-     *         [0,1)
+     *         [0,1). Will always round down from the true real value.
      * @param x  The value of x in (1+x). Represented as a 128-bit fixed-point
      * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
      *            fixed point. */
@@ -32,6 +32,7 @@ library CompoundMath {
     }
     
     /* @notice Computes the result from compounding two cumulative growth rates.
+     * @dev    Rounds down from the real value.
      * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
      *           fixed-point. 
      * @param y The compounded growth rate as in (1+y). Represted as 128-bit 
@@ -46,6 +47,7 @@ library CompoundMath {
 
     /* @notice Computes the result from starting with a given compounded growth
      *         rate and subtracting out another fixed amount of compound growth.
+     * @dev    Rounds down from the real value.
      * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
      *           fixed-point. 
      * @param y The compounded growth rate to shrink by as in (1+y). Represted as 
@@ -60,6 +62,7 @@ library CompoundMath {
 
     /* @notice Computes the result from applying a compound growth rate to a fixed
      *         quantity.
+     * @dev    Rounds down from the real value.
      * @param seed The fixed quantity to start with, growth to be applied on top.
      *              Represented as an unsigned integer.
      * @param growth The compounded growth rate to apply, as in (1+g). Represented
@@ -73,8 +76,10 @@ library CompoundMath {
         return FullMath.mulDiv(uint256(seed), multFactor, ONE);
     }
 
+
     /* @notice Computes the result from backing out a compounded growth value from
      *         an existing value. The inverse of compoundGrow().
+     * @dev    Rounds down from the real value.
      * @param val The fixed quantity representing the starting value that we want
      *             to back out a pre-growth seed from.
      * @param growth The compounded growth rate to back out, as in (1+g). Represented
@@ -89,6 +94,7 @@ library CompoundMath {
     }
     
     /* @notice Inflates a starting value by a cumulative growth rate.
+     * @dev    Rounds down from the real value.
      * @param seed The pre-inflated starting value as unsigned integer
      * @param growth Cumulative growth rate as 128-bit fixed-point value.
      * @return The ending value = seed * (1 + growth). Rounded down to nearest

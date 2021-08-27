@@ -60,7 +60,12 @@ library CurveMath {
      *    
      * @param concTokenGrowth_ The cumulative rewards growth rate (represented as 128-
      *   bit fixed point) of 1 unit of concentrated liquidity that was active since the
-     *   beggining of the pool. */
+     *   beggining of the pool.
+     *
+     * @dev To be conservative with collateral these growth rates should always be
+     *      rounded down from their real-value results. Some minor lower-bound 
+     *      approximation is find, since all it will result in is slightly smaller 
+     *      reward payouts. */
     struct CurveFeeAccum {
         uint256 ambientGrowth_;
         uint256 concTokenGrowth_;
@@ -123,6 +128,8 @@ library CurveMath {
     
     /* @notice Calculates the total scalar amount of liquidity currently active on the 
      *    curve.
+     * @dev    Result always rounds down from the real value, *assuming* that the fee
+     *         accumulation fields are conservative lower-bound rounded.
      * @param curve - The currently active liqudity curve state. Remember this curve 
      *    state is only known valid within the current tick.
      * @return - The total scalar liquidity. Equivalent to sqrt(X*Y) in a constant-
@@ -135,7 +142,12 @@ library CurveMath {
 
     /* @notice Similar to calcLimitFlows(), except returns the max possible flow in the
      *   *opposite* direction. I.e. is inBaseQty_ is True, returns the quote token flow
-     *   for the swap. */
+     *   for the swap.
+     *
+     * @dev The fixed-point result approximates the real valued formula with close but
+     *   directionally unpredicable precision. It could be slightly above or slightly
+     *   below. This function should not be used in any context with strict directional 
+     *   boundness requirements. */
     function calcLimitCounter (CurveState memory curve, SwapAccum memory swap,
                                uint160 limitPrice) internal pure returns (uint256) {
         bool isBuy = limitPrice > curve.priceRoot_;
@@ -148,11 +160,16 @@ library CurveMath {
      *   curve until either 1) the limit price is reached or 2) the swap fills its 
      *   entire remaining quantity.
      *
-     * @dev This function does *NOT* account for the possibility of concentrated liquidity
+     * @dev This function does *NOT* account for the possibility of concentrated liq
      *   being knocked in/out as the price on the AMM curve moves across tick boundaries.
      *   It's the responsibility of the caller to properly check whether the limit price
      *   is within the bounds of the locally stable curve.
      *
+     * @dev As long as CurveState's fee accum fields are conservatively lower bounded,
+     *   and as long as limitPrice is accurate, then this function rounds down from the
+     *   true real value. However if limitPrice is approximated, then results could be
+     *   rounded up or down (should be predictable from internal logic).
+     * 
      * @param curve - The current state of the liquidity curve. No guarantee that it's
      *   liquidity stable through the entire limit range (see @dev above). Note that this
      *   function does *not* update the curve struct object.    
@@ -195,8 +212,11 @@ library CurveMath {
 
     /* @notice Returns the amount of virtual reserves give the price and liquidity of the
      *   constant-product liquidity curve.
+     *
      * @dev The actual pool probably holds significantly less collateral because of the 
      *   use of concentrated liquidity. 
+     * @dev Results always round down from the precise real-valued requirement if 
+     *   fractional tokens were possible.   
      * 
      * @param liq - The total active liquidity in AMM curve. Represented as sqrt(X*Y)
      * @param price - The current active (square root of) price of the AMM curve. 
@@ -205,7 +225,7 @@ library CurveMath {
      *
      * @returns The virtual reserves of the token (rounded down to nearest integer). 
      *   Equivalent to the amount of tokens that would be held for an equivalent 
-     *   classical constant- product AMM without concentrated liquidity. */
+     *   classical constant- product AMM without concentrated liquidity.  */
     function reserveAtPrice (uint128 liq, uint160 price, bool inBaseQty)
         internal pure returns (uint256) {
         return inBaseQty ?
@@ -228,18 +248,21 @@ library CurveMath {
      *
      * @return The flow of tokens that would have to be swapped to move the liquidity
      *    curve to the targetPrice. Positive implies pools receives tokens, and negative
-     *    that the pool would pay tokens. Because of rounding this can be +/- 1 of the
-     *    real valued answer. */
+     *    that the pool would pay tokens. Rounding always occurs in favor of the pool. */
     function deltaFlow (uint128 liq, uint160 startPrice, uint160 targetPrice,
                         bool inBaseQty)
         internal pure returns (int256) {
         uint256 initReserve = reserveAtPrice(liq, startPrice, inBaseQty);
         uint256 endReserve = reserveAtPrice(liq, targetPrice, inBaseQty);
         return (initReserve > endReserve) ?
-            -int256(initReserve - endReserve) :
-            int256(endReserve - initReserve);
+            -int256(initReserve - endReserve - 1) : // Round pool's favor
+            int256(endReserve - initReserve + 1);
     }
 
+    /* @dev The fixed point arithmetic results in output that's a close approximation
+     *   to the true real value, but could be skewed in either direction. The output
+     *   from this function should not be consumed in any context that requires strict
+     *   boundness. */
     function invertFlow (uint128 liq, uint160 price, uint256 denomFlow,
                          bool isBuy, bool inBaseQty) private pure returns (uint256) {
         uint256 invertReserve = reserveAtPrice(liq, price, !inBaseQty);

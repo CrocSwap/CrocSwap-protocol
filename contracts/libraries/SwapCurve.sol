@@ -58,6 +58,15 @@ library SwapCurve {
         swapOverCurve(curve, accum, limitPrice);
     }
 
+    /* @notice Bump the swap flows by 1 wei in favor of the pool to conservatively
+     *    guard against any under-collateralization risk due to rounding effects
+     *    in the swap calculations. */
+    function padSwapFlows (CurveMath.SwapAccum memory swap) internal pure {
+        swap.paidBase_ += 1;
+        swap.paidQuote_ += 1;
+        swap.paidProto_ -= 1;
+    }
+
     function determineLimit (int24 bumpTick, uint160 limitPrice, bool isBuy)
         pure private returns (uint160) {
         uint160 bounded = boundLimit(bumpTick, limitPrice, isBuy);

@@ -141,6 +141,7 @@ contract LiquidityCurve {
             if (rewards > 0) {
                 (uint256 baseRewards, uint256 quoteRewards) =
                     liquidityPayable(rewards.toUint128());
+                (baseRewards, quoteRewards) = payConservative(baseRewards, quoteRewards);
                 base += baseRewards;
                 quote += quoteRewards;
             }
@@ -279,5 +280,11 @@ contract LiquidityCurve {
         private pure returns (uint256, uint256) {
         return (liqBase > 0 ? liqBase + 1 : 0,
                 liqQuote > 0 ? liqQuote + 1 : 0);
+    }
+
+    function payConservative (uint256 liqBase, uint256 liqQuote)
+        private pure returns (uint256, uint256) {
+        return (liqBase > 0 ? liqBase - 1 : 0,
+                liqQuote > 0 ? liqQuote - 1 : 0);
     }
 }
