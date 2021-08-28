@@ -55,6 +55,12 @@ library SwapCurve {
                           int24 bumpTick, uint160 swapLimit) pure internal {
         uint160 limitPrice = determineLimit(bumpTick, swapLimit, accum.cntx_.isBuy_);
         bookExchFees(curve, accum, limitPrice);
+        
+        // limitPrice is still valid even though curve has move from ingesting liquidity
+        // fees in bookExchFees(). That's because the collected fees are mathematically
+        // capped at a fraction of the flow necessary to reach limitPrice. See
+        // bookExchFees() comments. (This is also why we book fees before swapping, so we
+        // don't run into the limitPrice when trying to ingest fees.)
         swapOverCurve(curve, accum, limitPrice);
     }
 
@@ -65,6 +71,28 @@ library SwapCurve {
         swap.paidBase_ += 1;
         swap.paidQuote_ += 1;
         swap.paidProto_ -= 1;
+    }
+
+
+    /* @notice Calculates the exchange fee given a swap directive and limitPrice. Note 
+     *   this assumes the curve is constant-product without liquidity bumps through the
+     *   whole range. Don't use this function if you're unable to guarantee that the AMM
+     *   curve is locally stable through the price impact.
+     *
+     * @param curve The current state of the AMM liquidity curve. Must be stable without
+     *              liquidity bumps through the price impact.
+     * @param swap  The swap to be executed. This function will *not* mutate any 
+     *              accumulator fields on the swap. 
+     * @param limitPrice The limit price (in square root 96-bit fixed point precision)
+     * @return liqFee The total fee accumulated to liquidity providers in the pool (in 
+     *                the opposite side tokens of the swap denomination).
+     * @return protoFee The total fee accumulated to the CrocSwap protocol. */
+    function vigOverFlow (CurveMath.CurveState memory curve,
+                          CurveMath.SwapAccum memory swap,
+                          uint160 limitPrice)
+        internal pure returns (uint256 liqFee, uint256 protoFee) {
+        uint256 flow = curve.calcLimitCounter(swap, limitPrice);
+        (liqFee, protoFee) = vigOverFlow(flow, swap);
     }
 
     function swapOverCurve (CurveMath.CurveState memory curve,
@@ -82,6 +110,10 @@ library SwapCurve {
         }
     }
 
+    /* @notice Determines an effective limit price given the combination of swap-
+     *    specified limit, tick liquidity bump boundary on the locally stable AMM curve,
+     *    and the numerical boundaries of the price field. Always picks the value that's
+     *    most to the inside of the swap direction. */
     function determineLimit (int24 bumpTick, uint160 limitPrice, bool isBuy)
         pure private returns (uint160) {
         uint160 bounded = boundLimit(bumpTick, limitPrice, isBuy);
@@ -103,12 +135,30 @@ library SwapCurve {
         }
     }
 
+    /* @notice Calculates exchange fee charge based off an estimate of the predicted
+     *         order flow on this leg of the swap.
+     * 
+     * @dev    Note that the process of collecting the exchange fee itself alters the
+     *   structure of the curve, because those fees assimilate as liquidity into the 
+     *   curve new liquidity. As such the flow used to pro-rate fees is only an estimate
+     *   of the actual flow that winds up executed. This means that fees are not exact 
+     *   relative to realized flows. But because fees only have a small impact on the 
+     *   curve, they'll tend to be very close. Getting fee exactly correct doesn't 
+     *   matter, and either over or undershooting is fine from a collateral stability 
+     *   perspective. */
     function bookExchFees (CurveMath.CurveState memory curve,
                            CurveMath.SwapAccum memory accum,
                            uint160 limitPrice) pure private {
         (uint256 liqFees, uint256 exchFees) = vigOverFlow(curve, accum, limitPrice);
-        curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
         assignFees(liqFees, exchFees, accum);
+        
+        /* We can guarantee that the price shift associated with the liquidity
+         * assimilation is safe. The limit price boundary is by definition within the
+         * tick price boundary of the locally stable AMM curve (see determineLimit()
+         * function). The liquidity assimilation flow is mathematically capped within 
+         * the limit price flow, because liquidity fees are a small fraction of swap
+         * flows. */
+        curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
     }
 
     function assignFees (uint256 liqFees, uint256 exchFees,
@@ -122,14 +172,6 @@ library SwapCurve {
         accum.paidProto_ = accum.paidProto_.add(exchFees);
     }
 
-    function vigOverFlow (CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory swap,
-                          uint160 limitPrice)
-        internal pure returns (uint256 liqFee, uint256 protoFee) {
-        uint256 flow = curve.calcLimitCounter(swap, limitPrice);
-        (liqFee, protoFee) = vigOverFlow(flow, swap);
-    }
-    
     function vigOverFlow (uint256 flow, uint24 feeRate, uint8 protoProp)
         private pure returns (uint256 liqFee, uint256 protoFee) {
         uint128 FEE_BP_MULT = 100 * 100 * 100;
