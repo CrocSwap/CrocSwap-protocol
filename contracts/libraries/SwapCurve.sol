@@ -73,7 +73,6 @@ library SwapCurve {
         swap.paidProto_ -= 1;
     }
 
-
     /* @notice Calculates the exchange fee given a swap directive and limitPrice. Note 
      *   this assumes the curve is constant-product without liquidity bumps through the
      *   whole range. Don't use this function if you're unable to guarantee that the AMM
