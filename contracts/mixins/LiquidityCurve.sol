@@ -23,6 +23,7 @@ contract LiquidityCurve {
     using SafeCast for uint128;
     using SafeCast for int256;
     using CurveMath for CurveMath.CurveState;
+    using CurveMath for uint128;
 
     CurveMath.CurveState private curve_;
 
@@ -137,7 +138,11 @@ contract LiquidityCurve {
         (base, quote) = liquidityPayable(liquidity, lowerTick, upperTick);
 
         if (rewardRate > 0) {
+            // Round down reward sees on payout, in contrast to rounding them up on
+            // incremental accumulation (see CurveAssimilate.sol). This mathematicaly
+            // guarantees that we never try to burn more tokens than exist on the curve.
             uint256 rewards = FullMath.mulDiv(liquidity, rewardRate, FixedPoint128.Q128);
+            
             if (rewards > 0) {
                 (uint256 baseRewards, uint256 quoteRewards) =
                     liquidityPayable(rewards.toUint128());
@@ -194,12 +199,12 @@ contract LiquidityCurve {
             translateTickRange(bidTick, askTick);
 
         if (tick < bidTick) {
-            quoteDebit = liqQuoteDelta(liquidity, bidPrice, askPrice);
+            quoteDebit = liquidity.deltaPriceQuote(bidPrice, askPrice);
         } else if (tick > askTick) {
-            baseDebit = liqBaseDelta(liquidity, bidPrice, askPrice);
+            baseDebit = liquidity.deltaPriceBase(bidPrice, askPrice);
         } else {
-            quoteDebit = liqQuoteDelta(liquidity, price, askPrice);
-            baseDebit = liqBaseDelta(liquidity, bidPrice, price);
+            quoteDebit = liquidity.deltaPriceQuote(price, askPrice);
+            baseDebit = liquidity.deltaPriceBase(bidPrice, price);
         }
     }
     
@@ -209,21 +214,6 @@ contract LiquidityCurve {
         uint128 liq = CompoundMath.inflateLiqSeed(seeds, curve_.accum_.ambientGrowth_);
         baseDebit = FullMath.mulDiv(liq, price, FixedPoint96.Q96);
         quoteDebit = (uint256(liq) << FixedPoint96.RESOLUTION) / price;
-    }
-    
-    function liqBaseDelta (uint128 liquidity,
-                            uint160 bidPrice, uint160 askPrice)
-        private pure returns (uint256) {
-        return FullMath.mulDiv(liquidity, askPrice - bidPrice,
-                               FixedPoint96.Q96);
-    }
-
-    function liqQuoteDelta (uint128 liquidity,
-                            uint160 bidPrice, uint160 askPrice)
-        private pure returns (uint256) {
-        uint256 term = FullMath.mulDiv(askPrice - bidPrice,
-                                       FixedPoint96.Q96, bidPrice);
-        return FullMath.mulDiv(term, liquidity, askPrice);
     }
 
     /* @notice Writes a new price into the curve (without any adjustment to liquidity)
@@ -276,15 +266,20 @@ contract LiquidityCurve {
         askPrice = TickMath.getSqrtRatioAtTick(upperTick);
     }
 
+    // Need to support at least 2 wei of precision round down when calculating quote
+    // token reserve deltas. (See CurveMath's deltaPriceQuote() function.) 4 gives us a
+    // safe cushion and is economically meaningless.
+    uint256 constant TOKEN_ROUND = 4;
+    
     function chargeConservative (uint256 liqBase, uint256 liqQuote)
         private pure returns (uint256, uint256) {
-        return (liqBase > 0 ? liqBase + 1 : 0,
-                liqQuote > 0 ? liqQuote + 1 : 0);
+        return (liqBase > 0 ? liqBase + TOKEN_ROUND : 0,
+                liqQuote > 0 ? liqQuote + TOKEN_ROUND : 0);
     }
 
     function payConservative (uint256 liqBase, uint256 liqQuote)
         private pure returns (uint256, uint256) {
-        return (liqBase > 0 ? liqBase - 1 : 0,
-                liqQuote > 0 ? liqQuote - 1 : 0);
+        return (liqBase > 0 ? liqBase - TOKEN_ROUND : 0,
+                liqQuote > 0 ? liqQuote - TOKEN_ROUND : 0);
     }
 }

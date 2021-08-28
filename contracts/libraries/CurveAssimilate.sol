@@ -177,9 +177,9 @@ library CurveAssimilate {
     }
 
     /* @notice To avoid over-promising rewards, we need to make sure that fixed-point
-     *   rounding effects don't round concentrated rewards growth more than ambient seeds.
-     *   Otherwise we could possibly reach a situation where burned rewards exceed the
-     *   the ambient seeds stored on the curve.
+     *   rounding effects don't round concentrated rewards growth more than ambient 
+     *   seeds Otherwise we could possibly reach a situation where burned rewards 
+     *   exceed the the ambient seeds stored on the curve.
      *
      * @dev Functionally, the reward inflator is most likely higher precision than
      *   the ambient seed injection. Therefore prevous fixed point math that rounds
@@ -192,10 +192,10 @@ library CurveAssimilate {
         if (ambientInject == 0) { return 0; }
 
         // To shrink the rewards by ambient round down precision we use the formula:
-        // R' = R * (A - 1) / A
+        // R' = R * A / (A + 1)
         //   (where R is the rewards inflator, and A is the ambient seed injection)
-        uint256 safeShrink = FullMath.mulDiv(ambientInject - 1, FixedPoint128.Q128,
-                                             ambientInject);
+        uint256 safeShrink = FullMath.mulDiv(ambientInject, FixedPoint128.Q128,
+                                             ambientInject + 1);
         return FullMath.mulDiv(concInflator, safeShrink, FixedPoint128.Q128);
     }
 }

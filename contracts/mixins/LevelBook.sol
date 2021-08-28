@@ -147,7 +147,6 @@ contract LevelBook is TickCensus {
         
         if (deleteBid) { delete levels_[bidTick]; }
         if (deleteAsk) { delete levels_[askTick]; }
-
     }
 
     function initLevel (int24 midTick, int24 tick, uint256 feeGlobal) private {

@@ -168,7 +168,7 @@ library CurveMath {
      * @dev As long as CurveState's fee accum fields are conservatively lower bounded,
      *   and as long as limitPrice is accurate, then this function rounds down from the
      *   true real value. At most this round down loss of precision is tightly bounded at
-     *   2 wei. (See comments in limitQuoteDelta())
+     *   2 wei. (See comments in deltaPriceQuote() function)
      * 
      * @param curve - The current state of the liquidity curve. No guarantee that it's
      *   liquidity stable through the entire limit range (see @dev above). Note that this
@@ -191,25 +191,31 @@ library CurveMath {
                              uint160 limitPrice) private pure returns (uint256) {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
-            limitBaseDelta(liq, curve.priceRoot_, limitPrice) :
-            limitQuoteDelta(liq, limitPrice, curve.priceRoot_);
+            deltaPriceBase(liq, curve.priceRoot_, limitPrice) :
+            deltaPriceQuote(liq, limitPrice, curve.priceRoot_);
     }
 
-    /* @dev Result is a tight lower-bound for fixed-point precision. Meaning if the
+    /* @notice Calculates the change to base token reserves associated with a price
+     *   move along an AMM curve of constant liquidity.
+     *
+     * @dev Result is a tight lower-bound for fixed-point precision. Meaning if the
      *   the returned limit is X, then X will be inside the limit price and (X+1)
      *   will be outside the limit price. */
-    function limitBaseDelta (uint128 liq, uint160 price, uint160 limitPrice)
-        private pure returns (uint256) {
-        uint160 priceDelta = limitPrice > price ?
-            limitPrice - price : price - limitPrice;
+    function deltaPriceBase (uint128 liq, uint160 priceX, uint160 priceY)
+        internal pure returns (uint256) {
+        uint160 priceDelta = priceX > priceY ?
+            priceX - priceY : priceY - priceX;
         return reserveAtPrice(liq, priceDelta, true);
     }
 
-    /* @dev Result is almost always within a fixed-point precision unit from the true
+    /* @notice Calculates the change to quote token reserves associated with a price
+     *   move along an AMM curve of constant liquidity.
+     * 
+     * @dev Result is almost always within a fixed-point precision unit from the true
      *   real value. However in certain very rare cases, the result could be up to 2
      *   wei below the true real value. Caller should account for this upstream. */
-    function limitQuoteDelta (uint128 liq, uint160 price, uint160 limitPrice)
-        private pure returns (uint256) {
+    function deltaPriceQuote (uint128 liq, uint160 price, uint160 limitPrice)
+        internal pure returns (uint256) {
         uint160 priceDelta = limitPrice > price ?
             limitPrice - price : price - limitPrice;
         
