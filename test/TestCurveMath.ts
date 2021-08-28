@@ -35,7 +35,7 @@ describe('CurveMath', () => {
       expect(limitOne).to.equal(7151);
       expect(limitTwo).to.equal(1837);
       expect(limitThree).to.equal(1610);
-      expect(limitFour).to.equal(708);
+      expect(limitFour).to.equal(707);
    })
 
    it("limit exhaust qty", async() => {
@@ -52,7 +52,7 @@ describe('CurveMath', () => {
       expect(limitOne).to.equal(5223);
       expect(limitTwo).to.equal(11618);
       expect(limitThree).to.equal(5402);
-      expect(limitFour).to.equal(221961);
+      expect(limitFour).to.equal(221865);
    })
 
    it("limit invert exhaust qty", async() => {
@@ -68,7 +68,7 @@ describe('CurveMath', () => {
 
       expect(limitOne).to.equal(1000000); // Effective limit is Inifnity, Hits swap qtyLeft cap
       expect(limitTwo).to.equal(14999); // Rounds down one below reserve
-      expect(limitThree).to.equal(6666); // Since virtual reserve is 6666.667, rounds to 6666
+      expect(limitThree).to.equal(6665); // Since virtual reserve is 6666.667, rounds to 6665
       expect(limitFour).to.equal(1000000); 
    })
 
@@ -82,8 +82,8 @@ describe('CurveMath', () => {
       expect(limitOne).to.equal(6568);
       // One reserve token left, counter reserve goes to 10k^2 = 100mn. Subtract 6666 initial...
       expect(limitTwo).to.equal(99993334);
-      // Result will be infinite, so just check if it's bigger than a really big number...
-      expect(limitThree).to.gte(100000000000);
+      // One reserve token left, counter reserve goes to 10k^2 = 100mn. Subtract 15000 initial...
+      expect(limitThree).to.gte(99985000);
       // Hits the swap qtyLeft cap.
       expect(limitFour).to.equal(14901);
    })
@@ -147,8 +147,8 @@ describe('CurveMath', () => {
      
       // Consumes 6666 out of the 6666.67 (at 5% vig) in virtual reserves
       expect(vigOne[0]).to.equal(333)
-      // Counterflow, and therefore vig is at infinity. Just check bigger than very big number
-      expect(vigTwo[0]).to.gte(100000000000)
+      // Counterflow rounds to single token left, and vig is against at the 1:10k reserve
+      expect(vigTwo[0]).to.gte(4999250)
       // Counterflow rounds to single token left, and vig is against at the 1:10k reserve
       expect(vigThree[0]).to.equal(4999666)
       // Consumes the full 15k reserve at 5% vig. 1/3 goes to protocol
@@ -160,31 +160,32 @@ describe('CurveMath', () => {
       expect(vigFour[1]).to.equal(125);
    })
 
+   const COLLATERAL_BUFFER = 8; // Standard buffer used in current code
 
    it("roll liq", async() => {
       let result = await curve.testRoll(1000, toSqrtPrice(2.25), 10000, true, true);
       expect(result.qtyLeft).to.equal(0);
       expect(result.rollPrice).to.equal(toSqrtPrice(2.56));
-      expect(result.paidBase).to.equal(1000);
-      expect(result.paidQuote).to.equal(-416);
+      expect(result.paidBase).to.equal(1000 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(-414 + COLLATERAL_BUFFER);
 
       result = await curve.testRoll(3000, toSqrtPrice(2.25), 10000, false, true);
       expect(result.qtyLeft).to.equal(0);
-      expect(result.rollPrice).to.equal(toSqrtPrice(1.44));
-      expect(result.paidBase).to.equal(-3000);
-      expect(result.paidQuote).to.equal(1667);
+      expect(fromSqrtPrice(result.rollPrice)).to.eq(1.44);
+      expect(result.paidBase).to.equal(-2999 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(1668 + COLLATERAL_BUFFER);
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, true, false);
       expect(result.qtyLeft).to.equal(0);
       expect(result.rollPrice).to.equal(toSqrtPrice(9.0));
-      expect(result.paidBase).to.equal(15000);
-      expect(result.paidQuote).to.equal(-3333);
+      expect(result.paidBase).to.equal(15001 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(-3332 + COLLATERAL_BUFFER);
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, false, false);
       expect(result.qtyLeft).to.equal(0);
-      expect(result.rollPrice).to.equal(toSqrtPrice(1.0));
-      expect(result.paidBase).to.equal(-5000);
-      expect(result.paidQuote).to.equal(3333);
+      expect(fromSqrtPrice(result.rollPrice)).to.equal(1.0);
+      expect(result.paidBase).to.equal(-4998 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(3333 + COLLATERAL_BUFFER);
    })
 
    it("roll liq infinity", async() => {
@@ -195,11 +196,11 @@ describe('CurveMath', () => {
       expect(resultOne.qtyLeft).to.equal(0);
       expect(resultOne.rollPrice).to.equal(maxSqrtPrice());
       expect(resultOne.paidBase).to.gt(infFloor);
-      expect(resultOne.paidQuote).to.equal(-6666);
+      expect(resultOne.paidQuote).to.equal(-6664 + COLLATERAL_BUFFER);
 
       expect(resultTwo.qtyLeft).to.equal(0);
       expect(resultTwo.rollPrice).to.equal(minSqrtPrice());
-      expect(resultTwo.paidBase).to.equal(-15000);
+      expect(resultTwo.paidBase).to.equal(-14998 + COLLATERAL_BUFFER);
       expect(resultTwo.paidQuote).to.gt(infFloor);
    })
 
@@ -208,21 +209,21 @@ describe('CurveMath', () => {
       let result = await curve.testAssimilate(1000, toSqrtPrice(2.25), 
          2000, 7500, toFixedGrowth(0.25), false);      
       expect(fromSqrtPrice(result.shiftPrice)).lte(2.4);
-      expect(fromSqrtPrice(result.shiftPrice)).gte(2.3999);      
+      expect(fromSqrtPrice(result.shiftPrice)).gte(2.3997);      
       expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.290994);
-      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.29095);
-      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.02540334);
-      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.02538);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.2909);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.02523302);
+      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.025233);
       expect(result.shiftSeed.toNumber()).to.eq(2000 + 190);
 
       result = await curve.testAssimilate(1250, toSqrtPrice(0.64), 
          2000, 7500, toFixedGrowth(0.25), true);      
       expect(fromSqrtPrice(result.shiftPrice)).gte(0.64 / 1.1);
       expect(fromSqrtPrice(result.shiftPrice)).lte(0.64 / 1.099);      
-      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.311011);
-      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.3109);
-      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.037229);
-      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.03715);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.31088999);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.31088);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.03702629);
+      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.037026);
       expect(result.shiftSeed.toNumber()).to.lte(2000 + 279);
       expect(result.shiftSeed.toNumber()).to.lte(2000 + 278);
    })

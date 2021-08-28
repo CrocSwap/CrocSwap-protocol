@@ -74,20 +74,15 @@ library CurveRoll {
                              CurveMath.SwapAccum memory swap) private pure {
         (uint128 baseShave, uint128 quoteShave) = sizePrecisionBuffer(curve, swap);
         
-        if (isFlowInput(swap.cntx_)) {
-            uint256 flowShave = swap.cntx_.inBaseQty_ ? baseShave : quoteShave;
-            // In very rare corner cases, the swap may demand an economically
-            // meaningless amount more token wei than what the user specified. They can
-            // always reject this condition at the time of settlement callback.
-            swap.qtyLeft_ = swap.qtyLeft_ > flowShave ?
-                swap.qtyLeft_ - flowShave : 0;
-        }
+        uint256 flowShave = swap.cntx_.inBaseQty_ ? baseShave : quoteShave;
+        // In very rare corner cases, the swap may demand an economically
+        // meaningless amount more token wei than what the user specified. They can
+        // always reject this condition at the time of settlement callback.
+        swap.qtyLeft_ = swap.qtyLeft_ > flowShave ?
+            swap.qtyLeft_ - flowShave : 0;
         
-        if (swap.paidQuote_ > 0) {
-            swap.paidQuote_ = swap.paidQuote_ + quoteShave;
-        } else {
-            swap.paidBase_ = swap.paidBase_ + baseShave;
-        }
+        swap.paidQuote_ = swap.paidQuote_ + quoteShave;
+        swap.paidBase_ = swap.paidBase_ + baseShave;
     }
 
     /* @dev Calculates a conservative upper bound of token bound to guarantee collateral
@@ -138,19 +133,18 @@ library CurveRoll {
         uint256 nextReserve = flow > 0 ? reserve.add(uint256(flow)) :
             reserve.sub(uint256(-flow));
 
-        uint256 curvePrec = cntx.inBaseQty_ ?
+        uint256 curvePrice = cntx.inBaseQty_ ?
             FullMath.mulDivTrapZero(price, nextReserve, reserve) :
             FullMath.mulDivTrapZero(price, reserve, nextReserve);
-
-        // To be conservative, round the curve precision to the inside of the price
-        // move. That prevents us from inadvertantly crossing a fixed limit price.
-        uint160 curvePrice = curvePrec < price ?
-            uint160(curvePrec) + 1 :
-            uint160(curvePrec);
-        
+                
         if (curvePrice > TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO; }
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
-        return curvePrice;
+        
+        // To be conservative, round the curve precision to the inside of the price
+        // move. That prevents us from inadvertantly crossing a fixed limit price.
+        return curvePrice < price ?
+            uint160(curvePrice) + 1 :
+            uint160(curvePrice);
     }
 
     function signFlow (uint256 flow, CurveMath.SwapFrame memory cntx)
