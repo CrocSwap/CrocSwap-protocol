@@ -76,6 +76,9 @@ contract PositionRegistrar {
         uint256 oldMileage = pos.feeMileage_;
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
+        // Technically feeMileage should never be less than oldMileage, but we need to
+        // handle it because it can happen due to fixed-point effects. (See blendMileage()
+        // function.)
         if (feeMileage > oldMileage) {
             rewards = feeMileage.sub(oldMileage);
             // No need to adjust the position's mileage checkpoint. Rewards are in per
@@ -115,7 +118,15 @@ contract PositionRegistrar {
         }
         pos.liquidity_ = LiquidityMath.addDelta(liq, liqAdd);
     }
-    
+
+    /* @dev To be conservative in terms of rewards/collateral, this function always
+     *   rounds up to 2 units of precision. We need mileage rounded up, so reward payouts
+     *   are rounded down. However this could lead to the technically "impossible" 
+     *   situation where the mileage on a subsequent rewards burn is smaller than the
+     *   blended mileage in the liquidity postion. Technically this shouldn't happen 
+     *   because mileage only increases through time. However this is a non-consequential
+     *   failure. burnPosLiq() just treats it as a zero reward situation, and the staker
+     *   loses an economically non-meaningful amount of rewards on the burn. */
     function blendMileage (uint256 mileageX, uint128 liqX, uint256 mileageY, uint liqY)
         private pure returns (uint256) {
         if (liqY == 0) { return mileageX; }
