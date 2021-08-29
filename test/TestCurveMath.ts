@@ -186,7 +186,7 @@ describe('CurveMath', () => {
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, false, false);
       expect(result.qtyLeft).to.equal(0);
       expect(fromSqrtPrice(result.rollPrice)).to.equal(1.0);
-      expect(result.paidBase).to.equal(-4998 + COLLATERAL_BUFFER);
+      expect(result.paidBase).to.equal(-4999 + COLLATERAL_BUFFER);
       expect(result.paidQuote).to.equal(3333);
    })
 
