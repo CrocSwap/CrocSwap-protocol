@@ -112,7 +112,8 @@ library SwapCurve {
         bool insideLimit = swap.cntx_.isBuy_ ?
             curve.priceRoot_ < limitPrice :
             curve.priceRoot_ > limitPrice;
-        require(swap.qtyLeft_ > 0 && insideLimit, "RB");
+        bool hasRemaining = swap.qtyLeft_ > 0;
+        require(hasRemaining != insideLimit, "RB");
     }
 
     /* @notice Determines an effective limit price given the combination of swap-
