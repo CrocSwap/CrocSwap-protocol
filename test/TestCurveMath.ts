@@ -160,32 +160,34 @@ describe('CurveMath', () => {
       expect(vigFour[1]).to.equal(125);
    })
 
-   const COLLATERAL_BUFFER = 8; // Standard buffer used in current code
+   const COLLATERAL_BUFFER = 4; // Standard buffer used in current code
 
    it("roll liq", async() => {
       let result = await curve.testRoll(1000, toSqrtPrice(2.25), 10000, true, true);
       expect(result.qtyLeft).to.equal(0);
       expect(result.rollPrice).to.equal(toSqrtPrice(2.56));
-      expect(result.paidBase).to.equal(1000 + COLLATERAL_BUFFER);
-      expect(result.paidQuote).to.equal(-414 + COLLATERAL_BUFFER);
+      expect(result.paidBase).to.equal(1000);
+      expect(result.paidQuote).to.equal(-416 + COLLATERAL_BUFFER);
 
       result = await curve.testRoll(3000, toSqrtPrice(2.25), 10000, false, true);
       expect(result.qtyLeft).to.equal(0);
-      expect(fromSqrtPrice(result.rollPrice)).to.eq(1.44);
-      expect(result.paidBase).to.equal(-2999 + COLLATERAL_BUFFER);
-      expect(result.paidQuote).to.equal(1668 + COLLATERAL_BUFFER);
+      expect(fromSqrtPrice(result.rollPrice)).to.gte(1.4399999);
+      expect(fromSqrtPrice(result.rollPrice)).to.lte(1.44);
+      expect(result.paidBase).to.equal(-3000);
+      expect(result.paidQuote).to.equal(1666 + COLLATERAL_BUFFER);
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, true, false);
       expect(result.qtyLeft).to.equal(0);
-      expect(result.rollPrice).to.equal(toSqrtPrice(9.0));
-      expect(result.paidBase).to.equal(15001 + COLLATERAL_BUFFER);
-      expect(result.paidQuote).to.equal(-3332 + COLLATERAL_BUFFER);
+      expect(fromSqrtPrice(result.rollPrice)).to.gte(8.99999);
+      expect(fromSqrtPrice(result.rollPrice)).to.lte(9.9);
+      expect(result.paidBase).to.equal(15000 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(-3333);
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, false, false);
       expect(result.qtyLeft).to.equal(0);
       expect(fromSqrtPrice(result.rollPrice)).to.equal(1.0);
       expect(result.paidBase).to.equal(-4998 + COLLATERAL_BUFFER);
-      expect(result.paidQuote).to.equal(3333 + COLLATERAL_BUFFER);
+      expect(result.paidQuote).to.equal(3333);
    })
 
    it("roll liq infinity", async() => {
@@ -196,11 +198,11 @@ describe('CurveMath', () => {
       expect(resultOne.qtyLeft).to.equal(0);
       expect(resultOne.rollPrice).to.equal(maxSqrtPrice());
       expect(resultOne.paidBase).to.gt(infFloor);
-      expect(resultOne.paidQuote).to.equal(-6664 + COLLATERAL_BUFFER);
+      expect(resultOne.paidQuote).to.equal(-6665 + COLLATERAL_BUFFER);
 
       expect(resultTwo.qtyLeft).to.equal(0);
       expect(resultTwo.rollPrice).to.equal(minSqrtPrice());
-      expect(resultTwo.paidBase).to.equal(-14998 + COLLATERAL_BUFFER);
+      expect(resultTwo.paidBase).to.equal(-14999 + COLLATERAL_BUFFER);
       expect(resultTwo.paidQuote).to.gt(infFloor);
    })
 
