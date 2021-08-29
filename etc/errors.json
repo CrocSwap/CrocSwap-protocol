@@ -12,6 +12,7 @@
     "O": "Ticks out of order",
     "Q": "Insufficient quote token",
     "R": "Price outside tick range",
+    "RB", "Swap Curve Boundary Crash",
     "S": "Mezzanine spill broken",
     "T": "Price below max tick",
     "V": "Insufficient liquidity in level",

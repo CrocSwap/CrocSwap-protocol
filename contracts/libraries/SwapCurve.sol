@@ -64,15 +64,6 @@ library SwapCurve {
         swapOverCurve(curve, accum, limitPrice);
     }
 
-    /* @notice Bump the swap flows by 1 wei in favor of the pool to conservatively
-     *    guard against any under-collateralization risk due to rounding effects
-     *    in the swap calculations. */
-    function padSwapFlows (CurveMath.SwapAccum memory swap) internal pure {
-        swap.paidBase_ += 1;
-        swap.paidQuote_ += 1;
-        swap.paidProto_ -= 1;
-    }
-
     /* @notice Calculates the exchange fee given a swap directive and limitPrice. Note 
      *   this assumes the curve is constant-product without liquidity bumps through the
      *   whole range. Don't use this function if you're unable to guarantee that the AMM
@@ -100,13 +91,28 @@ library SwapCurve {
         uint256 realFlows = curve.calcLimitFlows(accum, limitPrice);
         bool hitsLimit = realFlows < accum.qtyLeft_;
 
-        curve.rollLiq(realFlows, accum);
         if (hitsLimit) {
-            // In the limit price, the flow will slightly undershoot the price...
-            // It's safe to pin the price directly, because rollLiq() has over-
-            // collateralized for loss of precision in the realFlows calculation.
-            curve.priceRoot_ = limitPrice;
+            curve.rollPrice(limitPrice, accum);
+        } else {
+            curve.rollFlow(realFlows, accum);
         }
+        assertEndStable(curve, accum, limitPrice);
+    }
+    
+    /* @dev In rare corner cases, swap can result in a corrupt end state. This occurs
+     *   when the swap flow lands within a wei or two of the limit price boundary. The
+     *   corrupt condition can be reached by multiple paths, but always results in 
+     *   simultaneously hitting the limit and exactly exhausting the swap's liquidity.
+     *   The problem is upstream logic will think the swap is complete, fail to knock in
+     *   new liquidity and corrupt the state of the book. Since this is so astronomically
+     *   rare, just crash the transaction. */
+    function assertEndStable (CurveMath.CurveState memory curve,
+                              CurveMath.SwapAccum memory swap,
+                              uint160 limitPrice) pure private {
+        bool insideLimit = swap.cntx_.isBuy_ ?
+            curve.priceRoot_ < limitPrice :
+            curve.priceRoot_ > limitPrice;
+        require(swap.qtyLeft_ > 0 && insideLimit, "RB");
     }
 
     /* @notice Determines an effective limit price given the combination of swap-

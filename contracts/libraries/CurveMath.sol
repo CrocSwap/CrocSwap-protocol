@@ -191,8 +191,8 @@ library CurveMath {
                              uint160 limitPrice) private pure returns (uint256) {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
-            deltaPriceBase(liq, curve.priceRoot_, limitPrice) :
-            deltaPriceQuote(liq, limitPrice, curve.priceRoot_);
+            deltaBase(liq, curve.priceRoot_, limitPrice) :
+            deltaQuote(liq, limitPrice, curve.priceRoot_);
     }
 
     /* @notice Calculates the change to base token reserves associated with a price
@@ -201,7 +201,7 @@ library CurveMath {
      * @dev Result is a tight lower-bound for fixed-point precision. Meaning if the
      *   the returned limit is X, then X will be inside the limit price and (X+1)
      *   will be outside the limit price. */
-    function deltaPriceBase (uint128 liq, uint160 priceX, uint160 priceY)
+    function deltaBase (uint128 liq, uint160 priceX, uint160 priceY)
         internal pure returns (uint256) {
         uint160 priceDelta = priceX > priceY ?
             priceX - priceY : priceY - priceX;
@@ -214,7 +214,7 @@ library CurveMath {
      * @dev Result is almost always within a fixed-point precision unit from the true
      *   real value. However in certain very rare cases, the result could be up to 2
      *   wei below the true real value. Caller should account for this upstream. */
-    function deltaPriceQuote (uint128 liq, uint160 price, uint160 limitPrice)
+    function deltaQuote (uint128 liq, uint160 price, uint160 limitPrice)
         internal pure returns (uint256) {
         uint160 priceDelta = limitPrice > price ?
             limitPrice - price : price - limitPrice;
@@ -289,32 +289,6 @@ library CurveMath {
             FullMath.mulDiv(liq, FixedPoint96.Q96, price);
     }
 
-    /* @notice Calculates the total tokens that would have to be swapped to move
-     *    a constant product AMM curve from one price to another.
-     *
-     * @dev Note that this assumes the curve is liquidity stable across the entire
-     *   range. It's the callers responsibility to check whether the price range
-     *   would cross a concentrated liquidity tick bump, which would invalidate
-     *   the result.
-     *
-     * @param liq - The total liquidity (in sqrt(X*Y)) active in the curve. 
-     * @param startPrice - The current active price of the curve.
-     * @param targetPrice - The assumed ending price of the curve.
-     * @param inBaseQty - Whether to represent the result in base or quote tokens.
-     *
-     * @return The flow of tokens that would have to be swapped to move the liquidity
-     *    curve to the targetPrice. Positive implies pools receives tokens, and negative
-     *    that the pool would pay tokens. Rounding always occurs in favor of the pool. */
-    function deltaFlow (uint128 liq, uint160 startPrice, uint160 targetPrice,
-                        bool inBaseQty)
-        internal pure returns (int256) {
-        uint256 initReserve = reserveAtPrice(liq, startPrice, inBaseQty);
-        uint256 endReserve = reserveAtPrice(liq, targetPrice, inBaseQty);
-        return (initReserve > endReserve) ?
-            -int256(initReserve - endReserve - 1) : // Round pool's favor
-            int256(endReserve - initReserve + 1);
-    }
-
     /* @dev The fixed point arithmetic results in output that's a close approximation
      *   to the true real value, but could be skewed in either direction. The output
      *   from this function should not be consumed in any context that requires strict
@@ -331,6 +305,13 @@ library CurveMath {
         uint256 endInvert = FullMath.mulDivTrapZero(liq, liq, endReserve);
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
+    }
+
+    /* @notice Returns true if the swap quantity is denominated by the input token-- the
+     *   side being paid to the pool. I.e. base token if user is sending base and 
+     *   receiving quote token. */
+    function isFlowInput (CurveMath.SwapFrame memory cntx) internal pure returns (bool) {
+        return cntx.inBaseQty_ == cntx.isBuy_;
     }
 
     /* @notice Computes the amount of token over-collateralization needed to buffer any 

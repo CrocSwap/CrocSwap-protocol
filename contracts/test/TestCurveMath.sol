@@ -131,7 +131,7 @@ contract TestCurveMath {
                              int256 paidBase, int256 paidQuote) {
         CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveRoll.rollLiq(curve, flow, swap);
+        CurveRoll.rollFlow(curve, flow, swap);
         (rollPrice, qtyLeft, paidBase, paidQuote) =
             (curve.priceRoot_, swap.qtyLeft_, swap.paidBase_, swap.paidQuote_);
     }

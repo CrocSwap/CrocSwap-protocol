@@ -199,12 +199,12 @@ contract LiquidityCurve {
             translateTickRange(bidTick, askTick);
 
         if (tick < bidTick) {
-            quoteDebit = liquidity.deltaPriceQuote(bidPrice, askPrice);
+            quoteDebit = liquidity.deltaQuote(bidPrice, askPrice);
         } else if (tick > askTick) {
-            baseDebit = liquidity.deltaPriceBase(bidPrice, askPrice);
+            baseDebit = liquidity.deltaBase(bidPrice, askPrice);
         } else {
-            quoteDebit = liquidity.deltaPriceQuote(price, askPrice);
-            baseDebit = liquidity.deltaPriceBase(bidPrice, price);
+            quoteDebit = liquidity.deltaQuote(price, askPrice);
+            baseDebit = liquidity.deltaBase(bidPrice, price);
         }
     }
     
