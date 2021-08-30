@@ -16,13 +16,15 @@ describe('LiquidityCurve', () => {
       curve = (await factory.deploy()) as TestLiquidityCurve;
    })
 
+   const COLLATERAL_ROUND = 4
+
    it("liquidity receive ambient", async () => {
       await curve.fixCurve(toSqrtPrice(2.25), 6000, 10000);
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
       await curve.testLiqRecAmb(1500);
       
-      expect(await curve.baseFlow()).to.equal(3938);
-      expect(await curve.quoteFlow()).to.equal(1751);
+      expect(await curve.baseFlow()).to.equal(3937 + COLLATERAL_ROUND);
+      expect(await curve.quoteFlow()).to.equal(1750 + COLLATERAL_ROUND);
       expect((await curve.pullTotalLiq()).toNumber()).to.lte(23125);
 
       let state = await curve.pullCurve();
@@ -55,8 +57,8 @@ describe('LiquidityCurve', () => {
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
       await curve.testLiqRecConc(1500, toSqrtPrice(1.96), toSqrtPrice(2.89));
       
-      expect(await curve.baseFlow()).to.equal(151);
-      expect(await curve.quoteFlow()).to.equal(118);
+      expect(await curve.baseFlow()).to.equal(150 + COLLATERAL_ROUND);
+      expect(await curve.quoteFlow()).to.equal(117 + COLLATERAL_ROUND);
       expect((await curve.pullTotalLiq()).toNumber()).to.lte(22000);
 
       let state = await curve.pullCurve();
@@ -105,7 +107,7 @@ describe('LiquidityCurve', () => {
       await curve.testLiqPayConc(1500, toSqrtPrice(4), toSqrtPrice(6.25), 0);
       
       expect(await curve.baseFlow()).to.equal(0);
-      expect(await curve.quoteFlow()).to.equal(150);
+      expect(await curve.quoteFlow()).to.equal(149);
       expect((await curve.pullTotalLiq()).toNumber()).to.lte(20500);
 
       let state = await curve.pullCurve();
@@ -121,7 +123,7 @@ describe('LiquidityCurve', () => {
          toFixedGrowth(0.8));
       
       expect(await curve.baseFlow()).to.equal(3147);
-      expect(await curve.quoteFlow()).to.equal(150 + 1398);
+      expect(await curve.quoteFlow()).to.equal(149 + 1398);
       expect((await curve.pullTotalLiq()).toNumber()).to.lte(19400);
 
       let state = await curve.pullCurve();

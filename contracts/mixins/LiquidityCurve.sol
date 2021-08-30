@@ -129,9 +129,11 @@ contract LiquidityCurve {
      *                  liquidity range.
      *
      * @return base - The amount of base token collateral that can be paid out following
-     *                the removal of the liquidity.
+     *                the removal of the liquidity. Always rounded down to favor 
+     *                collateral stability.
      * @return quote - The amount of base token collateral that can be paid out following
-     *                the removal of the liquidity. */
+     *                the removal of the liquidity. Always rounded down to favor 
+     *                collateral stability. */
     function liquidityPayable (uint128 liquidity, uint256 rewardRate,
                                int24 lowerTick, int24 upperTick)
         internal returns (uint256 base, uint256 quote) {
@@ -146,7 +148,6 @@ contract LiquidityCurve {
             if (rewards > 0) {
                 (uint256 baseRewards, uint256 quoteRewards) =
                     liquidityPayable(rewards.toUint128());
-                (baseRewards, quoteRewards) = payConservative(baseRewards, quoteRewards);
                 base += baseRewards;
                 quote += quoteRewards;
             }
@@ -168,7 +169,13 @@ contract LiquidityCurve {
      * @param seeds The number of ambient seeds being added. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
-     *              rate on the curve. (See CurveMath.sol.) */
+     *              rate on the curve. (See CurveMath.sol.) 
+     * @return base - The amount of base token collateral that can be paid out following
+     *                the removal of the liquidity. Always rounded down to favor 
+     *                collateral stability.
+     * @return quote - The amount of base token collateral that can be paid out following
+     *                the removal of the liquidity. Always rounded down to favor 
+     *                collateral stability. */
     function liquidityPayable (uint128 seeds)
         internal returns (uint256 base, uint256 quote) {
         (base, quote) = liquidityFlows(seeds);
@@ -191,6 +198,9 @@ contract LiquidityCurve {
     }
     
 
+    /* @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
+     *   flows. Safe to pay this flow, but when pool is receiving caller must make sure
+     *   to round up for collateral safety. */
     function liquidityFlows (uint128 liquidity,
                              int24 bidTick, int24 askTick)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
@@ -208,6 +218,10 @@ contract LiquidityCurve {
         }
     }
     
+    /* @dev Uses fixed-point math that rounds down at each division. Because there are
+     *   divisions, max precision loss is under 2 wei. Safe to pay this flow, but when
+     *   when pool is receiving, caller must make sure to round up for collateral 
+     *   safety. */
     function liquidityFlows (uint128 seeds)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
         uint160 price  = curve_.priceRoot_;
@@ -275,11 +289,5 @@ contract LiquidityCurve {
         private pure returns (uint256, uint256) {
         return (liqBase > 0 ? liqBase + TOKEN_ROUND : 0,
                 liqQuote > 0 ? liqQuote + TOKEN_ROUND : 0);
-    }
-
-    function payConservative (uint256 liqBase, uint256 liqQuote)
-        private pure returns (uint256, uint256) {
-        return (liqBase > 0 ? liqBase - TOKEN_ROUND : 0,
-                liqQuote > 0 ? liqQuote - TOKEN_ROUND : 0);
     }
 }
