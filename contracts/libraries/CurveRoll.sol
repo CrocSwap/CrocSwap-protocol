@@ -47,7 +47,8 @@ library CurveRoll {
     function rollFlow (CurveMath.CurveState memory curve, uint256 flow,
                        CurveMath.SwapAccum memory swap) internal pure {        
         (uint256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap);
-        setCurvePos(curve, swap, nextPrice, flow, counterFlow);
+        (int256 paidFlow, int256 paidCounter) = signFlow(flow, counterFlow, swap.cntx_);
+        setCurvePos(curve, swap, nextPrice, paidFlow, paidCounter);
     }
 
     /* @notice Moves a curve to a pre-determined price target, and adjusts the swap flows
@@ -70,20 +71,29 @@ library CurveRoll {
     function rollPrice (CurveMath.CurveState memory curve, uint160 price,
                         CurveMath.SwapAccum memory swap) internal pure {
         (uint256 flow, uint256 counterFlow) = deriveDemand(curve, price, swap);
-        setCurvePos(curve, swap, price, flow, counterFlow);
+        (int256 paidFlow, int256 paidCounter) = signFixed(flow, counterFlow, swap.cntx_);
+        setCurvePos(curve, swap, price, paidFlow, paidCounter);
     }
 
     function setCurvePos (CurveMath.CurveState memory curve, 
                           CurveMath.SwapAccum memory swap, uint160 price,
-                          uint256 flow, uint256 counterFlow) private pure {
-        (int256 paidFlow, int256 paidCounter) = signFlow(flow, counterFlow, swap.cntx_);
-        swap.qtyLeft_ = flow >= swap.qtyLeft_ ? 0 :
-            swap.qtyLeft_.sub(flow);
+                          int256 paidFlow, int256 paidCounter) private pure {
+        uint256 spent = flowToSpent(paidFlow, swap.cntx_);
+        swap.qtyLeft_ = spent >= swap.qtyLeft_ ? 0 :
+            swap.qtyLeft_.sub(spent);
         swap.paidBase_ = swap.paidBase_.add
             (swap.cntx_.inBaseQty_ ? paidFlow : paidCounter);
         swap.paidQuote_ = swap.paidQuote_.add
             (swap.cntx_.inBaseQty_ ? paidCounter : paidFlow);        
         curve.priceRoot_ = price;
+    }
+
+    /* @notice Convert a signed paid flow to a decrement to apply to swap qty left. */
+    function flowToSpent (int256 paidFlow, CurveMath.SwapFrame memory cntx)
+        private pure returns (uint256) {
+        int256 spent = cntx.isFlowInput() ? paidFlow : -paidFlow;
+        if (spent < 0) { return 0; }
+        return uint256(spent);
     }
 
     /* @notice Calculates the flow and counterflow associated with moving the constant
@@ -157,11 +167,36 @@ library CurveRoll {
     function priceRoundsUp (CurveMath.SwapFrame memory cntx) private pure returns (bool) {
         return cntx.isBuy_ != cntx.isFlowInput();
     }
-    
+
+    // Max round precision loss is 2 wei, but a 4 wei cushion provides extra margin
+    // and is economically meaningless.
+    int256 constant ROUND_PRECISION_WEI = 4;
+
     /* @notice Correctly assigns the signed direction to the unsigned flow and counter
-     *   flow magnitudes that were previously computed. Positive sign implies the flow
-     *   is being received by the pool, negative that it's being received by the user. */
+     *   flow magnitudes that were previously computed for a fixed flow swap. Positive 
+     *   sign implies the flow is being received by the pool, negative that it's being 
+     *   received by the user. */
     function signFlow (uint256 flowMagn, uint256 counterMagn,
+                        CurveMath.SwapFrame memory cntx)
+        private pure returns (int256 flow, int256 counter) {
+        (flow, counter) = signMagn(flowMagn, counterMagn, cntx);
+        // Conservatively round directional counterflow in the direction of the pool's
+        // collateral. Don't round swap flow because that's a fixed target. 
+        counter = counter + ROUND_PRECISION_WEI;
+    }
+
+    /* @notice Same as signFixed, but used for the flow from a price target swap leg. */
+    function signFixed (uint256 flowMagn, uint256 counterMagn,
+                        CurveMath.SwapFrame memory cntx)
+        private pure returns (int256 flow, int256 counter) {
+        (flow, counter) = signMagn(flowMagn, counterMagn, cntx);
+        // In a price target, bothsides of the flow are floating, and have to be rounded
+        // in pool's favor to conservatively accomodate the price precision.
+        flow = flow + ROUND_PRECISION_WEI;
+        counter = counter + ROUND_PRECISION_WEI;
+    }
+    
+    function signMagn (uint256 flowMagn, uint256 counterMagn,
                        CurveMath.SwapFrame memory cntx)
         private pure returns (int256 flow, int256 counter) {
         if (cntx.isFlowInput()) {
@@ -170,11 +205,6 @@ library CurveRoll {
             (flow, counter) = (-(flowMagn.toInt256()), counterMagn.toInt256());
         }
         
-        // Max round precision loss is 2 wei, but a 4 wei cushion provides extra margin
-        // and is economically meaningless.
-        int256 ROUND_PRECISION_WEI = 4;
-        // Conservatively round directional counterflow in the direction of the pool's
-        // collateral. Don't round swap flow because that's a fixed target. 
-        counter = counter + ROUND_PRECISION_WEI;
+        
     }
 }
