@@ -53,29 +53,31 @@ describe('Pool', () => {
        await quoteToken.deposit(testZero.address, 100000000); 
     })
 
+    const MINT_BUFFER = 3;
+    const SWAP_BUFFER = 4;
 
     it("mint collection", async() => {
        await pool.initialize(toSqrtPrice(1.5))
        await test.testMint(-100, 100, 10000);
        expect(await test.snapQuoteOwed()).to.equal(0)
        expect(await test.snapQuoteMint()).to.equal(0)
-       expect(await test.snapBaseOwed()).to.equal(100)
-       expect(await test.snapBaseMint()).to.equal(100)
+       expect(await test.snapBaseOwed()).to.equal(100 + MINT_BUFFER)
+       expect(await test.snapBaseMint()).to.equal(100 + MINT_BUFFER)
 
        await test.testMint(5000, 6000, 10000);
-       expect(await test.snapQuoteOwed()).to.equal(380)
-       expect(await test.snapQuoteMint()).to.equal(380)
+       expect(await test.snapQuoteOwed()).to.equal(380 + MINT_BUFFER)
+       expect(await test.snapQuoteMint()).to.equal(380 + MINT_BUFFER)
        expect(await test.snapBaseOwed()).to.equal(0)
        expect(await test.snapBaseMint()).to.equal(0)
 
        await test.testMint(3000, 5000, 10000);
-       expect(await test.snapQuoteOwed()).to.equal(377)
-       expect(await test.snapQuoteMint()).to.equal(377)
-       expect(await test.snapBaseOwed()).to.equal(630)
-       expect(await test.snapBaseMint()).to.equal(630)
+       expect(await test.snapQuoteOwed()).to.equal(377 + MINT_BUFFER)
+       expect(await test.snapQuoteMint()).to.equal(377 + MINT_BUFFER)
+       expect(await test.snapBaseOwed()).to.equal(630 + MINT_BUFFER)
+       expect(await test.snapBaseMint()).to.equal(630 + MINT_BUFFER)
 
-       expect(await baseToken.balanceOf(pool.address)).to.equal(730)
-       expect(await quoteToken.balanceOf(pool.address)).to.equal(757)
+       expect(await baseToken.balanceOf(pool.address)).to.equal(730 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf(pool.address)).to.equal(757 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
@@ -97,10 +99,10 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
         
-        const swapFlow = 6612
+        const swapFlow = 6602
         const feeCost = 148
         const liqBonus = 2
-        const liqGrowth = 89
+        const liqGrowth = 88
         const counterFlow = -(swapFlow - feeCost + liqBonus)
 
         await test.testSwap(false, 10000, toSqrtPrice(2.0))
@@ -114,8 +116,8 @@ describe('Pool', () => {
         expect((await baseToken.balanceOf(pool.address)).sub(startBase)).to.equal(10000)
 
         let price = fromSqrtPrice((await pool.slot0()).sqrtPriceX96)
-        expect(price).to.gte(1.524319)
-        expect(price).to.lte(1.524321)
+        expect(price).to.gte(1.524314)
+        expect(price).to.lte(1.524315)
     })
     
 
@@ -129,10 +131,10 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(false, 10000, toSqrtPrice(2.0))
 
-        const swapFlow = 6612
+        const swapFlow = 6603
         const feeCost = 148
         const liqBonus = 1
-        const liqGrowth = 74
+        const liqGrowth = 73
         const counterFlow = -(swapFlow - feeCost + liqBonus)
 
         expect(await test.snapBaseSwap()).to.equal(10000)
@@ -155,9 +157,9 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
         
-        const swapFlow = 6722
+        const swapFlow = 6726
         const feeCost = 151
-        const liqGrowth = 92
+        const liqGrowth = 91
         const counterFlow = (swapFlow + feeCost)
 
         await test.testSwap(true, -10000, toSqrtPrice(1.25))
@@ -183,10 +185,10 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
 
-        const swapFlow = 6722
+        const swapFlow = 6725
         const feeCost = 151
         const liqBonus = 1
-        const liqGrowth = 77
+        const liqGrowth = 76
         const counterFlow = (swapFlow + feeCost + liqBonus)
 
         await test.testSwap(true, -10000, toSqrtPrice(1.25))
@@ -242,10 +244,10 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
         
-        const swapFlow = 15188
+        const swapFlow = 15201
         const feeCost = 341
         const liqBonus = 3
-        const liqGrowth = 138
+        const liqGrowth = 137
         const counterFlow = (swapFlow + feeCost + liqBonus)
 
         await test.testSwap(false, -10000, toSqrtPrice(2.0))
@@ -259,8 +261,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf(pool.address)).sub(startQuote)).to.equal(-10000)
 
         let price = fromSqrtPrice((await pool.slot0()).sqrtPriceX96)
-        expect(price).to.gte(1.53785)
-        expect(price).to.lte(1.53786)
+        expect(price).to.gte(1.53787)
+        expect(price).to.lte(1.53788)
     })
 
     it("swap output exact proto fee", async() => {
@@ -271,10 +273,10 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
         
-        const swapFlow = 15188
+        const swapFlow = 15202
         const feeCost = 341
         const liqBonus = 2
-        const liqGrowth = 115
+        const liqGrowth = 114
         const counterFlow = (swapFlow + feeCost + liqBonus)
 
         await test.testSwap(false, -10000, toSqrtPrice(2.0))
@@ -298,8 +300,8 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf(pool.address)
         let startBase = await baseToken.balanceOf(pool.address)
         
-        let limitFlow = 7663
-        let counterFlow = -4333
+        let limitFlow = 7668
+        let counterFlow = -4324
         let liqGrowth = 58
 
         await test.testSwap(false, 100000, toSqrtPrice(2.0))
@@ -327,9 +329,9 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(false, 100000, toSqrtPrice(2.0))
 
-        let limitFlow = 9067
-        let counterFlow = -5218
-        let liqGrowth = 69
+        let limitFlow = 9082
+        let counterFlow = -5185
+        let liqGrowth = 65
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -355,9 +357,9 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(true, 100000, toSqrtPrice(1.25))
 
-        let limitFlow = -5456
-        let counterFlow = 4018
-        let liqGrowth = 47
+        let limitFlow = -5433
+        let counterFlow = 4037
+        let liqGrowth = 45
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -385,9 +387,9 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(true, 100000, toSqrtPrice(1.25))
 
-        let limitFlow = -5447
-        let counterFlow = 4012
-        let liqGrowth = 40
+        let limitFlow = -5424
+        let counterFlow = 4030
+        let liqGrowth = 37
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -410,7 +412,7 @@ describe('Pool', () => {
         await test.testMint(-5000, 8000, 40000); 
         await test.testMint(3800, 4300, 30000); 
 
-        const liqGrowth = 5
+        const liqGrowth = 3
 
         // 1.525 is just below the 4300th tick... Important to avoid stopping at an empty
         // spill tick, otherwise the behavior isn't tested.
@@ -433,8 +435,8 @@ describe('Pool', () => {
         await test.testSwap(false, 10000000, maxSqrtPrice())
 
         let limitFlow = 10000000
-        let counterFlow = -669
-        let liqGrowth = 6
+        let counterFlow = -625
+        let liqGrowth = 5
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -556,15 +558,15 @@ describe('Pool', () => {
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 100000)
         // The formula below backs out the rewards portion of the burn
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(16)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(24)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(15)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(23)
 
         // Subsequent burns should collect rewards at same rate.
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 100000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(16)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(24)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(15)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(23)
 
         // Subsequent burns should stack upon previously unredeemed fraction of the rewards. I.e. not reset
         // rewards for the unburned liquidity.
@@ -573,8 +575,8 @@ describe('Pool', () => {
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 100000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(36)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(55)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(35)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(53)
     })
 
 
@@ -596,17 +598,17 @@ describe('Pool', () => {
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(48)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(72)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(46)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(69)
         
         // Minting on top of previously rewarded liquidity should require the same collateral commitment
         // (Roughtly accounting for minor differences in price...)
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testMint(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(-collateralQuote)).to.gte(-1)
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(-collateralQuote)).to.gte(-4)
         expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(-collateralQuote)).to.lte(0)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(-collateralBase)).to.gte(-1)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(-collateralBase)).to.gte(-4)
         expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(-collateralBase)).to.lte(0)
 
         // Burn should collect rewards at the blended rate of the previously stacked liquidity
@@ -614,22 +616,22 @@ describe('Pool', () => {
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 250000)
         expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(31)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(47)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(46)
 
         // Adding more liquidity at higher rewards mark should blend down the rewards rate per unit burned 
         await test.testMint(-10000, 25000, 250000)
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(21)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(31)        
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(20)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(30)        
 
         // Rewards rate on subsequent burns should remain the at the same blended rate
         startBase = await baseToken.balanceOf(test.address)
         startQuote = await quoteToken.balanceOf(test.address)
         await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(21)
-        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(31)        
+        expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(20)
+        expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(30)        
     })
 
 
