@@ -17,6 +17,8 @@ describe('Swap Curve', () => {
       curve = (await factory.deploy()) as TestLiquidityCurve;
    })
 
+   const COLLATERAL_ROUND = 4;
+
    it("swap full qty", async() => {
       let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
       let swap = { qtyLeft_: 1000000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
@@ -27,7 +29,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-430446);
+      expect(accum.paidQuote_.toNumber()).to.equal(-430446 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(0);
 
       let state = await curve.pullCurve();
@@ -49,18 +51,18 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-409602);
+      expect(accum.paidQuote_.toNumber()).to.equal(-409602 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(0);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.39490)
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.39495)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6004494)
+      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6004493)
       expect(state.liq_.concentrated_.toNumber()).to.equal(10000000);
       expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.gte(0.75 + 0.001377);
       expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.001378);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.0004495);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.0004494);
+      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.0004492);
+      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.0004493);
    })
 
    it("swap fee+proto full qty", async() => {
@@ -73,18 +75,18 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-409467);
+      expect(accum.paidQuote_.toNumber()).to.equal(-409466 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(4304);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.3957)
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.3958)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6003596)
+      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6003595)
       expect(state.liq_.concentrated_.toNumber()).to.equal(10000000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.gte(0.75 + 0.00110202);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.00110203);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.00035962);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.00035961);
+      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.00110196);
+      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.00110197);
+      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.00035950);
+      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.00035949);
    })
 
    it("swap paid cumulative", async() => {
@@ -97,7 +99,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1300000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-509467);
+      expect(accum.paidQuote_.toNumber()).to.equal(-509466 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(14304);
    })
 
@@ -111,7 +113,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(-1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(459384);
+      expect(accum.paidQuote_.toNumber()).to.equal(459383 + COLLATERAL_ROUND);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.106039)
@@ -128,7 +130,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(-1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(482932);
+      expect(accum.paidQuote_.toNumber()).to.equal(482931 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(5742);
 
       let state = await curve.pullCurve();
@@ -145,7 +147,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(2427631);
+      expect(accum.paidBase_.toNumber()).to.equal(2427631 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(-1000000);
 
       let state = await curve.pullCurve();
@@ -162,7 +164,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(2556199);
+      expect(accum.paidBase_.toNumber()).to.equal(2556199 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(-1000000);
       expect(accum.paidProto_.toNumber()).to.equal(30345);
 
@@ -180,7 +182,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(-2096592);
+      expect(accum.paidBase_.toNumber()).to.equal(-2096591 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(1000000);
 
       let state = await curve.pullCurve();
@@ -197,7 +199,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(-1997123);
+      expect(accum.paidBase_.toNumber()).to.equal(-1997122 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(1000000);
       expect(accum.paidProto_.toNumber()).to.equal(26207);
 
@@ -218,9 +220,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.4023)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(975852);
-      expect(accum.paidBase_.toNumber()).to.equal(1024148);
-      expect(accum.paidQuote_.toNumber()).to.equal(-440505);
+      expect(accum.qtyLeft_.toNumber()).to.equal(975853 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(1024147 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(-440505 + COLLATERAL_ROUND);
    })
 
    it("swap bump sell", async() => {
@@ -235,9 +237,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.96)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(102397);
-      expect(accum.paidBase_.toNumber()).to.equal(-204967);
-      expect(accum.paidQuote_.toNumber()).to.equal(97603);
+      expect(accum.qtyLeft_.toNumber()).to.equal(102398 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-204968 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(97602 + COLLATERAL_ROUND);
    })
 
    it("swap bump denom", async() => {
@@ -252,9 +254,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.96)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(795032);
-      expect(accum.paidBase_.toNumber()).to.equal(-204968);
-      expect(accum.paidQuote_.toNumber()).to.equal(97604);
+      expect(accum.qtyLeft_.toNumber()).to.equal(795032 + COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-204968 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(97602 + COLLATERAL_ROUND);
    })
 
    it("swap limit price", async() => {
@@ -269,9 +271,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.4023)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(975000);
-      expect(accum.paidBase_.toNumber()).to.equal(1025000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-440860);
+      expect(accum.qtyLeft_.toNumber()).to.equal(975001 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(1024999 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(-440860 + COLLATERAL_ROUND);
    })
 
    it("swap limit fee", async() => {
@@ -286,9 +288,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.4024)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(949385);
-      expect(accum.paidBase_.toNumber()).to.equal(1050615);
-      expect(accum.paidQuote_.toNumber()).to.equal(-430198);
+      expect(accum.qtyLeft_.toNumber()).to.equal(949387 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(1050613 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(-430197 + COLLATERAL_ROUND);
    })
 
    it("swap limit sell", async() => {
@@ -303,9 +305,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.96)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(1023809);
-      expect(accum.paidBase_.toNumber()).to.equal(-2050000);
-      expect(accum.paidQuote_.toNumber()).to.equal(976191);
+      expect(accum.qtyLeft_.toNumber()).to.equal(1023810 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-2050000 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(976190 + COLLATERAL_ROUND);
    })
 
    it("swap bump infinity", async() => {
@@ -320,9 +322,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.4023)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(975000);
-      expect(accum.paidBase_.toNumber()).to.equal(1025000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-440860);
+      expect(accum.qtyLeft_.toNumber()).to.equal(975001 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(1024999 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(-440860 + COLLATERAL_ROUND);
    })
 
    it("swap bump sell infinity", async() => {
@@ -337,9 +339,9 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.96)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(1023809);
-      expect(accum.paidBase_.toNumber()).to.equal(-2050000);
-      expect(accum.paidQuote_.toNumber()).to.equal(976191);
+      expect(accum.qtyLeft_.toNumber()).to.equal(1023810 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-2050000 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(976190 + COLLATERAL_ROUND);
    })
 
    it("swap infinity", async() => {
@@ -354,7 +356,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(2000000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-6666);
+      expect(accum.paidQuote_.toNumber()).to.equal(-6661);
    })
 
    it("swap infinity sell", async() => {
@@ -367,9 +369,9 @@ describe('Swap Curve', () => {
       expect(state.priceRoot_).to.equal(minSqrtPrice());
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(1999985001);
-      expect(accum.paidBase_.toNumber()).to.equal(-14999);
-      expect(accum.paidQuote_.toNumber()).to.equal(99993335);
+      expect(accum.qtyLeft_.toNumber()).to.equal(1999985001 + COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-14999 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_).to.gte(100000000000);
    })
 
    it("swap infinity quote", async() => {
@@ -382,9 +384,9 @@ describe('Swap Curve', () => {
       expect(state.priceRoot_).to.equal(maxSqrtPrice());
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(1999993334);
-      expect(accum.paidBase_).to.be.gt(42949672945000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-6666);
+      expect(accum.qtyLeft_.toNumber()).to.equal(1999993335 + COLLATERAL_ROUND);
+      expect(accum.paidBase_).to.gte(100000000000000);
+      expect(accum.paidQuote_.toNumber()).to.equal(-6665 + COLLATERAL_ROUND);
    })
 
    it("swap infinity quote sell", async() => {
@@ -400,7 +402,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(-15000);
+      expect(accum.paidBase_.toNumber()).to.equal(-14999 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(2000000000);
    })
 })
