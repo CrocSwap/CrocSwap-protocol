@@ -3,7 +3,7 @@ import { MockFactory } from '../typechain/MockFactory'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
@@ -405,110 +405,6 @@ describe('Pool', () => {
         expect(protoFees[1]).to.equal(17)
     })
 
-    /* This test exists to test for a very specific type of behavior. If we swap to hit a
-     * limit barrier we want to make sure that we don't knock in the next liquidity bump. */
-    it("swap knock in liquidity at limit", async() => {
-        await pool.initialize(toSqrtPrice(1.5))
-        await test.testMint(-5000, 8000, 40000); 
-        await test.testMint(3800, 4300, 30000); 
-
-        const liqGrowth = 3
-
-        // 1.525 is just below the 4300th tick... Important to avoid stopping at an empty
-        // spill tick, otherwise the behavior isn't tested.
-        await test.testSwap(false, 100000, toSqrtPrice(1.525))
-        expect(await pool.liquidity()).to.equal(70000 + liqGrowth)
-
-        let price = fromSqrtPrice((await pool.slot0()).sqrtPriceX96)
-        expect(price).to.gte(1.524999)
-        expect(price).to.lte(1.525)
-    })
-
-    /* Tests that liquidity is kicked in and out at the correct tick bump barriers. */
-    it("swap bump barrier", async() => {
-        await pool.initialize(toSqrtPrice(1.5))
-        await test.testMint(-5000, 8000, 40000); 
-        await test.testMint(3800, 4300, 30000); 
-        await test.testMint(4300, 9000, 130000); 
-        await test.testMint(2500, 3800, 15000); 
-
-        // Exactly half a tick below 4300-- upper bump should not kick in
-        await test.testSwap(false, 100000, toSqrtPrice(1.537148))
-        expect(await pool.liquidity()).to.equal(70000 + 6)
-
-        // Revert back
-        await test.testSwap(true, 100000, toSqrtPrice(1.5))
-        expect(await pool.liquidity()).to.equal(70000 + 13)
-        
-        // Exactly half a tick above 4300-- upper bump should kick in
-        await test.testSwap(false, 100000, toSqrtPrice(1.537301))
-        expect(await pool.liquidity()).to.equal(170000 + 20)
-
-        // Revert back
-        await test.testSwap(true, 100000, toSqrtPrice(1.5))
-        expect(await pool.liquidity()).to.equal(70000 + 12)
-        
-        // Exactly half a tick below 3800-- lower bump should kick in 
-        await test.testSwap(true, 100000, toSqrtPrice(1.462184))
-        expect(await pool.liquidity()).to.equal(55000 + 24)
-
-        // Revert back
-        await test.testSwap(false, 100000, toSqrtPrice(1.5))
-        expect(await pool.liquidity()).to.equal(70000 + 12)
-                
-        // Exactly half a tick above 3800-- lower bump should not kick in 
-        await test.testSwap(true, 100000, toSqrtPrice(1.46233))
-        expect(await pool.liquidity()).to.equal(70000 + 36)
-
-        // Move one tick up through a bump
-        await test.testSwap(false, 100000, toSqrtPrice(1.462184))
-        expect(await pool.liquidity()).to.equal(70000 + 24)        
-
-        // Move one tick down through a bumo
-        await test.testSwap(true, 100000, toSqrtPrice(1.46233))
-        expect(await pool.liquidity()).to.equal(70000 + 36)
-    })
-
-    it("swap infinity book fee", async() => {
-        await pool.initialize(toSqrtPrice(1.5))
-        await test.testMint(-5000, 8000, 4000); 
-        await test.testMint(3800, 4300, 3000); 
-        await test.testMint(3400, 4800, 2000); 
-
-        let startQuote = await quoteToken.balanceOf(pool.address)
-        let startBase = await baseToken.balanceOf(pool.address)
-        await test.testSwap(false, 10000000, maxSqrtPrice())
-
-        let limitFlow = 10000000
-        let counterFlow = -625
-        let liqGrowth = 5
-
-        expect(await test.snapBaseSwap()).to.equal(limitFlow)
-        expect(await test.snapBaseFlow()).to.equal(limitFlow)
-        expect(await test.snapQuoteSwap()).to.equal(counterFlow)
-        expect(await test.snapQuoteFlow()).to.equal(counterFlow)
-
-        expect(await pool.liquidity()).to.equal(0 + liqGrowth)
-        expect((await quoteToken.balanceOf(pool.address)).sub(startQuote)).to.equal(counterFlow)
-        expect((await baseToken.balanceOf(pool.address)).sub(startBase)).to.equal(limitFlow)
-
-        let price = (await pool.slot0()).sqrtPriceX96
-        expect(price).to.gte(toSqrtPrice(1000000000))
-    })
-
-    it("swap infinity zero liq", async() => {
-        await pool.initialize(toSqrtPrice(1.5))
-
-        // Set liquidity thin enough that fee vig rounds down to zero
-        await test.testMint(-5000, 8000, 400); 
-        await test.testMint(3800, 4300, 300); 
-        await test.testMint(3400, 4800, 200); 
-
-        // Reverts because caller won't have infinite tokens to counterflow against
-        // zero liquidity.
-        expect(test.testSwap(false, 10000000, maxSqrtPrice())).to.be.reverted
-    })
-
 
     it("burn payout full", async() => {
         await pool.initialize(toSqrtPrice(1.5))
@@ -678,7 +574,6 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf(test.address)).sub(startQuote).sub(collateralQuote)).to.equal(20)
         expect((await baseToken.balanceOf(test.address)).sub(startBase).sub(collateralBase)).to.equal(30)        
     })
-
 
     it("transfer liquidity", async() => {
         await pool.initialize(toSqrtPrice(1.0))
