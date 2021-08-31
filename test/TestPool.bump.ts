@@ -11,7 +11,7 @@ import { CrocSwapPool } from '../typechain/CrocSwapPool';
 
 chai.use(solidity);
 
-/* Test correct behavior around tick bump boundary conditions. */
+/* Test behavior around tick bump boundary conditions. */
 describe('Pool Bump', () => {
     let pool: CrocSwapPool
     let poolZero: CrocSwapPool
@@ -123,7 +123,197 @@ describe('Pool Bump', () => {
         await test.testSwap(true, 100000, toSqrtPrice(1.46233))
         expect(await pool.liquidity()).to.equal(70000 + 36)
     })
-    
+
+    it("mint at bump barrier", async() => {
+        // 1.0 starts exact on the barrier for Tick=0
+        await pool.initialize(toSqrtPrice(1.0))        
+        await test.testMint(-5000, 8000, 40000); 
+        
+        await test.testMint(0, 1000, 30000); 
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test.snapQuoteMint()).to.equal(0)
+        expect(await test.snapBaseOwed()).to.equal(100 + 3)
+        expect(await test.snapBaseMint()).to.equal(100 + 3)
+        expect(await pool.liquidity()).to.equal(30000)
+        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))
+
+        await test.testMint(-1000, 0, 30000); 
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test.snapQuoteMint()).to.equal(0)
+        expect(await test.snapBaseOwed()).to.equal(100 + 3)
+        expect(await test.snapBaseMint()).to.equal(100 + 3)
+        expect(await pool.liquidity()).to.equal(30000)
+        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))
+        
+        await test.testMint(-1000, -1, 30000); 
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test.snapQuoteMint()).to.equal(0)
+        expect(await test.snapBaseOwed()).to.equal(100 + 3)
+        expect(await test.snapBaseMint()).to.equal(100 + 3)
+        expect(await pool.liquidity()).to.equal(30000)
+        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))
+
+        await test.testMint(1, 1000, 30000); 
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test.snapQuoteMint()).to.equal(0)
+        expect(await test.snapBaseOwed()).to.equal(100 + 3)
+        expect(await test.snapBaseMint()).to.equal(100 + 3)
+        expect(await pool.liquidity()).to.equal(30000)
+        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))
+    })
+
+    it("swap at bump barrier (cross)", async() => {
+        // 1.0 starts exact on the barrier for Tick=0
+        const peg = toSqrtPrice(1.0)
+        await pool.initialize(peg)  
+        await test.testMint(-5000, 8000, 40000);         
+        await test.testMint(0, 1000, 30000); 
+        await test.testMint(-1000, 0, 25000); 
+
+        // Trade down from an initialized point on the barrier
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        let price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(peg)
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down after getting back to the barrier from below
+        await test.testSwap(false, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down after getting back to the barrier from above
+        await test.testSwap(false, 100000000, toSqrtPrice(1.5))
+        await test.testSwap(true, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down multiple ticks from the barrier
+        await test.testSwap(false, 100000000, toSqrtPrice(1.5))
+        await test.testSwap(true, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.8))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+    })
+
+    it("swap at bump barrier (retreat)", async() => {
+        // 1.0 starts exact on the barrier for Tick=0
+        const peg = toSqrtPrice(1.0)
+        await pool.initialize(peg)  
+        await test.testMint(-5000, 8000, 40000);         
+        await test.testMint(0, 1000, 30000); 
+        await test.testMint(-1000, 0, 25000); 
+
+       // Trade up from an initialized point on the barrier
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       let price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(peg)
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up after getting back to the barrier from below
+       await test.testSwap(true, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up after getting back to the barrier from above
+       await test.testSwap(true, 100000000, toSqrtPrice(0.5))
+       await test.testSwap(false, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up multiple ticks from the barrier
+       await test.testSwap(true, 100000000, toSqrtPrice(1.5))
+       await test.testSwap(false, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.2))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+    })
+
+    it("swap at top of bump (retreat)", async() => {
+        // 1.0 starts exact on the barrier for Tick=0
+        const peg = toSqrtPrice(1.0).sub(1)
+        await pool.initialize(peg)  
+        await test.testMint(-5000, 8000, 40000);         
+        await test.testMint(0, 1000, 30000); 
+        await test.testMint(-1000, 0, 25000); 
+
+        // Trade down from an initialized point on the barrier
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        let price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(peg)
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down after getting back to the barrier from below
+        await test.testSwap(false, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down after getting back to the barrier from above
+        await test.testSwap(false, 100000000, toSqrtPrice(1.5))
+        await test.testSwap(true, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+
+        // Trade down multiple ticks from the barrier
+        await test.testSwap(false, 100000000, toSqrtPrice(1.5))
+        await test.testSwap(true, 100000000, peg)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.8))
+        price = (await pool.slot0()).sqrtPriceX96
+        expect(price).to.equal(maxSqrtPrice())
+        expect(await pool.liquidity()).to.equal(1)
+    })
+
+    it("swap at bump barrier (cross)", async() => {
+        // 1.0 starts exact on the barrier for Tick=0
+        const peg = toSqrtPrice(1.0).sub(1)
+        await pool.initialize(peg)  
+        await test.testMint(-5000, 8000, 40000);         
+        await test.testMint(0, 1000, 30000); 
+        await test.testMint(-1000, 0, 25000); 
+
+       // Trade up from an initialized point on the barrier
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       let price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(peg)
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up after getting back to the barrier from below
+       await test.testSwap(true, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up after getting back to the barrier from above
+       await test.testSwap(true, 100000000, toSqrtPrice(0.5))
+       await test.testSwap(false, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+
+       // Trade up multiple ticks from the barrier
+       await test.testSwap(true, 100000000, toSqrtPrice(1.5))
+       await test.testSwap(false, 100000000, peg)
+       await test.testSwap(false, 100000000, toSqrtPrice(1.2))
+       price = (await pool.slot0()).sqrtPriceX96
+       expect(price).to.equal(maxSqrtPrice())
+       expect(await pool.liquidity()).to.equal(1)
+    })
+
     it("swap infinity barrier", async() => {
         await pool.initialize(toSqrtPrice(1.5))
         await test.testMint(-887272, 887272, 1); 
