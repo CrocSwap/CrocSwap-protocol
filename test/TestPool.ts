@@ -424,6 +424,51 @@ describe('Pool', () => {
         expect(price).to.lte(1.525)
     })
 
+    /* Tests that liquidity is kicked in and out at the correct tick bump barriers. */
+    it("swap bump barrier", async() => {
+        await pool.initialize(toSqrtPrice(1.5))
+        await test.testMint(-5000, 8000, 40000); 
+        await test.testMint(3800, 4300, 30000); 
+        await test.testMint(4300, 9000, 130000); 
+        await test.testMint(2500, 3800, 15000); 
+
+        // Exactly half a tick below 4300-- upper bump should not kick in
+        await test.testSwap(false, 100000, toSqrtPrice(1.537148))
+        expect(await pool.liquidity()).to.equal(70000 + 6)
+
+        // Revert back
+        await test.testSwap(true, 100000, toSqrtPrice(1.5))
+        expect(await pool.liquidity()).to.equal(70000 + 13)
+        
+        // Exactly half a tick above 4300-- upper bump should kick in
+        await test.testSwap(false, 100000, toSqrtPrice(1.537301))
+        expect(await pool.liquidity()).to.equal(170000 + 20)
+
+        // Revert back
+        await test.testSwap(true, 100000, toSqrtPrice(1.5))
+        expect(await pool.liquidity()).to.equal(70000 + 12)
+        
+        // Exactly half a tick below 3800-- lower bump should kick in 
+        await test.testSwap(true, 100000, toSqrtPrice(1.462184))
+        expect(await pool.liquidity()).to.equal(55000 + 24)
+
+        // Revert back
+        await test.testSwap(false, 100000, toSqrtPrice(1.5))
+        expect(await pool.liquidity()).to.equal(70000 + 12)
+                
+        // Exactly half a tick above 3800-- lower bump should not kick in 
+        await test.testSwap(true, 100000, toSqrtPrice(1.46233))
+        expect(await pool.liquidity()).to.equal(70000 + 36)
+
+        // Move one tick up through a bump
+        await test.testSwap(false, 100000, toSqrtPrice(1.462184))
+        expect(await pool.liquidity()).to.equal(70000 + 24)        
+
+        // Move one tick down through a bumo
+        await test.testSwap(true, 100000, toSqrtPrice(1.46233))
+        expect(await pool.liquidity()).to.equal(70000 + 36)
+    })
+
     it("swap infinity book fee", async() => {
         await pool.initialize(toSqrtPrice(1.5))
         await test.testMint(-5000, 8000, 4000); 
