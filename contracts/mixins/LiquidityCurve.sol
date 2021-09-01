@@ -87,8 +87,9 @@ contract LiquidityCurve {
     function liquidityReceivable (uint128 liquidity,
                                   int24 lowerTick, int24 upperTick)
         internal returns (uint256, uint256) {
-        (uint256 base, uint256 quote) = liquidityFlows(liquidity, lowerTick, upperTick);
-        bumpConcentrated(liquidity, base, quote);
+        (uint256 base, uint256 quote, bool inRange) =
+            liquidityFlows(liquidity, lowerTick, upperTick);
+        bumpConcentrated(liquidity, inRange);
         return chargeConservative(base, quote);
     }
 
@@ -159,8 +160,9 @@ contract LiquidityCurve {
     function liquidityPayable (uint128 liquidity,
                                int24 lowerTick, int24 upperTick)
         internal returns (uint256 base, uint256 quote) {
-        (base, quote) = liquidityFlows(liquidity, lowerTick, upperTick);
-        bumpConcentrated(-(liquidity.toInt256()), base, quote);
+        bool inRange;
+        (base, quote, inRange) = liquidityFlows(liquidity, lowerTick, upperTick);
+        bumpConcentrated(-(liquidity.toInt256()), inRange);
     }
 
     /* @notice Same as above liquidityPayable() but used for non-range based ambient
@@ -187,9 +189,8 @@ contract LiquidityCurve {
             (curve_.liq_.ambientSeed_, seedDelta.toInt128());
     }
 
-    function bumpConcentrated (int256 liqDelta, uint256 base,
-                               uint256 quote) private {
-        if (base > 0 && quote > 0) {
+    function bumpConcentrated (int256 liqDelta, bool inRange) private {
+        if (inRange) {
             uint128 prevLiq = curve_.liq_.concentrated_;
             uint128 nextLiq = LiquidityMath.addDelta
                 (prevLiq, liqDelta.toInt128());
@@ -203,18 +204,19 @@ contract LiquidityCurve {
      *   to round up for collateral safety. */
     function liquidityFlows (uint128 liquidity,
                              int24 bidTick, int24 askTick)
-        private view returns (uint256 baseDebit, uint256 quoteDebit) {
-        (uint160 price, int24 tick) = loadPriceTick();
+        private view returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
+        (uint160 price, int24 priceTick) = loadPriceTick();
         (uint160 bidPrice, uint160 askPrice) =
             translateTickRange(bidTick, askTick);
 
-        if (tick < bidTick) {
+        if (priceTick < bidTick) {
             quoteDebit = liquidity.deltaQuote(bidPrice, askPrice);
-        } else if (tick > askTick) {
+        } else if (priceTick >= askTick) {
             baseDebit = liquidity.deltaBase(bidPrice, askPrice);
         } else {
             quoteDebit = liquidity.deltaQuote(price, askPrice);
             baseDebit = liquidity.deltaBase(bidPrice, price);
+            inRange = true;
         }
     }
     

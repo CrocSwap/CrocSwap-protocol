@@ -25,7 +25,7 @@ describe('LiquidityCurve', () => {
       
       expect(await curve.baseFlow()).to.equal(3937 + COLLATERAL_ROUND);
       expect(await curve.quoteFlow()).to.equal(1750 + COLLATERAL_ROUND);
-      expect((await curve.pullTotalLiq()).toNumber()).to.lte(23125);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(23125);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
@@ -42,7 +42,7 @@ describe('LiquidityCurve', () => {
       
       expect(await curve.baseFlow()).to.equal(3937);
       expect(await curve.quoteFlow()).to.equal(1750);
-      expect((await curve.pullTotalLiq()).toNumber()).to.lte(17875);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(17875);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
@@ -76,7 +76,7 @@ describe('LiquidityCurve', () => {
       
       expect(await curve.baseFlow()).to.equal(150);
       expect(await curve.quoteFlow()).to.equal(117);
-      expect((await curve.pullTotalLiq()).toNumber()).to.lte(19000);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(19000);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
@@ -89,11 +89,16 @@ describe('LiquidityCurve', () => {
    it("liquidity below range", async () => {
       await curve.fixCurve(toSqrtPrice(2.25), 6000, 10000);
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
+
+      await curve.testLiqRecConc(3000, toSqrtPrice(1.44), toSqrtPrice(1.96));
+      expect(await curve.baseFlow()).to.equal(600 + 3);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
+
       await curve.testLiqPayConc(1500, toSqrtPrice(1.44), toSqrtPrice(1.96), 0);
-      
       expect(await curve.baseFlow()).to.equal(299);
       expect(await curve.quoteFlow()).to.equal(0);
-      expect((await curve.pullTotalLiq()).toNumber()).to.lte(20500);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
@@ -104,16 +109,89 @@ describe('LiquidityCurve', () => {
    it("liquidity above range", async () => {
       await curve.fixCurve(toSqrtPrice(2.25), 6000, 10000);
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
-      await curve.testLiqPayConc(1500, toSqrtPrice(4), toSqrtPrice(6.25), 0);
-      
+     
+      await curve.testLiqRecConc(3000, toSqrtPrice(4), toSqrtPrice(6.25));
+      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.quoteFlow()).to.equal(300 + 3);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
+
+      await curve.testLiqPayConc(1500, toSqrtPrice(4), toSqrtPrice(6.25), 0); 
       expect(await curve.baseFlow()).to.equal(0);
       expect(await curve.quoteFlow()).to.equal(149);
-      expect((await curve.pullTotalLiq()).toNumber()).to.lte(20500);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
 
       let state = await curve.pullCurve();
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
       expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
       expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+   })
+
+
+   it("liquidity below range", async () => {
+      await curve.fixCurve(toSqrtPrice(2.25), 6000, 10000);
+      await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
+
+      await curve.testLiqRecConc(3000, toSqrtPrice(1.44), toSqrtPrice(1.96));
+      expect(await curve.baseFlow()).to.equal(600 + 3);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
+
+      await curve.testLiqPayConc(1500, toSqrtPrice(1.44), toSqrtPrice(1.96), 0);
+      expect(await curve.baseFlow()).to.equal(299);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
+
+      let state = await curve.pullCurve();
+      expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
+      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
+      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+   })
+
+   it("liquidity on lower bump", async () => {
+      await curve.fixCurve(toSqrtPrice(1.0), 6000, 10000);
+      await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
+     
+      await curve.testLiqRecTicks(3000, 0, 1000);
+      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.quoteFlow()).to.equal(150);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(23500);
+
+      await curve.testLiqPayTicks(3000, 0, 1000);
+      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.quoteFlow()).to.equal(146);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(20500);
+   })
+
+   it("liquidity on upper bump", async () => {
+      await curve.fixCurve(toSqrtPrice(1.0), 6000, 10000);
+      await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
+
+      await curve.testLiqRecTicks(3000, -1000, 0);
+      expect(await curve.baseFlow()).to.equal(150);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.lte(20500);
+
+      await curve.testLiqPayTicks(3000, -1000, 0);
+      expect(await curve.baseFlow()).to.equal(146);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.lte(20500);
+   })
+
+   it("liquidity inside tick", async () => {
+      await curve.fixCurve(toSqrtPrice(1.00005), 6000, 10000);
+      await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
+     
+      await curve.testLiqRecTicks(3000, 0, 1000);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(23500);
+
+      await curve.testLiqRecTicks(3000, 1, 1000);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(23500);
+
+      await curve.testLiqRecTicks(3000, -1000, 0);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(23500);
+
+      await curve.testLiqRecTicks(3000, -1000, 1);
+      expect((await curve.pullTotalLiq()).toNumber()).to.eq(26500);
    })
 
    it("liquidity rewards", async () => {
