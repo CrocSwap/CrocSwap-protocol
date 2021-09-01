@@ -97,29 +97,30 @@ library Bitmaps {
         return uint8(tick % 256);
     }
 
-    /* @notice Determines the next (shifted-by-one) terminus value for the terminus bit.
+    /* @notice Determines the next shift bump from a starting terminus value. Note for 
+     *   upper the barrier is always to the right. For lower it's on the tick. This is
+     *   because bumps always occur at the start of the tick.
+     *
      * @param tick - The full 24-bit tick index.
-     * @param isBuy - If true, shift and index from left-to-right. Otherwise right-to-
+     * @param isUpper - If true, shift and index from left-to-right. Otherwise right-to-
      *   left.
-     * @return - Returns the shift-by-one terminus bit indexed directionally based on
-     *   param @isBuy. Can be 256, if the terminus bit occurs at the last slot. */  
-    function termShift (int24 tick, bool isBuy) internal pure returns (uint16) {
+     * @return - Returns the bumped terminus bit indexed directionally based on param 
+     *   isUpper. Can be 256, if the terminus bit occurs at the last slot. */  
+    function termBump (int24 tick, bool isUpper) internal pure returns (uint16) {
         uint8 bit = termBit(tick);
-        return bitShift(bit, isBuy);
-    }
-
-    function bitShift (uint8 bit, bool isBuy) private pure returns (uint16) {
-        return uint16(bitRelate(bit, isBuy)) + 1;
+        // Bump moves up for upper, but occurs at the bottom of the same tick for lower.
+        uint16 shiftTerm = isUpper ? 1 : 0;
+        return uint16(bitRelate(bit, isUpper)) + shiftTerm;
     }
 
     /* @notice Converts a directional bitmap position, to a cardinal bitmap position. For
      *   example the 20th bit for a sell (right-to-left) would be the 235th bit in
      *   the bitmap. 
      * @param bit - The directional-oriented index in the 256-bit bitmap.
-     * @param isBuy - If true, the direction is left-to-right, if false right-to-left.
+     * @param isUpper - If true, the direction is left-to-right, if false right-to-left.
      * @return The cardinal (left-to-right) index in the bitmap. */
-    function bitRelate (uint8 bit, bool isBuy) internal pure returns (uint8) {
-        return isBuy ? bit : (255 - bit);
+    function bitRelate (uint8 bit, bool isUpper) internal pure returns (uint8) {
+        return isUpper ? bit : (255 - bit);
     }
 
     /* @notice Converts a 16-bit tick base and an 8-bit terminus tick to a full 24-bit
@@ -154,19 +155,19 @@ library Bitmaps {
     }
 
     /* @notice Returns the zero horizon point for the full 24-bit tick index. */
-    function zeroTick (bool isBuy) internal pure returns (int24) {
-        return isBuy ? type(int24).max : type(int24).min;
+    function zeroTick (bool isUpper) internal pure returns (int24) {
+        return isUpper ? type(int24).max : type(int24).min;
     }
 
     /* @notice Returns the zero horizon point equivalent for the first 16-bits of the 
      *    tick index. */
-    function zeroMezz (bool isBuy) internal pure returns (int16) {
-        return isBuy ? type(int16).max : type(int16).min;
+    function zeroMezz (bool isUpper) internal pure returns (int16) {
+        return isUpper ? type(int16).max : type(int16).min;
     }
 
     /* @notice Returns the zero point equivalent for the terminus bit (last 8-bits) of
      *    the tick index. */
-    function zeroTerm (bool isBuy) internal pure returns (uint8) {
-        return isBuy ? type(uint8).max : 0;
+    function zeroTerm (bool isUpper) internal pure returns (uint8) {
+        return isUpper ? type(uint8).max : 0;
     }
 }

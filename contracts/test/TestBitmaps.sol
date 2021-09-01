@@ -31,9 +31,9 @@ contract TestBitmapsLib {
         return bitmap.isBitSet(pos);
     }
 
-    function testShiftTerm (int24 tick, bool isBuy)
+    function testShiftBump (int24 tick, bool isBuy)
         pure public returns (uint16) {
-        return tick.termShift(isBuy);
+        return tick.termBump(isBuy);
     }
     
     function testCastIndex (int8 x) pure public returns (uint8) {
