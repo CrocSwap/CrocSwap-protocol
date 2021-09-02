@@ -6,7 +6,6 @@ import '../libraries/FullMath.sol';
 import '../libraries/FixedPoint128.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
-import './GasPriceOracle.sol';
 
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
