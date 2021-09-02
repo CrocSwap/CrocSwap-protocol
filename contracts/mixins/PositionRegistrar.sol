@@ -35,7 +35,9 @@ contract PositionRegistrar {
 
     mapping(bytes32 => Position) private positions_;
 
-    // The estimated marginal gas utilized when crossing a single tick. #TODO Move
+    // The estimated marginal gas utilized when crossing a single tick. #TODO Move,
+    // This appears to be circumstantially breaking liqRatio mulDiv when raised an
+    // order of magnitude or more.
     uint128 constant private TICK_CROSS_GAS_EST = 100;
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
@@ -198,7 +200,7 @@ contract PositionRegistrar {
     * @return valid    Whether the position has provided enough liquidity to justify
                        the position if it had an intermediate tick.
     * @return prevLiq  The previously held liquidity at the position. */
-    function itmdTickNewLiq (address owner, int24 lowerTick, int24 upperTick, uint128 deltaLiq, bool burn) internal view returns (bool valid, uint128 prevLiq) {
+    function validItmdTickPos (address owner, int24 lowerTick, int24 upperTick, uint128 deltaLiq, bool burn) internal view returns (bool valid, uint128 prevLiq) {
         Position storage pos = lookupPosition(owner, lowerTick, upperTick);
         prevLiq = pos.liquidity_;
         uint128 newLiq = burn ? prevLiq - deltaLiq : prevLiq + deltaLiq;

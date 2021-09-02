@@ -147,8 +147,8 @@ contract CrocSwapPool is ICrocSwapPool,
                    uint128 liqAdded, bytes calldata data)
         external override reEntrantLock returns (uint256 quoteOwed, uint256 baseOwed) {
         if (isIntermediateTickPresent(lowerTick, upperTick)) {
-            (bool viableItmdTick,) = itmdTickNewLiq(owner, lowerTick, upperTick, liqAdded, false);
-            require(viableItmdTick);
+            (bool validItmdTick,) = validItmdTickPos(owner, lowerTick, upperTick, liqAdded, false);
+            require(validItmdTick);
         }
         (, int24 midTick) = loadPriceTick();
         // Insert the range order into the book and position data structures
@@ -207,8 +207,8 @@ contract CrocSwapPool is ICrocSwapPool,
                    uint128 liqRemoved)
         external override reEntrantLock returns (uint256 quotePaid, uint256 basePaid) {
         if (isIntermediateTickPresent(lowerTick, upperTick)) {
-            (bool viableItmdTick, uint128 prevLiq) = itmdTickNewLiq(msg.sender, lowerTick, upperTick, liqRemoved, true);
-            liqRemoved = viableItmdTick ? liqRemoved : prevLiq;
+            (bool validItmdTick, uint128 prevLiq) = validItmdTickPos(msg.sender, lowerTick, upperTick, liqRemoved, true);
+            liqRemoved = validItmdTick ? liqRemoved : prevLiq;
         }
 
         (, int24 midTick) = loadPriceTick();

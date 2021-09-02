@@ -35,7 +35,7 @@ contract TestPositionRegistrar is PositionRegistrar {
     function testGetIntermediateTickLiqThreshold () public view returns (uint256) {
         return getIntermediateTickLiqThreshold();
     }
-    function testItmdTickNewLiq (address owner, int24 lowerTick, int24 upperTick, uint128 deltaLiq, bool burn) public view returns (bool, uint128) {
-        return itmdTickNewLiq(owner, lowerTick, upperTick, deltaLiq, burn);
+    function testValidItmdTickPos (address owner, int24 lowerTick, int24 upperTick, uint128 deltaLiq, bool burn) public view returns (bool, uint128) {
+        return validItmdTickPos(owner, lowerTick, upperTick, deltaLiq, burn);
     }
 }
