@@ -60,13 +60,18 @@ contract CrocSwapPool is ICrocSwapPool,
      *                   fee rate paid by swappers, and is divided between liquidity 
      *                   miners and the CrocSwap protocol.
      * @param tickUnits  The minimum granularity of valid tick spacings in terms of basis
-     *                   points (0.01%). Unlike the other params, this value can be 
-     *                   changed by the pool owner after the pool is created. */
+     *                   points (0.01%). This value can be changed by the pool owner
+     *                   after the pool is created.
+     * @param itmdLiqRat The product of this value and a position's liqudity must exceed
+     *                   the expected gas cost incurred while crossing a tick in order
+     *                   justify a position's use of an intermediate (non uniformly
+     *                   spaced) tick. */
     constructor (address factoryRef, address tokenQuote, address tokenBase,
-                 uint24 feeRate, int24 tickUnits) {
+                 uint24 feeRate, int24 tickUnits, uint128 initItmdLiqRat) {
         (factory_, tokenBase_, tokenQuote_, feeRate_) =
             (factoryRef, tokenBase, tokenQuote, feeRate);
         setTickSize(tickUnits);
+        setItmdLiqRat(initItmdLiqRat);
     }
 
     function factory() external view override returns (address) {
@@ -86,6 +91,9 @@ contract CrocSwapPool is ICrocSwapPool,
     }
     function maxLiquidityPerTick() external pure override returns (uint128) {
         return TickMath.MAX_TICK_LIQUIDITY;
+    }
+    function itmdLiqRat() external view returns (uint128) {
+        return getItmdLiqRat();
     }
     
     function liquidity() external view override returns (uint128) {
@@ -138,8 +146,11 @@ contract CrocSwapPool is ICrocSwapPool,
     function mint (address owner, int24 lowerTick, int24 upperTick,
                    uint128 liqAdded, bytes calldata data)
         external override reEntrantLock returns (uint256 quoteOwed, uint256 baseOwed) {
+        if (isIntermediateTickPresent(lowerTick, upperTick)) {
+            (bool viableItmdTick,) = itmdTickNewLiq(owner, lowerTick, upperTick, liqAdded, false);
+            require(viableItmdTick);
+        }
         (, int24 midTick) = loadPriceTick();
-
         // Insert the range order into the book and position data structures
         uint256 odometer = addBookLiq(midTick, lowerTick, upperTick,
                                       liqAdded, tokenOdometer());
@@ -195,6 +206,11 @@ contract CrocSwapPool is ICrocSwapPool,
     function burn (address recipient, int24 lowerTick, int24 upperTick,
                    uint128 liqRemoved)
         external override reEntrantLock returns (uint256 quotePaid, uint256 basePaid) {
+        if (isIntermediateTickPresent(lowerTick, upperTick)) {
+            (bool viableItmdTick, uint128 prevLiq) = itmdTickNewLiq(msg.sender, lowerTick, upperTick, liqRemoved, true);
+            liqRemoved = viableItmdTick ? liqRemoved : prevLiq;
+        }
+
         (, int24 midTick) = loadPriceTick();
 
         // Remember feeMileage is the *global* liquidity growth in the range. We still
@@ -207,8 +223,7 @@ contract CrocSwapPool is ICrocSwapPool,
         uint256 rewards = burnPosLiq(msg.sender, lowerTick, upperTick,
                                      liqRemoved, feeMileage);
         (basePaid, quotePaid) = liquidityPayable(liqRemoved, uint128(rewards),
-                                                  lowerTick, upperTick);
-
+                                                  lowerTick, upperTick);        
         if (basePaid > 0) {
             TransferHelper.safeTransfer(tokenBase_, recipient, basePaid);
         }

@@ -35,7 +35,7 @@ contract LevelBook is TickCensus {
     // Added to all feeOdometer entries so we can easily distinguish between
     // unininitialized levels and levels initialized with 0 global fees.
     uint256 constant private FEE_ODOMETER_OFFSET = 1;
-    
+
     mapping(int24 => BookLevel) private levels_;
 
     uint16 private tickSize_;
@@ -96,7 +96,6 @@ contract LevelBook is TickCensus {
     function addBookLiq (int24 midTick, int24 bidTick, int24 askTick, uint128 liq,
                          uint256 feeGlobal)
         internal returns (uint256 feeOdometer) {
-        assertTickSize(bidTick, askTick);
         addBid(bidTick, liq);
         addAsk(askTick, liq);
         initLevel(midTick, bidTick, feeGlobal);
@@ -117,11 +116,12 @@ contract LevelBook is TickCensus {
         return tickSize_;
     }
 
-    function assertTickSize (int24 bidTick, int24 askTick) internal view {
+    function isIntermediateTickPresent (int24 bidTick, int24 askTick) internal view returns (bool) {
         if (tickSize_ > 0) {
-            require(bidTick % tickSize_ == 0, "D");
-            require(askTick % tickSize_ == 0, "D");
+            return bidTick % tickSize_ == 0 || askTick % tickSize_ == 0;
         }
+
+        return false;
     }
 
     /* @notice Call when removing liquidity associated with a specific range order.

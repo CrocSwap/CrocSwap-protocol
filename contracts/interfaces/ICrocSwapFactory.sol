@@ -14,12 +14,14 @@ interface ICrocSwapFactory {
     /// @param token1 The second token of the pool by address sort order
     /// @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip
     /// @param tickSpacing The minimum number of ticks between initialized ticks
+    /// @param itmdLiqRat: The ratio used in evaluating if a position's liquidity justifies an intermediate tick
     /// @param pool The address of the created pool
     event PoolCreated(
         address indexed token0,
         address indexed token1,
         uint24 indexed fee,
         int24 tickSpacing,
+        uint128 itmdLiqRat,
         address pool
     );
 

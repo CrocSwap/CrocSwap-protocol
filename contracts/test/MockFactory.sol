@@ -41,7 +41,7 @@ contract MockFactory is ICrocSwapFactory {
 
     function createPool (address quote, address base, uint24 fee) external override
         returns (address) {
-        hotPool = address(new CrocSwapPool(address(this), quote, base, fee, 1));
+        hotPool = address(new CrocSwapPool(address(this), quote, base, fee, 1, 1));
         return hotPool;
     }
 }

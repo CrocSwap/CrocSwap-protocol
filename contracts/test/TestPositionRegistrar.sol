@@ -26,4 +26,16 @@ contract TestPositionRegistrar is PositionRegistrar {
         Position storage pos = lookupPosition(owner, lower, upper);
         return (pos.liquidity_, pos.feeMileage_);
     }
+    function testGetItmdLiqRat () public returns (uint128) {
+        getItmdLiqRat();
+    }
+    function testSetItmdLiqRat (uint128 itdmLiqRat) public {
+        setItmdLiqRat(itdmLiqRat);
+    }
+    function testGetIntermediateTickLiqThreshold () public returns (uint256) {
+        getIntermediateTickLiqThreshold();
+    }
+    function testItmdTickNewLiq (address owner, int24 lowerTick, int24 upperTick, uint128 deltaLiq, bool burn) public view returns (bool, uint128) {
+        return itmdTickNewLiq(owner, lowerTick, upperTick, deltaLiq, burn);
+    }
 }

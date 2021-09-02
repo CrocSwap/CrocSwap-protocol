@@ -134,4 +134,32 @@ describe('PositionRegistrar', () => {
         await reg.testAdd(ownerTwo, -100, 100, 250000, 12500);
         expect(reg.testTransfer(owner, ownerTwo, -100, 100)).to.be.reverted
     })
+
+    it("valid intermediate liq mint", async() => {
+        await reg.testSetItmdLiqRat(1);
+        await reg.testAdd(owner, -6, 37, 10000, 100);
+        let result = await reg.testItmdTickNewLiq(owner, -6, 37, 1, false);
+        expect(result[0]).to.equal(true);
+    })
+
+    it("valid intermediate liq burn", async() => {
+        await reg.testSetItmdLiqRat(1);
+        await reg.testAdd(owner, -6, 37, 100, 100);
+        let result = await reg.testItmdTickNewLiq(owner, -6, 37, 1, true);
+        expect(result[0]).to.equal(true);   
+    })
+
+    it("invalid intermediate liq mint", async() => {
+        await reg.testSetItmdLiqRat(10000);
+        await reg.testAdd(owner, -6, 37, 1, 100);
+        let result = await reg.testItmdTickNewLiq(owner, -6, 37, 1, false);
+        expect(result[0]).to.equal(false);
+    })
+
+    it("invalid intermediate liq burn", async() => {
+        await reg.testSetItmdLiqRat(10000);
+        await reg.testAdd(owner, -6, 37, 5, 100);
+        let result = await reg.testItmdTickNewLiq(owner, -6, 37, 1, true);
+        expect(result[0]).to.equal(false);
+    })
 })
