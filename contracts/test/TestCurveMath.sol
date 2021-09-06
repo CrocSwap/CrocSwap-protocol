@@ -158,11 +158,32 @@ contract TestCurveMath {
         (shiftGrowth, concGrowth) = (curve.accum_.ambientGrowth_,
                                      curve.accum_.concTokenGrowth_);
     }
+
+    function testDeriveFlowPrice (uint160 price, uint256 reserve, uint256 flow, 
+                                  bool isBuy, bool inBase)
+        public pure returns (uint160) {
+        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, 0, 0);
+
+        return CurveRoll.deriveFlowPrice(price, reserve, flow, cntx);
+        }
     
+    function testDeltaFlow (uint128 liq, uint128 startPrice, uint128 endPrice, bool inBase)
+        public pure returns (int256) {
+            return CurveMath.deltaFlow(liq, startPrice, endPrice, inBase);
+        }
+    
+    function testDeriveImpact (uint160 price, uint128 seed, uint256 growth, uint128 conc, uint256 flow, 
+                                  bool isBuy, bool inBase)
+        public pure returns (int256, uint160) {
+        CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
+        CurveMath.SwapAccum memory cntx = buildSwap(flow, isBuy, inBase);
+
+        return CurveRoll.deriveImpact(curve, flow, cntx);
+    }
+
     function buildSwap (uint256 flow, bool isBuy, bool inBase)
         private pure returns (CurveMath.SwapAccum memory) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
-            (isBuy, inBase, 0, 0);
+        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, 0, 0);
         return CurveMath.SwapAccum(flow, 0, 0, 0, cntx);
     }
     

@@ -73,7 +73,7 @@ library CurveRoll {
     }
 
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
-                           CurveMath.SwapAccum memory swap) private pure
+                           CurveMath.SwapAccum memory swap) internal pure
         returns (int256 counterFlow, uint160 nextPrice) {
         uint128 liq = curve.activeLiquidity();
         uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
@@ -84,7 +84,7 @@ library CurveRoll {
     
     function deriveFlowPrice (uint160 price, uint256 reserve,
                               uint256 flowMagn, CurveMath.SwapFrame memory cntx)
-        private pure returns (uint160) {
+        internal pure returns (uint160) {
         int256 flow = signFlow(flowMagn, cntx);
         uint256 nextReserve = flow > 0 ? reserve.add(uint256(flow)) :
             reserve.sub(uint256(-flow));
