@@ -262,18 +262,122 @@ describe('CurveMath', () => {
       expect(result.paidBase).to.equal(50001);
       expect(result.paidQuote).to.equal(-8333);
 
+      // Remaining, buying with a fixed payment
       result = await curve.testRollRounded(50000, toSqrtPrice(4), 50000, true, true, 80000);
       expect(result.qtyLeft).to.equal(29999);
       expect(result.rollPrice).to.equal(toSqrtPrice(9));
       expect(result.paidBase).to.equal(50001);
       expect(result.paidQuote).to.equal(-8333);
 
-      // Remaining, buying fixed receivable
-      result = await curve.testRollRounded(40000, toSqrtPrice(1.5), 88182, true, false, 50000);
-      expect(result.qtyLeft).to.equal(10000);
-      // expect(fromSqrtPrice(result.rollPrice)).to.equal(7.59375)
-      // expect(result.paidBase).to.equal(135001);
-      expect(result.paidQuote).to.equal(-40000);
+      // Remaining, buying a fixed receivable
+      result = await curve.testRollRounded(50, toSqrtPrice(1), 2000, true, false, 75);
+      expect(result.qtyLeft).to.equal(25);
+      expect(fromSqrtPrice(result.rollPrice)).gt(1.0519395);
+      expect(fromSqrtPrice(result.rollPrice)).lt(1.05193951);
+      expect(result.paidBase).to.equal(53);
+      expect(result.paidQuote).to.equal(-50);
+
+      // No remaining, buying a fixed receivable
+      result = await curve.testRollRounded(50, toSqrtPrice(1), 2000, true, false, 50);
+      expect(result.qtyLeft).to.equal(0);
+      expect(fromSqrtPrice(result.rollPrice)).gt(1.0519395);
+      expect(fromSqrtPrice(result.rollPrice)).lt(1.05193951);
+      expect(result.paidBase).to.equal(53);
+      expect(result.paidQuote).to.equal(-50);
+
+      // Remaining, buying a fixed receivable
+      result = await curve.testRollRounded(5, toSqrtPrice(1), 10, true, false, 10);
+      expect(result.qtyLeft).to.equal(5);
+      expect(fromSqrtPrice(result.rollPrice)).to.equal(4);
+      expect(result.paidBase).to.equal(12);
+      expect(result.paidQuote).to.equal(-5);
+
+      // Remaining, selling for a fixed receivable
+      result = await curve.testRollRounded(50, toSqrtPrice(1), 2000, false, true, 75);
+      expect(result.qtyLeft).to.equal(25);
+      expect(fromSqrtPrice(result.rollPrice)).to.lt(.951);
+      expect(fromSqrtPrice(result.rollPrice)).to.gt(.95);
+      expect(result.paidBase).to.equal(-50);
+      expect(result.paidQuote).to.equal(53);  
+
+      // No remaining, selling for a fixed receivable
+      result = await curve.testRollRounded(200, toSqrtPrice(1.44), 1000, false, true, 200);
+      expect(result.qtyLeft).to.equal(0);
+      expect(fromSqrtPrice(result.rollPrice)).to.lt(1);
+      expect(fromSqrtPrice(result.rollPrice)).to.gt(.999);
+      expect(result.paidBase).to.equal(-200);
+      expect(result.paidQuote).to.equal(169); 
+      
+      // Remaining, selling with a fixed payment
+      result = await curve.testRollRounded(50, toSqrtPrice(1), 2000, false, false, 75);
+      expect(result.qtyLeft).to.equal(24);
+      expect(fromSqrtPrice(result.rollPrice)).to.lt(.952);
+      expect(fromSqrtPrice(result.rollPrice)).to.gt(.951);
+      expect(result.paidBase).to.equal(-48);
+      expect(result.paidQuote).to.equal(51);
+
+      // No remaining, selling with a fixed payment
+      result = await curve.testRollRounded(120000, toSqrtPrice(.04), 40000, false, false, 120000);
+      expect(result.qtyLeft).to.equal(0);
+      expect(fromSqrtPrice(result.rollPrice)).to.lt(.015625);
+      expect(fromSqrtPrice(result.rollPrice)).to.gt(.0156249);
+      expect(result.paidBase).to.equal(-2999);
+      expect(result.paidQuote).to.equal(120001);
    })
 
+   it("roll liq rounded inf", async() => {
+      const infFloor = BigNumber.from("100000000000000000")
+
+      // Buying with a fixed payment
+      let result = await curve.testRollRoundedInf(1000, toSqrtPrice(4), true, true)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(maxSqrtPrice());
+      expect(result.paidBase).to.gt(infFloor);
+      expect(result.paidQuote).to.equal(-499);
+
+      result = await curve.testRollRoundedInf(8200, toSqrtPrice(.01), true, true)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(maxSqrtPrice());
+      expect(result.paidBase).to.gt(infFloor);
+      expect(result.paidQuote).to.equal(-81999);
+
+      // Buying for a fixed receivable
+      result = await curve.testRollRoundedInf(1000, toSqrtPrice(4), true, false)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(maxSqrtPrice());
+      expect(result.paidBase).to.gt(infFloor);
+      expect(result.paidQuote).to.equal(-500);
+
+      result = await curve.testRollRoundedInf(6000, toSqrtPrice(1), true, false)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(maxSqrtPrice());
+      expect(result.paidBase).to.gt(infFloor);
+      expect(result.paidQuote).to.equal(-6000);
+
+      // Selling for a fixed receivable
+      result = await curve.testRollRoundedInf(1000, toSqrtPrice(4), false, true)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(minSqrtPrice());
+      expect(result.paidBase).to.equal(-2000);
+      expect(result.paidQuote).to.gt(infFloor);
+
+      result = await curve.testRollRoundedInf(1000, toSqrtPrice(625), false, true)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(minSqrtPrice());
+      expect(result.paidBase).to.equal(-25000);
+      expect(result.paidQuote).to.gt(infFloor);
+
+      // Selling with a fixed payment
+      result = await curve.testRollRoundedInf(1000, toSqrtPrice(4), false, false)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(minSqrtPrice());
+      expect(result.paidBase).to.equal(-1999);
+      expect(result.paidQuote).to.gt(infFloor);
+
+      result = await curve.testRollRoundedInf(1000000, toSqrtPrice(25), false, false)
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(minSqrtPrice());
+      expect(result.paidBase).to.equal(-4999999);
+      expect(result.paidQuote).to.gt(infFloor);
+   })
 })

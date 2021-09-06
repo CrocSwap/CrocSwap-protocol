@@ -158,6 +158,17 @@ contract TestCurveMath {
             (curve.priceRoot_, swap.qtyLeft_, swap.paidBase_, swap.paidQuote_);
     }
 
+    function testRollRoundedInf (uint128 liq, uint160 price, bool isBuy, bool inBase)
+        public pure returns (uint160 rollPrice, uint256 qtyLeft,
+                             int256 paidBase, int256 paidQuote) {
+        uint128 flow = (isBuy == inBase) ? type(uint128).max :
+            uint128(inBase ?
+                    FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
+                    FullMath.mulDiv(liq, FixedPoint96.Q96, price));
+        (rollPrice, qtyLeft, paidBase, paidQuote) =
+            testRollRounded(flow, price, liq, isBuy, inBase, flow);
+    }
+
     function testAssimilate (uint256 feesPaid, uint160 price,
                              uint128 seed, uint128 conc, uint256 growth, bool inBase)
         public pure returns (uint160 shiftPrice, uint128 shiftSeed,
