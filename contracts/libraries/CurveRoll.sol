@@ -61,14 +61,14 @@ library CurveRoll {
     }
 
     function shaveRoundDown (CurveMath.SwapAccum memory swap) private pure {
-        if (isFlowInput(swap.cntx_)) {
-            swap.qtyLeft_ = swap.qtyLeft_ - 1;
+        if (isFlowInput(swap.cntx_) && swap.qtyLeft_ > 0) {
+            swap.qtyLeft_ = swap.qtyLeft_.sub(1);
         }
         
         if (swap.paidQuote_ > 0) {
-            swap.paidQuote_ = swap.paidQuote_ + 1;
+            swap.paidQuote_ = swap.paidQuote_.add(1);
         } else {
-            swap.paidBase_ = swap.paidBase_ + 1;
+            swap.paidBase_ = swap.paidBase_.add(1);
         }
     }
 
@@ -106,7 +106,7 @@ library CurveRoll {
         }
     }
     
-    function isFlowInput (CurveMath.SwapFrame memory cntx) private pure returns (bool) {
+    function isFlowInput (CurveMath.SwapFrame memory cntx) internal pure returns (bool) {
         return cntx.inBaseQty_ == cntx.isBuy_;
     }
 

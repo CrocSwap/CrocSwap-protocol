@@ -235,4 +235,45 @@ describe('CurveMath', () => {
       expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
       expect(result.shiftSeed.toNumber()).to.eq(2000);
    })
+
+   it("is flow input", async() => {
+      // Buying with a fixed payment
+      let result = await curve.testIsFlowInput(true, true);
+      expect(result).eq(true);
+
+      // Buying for a fixed receivable
+      result = await curve.testIsFlowInput(true, false);
+      expect(result).eq(false);
+
+      // Selling for a fixed receivable
+      result = await curve.testIsFlowInput(false, true);
+      expect(result).eq(false);
+
+      // Selling with a fixed payment
+      result = await curve.testIsFlowInput(false, false);
+      expect(result).eq(true);
+   })
+
+   it ("roll liq rounded", async() => {
+      // No remaining, buying with fixed payment
+      let result = await curve.testRollRounded(50000, toSqrtPrice(4), 50000, true, true, 50000);
+      expect(result.qtyLeft).to.equal(0);
+      expect(result.rollPrice).to.equal(toSqrtPrice(9));
+      expect(result.paidBase).to.equal(50001);
+      expect(result.paidQuote).to.equal(-8333);
+
+      result = await curve.testRollRounded(50000, toSqrtPrice(4), 50000, true, true, 80000);
+      expect(result.qtyLeft).to.equal(29999);
+      expect(result.rollPrice).to.equal(toSqrtPrice(9));
+      expect(result.paidBase).to.equal(50001);
+      expect(result.paidQuote).to.equal(-8333);
+
+      // Remaining, buying fixed receivable
+      result = await curve.testRollRounded(40000, toSqrtPrice(1.5), 88182, true, false, 50000);
+      expect(result.qtyLeft).to.equal(10000);
+      // expect(fromSqrtPrice(result.rollPrice)).to.equal(7.59375)
+      // expect(result.paidBase).to.equal(135001);
+      expect(result.paidQuote).to.equal(-40000);
+   })
+
 })

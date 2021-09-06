@@ -147,6 +147,17 @@ contract TestCurveMath {
             testRoll(flow, price, liq, isBuy, inBase);
     }
 
+    function testRollRounded (uint256 flow, uint160 price, uint128 liq,
+                       bool isBuy, bool inBase, uint256 qtyRemaining)
+        public pure returns (uint160 rollPrice, uint256 qtyLeft,
+                             int256 paidBase, int256 paidQuote) {
+        CurveMath.SwapAccum memory swap = buildSwap(qtyRemaining, isBuy, inBase);
+        CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
+        CurveRoll.rollLiqRounded(curve, flow, swap);
+        (rollPrice, qtyLeft, paidBase, paidQuote) =
+            (curve.priceRoot_, swap.qtyLeft_, swap.paidBase_, swap.paidQuote_);
+    }
+
     function testAssimilate (uint256 feesPaid, uint160 price,
                              uint128 seed, uint128 conc, uint256 growth, bool inBase)
         public pure returns (uint160 shiftPrice, uint128 shiftSeed,
@@ -159,10 +170,23 @@ contract TestCurveMath {
                                      curve.accum_.concTokenGrowth_);
     }
     
+    function testIsFlowInput(bool isBuy, bool inBase)
+        public pure returns (bool) {
+            CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
+            return CurveRoll.isFlowInput(cntx);
+    }
+    
+    function buildSwapFrame (bool isBuy, bool inBase)
+        private pure returns (CurveMath.SwapFrame memory) {
+            CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
+                (isBuy, inBase, 0, 0);
+            
+            return cntx;
+    }
+
     function buildSwap (uint256 flow, bool isBuy, bool inBase)
         private pure returns (CurveMath.SwapAccum memory) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
-            (isBuy, inBase, 0, 0);
+        CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
         return CurveMath.SwapAccum(flow, 0, 0, 0, cntx);
     }
     
