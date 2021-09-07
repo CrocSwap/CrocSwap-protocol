@@ -206,7 +206,7 @@ contract CrocSwapPool is ICrocSwapPool,
         // cumulative rewards
         uint256 rewards = burnPosLiq(msg.sender, lowerTick, upperTick,
                                      liqRemoved, feeMileage);
-        (basePaid, quotePaid) = liquidityPayable(liqRemoved, uint128(rewards),
+        (basePaid, quotePaid) = liquidityPayable(liqRemoved, rewards.toUint128(),
                                                   lowerTick, upperTick);
 
         if (basePaid > 0) {

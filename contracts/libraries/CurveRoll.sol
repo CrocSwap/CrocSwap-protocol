@@ -19,6 +19,7 @@ library CurveRoll {
     using LowGasSafeMath for int256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
+    using SafeCast for uint256;
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
 
@@ -94,15 +95,15 @@ library CurveRoll {
             FullMath.mulDivTrapZero(price, reserve, nextReserve);
         if (curvePrice > TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO; }
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
-        return uint160(curvePrice);
+        return curvePrice.toUint160();
     }
 
     function signFlow (uint256 flow, CurveMath.SwapFrame memory cntx)
         private pure returns (int256) {
         if (cntx.inBaseQty_ == cntx.isBuy_) {
-            return int256(flow);
+            return flow.toInt256();
         } else {
-            return -int256(flow);
+            return flow.toInt256();
         }
     }
     

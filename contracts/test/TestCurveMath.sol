@@ -140,7 +140,7 @@ contract TestCurveMath {
         public pure returns (uint160 rollPrice, uint256 qtyLeft,
                              int256 paidBase, int256 paidQuote) {
         uint128 flow = (isBuy == inBase) ? type(uint128).max :
-            uint128(inBase ?
+            SafeCast.toUint128(inBase ?
                     FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
                     FullMath.mulDiv(liq, FixedPoint96.Q96, price));
         (rollPrice, qtyLeft, paidBase, paidQuote) =

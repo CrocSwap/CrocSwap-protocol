@@ -14,6 +14,7 @@ import "hardhat/console.sol";
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
 contract LevelBook is TickCensus {
+    using SafeCast for uint128;
 
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
@@ -181,7 +182,7 @@ contract LevelBook is TickCensus {
         BookLevel storage lvl = levels_[tick];
         uint128 prevLiq = lvl.bidLiq_;
         require(subLiq <= prevLiq, "V");
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -int128(subLiq));
+        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
         
         lvl.bidLiq_ = newLiq;
         if (newLiq == 0 && lvl.askLiq_ == 0) {
@@ -195,7 +196,7 @@ contract LevelBook is TickCensus {
         BookLevel storage lvl = levels_[tick];
         uint128 prevLiq = lvl.askLiq_;
         require(subLiq <= prevLiq, "V");
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -int128(subLiq));
+        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
         
         lvl.askLiq_ = newLiq;
         if (newLiq == 0 && lvl.bidLiq_ == 0) {

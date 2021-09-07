@@ -19,6 +19,7 @@ library CurveMath {
     using LowGasSafeMath for int256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
+    using SafeCast for uint256;
 
     /* All CrocSwap swaps occur along a locally stable constant-product AMM curve.
      * For large moves across tick boundaries, the state of this curve might change
@@ -255,8 +256,8 @@ library CurveMath {
         uint256 initReserve = reserveAtPrice(liq, startPrice, inBaseQty);
         uint256 endReserve = reserveAtPrice(liq, targetPrice, inBaseQty);
         return (initReserve > endReserve) ?
-            -int256(initReserve - endReserve - 1) : // Round pool's favor
-            int256(endReserve - initReserve + 1);
+            -((initReserve - endReserve - 1).toInt256()) : // Round pool's favor
+            (endReserve - initReserve + 1).toInt256();
     }
 
     /* @dev The fixed point arithmetic results in output that's a close approximation
