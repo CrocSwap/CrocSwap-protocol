@@ -103,7 +103,7 @@ library CurveRoll {
         if (cntx.inBaseQty_ == cntx.isBuy_) {
             return flow.toInt256();
         } else {
-            return flow.toInt256();
+            return -(flow.toInt256());
         }
     }
     
