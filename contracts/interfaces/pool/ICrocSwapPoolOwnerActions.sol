@@ -14,5 +14,5 @@ interface ICrocSwapPoolOwnerActions {
     /// @return amount1 The protocol fee collected in token1
     function collectProtocol(
         address recipient
-    ) external returns (uint128 amount0, uint128 amount1);
+    ) external returns (uint256 amount0, uint256 amount1);
 }

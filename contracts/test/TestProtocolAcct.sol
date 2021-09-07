@@ -27,7 +27,7 @@ contract TestProtocolAccount is ProtocolAccount {
         disburseProtocol(client_, tokenBase_, tokenQuote_);
     }
 
-    function getAccum() public view returns (uint128, uint128) {
+    function getAccum() public view returns (uint256, uint256) {
         return protoFeeAccum();
     }
 }

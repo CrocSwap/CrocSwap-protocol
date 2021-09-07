@@ -431,16 +431,16 @@ contract CrocSwapPool is ICrocSwapPool,
 
     // @inheritdoc ICrocSwapV3PoolOwnerActions  
     function collectProtocol (address recipient)
-        protocolAuth external override returns (uint128, uint128) {
-        (uint128 baseFees, uint128 quoteFees) = disburseProtocol
+        protocolAuth external override returns (uint256, uint256) {
+        (uint256 baseFees, uint256 quoteFees) = disburseProtocol
             (recipient, tokenBase_, tokenQuote_);
         emit CollectProtocol(msg.sender, recipient, quoteFees, baseFees);
         return (quoteFees, baseFees);
     }
 
     // @inheritdoc ICrocSwapV3PoolState
-    function protocolFees() external view override returns (uint128, uint128) {
-        (uint128 baseFees, uint128 quoteFees) = protoFeeAccum();
+    function protocolFees() external view override returns (uint256, uint256) {
+        (uint256 baseFees, uint256 quoteFees) = protoFeeAccum();
         return (quoteFees, baseFees);
     }
     

@@ -11,17 +11,17 @@ pragma solidity >0.7.1;
  * @dev Unlike liquidity fees, protocol fees are accumulated as resting tokens 
  *      instead of ambient liquidity. */
 contract ProtocolAccount {
-    
-    uint128 private protoFeesBase_;
-    uint128 private protoFeesQuote_;
+
+    uint256 private protoFeesBase_;
+    uint256 private protoFeesQuote_;
 
     /* @notice Called at the completion of a swap event, incrementing any protocol
      *         fees accumulated in the swap. */
     function accumProtocolFees (CurveMath.SwapAccum memory accum) internal {
         if (accum.cntx_.inBaseQty_) {
-            protoFeesBase_ += uint128(accum.paidProto_);
+            protoFeesBase_ += accum.paidProto_;
         } else {
-            protoFeesQuote_ += uint128(accum.paidProto_);
+            protoFeesQuote_ += accum.paidProto_;
         }
     }
 
@@ -36,7 +36,7 @@ contract ProtocolAccount {
      *                    before the disburse call. */
     function disburseProtocol (address recipient,
                                address tokenQuote, address tokenBase)
-        internal returns (uint128 quoteFees, uint128 baseFees) {
+        internal returns (uint256 quoteFees, uint256 baseFees) {
         baseFees = protoFeesBase_;
         quoteFees = protoFeesQuote_;
         protoFeesBase_ = 0;
@@ -46,7 +46,7 @@ contract ProtocolAccount {
     }
 
     
-    function transferFees (uint128 amount, address token,
+    function transferFees (uint256 amount, address token,
                            address recipient) private {
         if (amount > 0) {
             TransferHelper.safeTransfer(token, recipient, amount);
@@ -55,7 +55,7 @@ contract ProtocolAccount {
 
     /* @notice Retrieves the balance of the protocol unclaimed fees currently resting
      *         in the pool. */
-    function protoFeeAccum() internal view returns (uint128, uint128) {
+    function protoFeeAccum() internal view returns (uint256, uint256) {
         return (protoFeesQuote_, protoFeesBase_);
     }
 }
