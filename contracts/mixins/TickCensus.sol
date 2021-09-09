@@ -92,113 +92,147 @@ contract TickCensus {
     }
 
     /* @notice Finds an inner-bound conservative liquidity tick boundary based on
-     *   the terminus map at a starting tick point. 
+     *   the terminus map at a starting tick point. Because liquidity actually bumps
+     *   at the bottom of the tick, the result is assymetric on direction. When seeking
+     *   an upper barrier, it'll be the tick that we cross into. For lower barriers, it's
+     *   the tick that we cross out of, and therefore could even be the starting tick.
+     * 
      * @dev For gas efficiency this method only looks at a previously loaded terminus
      *   bitmap. Often for moves of that size we don't even need to look past the 
      *   terminus boundary. So there's no point doing a mezzanine layer seek unless we
      *   end up needing it.
      *
-     * @param isBuy - If true indicates that we're looking for an upper boundary.
+     * @param isUpper - If true indicates that we're looking for an upper boundary.
      * @param startTick - The current tick index that we're finding the boundary from.
      * @param termBitmap - The previously loaded terminus bitmap associated with the
      *    starting tick. It's the caller's responsibility to make sure this is correct.
+     *
      * @return boundTick - The tick index that we can conservatively roll to before 
      *    potentially hitting an initialized liquidity bump.
      * @return isSpill - If true indicates that the boundary represents the end of the
-     *    terminus bitmap rather than a known tick bump. */
-    function pinBitmap (bool isBuy, int24 startTick, uint256 termBitmap)
+     *    terminus bitmap. Could or could not also still be an active bump, but only
+     *    at the lower bound (because lower bounds exist in the bitmap, but upper bounds
+     *    exist at the next bitmap over). */
+    function pinBitmap (bool isUpper, int24 startTick, uint256 termBitmap)
         internal pure returns (int24 boundTick, bool isSpill) {
-        uint16 shiftTerm = startTick.termShift(isBuy);
+        uint16 shiftTerm = startTick.termBump(isUpper);
         int16 tickMezz = startTick.mezzKey();
-        (boundTick, isSpill) = pinTermMezz(isBuy, shiftTerm, tickMezz, termBitmap);
+        (boundTick, isSpill) = pinTermMezz
+            (isUpper, shiftTerm, tickMezz, termBitmap);
     }
 
-    function pinTermMezz (bool isBuy, uint16 shiftTerm, int16 tickMezz,
+    function pinTermMezz (bool isUpper, uint16 shiftTerm, int16 tickMezz,
                           uint256 termBitmap)
-        private pure returns (int24 nextTick, bool spillTick) {
-        uint8 nextTerm;
-        (nextTerm, spillTick) = termBitmap.bitAfterTrunc(shiftTerm, isBuy);
-        nextTick = spillTick ?
-            spillOverPin(isBuy, tickMezz) :
+        private pure returns (int24 nextTick, bool spillBit) {
+        (uint8 nextTerm, bool spillTrunc) =
+            termBitmap.bitAfterTrunc(shiftTerm, isUpper);
+        spillBit = doesSpillBit(isUpper, nextTerm, spillTrunc);
+        nextTick = spillBit ?
+            spillOverPin(isUpper, tickMezz) :
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
-    function spillOverPin (bool isBuy, int16 tickMezz) private pure returns (int24) {
-        int16 stepMezz = isBuy ? tickMezz + 1 : tickMezz - 1;
-        return tickMezz == Bitmaps.zeroMezz(isBuy) ?
-            Bitmaps.zeroTick(isBuy) :
-            Bitmaps.weldMezzTerm(stepMezz, Bitmaps.zeroTerm(!isBuy));
+    function doesSpillBit (bool isUpper, uint8 nextTerm, bool spillTrunc)
+        private pure returns (bool spillBit) {
+        if (isUpper) {
+            spillBit = spillTrunc;
+        } else {
+            bool bumpAtFloor = nextTerm == 0;
+            spillBit = spillTrunc && !bumpAtFloor;
+        }
+    }
+
+    function spillOverPin (bool isUpper, int16 tickMezz) private pure returns (int24) {
+        if (isUpper) {
+            int16 stepMezz = tickMezz + 1;
+            return tickMezz == Bitmaps.zeroMezz(isUpper) ?
+                Bitmaps.zeroTick(isUpper) :
+                Bitmaps.weldMezzTerm(stepMezz, Bitmaps.zeroTerm(!isUpper));
+        } else {
+            return Bitmaps.weldMezzTerm(tickMezz, 0);
+        }
     }
 
 
     /* @notice Determines the next tick bump boundary tick starting using recursive
-     *   bitmap lookup.
+     *   bitmap lookup. Follows the same up/down assymetry as pinBitmap(). Upper bump
+     *   is the tick being crossed *into*, lower bump is the tick being crossed *out of*.
+     *
      * @dev This is a much more gas heavy operation because it recursively looks 
      *   though all three layers of bitmaps. It should only be called if pinBitmap()
      *   can't find the boundary in the terminus layer.
      *
      * @param borderTick - The current tick that we want to seek a tick liquidity
      *   boundary from. For defined behavior this tick must occur at the border of
-     *   terminus bitmap. (I.e. a spill result from pinTermMezz())
-     * @param isBuy - The direction of the boundary. If true seek an upper boundary.
+     *   terminus bitmap. For lower borders, must be the tick from the start of the byte.
+     *   For upper borders, must be the tick past the end of the byte. Any spill result 
+     *   from pinTermMezz() is safe.
+     * @param isUpper - The direction of the boundary. If true seek an upper boundary.
      *
      * @return (int24) - The tick index of the next tick boundary with an active 
-     *   liquidity bump.
+     *   liquidity bump. The result is assymetric boundary for upper/lower ticks. 
      * @return (uint256) - The bitmap associated with the terminus of the boundary
      *   tick. Loaded here for gas efficiency reasons. */
-    function seekMezzSpill (int24 borderTick, bool isBuy)
-        internal view returns (int24, uint256) {
-        uint8 lobbyBit = borderTick.lobbyBit();
-        uint8 mezzBit = borderTick.mezzBit();
-        (uint8 stepLobbyBit, bool spills) = determineSeekLobby(lobbyBit, mezzBit, isBuy);
+    function seekMezzSpill (int24 borderTick, bool isUpper)
+        internal view returns (int24) {
+        (uint8 lobbyBit, uint8 mezzBit) = rootsForBorder(borderTick, isUpper);
+        (uint8 lobbyStep, bool spills) = determineSeekLobby(lobbyBit, mezzBit, isUpper);
+        
         if (spills) {
-            return (Bitmaps.zeroTick(isBuy), 0);
-        } else if (lobbyBit == stepLobbyBit) {
-            return seekAtMezz(lobbyBit, mezzBit, isBuy);
+            return Bitmaps.zeroTick(isUpper);
+        } else if (lobbyBit == lobbyStep) {
+            return seekAtMezz(lobbyBit, mezzBit, isUpper);
         } else {
-            return seekFromLobby(stepLobbyBit, isBuy);
+            return seekFromLobby(lobbyStep, isUpper);
         }
     }
 
-    function determineSeekLobby (uint8 lobbyBit, uint8 mezzBit, bool isBuy)
+    function rootsForBorder (int24 borderTick, bool isUpper) private pure
+        returns (uint8 lobbyBit, uint8 mezzBit) {
+        // Because pinTermMezz returns a border *on* the previous bitmap, we need to
+        // decrement by one to get the seek starting point.
+        int24 pinTick = isUpper ? borderTick : (borderTick - 1);
+        lobbyBit = pinTick.lobbyBit();
+        mezzBit = pinTick.mezzBit();
+    }
+
+    function determineSeekLobby (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
         private view returns (uint8 stepLobbyBit, bool spills) {
-        uint8 truncShift = Bitmaps.bitRelate(lobbyBit, isBuy);
-        (stepLobbyBit, spills) = lobby_.bitAfterTrunc(truncShift, isBuy);
+        uint8 truncShift = Bitmaps.bitRelate(lobbyBit, isUpper);
+        (stepLobbyBit, spills) = lobby_.bitAfterTrunc(truncShift, isUpper);
         if (stepLobbyBit == lobbyBit) {
-            (,bool spillsMezz) = determineSeekMezz(lobbyBit, mezzBit, isBuy);
+            (,bool spillsMezz) = determineSeekMezz(lobbyBit, mezzBit, isUpper);
             if (spillsMezz) {
                 (stepLobbyBit, spills) = lobby_.bitAfterTrunc
-                    (truncShift + 1, isBuy);
+                    (truncShift + 1, isUpper);
             }
         }
     }
 
-    function determineSeekMezz (uint8 lobbyBit, uint8 mezzBit, bool isBuy)
+    function determineSeekMezz (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
         private view returns (uint8 stepMezzBit, bool spillsMezz) {
         int8 mezzIdx = Bitmaps.uncastBitmapIndex(lobbyBit);
         uint256 firstBitmap = mezzanine_[mezzIdx];
         require(firstBitmap != 0, "Y");
         
-        uint8 mezzShift = Bitmaps.bitRelate(mezzBit, isBuy);
-        (stepMezzBit, spillsMezz) = firstBitmap.bitAfterTrunc(mezzShift, isBuy);        
+        uint8 mezzShift = Bitmaps.bitRelate(mezzBit, isUpper);
+        (stepMezzBit, spillsMezz) = firstBitmap.bitAfterTrunc(mezzShift, isUpper);        
     }
 
-    function seekFromLobby (uint8 lobbyBit, bool isBuy)
-        private view returns (int24, uint256) {
-        return seekAtMezz(lobbyBit, Bitmaps.zeroTerm(!isBuy), isBuy);
+    function seekFromLobby (uint8 lobbyBit, bool isUpper)
+        private view returns (int24) {
+        return seekAtMezz(lobbyBit, Bitmaps.zeroTerm(!isUpper), isUpper);
     }
 
-    function seekAtMezz (uint8 lobbyBit, uint8 mezzBit, bool isBuy)
-        private view returns (int24, uint256) {
+    function seekAtMezz (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
+        private view returns (int24) {
         (uint8 newMezz, bool spillsMezz) = determineSeekMezz
-            (lobbyBit, mezzBit, isBuy);
+            (lobbyBit, mezzBit, isUpper);
         require(!spillsMezz, "S");
 
         int16 mezzIdx = Bitmaps.weldLobbyMezz(Bitmaps.uncastBitmapIndex(lobbyBit),
                                               newMezz);
-        uint256 termBitmap = terminus_[mezzIdx];
-        require(termBitmap != 0, "M");
-        return (Bitmaps.weldMezzTerm(mezzIdx, Bitmaps.zeroTerm(!isBuy)), termBitmap);
+        return Bitmaps.weldMezzTerm(mezzIdx, Bitmaps.zeroTerm(!isUpper));
     }
 
 }

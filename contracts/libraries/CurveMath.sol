@@ -356,9 +356,9 @@ library CurveMath {
             //    delta(Q) >= L * delta(1/P)
             //    delta(P) <= 2^-96  (96 bit precision rounding)
             //          P  >= 2^-96  (minimum precision)
-            //    delta(Q) >= L * (1/P - 1/(P+2^-96))
-            //             >= L * 2^-96/(P^2 + P * 2^-96)
-            //             >= L * 2^-96/P^2        (upper bound to above)
+            //    delta(Q) >= L * (1/(P-2^-96) - 1/P)
+            //             >= L * 2^-96/(P^2 - P * 2^-96)
+            //             >= L * 2^-96/(P - 2^-96)^2        (upper bound to above)
             if (price <= FixedPoint96.Q96) {
                 // The fixed point representation of Price in bits is
                 //    Pb = P * 2^96
@@ -368,7 +368,7 @@ library CurveMath {
                 //
                 return FullMath.mulDiv(liqWeight, FixedPoint96.Q96,
                                        // Price^2 fits in 256 bits since price < 96 bits
-                                       uint256(price)*uint256(price));
+                                       uint256(price - 1)*uint256(price - 1));
             } else {
                 // If price is greater than 1, Can reduce to this (potentially loose,
                 // but still economically small) upper bound:

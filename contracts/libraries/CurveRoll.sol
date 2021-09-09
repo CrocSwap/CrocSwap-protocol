@@ -75,6 +75,49 @@ library CurveRoll {
         setCurvePos(curve, swap, price, paidFlow, paidCounter);
     }
 
+    /* @notice Called when a curve has reached its lower bump barrier. Because the 
+     *   barrier occurs at the first price in the tick, we need to "shave the price"
+     *   down into the next tick. The curve has kicked in liquidity that's only active
+     *   below this price, and we need the price to reflect the correct tick. So we burn
+     *   an economically meaningless amount of quote token wei to bring the price down
+     *   by exactly one unit of precision into the next tick. */
+    function shaveAtBump (CurveMath.CurveState memory curve,
+                          CurveMath.SwapAccum memory accum) pure internal {
+        uint256 burnDown = CurveMath.priceToTokenPrecision
+            (curve.activeLiquidity(), curve.priceRoot_, accum.cntx_.isBuy_);
+        if (accum.cntx_.isBuy_) {
+            setShaveUp(curve, accum, burnDown);
+        } else {
+            setShaveDown(curve, accum, burnDown);
+        }
+    }
+
+    function setShaveDown (CurveMath.CurveState memory curve, 
+                           CurveMath.SwapAccum memory swap,
+                           uint256 burnDown) private pure {
+        if (!swap.cntx_.inBaseQty_) {
+            require(swap.qtyLeft_ > burnDown, "BD");
+            swap.qtyLeft_ = swap.qtyLeft_.sub(burnDown);
+        }
+        swap.paidQuote_ = swap.paidQuote_.add(burnDown.toInt256());
+        if (curve.priceRoot_ > TickMath.MIN_SQRT_RATIO) {
+            curve.priceRoot_ -= 1;
+        }
+    }
+
+    function setShaveUp (CurveMath.CurveState memory curve, 
+                           CurveMath.SwapAccum memory swap,
+                           uint256 burnDown) private pure {
+        if (swap.cntx_.inBaseQty_) {
+            require(swap.qtyLeft_ > burnDown, "BD");
+            swap.qtyLeft_ = swap.qtyLeft_.sub(burnDown);
+        }
+        swap.paidBase_ = swap.paidBase_.add(burnDown.toInt256());
+        if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO) {
+            curve.priceRoot_ += 1;
+        }
+    }
+
     function setCurvePos (CurveMath.CurveState memory curve, 
                           CurveMath.SwapAccum memory swap, uint160 price,
                           int256 paidFlow, int256 paidCounter) private pure {

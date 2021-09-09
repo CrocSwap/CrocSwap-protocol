@@ -44,6 +44,7 @@ contract CrocSwapPool is ICrocSwapPool,
     using SafeCast for int256;
     using SwapCurve for CurveMath.CurveState;
     using SwapCurve for CurveMath.SwapAccum;
+    using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
     /* @param factoryRef The address of the CrocSwap factory object, which is owned
@@ -297,47 +298,55 @@ contract CrocSwapPool is ICrocSwapPool,
                            uint160 limitPrice) internal {
         bool isBuy = accum.cntx_.isBuy_;
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
-        uint256 termBitmap = terminusBitmap(midTick);
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
         while (hasSwapLeft(curve, accum, limitPrice)) {
-
             // Finds the next tick at which either A) an extant book level exists which
             // would bump the liquidity in the curve. Or B) we reach the end of our
             // locally visible bitmap. In either case we know that within this range,
             // we can execute the swap on a locallys stable constant-product AMM curve.
-            (int24 bumpTick, bool spillsOver) = pinBitmap(isBuy, midTick, termBitmap);
+            (int24 bumpTick, bool spillsOver) =
+                pinBitmap(isBuy, midTick, terminusBitmap(midTick));
             curve.swapToLimit(accum, bumpTick, limitPrice);
 
-            // This check is redundant since we check it in the loop condition anyway.
-            // But if we've fully exhausted the swap, this will short-circuit a number
-            // of unnecessary gas-rich bookkeeping operations.
-            if (hasSwapLeft(curve, accum, limitPrice)) {
+            // The swap can be in one of three states at this point: 1) qty exhausted,
+            // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
+            // the swap is complete. The latter means that we have adust AMM liquidity,
+            // and find the next liquidity bump.
+            bool atBump = hasSwapLeft(curve, accum, limitPrice);
+            
+            // The swap can be in one of three states at this point: 1) qty exhausted,
+            // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
+            // the swap is complete. The latter means that we have adust AMM liquidity,
+            // and find the next liquidity bump.
+            if (atBump) {
 
                 // The spills over variable indicates that we reaced the end of the
                 // local bitmap, rather than actually hitting a level bump. Therefore
                 // we should query the global bitmap, find the next level bitmap, and
-                // keep swapping on the constant-product curve until we hit that point.
+                // keep swapping on the constant-product curve until we hit point.
                 if (spillsOver) {
                     int24 borderTick = bumpTick;
-                    (bumpTick, termBitmap) = seekMezzSpill(borderTick, isBuy);
-
+                    bumpTick = seekMezzSpill(borderTick, isBuy);
+                    
                     // In some corner cases the local bitmap border also happens to
                     // be the next level bump. In which case we're done. Otherwise,
                     // we keep swapping since we still have some distance on the curve
                     // to cover.
                     if (bumpTick != borderTick) {
                         curve.swapToLimit(accum, bumpTick, limitPrice);
+                        atBump = hasSwapLeft(curve, accum, limitPrice);
                     }
                 }
-
+                
                 // Perform book-keeping related to crossing the level bump, update
                 // the locally tracked tick of the curve price (rather than wastefully
                 // we calculating it since we already know it), then begin the swap
                 // loop again.
-                knockInTick(bumpTick, isBuy, curve);
-                midTick = bumpTick;
+                if (atBump) {
+                    midTick = knockInTick(bumpTick, isBuy, curve, accum);
+                }
             }
         }
     }
@@ -370,17 +379,31 @@ contract CrocSwapPool is ICrocSwapPool,
      *               higher price. If false, the opposite.
      * @params curve The pre-bump state of the local constant-product AMM curve. Updated
      *               to reflect the liquidity added/removed from rolling through the
-     *               bump. */
+     *               bump.
+     * @return The tick index that the curve and its price are living in after the call
+     *         completes. */
     function knockInTick (int24 bumpTick, bool isBuy,
-                          CurveMath.CurveState memory curve) internal {
-        if (Bitmaps.isTickFinite(bumpTick)) {
-            int256 liqDelta = crossLevel(bumpTick, isBuy,
-                                         curve.accum_.concTokenGrowth_);
-            curve.liq_.concentrated_ = LiquidityMath.addDelta
-                (curve.liq_.concentrated_, liqDelta.toInt128());
-        }
+                          CurveMath.CurveState memory curve,
+                          CurveMath.SwapAccum memory accum) private returns (int24) {
+        if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
+        bumpLiquidity(bumpTick, isBuy, curve);
+        curve.shaveAtBump(accum);
+        return postBumpTick(bumpTick, isBuy);
+    }
+
+    function bumpLiquidity (int24 bumpTick, bool isBuy,
+                            CurveMath.CurveState memory curve) private {
+        int256 liqDelta = crossLevel(bumpTick, isBuy, curve.accum_.concTokenGrowth_);
+        curve.liq_.concentrated_ = LiquidityMath.addDelta
+            (curve.liq_.concentrated_, liqDelta.toInt128());
     }
     
+    // When selling down, the next tick leg actually occurs *below* the bump tick
+    // because the bump barrier is the first price on a tick. 
+    function postBumpTick (int24 bumpTick, bool isBuy) private pure returns (int24) {
+        return isBuy ? bumpTick : bumpTick - 1; 
+    }
+
     function settleSwapFlows (address recipient,
                               CurveMath.CurveState memory curve,
                               CurveMath.SwapAccum memory accum,
@@ -394,11 +417,13 @@ contract CrocSwapPool is ICrocSwapPool,
             IUniswapV3SwapCallback(msg.sender).uniswapV3SwapCallback
                 (accum.paidQuote_, accum.paidBase_, data);
             require(initBase.add(uint256(accum.paidBase_)) <= balanceBase(), "B");
+            
         } else {
-            if (accum.paidBase_ < 0)
+            if (accum.paidBase_ < 0) {
                 TransferHelper.safeTransfer(tokenBase_, recipient,
                                             uint256(-accum.paidBase_));
-            
+            }
+
             uint256 initQuote = balanceQuote();
             IUniswapV3SwapCallback(msg.sender).uniswapV3SwapCallback
                 (accum.paidQuote_, accum.paidBase_, data);

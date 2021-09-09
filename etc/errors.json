@@ -1,6 +1,7 @@
 {
     "A": "Unauthorized",
     "B": "Insufficient base token",
+    "BD": "Barrier burn down overflow",
     "C", "Oversized sqrt approx",
     "D", "Tick size below minimum increment",
     "G", "Overwriting a non-zero position on transfer",

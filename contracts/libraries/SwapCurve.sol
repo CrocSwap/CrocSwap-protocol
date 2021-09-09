@@ -13,6 +13,8 @@ import './CurveMath.sol';
 import './CurveAssimilate.sol';
 import './CurveRoll.sol';
 
+import "hardhat/console.sol";
+
 /* @title Swap Curve library.
  * @notice Library contains functionality for fully applying a swap directive to 
  *         a locally stable liquidty curve within the bounds of the stable range
@@ -133,10 +135,10 @@ library SwapCurve {
         if (bumpTick <= TickMath.MIN_TICK || bumpTick >= TickMath.MAX_TICK) {
             return limitPrice;
         } else if (isBuy) {
-            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);
+            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - 1;
             return bumpPrice < limitPrice ? bumpPrice : limitPrice;
         } else {
-            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick+1) - 1;
+            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);
             return bumpPrice > limitPrice ? bumpPrice : limitPrice;
         }
     }
