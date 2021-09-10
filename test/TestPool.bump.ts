@@ -72,7 +72,7 @@ describe('Pool Bump', () => {
 
         // 1.4623 is just above the 3800th tick...
         await test.testSwap(true, 100000, toSqrtPrice(1.4623))
-        expect(await pool.liquidity()).to.equal(70000 + 16)
+        expect(await pool.liquidity()).to.equal(70000 + 17)
 
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.4623))
@@ -187,20 +187,20 @@ describe('Pool Bump', () => {
         // Trade down after getting back to the barrier from above
         await test.testSwap(false, 100000000, toSqrtPrice(1.5))
         await test.testSwap(true, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(70000 + 187)
+        expect(await pool.liquidity()).to.equal(70000 + 196)
         await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99995))
-        expect(await pool.liquidity()).to.equal(65000 + 187)
+        expect(await pool.liquidity()).to.equal(65000 + 196)
 
         // Trade down multiple ticks from the barrier
         await test.testSwap(false, 100000000, toSqrtPrice(1.5))
         await test.testSwap(true, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(70000 + 376)
+        expect(await pool.liquidity()).to.equal(70000 + 394)
         await test.testSwap(true, 100000000, toSqrtPrice(0.8))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.8))
-        expect(await pool.liquidity()).to.equal(40000 + 426)
+        expect(await pool.liquidity()).to.equal(40000 + 453)
     })
 
     it("swap at bitmap bottom retreat", async() => {
@@ -228,20 +228,20 @@ describe('Pool Bump', () => {
        // Trade up after getting back to the barrier from far below
        await test.testSwap(true, 100000000, toSqrtPrice(0.5))
        await test.testSwap(false, 100000000, peg)
-       expect(await pool.liquidity()).to.equal(70000+ 208)
+       expect(await pool.liquidity()).to.equal(70000 + 227)
        await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
        price = (await pool.slot0()).sqrtPriceX96
        expect(price).to.equal(toSqrtPrice(1.00005))
-       expect(await pool.liquidity()).to.equal(70000 + 208)
+       expect(await pool.liquidity()).to.equal(70000 + 227)
 
        // Trade up multiple ticks from the barrier
        await test.testSwap(true, 100000000, toSqrtPrice(1.5))
        await test.testSwap(false, 100000000, peg)
-       expect(await pool.liquidity()).to.equal(70000 + 208)
+       expect(await pool.liquidity()).to.equal(70000 + 227)
        await test.testSwap(false, 100000000, toSqrtPrice(1.2))
        price = (await pool.slot0()).sqrtPriceX96
        expect(price).to.equal(toSqrtPrice(1.2))
-       expect(await pool.liquidity()).to.equal(40000 + 260)
+       expect(await pool.liquidity()).to.equal(40000 + 279)
     })
 
     it("swap at bitmap top retreat", async() => {
@@ -270,20 +270,20 @@ describe('Pool Bump', () => {
         // Trade down after getting back to the barrier from above
         await test.testSwap(false, 100000000, toSqrtPrice(1.2))
         await test.testSwap(true, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(65102)
+        expect(await pool.liquidity()).to.equal(65000 + 104)
         await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99995))
-        expect(await pool.liquidity()).to.equal(65102)
+        expect(await pool.liquidity()).to.equal(65000 + 104)
 
         // Trade down multiple ticks from the barrier
         await test.testSwap(false, 100000000, toSqrtPrice(1.2))
         await test.testSwap(true, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(65000 + 203)
+        expect(await pool.liquidity()).to.equal(65000 + 208)
         await test.testSwap(true, 100000000, toSqrtPrice(0.5))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.5))
-        expect(await pool.liquidity()).to.equal(298)
+        expect(await pool.liquidity()).to.equal(322)
     })
 
     it("swap at bitmap top cross", async() => {
@@ -311,20 +311,20 @@ describe('Pool Bump', () => {
         // Trade up after getting back to the barrier from above
         await test.testSwap(true, 100000000, toSqrtPrice(0.5))
         await test.testSwap(false, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(65000 + 208)
+        expect(await pool.liquidity()).to.equal(65000 + 227)
         await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.00005))
-        expect(await pool.liquidity()).to.equal(70208)
+        expect(await pool.liquidity()).to.equal(70000 + 227)
 
         // Trade up multiple ticks from the barrier
         await test.testSwap(true, 100000000, toSqrtPrice(0.95))
         await test.testSwap(false, 100000000, peg)
-        expect(await pool.liquidity()).to.equal(65000 + 241)
+        expect(await pool.liquidity()).to.equal(65000 + 260)
         await test.testSwap(false, 100000000, toSqrtPrice(2.5))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(2.5))
-        expect(await pool.liquidity()).to.equal(408)
+        expect(await pool.liquidity()).to.equal(429)
     })
 
     // Tests bitmap cross behavior when the bottom is hollow (i.e. not inintialized tick in the first slot)
@@ -445,66 +445,66 @@ describe('Pool Bump', () => {
         await test.testSwap(true, 100000000, toSqrtPrice(0.99995))
         let price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99995))
-        expect(await pool.liquidity()).to.equal(65000 + 171)
+        expect(await pool.liquidity()).to.equal(65000 + 174)
 
         await test.testSwap(false, 100000000, toSqrtPrice(1.1))
         await test.testSwap(true, 100000000, toSqrtPrice(0.99985))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99985))
-        expect(await pool.liquidity()).to.equal(150000 + 342)
+        expect(await pool.liquidity()).to.equal(150000 + 347)
 
         await test.testSwap(false, 100000000, toSqrtPrice(1.1))
         await test.testSwap(true, 100000000, toSqrtPrice(0.97))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.97))
-        expect(await pool.liquidity()).to.equal(240000 + 545)
+        expect(await pool.liquidity()).to.equal(240000 + 552)
 
         await test.testSwap(false, 100000000, toSqrtPrice(1.1))
         await test.testSwap(true, 100000000, toSqrtPrice(1.0))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.0))
-        expect(await pool.liquidity()).to.equal(140000 + 750)
+        expect(await pool.liquidity()).to.equal(140000 + 759)
 
         await test.testSwap(false, 100000000, toSqrtPrice(1.1))
         await test.testSwap(true, 100000000, toSqrtPrice(1.00005))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.00005))
-        expect(await pool.liquidity()).to.equal(140000 + 923)
+        expect(await pool.liquidity()).to.equal(140000 + 934)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(1.00005))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.00005))
-        expect(await pool.liquidity()).to.equal(140000 + 1168)
+        expect(await pool.liquidity()).to.equal(140000 + 1180)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(1.00015))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.00015))
-        expect(await pool.liquidity()).to.equal(170000 + 1413)
+        expect(await pool.liquidity()).to.equal(170000 + 1427)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(1.15))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.15))
-        expect(await pool.liquidity()).to.equal(140000 + 1779)
+        expect(await pool.liquidity()).to.equal(140000 + 1795)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(1.00025))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.00025))
-        expect(await pool.liquidity()).to.equal(170000 + 2146)
+        expect(await pool.liquidity()).to.equal(170000 + 2165)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(1.0))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(1.0))
-        expect(await pool.liquidity()).to.equal(140000 + 2393)
+        expect(await pool.liquidity()).to.equal(140000 + 2413)
 
         await test.testSwap(true, 100000000, toSqrtPrice(0.9))
         await test.testSwap(false, 100000000, toSqrtPrice(0.99995))
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99995))
-        expect(await pool.liquidity()).to.equal(65000 + 2640)
+        expect(await pool.liquidity()).to.equal(65000 + 2662)
     })
 })
