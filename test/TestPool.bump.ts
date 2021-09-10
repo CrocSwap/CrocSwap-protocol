@@ -360,6 +360,48 @@ describe('Pool Bump', () => {
         expect(await pool.liquidity()).to.equal(70000 + 11)
     })
 
+    // Used to measure broad-based non-reward liquidity. In most of these tests liquidity 
+    // rewards are <1000, and liquidity positions are in the thousands. So if we just want
+    // to check that liquidity is knocked in correctly, used the thousandth place.
+    function roundLiq (liq: BigNumber): number {
+        return Math.floor(liq.toNumber()/1000) * 1000
+    }
+
+    // Tests for a corner case where crossing a bitmap boundary can trick
+    // the tick tracker into falsey thinking a level was previously initialized
+    it("swap bitmap pre-init boundaries", async() => {
+        const peg = toSqrtPrice(1.015)
+        await pool.initialize(peg)  
+        await test.testMint(-5000, 8000, 40000); 
+        // Set bumps in the bitmap but not at the boundary        
+        await test.testMint(-5000, -128, 15000); 
+        await test.testMint(128, 8000, 35000);
+
+        // Crosses non-bumped bitmap boundaries at {-256, -1, 0, 256} ticks
+        await test.testSwap(true, 100000000, toSqrtPrice(0.97))
+        await test.testSwap(false, 100000000, toSqrtPrice(1.03))
+        
+        await test.testMint(-512, -256, 75000);
+        await test.testMint(-256, -1, 120000);
+        await test.testMint(-1, 0, 55000);
+        await test.testMint(0, 255, 150000);
+
+        expect(roundLiq(await pool.liquidity())).to.equal(75000)
+        await test.testSwap(true, 100000000, toSqrtPrice(1.01))
+        expect(roundLiq(await pool.liquidity())).to.equal(190000)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.99))
+        expect(roundLiq(await pool.liquidity())).to.equal(160000)
+        await test.testSwap(true, 100000000, toSqrtPrice(0.97))
+        expect(roundLiq(await pool.liquidity())).to.equal(130000)
+
+        await test.testSwap(false, 100000000, toSqrtPrice(0.99))
+        expect(roundLiq(await pool.liquidity())).to.equal(160000)
+        await test.testSwap(false, 100000000, toSqrtPrice(1.01))
+        expect(roundLiq(await pool.liquidity())).to.equal(190000)
+        await test.testSwap(false, 100000000, toSqrtPrice(1.03))
+        expect(roundLiq(await pool.liquidity())).to.equal(75000)
+    })    
+
     // Tests that swaps spanning bitmap barriers are stable
     it("swap across bitmaps", async() => {
         const peg = toSqrtPrice(1.015)
