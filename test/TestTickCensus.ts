@@ -159,17 +159,35 @@ describe('TickCensus', () => {
 
    it("pin sell", async() => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
-      let tick = tickRoot + 4
-      let bitmap = 4 + 16 + 2048 + 8192;
+      let tick = tickRoot + 7
+      let bitmap = 8 + 16 + 2048 + 8192;
       let result = await census.testPinSell(tick, bitmap);
       expect(result[1]).to.equal(false);
-      expect(result[0]).to.equal(tickRoot + 2);
+      expect(result[0]).to.equal(tickRoot + 4);
+   })
+
+   it("pin sell at", async() => {
+      let tickRoot = -120 * 256 * 256 + 12 * 256
+      let tick = tickRoot + 4
+      let bitmap = 8 + 16 + 2048 + 8192;
+      let result = await census.testPinSell(tick, bitmap);
+      expect(result[1]).to.equal(false);
+      expect(result[0]).to.equal(tickRoot + 4);
    })
 
    it("pin edge", async() => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
-      let tick = tickRoot + 4
-      let bitmap = 1 + 16 + 2048 + 8192;
+      let tick = tickRoot + 2
+      let bitmap = 8 + 16 + 2048 + 8192;
+      let result = await census.testPinSell(tick, bitmap);
+      expect(result[1]).to.equal(true);
+      expect(result[0]).to.equal(tickRoot);
+   })
+
+   it("pin edge barrier", async() => {
+      let tickRoot = -120 * 256 * 256 + 12 * 256
+      let tick = tickRoot + 2
+      let bitmap = 1 + 8 + 16 + 2048 + 8192;
       let result = await census.testPinSell(tick, bitmap);
       expect(result[1]).to.equal(false);
       expect(result[0]).to.equal(tickRoot);
@@ -185,10 +203,10 @@ describe('TickCensus', () => {
 
    it("pin sell spill", async() => {
       let tick = -120 * 256 * 256 + 12 * 256 + 4
-      let bitmap = 16 + 2048 + 8192;
+      let bitmap = 32 + 2048 + 8192;
       let result = await census.testPinSell(tick, bitmap);
       expect(result[1]).to.equal(true);
-      expect(result[0]).to.equal(-120 * 256 * 256 + 11 * 256 + 255);
+      expect(result[0]).to.equal(-120 * 256 * 256 + 12 * 256);
    })
 
    it("pin buy zero point", async() => {
@@ -200,7 +218,7 @@ describe('TickCensus', () => {
    })
 
    it("pin sell zero point", async() => {
-      let tick = -128 * 256 * 256 + 0 * 256 + 4
+      let tick = -128 * 256 * 256 + 0 * 256 + 3
       let bitmap = 16 + 2048 + 8192;
       let result = await census.testPinSell(tick, bitmap);
       expect(result[1]).to.equal(true);
@@ -280,20 +298,28 @@ describe('TickCensus', () => {
    it("seek lobby lookback", async() => {
       await census.testBookmark(-1 * 256 * 256 + 236 * 256 + 120)
       await census.testBookmark(0 * 256 * 256 + 31 * 256 + 64);
-      let tick = 0 * 256 * 256 + 15 * 256 + 214
       let buyBorder = 0 * 256 * 256 + 15 * 256 + 255 + 1
       let sellBorder = 0 * 256 * 256 + 15 * 256 + 0 - 1
       let resultBuy = await census.testSeekBuy(buyBorder)
       let resultSell = await census.testSeekSell(sellBorder)
+
+      // Current behavior is to seek at the border index of the terminus bitmmap index,
+      // *not* the active index inside the bitmap.
+      expect(resultBuy[0]).to.equal(0 * 256 * 256 + 31 * 256);
+      expect(resultSell[0]).to.equal(-1 * 256 * 256 + 236 * 256 + 255);
    })
 
    it("seek lobby lookback reverse", async() => {
       await census.testBookmark(0 * 256 * 256 + 10 * 256 + 120)
       await census.testBookmark(1 * 256 * 256 + 31 * 256 + 64);
-      let tick = 0 * 256 * 256 + 15 * 256 + 214
       let buyBorder = 0 * 256 * 256 + 15 * 256 + 255 + 1
       let sellBorder = 0 * 256 * 256 + 15 * 256 + 0 - 1
       let resultBuy = await census.testSeekBuy(buyBorder)
       let resultSell = await census.testSeekSell(sellBorder)
+
+      // Current behavior is to seek at the border index of the terminus bitmmap index,
+      // *not* the active index inside the bitmap.
+      expect(resultBuy[0]).to.equal(1 * 256 * 256 + 31 * 256);
+      expect(resultSell[0]).to.equal(0 * 256 * 236 + 10 * 256 + 255);
    })
 })

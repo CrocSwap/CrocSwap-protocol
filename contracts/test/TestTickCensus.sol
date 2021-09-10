@@ -23,11 +23,13 @@ contract TestTickCensus is TickCensus {
     }
 
     function testSeekBuy (int24 tick) public view returns (int24, uint256) {
-        return seekMezzSpill(tick, true);
+        int24 next = seekMezzSpill(tick, true);
+        return (next, terminusBitmap(next));
     }
 
     function testSeekSell (int24 tick) public view returns (int24, uint256) {
-        return seekMezzSpill(tick, false);
+        int24 next = seekMezzSpill(tick, false);
+        return (next, terminusBitmap(next));
     }
 
     function testBookmark (int24 tick) public {

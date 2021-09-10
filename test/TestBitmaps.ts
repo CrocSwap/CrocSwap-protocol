@@ -107,18 +107,18 @@ describe('BitmapsLib', () => {
       let tickEdgeLeft = lobby * 256 * 256 + mezz * 256 + 255;
       let tickEdgeRight = lobby * 256 * 256 + mezz * 256 + 0;
 
-      let resultBuy = await bitmaps.testShiftTerm(tick, true);
-      let resultSell = await bitmaps.testShiftTerm(tick, false);
-      let resultEdgeLeftBuy = await bitmaps.testShiftTerm(tickEdgeLeft, true);
-      let resultEdgeLeftSell = await bitmaps.testShiftTerm(tickEdgeLeft, false);
-      let resultEdgeRightBuy = await bitmaps.testShiftTerm(tickEdgeRight, true);
-      let resultEdgeRightSell = await bitmaps.testShiftTerm(tickEdgeRight, false);
+      let resultBuy = await bitmaps.testShiftBump(tick, true);
+      let resultSell = await bitmaps.testShiftBump(tick, false);
+      let resultEdgeLeftBuy = await bitmaps.testShiftBump(tickEdgeLeft, true);
+      let resultEdgeLeftSell = await bitmaps.testShiftBump(tickEdgeLeft, false);
+      let resultEdgeRightBuy = await bitmaps.testShiftBump(tickEdgeRight, true);
+      let resultEdgeRightSell = await bitmaps.testShiftBump(tickEdgeRight, false);
 
       expect(resultBuy).to.equal(57);
-      expect(resultSell).to.equal(200);
+      expect(resultSell).to.equal(199);
       expect(resultEdgeLeftBuy).to.equal(256);
-      expect(resultEdgeLeftSell).to.equal(1);
+      expect(resultEdgeLeftSell).to.equal(0);
       expect(resultEdgeRightBuy).to.equal(1);
-      expect(resultEdgeRightSell).to.equal(256);
+      expect(resultEdgeRightSell).to.equal(255);
    })
 })
