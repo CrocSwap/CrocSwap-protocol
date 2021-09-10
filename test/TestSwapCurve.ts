@@ -232,14 +232,15 @@ describe('Swap Curve', () => {
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
       await curve.testSwap(swap, toSqrtPrice(1.96), toSqrtPrice(1.5))
 
+      // Corresponds to the closest bump tick to 1.96
       let state = await curve.pullCurve();
-      expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.9601)
-      expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.96)
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.959846)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.959848)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(102398 - COLLATERAL_ROUND);
-      expect(accum.paidBase_.toNumber()).to.equal(-204968 + COLLATERAL_ROUND);
-      expect(accum.paidQuote_.toNumber()).to.equal(97602 + COLLATERAL_ROUND);
+      expect(accum.qtyLeft_.toNumber()).to.equal(102324 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-205112 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(97676 + COLLATERAL_ROUND);
    })
 
    it("swap bump denom", async() => {
@@ -249,14 +250,15 @@ describe('Swap Curve', () => {
       await curve.fixAccum(toFixedGrowth(0.75), toFixedGrowth(2.5));
       await curve.testSwap(swap, toSqrtPrice(1.96), toSqrtPrice(1.5))
 
+      // Corresponds to the closest bump tick to 1.96
       let state = await curve.pullCurve();
-      expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.9601)
-      expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.96)
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.959846)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.959848)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(795032 + COLLATERAL_ROUND);
-      expect(accum.paidBase_.toNumber()).to.equal(-204968 + COLLATERAL_ROUND);
-      expect(accum.paidQuote_.toNumber()).to.equal(97602 + COLLATERAL_ROUND);
+      expect(accum.qtyLeft_.toNumber()).to.equal(794888 + COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-205112 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(97676 + COLLATERAL_ROUND);
    })
 
    it("swap limit price", async() => {
