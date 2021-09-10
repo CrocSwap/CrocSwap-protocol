@@ -266,8 +266,8 @@ describe('TickCensus', () => {
       let rightTick = -121 * 256 * 256 + 128 * 256;
       let resultBuy = await census.testSeekBuy(rightTick);
       let resultSell = await census.testSeekSell(leftTick);
-      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 0);
-      expect(resultSell[0]).to.equal(-118 * 256 * 256 + 6 * 256 + 255);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 10);
+      expect(resultSell[0]).to.equal(-118 * 256 * 256 + 6 * 256 + 10);
       expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
       expect(resultSell[1].toNumber()).to.equal(1024); 
    });
@@ -278,8 +278,8 @@ describe('TickCensus', () => {
       let rightTick = -120 * 256 * 256 + 3 * 256;
       let resultBuy = await census.testSeekBuy(rightTick);
       let resultSell = await census.testSeekSell(leftTick);
-      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 0);
-      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 255);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 10);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 11);
       expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
       expect(resultSell[1].toNumber()).to.equal(2064); 
    });
@@ -289,8 +289,8 @@ describe('TickCensus', () => {
       let tick = -120 * 256 * 256 + 10 * 256;
       let resultBuy = await census.testSeekBuy(tick);
       let resultSell = await census.testSeekSell(tick);
-      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 0);
-      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 255);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 4);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 15);
       expect(resultBuy[1].toNumber()).to.equal(2064);
       expect(resultSell[1].toNumber()).to.equal(32768 + 1024); 
    });
@@ -303,10 +303,8 @@ describe('TickCensus', () => {
       let resultBuy = await census.testSeekBuy(buyBorder)
       let resultSell = await census.testSeekSell(sellBorder)
 
-      // Current behavior is to seek at the border index of the terminus bitmmap index,
-      // *not* the active index inside the bitmap.
-      expect(resultBuy[0]).to.equal(0 * 256 * 256 + 31 * 256);
-      expect(resultSell[0]).to.equal(-1 * 256 * 256 + 236 * 256 + 255);
+      expect(resultBuy[0]).to.equal(0 * 256 * 256 + 31 * 256 + 64);
+      expect(resultSell[0]).to.equal(-1 * 256 * 256 + 236 * 256 + 120);
    })
 
    it("seek lobby lookback reverse", async() => {
@@ -317,9 +315,7 @@ describe('TickCensus', () => {
       let resultBuy = await census.testSeekBuy(buyBorder)
       let resultSell = await census.testSeekSell(sellBorder)
 
-      // Current behavior is to seek at the border index of the terminus bitmmap index,
-      // *not* the active index inside the bitmap.
-      expect(resultBuy[0]).to.equal(1 * 256 * 256 + 31 * 256);
-      expect(resultSell[0]).to.equal(0 * 256 * 236 + 10 * 256 + 255);
+      expect(resultBuy[0]).to.equal(1 * 256 * 256 + 31 * 256 + 64);
+      expect(resultSell[0]).to.equal(0 * 256 * 236 + 10 * 256 + 120);
    })
 })

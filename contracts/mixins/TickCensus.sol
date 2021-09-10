@@ -157,7 +157,7 @@ contract TickCensus {
 
     /* @notice Determines the next tick bump boundary tick starting using recursive
      *   bitmap lookup. Follows the same up/down assymetry as pinBitmap(). Upper bump
-     *   is the tick being crossed *into*, lower bump is the tick being crossed *out of*.
+     *   is the tick being crossed *into*, lower bump is the tick being crossed *out of*
      *
      * @dev This is a much more gas heavy operation because it recursively looks 
      *   though all three layers of bitmaps. It should only be called if pinBitmap()
@@ -217,7 +217,7 @@ contract TickCensus {
         require(firstBitmap != 0, "Y");
         
         uint8 mezzShift = Bitmaps.bitRelate(mezzBit, isUpper);
-        (stepMezzBit, spillsMezz) = firstBitmap.bitAfterTrunc(mezzShift, isUpper);        
+        (stepMezzBit, spillsMezz) = firstBitmap.bitAfterTrunc(mezzShift, isUpper);  
     }
 
     function seekFromLobby (uint8 lobbyBit, bool isUpper)
@@ -233,7 +233,11 @@ contract TickCensus {
 
         int16 mezzIdx = Bitmaps.weldLobbyMezz(Bitmaps.uncastBitmapIndex(lobbyBit),
                                               newMezz);
-        return Bitmaps.weldMezzTerm(mezzIdx, Bitmaps.zeroTerm(!isUpper));
+        uint256 termBitmap = terminus_[mezzIdx];
+        
+        (uint8 termIdx, bool spillsTerm) = termBitmap.bitAfterTrunc(0, isUpper);
+        require(!spillsTerm, "ST");
+        return Bitmaps.weldMezzTerm(mezzIdx, termIdx);
     }
 
 }
