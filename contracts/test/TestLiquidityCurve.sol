@@ -16,6 +16,10 @@ contract TestLiquidityCurve is LiquidityCurve {
         (baseFlow, quoteFlow) = liquidityReceivable
             (liq, lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());
     }
+    
+    function testLiqRecTicks (uint128 liq, int24 lower, int24 upper) public {
+        (baseFlow, quoteFlow) = liquidityReceivable(liq, lower, upper);
+    }
 
     function testLiqRecAmb (uint128 liqSeed) public {
         (baseFlow, quoteFlow) = liquidityReceivable(liqSeed);
@@ -27,6 +31,10 @@ contract TestLiquidityCurve is LiquidityCurve {
             (liq, rewards, lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());
     }
 
+    function testLiqPayTicks (uint128 liq, int24 lower, int24 upper) public {
+        (baseFlow, quoteFlow) = liquidityPayable(liq, lower, upper);
+    }
+    
     function testLiqPayAmb (uint128 liqSeed) public {
         (baseFlow, quoteFlow) = liquidityPayable(liqSeed);
     }
