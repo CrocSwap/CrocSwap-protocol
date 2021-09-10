@@ -177,6 +177,27 @@ describe('LevelBook', () => {
         expect((await book.liqDelta()).toNumber()).to.equal(0)
     })
 
+    // Test that we can safely cross non-initialized levels without breaking the
+    // tick bitmap or screwing up liquidity.
+    it("cross non level", async() => {
+        await book.testAdd(100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(100, 90, 95, 25000, toFixedGrowth(0.5))
+        
+        await book.testCrossLevel(98, false, toFixedGrowth(0.5))
+        expect((await book.liqDelta()).toNumber()).to.equal(0)
+        await book.testCrossLevel(98, true, toFixedGrowth(0.5))
+        expect((await book.liqDelta()).toNumber()).to.equal(0)
+        expect(await book.hasTickBump(98)).to.equal(false)
+
+        await book.testAdd(100, 98, 102, 25000, toFixedGrowth(0.5))
+        expect(await book.hasTickBump(98)).to.equal(true)
+        await book.testCrossLevel(98, false, toFixedGrowth(0.5))
+        expect((await book.liqDelta()).toNumber()).to.equal(-25000)        
+        await book.testCrossLevel(98, true, toFixedGrowth(0.5))
+        expect((await book.liqDelta()).toNumber()).to.equal(25000)        
+        expect(await book.hasTickBump(98)).to.equal(true)
+    })
+
     it("odometer add", async() => {
         await book.testAdd(100, 95, 105, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()

@@ -29,10 +29,6 @@ contract LevelBook is TickCensus {
         uint128 askLiq_;
         uint256 feeOdometer_;
     }
-
-    // Added to all feeOdometer entries so we can easily distinguish between
-    // unininitialized levels and levels initialized with 0 global fees.
-    uint256 constant private FEE_ODOMETER_OFFSET = 1;
     
     mapping(int24 => BookLevel) private levels_;
 
@@ -68,10 +64,8 @@ contract LevelBook is TickCensus {
         int256 crossDelta = int256(lvl.bidLiq_) - int256(lvl.askLiq_);
         liqDelta = isBuy ? crossDelta : -crossDelta;
         
-        if (feeGlobal != lvl.feeOdometer_ - FEE_ODOMETER_OFFSET) {
-            levels_[tick].feeOdometer_ = feeGlobal -
-                (levels_[tick].feeOdometer_ - FEE_ODOMETER_OFFSET) +
-                FEE_ODOMETER_OFFSET;
+        if (feeGlobal != lvl.feeOdometer_) {
+            levels_[tick].feeOdometer_ = feeGlobal - levels_[tick].feeOdometer_;
         }
     }
 
@@ -95,10 +89,11 @@ contract LevelBook is TickCensus {
                          uint256 feeGlobal)
         internal returns (uint256 feeOdometer) {
         assertTickSize(bidTick, askTick);
-        addBid(bidTick, liq);
-        addAsk(askTick, liq);
+        // Make sure to init before add, because init logic relies on pre-add liquidity
         initLevel(midTick, bidTick, feeGlobal);
         initLevel(midTick, askTick, feeGlobal);
+        addBid(bidTick, liq);
+        addAsk(askTick, liq);
         feeOdometer = clockFeeOdometer(midTick, bidTick, askTick, feeGlobal);
     }
 
@@ -150,9 +145,9 @@ contract LevelBook is TickCensus {
     }
 
     function initLevel (int24 midTick, int24 tick, uint256 feeGlobal) private {
-        if (levels_[tick].feeOdometer_ == 0) {
+        if (levels_[tick].bidLiq_ == 0 && levels_[tick].askLiq_ == 0) {
             if (tick >= midTick) {
-                levels_[tick].feeOdometer_ = feeGlobal + FEE_ODOMETER_OFFSET;
+                levels_[tick].feeOdometer_ = feeGlobal;
             }
             bookmarkTick(tick);
         }
@@ -229,8 +224,8 @@ contract LevelBook is TickCensus {
         private view returns (uint256) {
         BookLevel storage lvl = levels_[lvlTick];
         return lvlTick <= currentTick ?
-            lvl.feeOdometer_ - FEE_ODOMETER_OFFSET :
-            (feeGlobal - (lvl.feeOdometer_ - FEE_ODOMETER_OFFSET));            
+            lvl.feeOdometer_ :
+            feeGlobal - lvl.feeOdometer_;            
     }
 }
 
