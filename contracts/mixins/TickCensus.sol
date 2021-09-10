@@ -126,19 +126,20 @@ contract TickCensus {
         private pure returns (int24 nextTick, bool spillBit) {
         (uint8 nextTerm, bool spillTrunc) =
             termBitmap.bitAfterTrunc(shiftTerm, isUpper);
-        spillBit = doesSpillBit(isUpper, nextTerm, spillTrunc);
+        spillBit = doesSpillBit(isUpper, spillTrunc, termBitmap);
         nextTick = spillBit ?
             spillOverPin(isUpper, tickMezz) :
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
-    function doesSpillBit (bool isUpper, uint8 nextTerm, bool spillTrunc)
+    function doesSpillBit (bool isUpper, bool spillTrunc, uint256 termBitmap)
         private pure returns (bool spillBit) {
         if (isUpper) {
             spillBit = spillTrunc;
         } else {
-            bool bumpAtFloor = nextTerm == 0;
-            spillBit = spillTrunc && !bumpAtFloor;
+            bool bumpAtFloor = termBitmap.isBitSet(0);
+            spillBit = bumpAtFloor ? false :
+                spillTrunc;
         }
     }
 
@@ -177,7 +178,7 @@ contract TickCensus {
         internal view returns (int24) {
         (uint8 lobbyBit, uint8 mezzBit) = rootsForBorder(borderTick, isUpper);
         (uint8 lobbyStep, bool spills) = determineSeekLobby(lobbyBit, mezzBit, isUpper);
-        
+
         if (spills) {
             return Bitmaps.zeroTick(isUpper);
         } else if (lobbyBit == lobbyStep) {
