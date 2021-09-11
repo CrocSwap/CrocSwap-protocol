@@ -111,8 +111,8 @@ describe('Pool dance integration', () => {
 
     it("add -> sweep -> burn", async() => {
         let init = await mintInit(test, pool)
-        const swapQuote = -5240
-        const swapBase = 8964
+        const swapQuote = -5245
+        const swapBase = 8984
         await testSwap.testSwap(false, 100000, toSqrtPrice(2.0))
 
         expect(initBalance.sub(await quoteToken.balanceOf(testSwap.address))).to.equal(swapQuote)
@@ -143,7 +143,7 @@ describe('Pool dance integration', () => {
 
     it("add -> swap/fee -> burn", async() => {
         let init = await mintInit(testFee, poolFee)
-        const swapQuote = -5120
+        const swapQuote = -5125
         const swapBase = 9212
         await testFeeSwap.testSwap(false, 100000, toSqrtPrice(2.0))
 
@@ -153,20 +153,20 @@ describe('Pool dance integration', () => {
         expect(await baseToken.balanceOf(poolFee.address)).to.equal(init.base + swapBase)
 
         const burnQuoteOne = init.quote - 2
-        const burnBaseOne = init.base - 459 - 5
+        const burnBaseOne = init.base - 459 - 4
         await testFee.testBurn(3800, 4300, 15000)
         expect(initBalance.sub(await quoteToken.balanceOf(testFee.address))).to.equal(burnQuoteOne)
         expect(initBalance.sub(await baseToken.balanceOf(testFee.address))).to.equal(burnBaseOne)
 
-        const burnQuoteTwo = burnQuoteOne - 367 - 24
-        const burnBaseTwo = burnBaseOne - 6354 - 48
+        const burnQuoteTwo = burnQuoteOne - 367 - 22
+        const burnBaseTwo = burnBaseOne - 6354 - 45
         await testFee.testBurn(-5000, 8000, 10000)
         expect(initBalance.sub(await quoteToken.balanceOf(testFee.address))).to.equal(burnQuoteTwo)
         expect(initBalance.sub(await baseToken.balanceOf(testFee.address))).to.equal(burnBaseTwo)
         expect(await quoteToken.balanceOf(poolFee.address)).to.equal(burnQuoteTwo + swapQuote)
         expect(await baseToken.balanceOf(poolFee.address)).to.equal(burnBaseTwo + swapBase)
 
-        expect(await poolFee.liquidity()).to.equal(30000 + 122)
+        expect(await poolFee.liquidity()).to.equal(30000 + 123)
         let price = fromSqrtPrice((await poolFee.slot0()).sqrtPriceX96)
         expect(price).to.gte(1.999999)
         expect(price).to.lte(2.000000)
@@ -175,16 +175,16 @@ describe('Pool dance integration', () => {
     it("swap -> swap -> burn", async() => {
         let init = await mintInit(test, pool)
 
-        let swapQuote = -5240
-        let swapBase = 8985
+        let swapQuote = -5245
+        let swapBase = 8984
         await testSwap.testSwap(false, 100000, toSqrtPrice(2.0))
         expect(initBalance.sub(await quoteToken.balanceOf(testSwap.address))).to.equal(swapQuote)
         expect(initBalance.sub(await baseToken.balanceOf(testSwap.address))).to.equal(swapBase)
         expect(await quoteToken.balanceOf(pool.address)).to.equal(init.quote + swapQuote)
         expect(await baseToken.balanceOf(pool.address)).to.equal(init.base + swapBase)
 
-        let swapQuoteTwo = swapQuote + 7277
-        let swapBaseTwo = swapBase - 11861
+        let swapQuoteTwo = swapQuote + 7312
+        let swapBaseTwo = swapBase - 11884 - 44 - 90 + 230 - 50
         await testSwap.testSwap(true, 100000, toSqrtPrice(1.4))
         expect(initBalance.sub(await quoteToken.balanceOf(testSwap.address))).to.equal(swapQuoteTwo)
         expect(initBalance.sub(await baseToken.balanceOf(testSwap.address))).to.equal(swapBaseTwo)
@@ -206,7 +206,7 @@ describe('Pool dance integration', () => {
     it("swap/fee -> swap/fee -> burn", async() => {
         let init = await mintInit(testFee, poolFee)
 
-        let swapQuote = -5120
+        let swapQuote = -5125
         let swapBase = 9212
         await testFeeSwap.testSwap(false, 100000, toSqrtPrice(2.0))
         expect(initBalance.sub(await quoteToken.balanceOf(testFeeSwap.address))).to.equal(swapQuote)
@@ -214,8 +214,8 @@ describe('Pool dance integration', () => {
         expect(await quoteToken.balanceOf(poolFee.address)).to.equal(init.quote + swapQuote)
         expect(await baseToken.balanceOf(poolFee.address)).to.equal(init.base + swapBase)
 
-        let swapQuoteTwo = swapQuote + 7487
-        let swapBaseTwo = swapBase - 11629
+        let swapQuoteTwo = swapQuote + 7325 + 194
+        let swapBaseTwo = swapBase - 11629 + 243 - 221 + 5
         await testFeeSwap.testSwap(true, 100000, toSqrtPrice(1.4))
         expect(initBalance.sub(await quoteToken.balanceOf(testFeeSwap.address))).to.equal(swapQuoteTwo)
         expect(initBalance.sub(await baseToken.balanceOf(testFeeSwap.address))).to.equal(swapBaseTwo)
@@ -223,12 +223,12 @@ describe('Pool dance integration', () => {
         expect(await baseToken.balanceOf(poolFee.address)).to.equal(init.base + swapBaseTwo)
 
         const burnQuote = init.quote - 316
-        const burnBase = init.base - 15
+        const burnBase = init.base - 15 + 1
         await testFee.testBurn(3800, 4300, 15000)
         expect(initBalance.sub(await quoteToken.balanceOf(testFee.address))).to.equal(burnQuote)
         expect(initBalance.sub(await baseToken.balanceOf(testFee.address))).to.equal(burnBase)
 
-        expect(await poolFee.liquidity()).to.equal(40000 + 366)
+        expect(await poolFee.liquidity()).to.equal(40000 + 363)
         let price = fromSqrtPrice((await poolFee.slot0()).sqrtPriceX96)
         expect(price).to.gte(1.399999)
         expect(price).to.lte(1.400001)      
@@ -237,15 +237,15 @@ describe('Pool dance integration', () => {
     it("swap -> burn -> swap", async() => {
         let init = await mintInit(test, pool)
 
-        let swapQuote = -5240
-        let swapBase = 8985
+        let swapQuote = -5245
+        let swapBase = 8984
         await testSwap.testSwap(false, 100000, toSqrtPrice(2.0))
         expect(initBalance.sub(await quoteToken.balanceOf(testSwap.address))).to.equal(swapQuote)
         expect(initBalance.sub(await baseToken.balanceOf(testSwap.address))).to.equal(swapBase)
         await test.testBurn(-5000, 8000, 30000)
 
-        let swapQuoteTwo = swapQuote + 3137
-        let swapBaseTwo = swapBase - 4935
+        let swapQuoteTwo = swapQuote + 3137 + 32
+        let swapBaseTwo = swapBase - 4935 + 29
         await testSwap.testSwap(true, 100000, toSqrtPrice(1.4))
         expect(initBalance.sub(await quoteToken.balanceOf(testSwap.address))).to.equal(swapQuoteTwo)
         expect(initBalance.sub(await baseToken.balanceOf(testSwap.address))).to.equal(swapBaseTwo)
@@ -259,20 +259,20 @@ describe('Pool dance integration', () => {
     it("swap/fee -> burn -> swap/fee", async() => {
         let init = await mintInit(testFee, poolFee)
 
-        let swapQuote = -5120
+        let swapQuote = -5125
         let swapBase = 9212
         await testFeeSwap.testSwap(false, 100000, toSqrtPrice(2.0))
         expect(initBalance.sub(await quoteToken.balanceOf(testFeeSwap.address))).to.equal(swapQuote)
         expect(initBalance.sub(await baseToken.balanceOf(testFeeSwap.address))).to.equal(swapBase)
         await testFee.testBurn(-5000, 8000, 30000)
 
-        let swapQuoteTwo = swapQuote + 3223
-        let swapBaseTwo = swapBase - 4834
+        let swapQuoteTwo = swapQuote + 3256
+        let swapBaseTwo = swapBase - 4834 + 31
         await testFeeSwap.testSwap(true, 100000, toSqrtPrice(1.4))
         expect(initBalance.sub(await quoteToken.balanceOf(testFeeSwap.address))).to.equal(swapQuoteTwo)
         expect(initBalance.sub(await baseToken.balanceOf(testFeeSwap.address))).to.equal(swapBaseTwo)
 
-        expect(await poolFee.liquidity()).to.equal(10000 + 147)
+        expect(await poolFee.liquidity()).to.equal(10000 + 149)
         let price = fromSqrtPrice((await poolFee.slot0()).sqrtPriceX96)
         expect(price).to.gte(1.399999)
         expect(price).to.lte(1.400001) 

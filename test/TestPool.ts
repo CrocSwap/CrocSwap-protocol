@@ -329,9 +329,9 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(false, 100000, toSqrtPrice(2.0))
 
-        let limitFlow = 9082
-        let counterFlow = -5185
-        let liqGrowth = 65
+        let limitFlow = 9081
+        let counterFlow = -5190
+        let liqGrowth = 67
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -357,8 +357,8 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(true, 100000, toSqrtPrice(1.25))
 
-        let limitFlow = -5433
-        let counterFlow = 4037
+        let limitFlow = -5437
+        let counterFlow = 4041
         let liqGrowth = 45
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
@@ -387,8 +387,8 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf(pool.address)
         await test.testSwap(true, 100000, toSqrtPrice(1.25))
 
-        let limitFlow = -5424
-        let counterFlow = 4030
+        let limitFlow = -5427
+        let counterFlow = 4033
         let liqGrowth = 37
 
         expect(await test.snapBaseSwap()).to.equal(limitFlow)
