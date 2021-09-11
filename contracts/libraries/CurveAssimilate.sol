@@ -46,8 +46,8 @@ library CurveAssimilate {
         // In zero liquidity curves, it makes no sense to assimilate, since
         // it will run prices to infinity. 
         if (CurveMath.activeLiquidity(curve) == 0) { return; }
-        
-        bool feesInBase = !isSwapInBase;        
+
+        bool feesInBase = !isSwapInBase;
         uint256 feesToLiq = shaveForPrecision(curve, feesPaid, feesInBase);
         uint256 inflator = calcLiqInflator(curve, feesToLiq, feesInBase);
 
@@ -80,6 +80,11 @@ library CurveAssimilate {
      *         change in the AMM curve's active liquidity. */
     function calcReserveInflator (uint256 reserve, uint256 feesPaid)
         private pure returns (uint256) {
+        // Short-circuit when virtual reserves are smaller than fees. This can only
+        // occur when liquidity is extremely small, and so is economically
+        // meanignless. But preserves numerical stability.
+        if (reserve == 0 || feesPaid > reserve) { return 0; }
+        
         uint256 nextReserve = reserve.add(feesPaid);
         uint256 inflator = nextReserve.compoundDivide(reserve);
         // Since Liquidity is represented as Sqrt(X*Y) the growth rate of liquidity is

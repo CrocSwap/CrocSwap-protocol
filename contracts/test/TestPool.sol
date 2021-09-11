@@ -37,9 +37,9 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
         quote = quoteAddr;
     }
     
-    function testSwap (bool isBuy, int256 qty, uint160 limitPrice) public {
+    function testSwap (bool isSell, int256 qty, uint160 limitPrice) public {
         (int quoteSwap, int baseSwap) = CrocSwapPool(pool).swap
-            (address(this), isBuy, qty, limitPrice, testCalldata);
+            (address(this), isSell, qty, limitPrice, testCalldata);
         if (!gasProfileMode) {
             (snapQuoteSwap, snapBaseSwap) = (quoteSwap, baseSwap);
         }

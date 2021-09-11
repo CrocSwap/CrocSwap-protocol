@@ -54,7 +54,7 @@ library SwapCurve {
      *    limitPrice is inside the starting curvePrice 0 quantity will execute. */
     function swapToLimit (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
-                          int24 bumpTick, uint160 swapLimit) pure internal {
+                          int24 bumpTick, uint160 swapLimit) view internal {
         uint160 limitPrice = determineLimit(bumpTick, swapLimit, accum.cntx_.isBuy_);
         bookExchFees(curve, accum, limitPrice);
         
@@ -126,7 +126,7 @@ library SwapCurve {
         pure private returns (uint160) {
         uint160 bounded = boundLimit(bumpTick, limitPrice, isBuy);
         if (bounded < TickMath.MIN_SQRT_RATIO)  return TickMath.MIN_SQRT_RATIO;
-        if (bounded > TickMath.MAX_SQRT_RATIO)  return TickMath.MAX_SQRT_RATIO;
+        if (bounded >= TickMath.MAX_SQRT_RATIO)  return TickMath.MAX_SQRT_RATIO - 1;
         return bounded;
     }
 

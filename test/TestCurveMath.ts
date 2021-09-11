@@ -230,12 +230,57 @@ describe('CurveMath', () => {
       expect(result.shiftSeed.toNumber()).to.lte(2000 + 278);
    })
 
-   it("assimilate zero liq", async() => {
+   it("assimilate zero fees", async() => {
       let result = await curve.testAssimilate(0, toSqrtPrice(2.25), 
          2000, 7500, toFixedGrowth(0.25), false);      
       expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
       expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
       expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
       expect(result.shiftSeed.toNumber()).to.eq(2000);
+   })
+
+   it("assimilate zero liq", async() => {
+      let result = await curve.testAssimilate(100, toSqrtPrice(2.25), 
+         0, 0, toFixedGrowth(0.25), false);      
+      expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
+      expect(result.shiftSeed.toNumber()).to.eq(0);
+   })
+
+   it("assimilate one liq", async() => {
+      let result = await curve.testAssimilate(100, toSqrtPrice(2.25), 
+         0, 1, toFixedGrowth(0.25), true);      
+      expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
+      expect(result.shiftSeed.toNumber()).to.eq(0);
+   })
+
+   it("assimilate one liq denom", async() => {
+      let result = await curve.testAssimilate(100, toSqrtPrice(2.25), 
+         0, 1, toFixedGrowth(0.25), false);      
+      expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
+      expect(result.shiftSeed.toNumber()).to.eq(0);
+   })
+
+   it("assimilate one liq zero fees", async() => {
+      let result = await curve.testAssimilate(0, toSqrtPrice(2.25), 
+         0, 1, toFixedGrowth(0.25), true);      
+      expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
+      expect(result.shiftSeed.toNumber()).to.eq(0);
+   })
+
+   it("assimilate one liq denom zero fees", async() => {
+      let result = await curve.testAssimilate(0, toSqrtPrice(2.25), 
+         0, 1, toFixedGrowth(0.25), false);      
+      expect(fromSqrtPrice(result.shiftPrice)).eq(2.25);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.eq(0.25);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
+      expect(result.shiftSeed.toNumber()).to.eq(0);
    })
 })

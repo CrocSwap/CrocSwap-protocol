@@ -113,7 +113,7 @@ library CurveRoll {
             swap.qtyLeft_ = swap.qtyLeft_.sub(burnDown);
         }
         swap.paidBase_ = swap.paidBase_.add(burnDown.toInt256());
-        if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO) {
+        if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO - 1) {
             curve.priceRoot_ += 1;
         }
     }
@@ -200,7 +200,7 @@ library CurveRoll {
             curvePrice = curvePrice + 1;
         }        
 
-        if (curvePrice > TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO; }
+        if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO - 1;}
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
         return curvePrice.toUint160();
     }
