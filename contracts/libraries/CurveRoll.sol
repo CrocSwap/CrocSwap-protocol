@@ -169,7 +169,7 @@ library CurveRoll {
      *   always rounds in the direction of the pool. Hence applying the flow, counterflow
      *   and price from this function is guaranteed to be curve collateral safe. */
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
-                           CurveMath.SwapAccum memory swap) private pure
+                           CurveMath.SwapAccum memory swap) internal pure
         returns (uint256 counterFlow, uint160 nextPrice) {
         uint128 liq = curve.activeLiquidity();
         uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
@@ -188,9 +188,9 @@ library CurveRoll {
      *   on the fixed flow. */
     function deriveFlowPrice (uint160 price, uint256 reserve,
                               uint256 flow, CurveMath.SwapFrame memory cntx)
-        private pure returns (uint160) {
-        uint256 nextReserve = cntx.isFlowInput() ?
-            reserve.add(flow) : reserve.sub(flow);
+        internal pure returns (uint160) {
+        uint256 nextReserve = flow > 0 ? reserve.add(uint256(flow)) :
+            reserve.sub(uint256(-flow));
 
         uint256 curvePrice = cntx.inBaseQty_ ?
             FullMath.mulDivTrapZero(price, nextReserve, reserve) :
@@ -220,7 +220,7 @@ library CurveRoll {
      *   sign implies the flow is being received by the pool, negative that it's being 
      *   received by the user. */
     function signFlow (uint256 flowMagn, uint256 counterMagn,
-                        CurveMath.SwapFrame memory cntx)
+                       CurveMath.SwapFrame memory cntx)
         private pure returns (int256 flow, int256 counter) {
         (flow, counter) = signMagn(flowMagn, counterMagn, cntx);
         // Conservatively round directional counterflow in the direction of the pool's
