@@ -189,8 +189,8 @@ library CurveRoll {
     function deriveFlowPrice (uint160 price, uint256 reserve,
                               uint256 flow, CurveMath.SwapFrame memory cntx)
         internal pure returns (uint160) {
-        uint256 nextReserve = flow > 0 ? reserve.add(uint256(flow)) :
-            reserve.sub(uint256(-flow));
+        uint256 nextReserve = cntx.isFlowInput() ?
+            reserve.add(flow) : reserve.sub(flow);
 
         uint256 curvePrice = cntx.inBaseQty_ ?
             FullMath.mulDivTrapZero(price, nextReserve, reserve) :
