@@ -182,7 +182,7 @@ describe('Swap Curve', () => {
 
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
-      expect(accum.paidBase_.toNumber()).to.equal(-2096591 + COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(-2096590 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(1000000);
 
       let state = await curve.pullCurve();

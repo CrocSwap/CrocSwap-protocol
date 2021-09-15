@@ -159,21 +159,13 @@ contract TestCurveMath {
                                      curve.accum_.concTokenGrowth_);
     }
 
-    function testDeriveFlowPrice (uint160 price, uint256 reserve, uint256 flow, 
-                                  bool isBuy, bool inBase)
-        public pure returns (uint160) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, 0, 0);
-
-        return CurveRoll.deriveFlowPrice(price, reserve, flow, cntx);
-    }
-    
     function testDeriveImpact (uint160 price, uint128 seed, uint256 growth,
                                uint128 conc, uint256 flow, 
                                bool isBuy, bool inBase)
         public pure returns (uint256, uint160) {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
-        CurveMath.SwapAccum memory cntx = buildSwap(flow, isBuy, inBase);
-        return CurveRoll.deriveImpact(curve, flow, cntx);
+        CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
+        return CurveRoll.deriveImpact(curve, flow, swap.cntx_);
     }
 
     function buildSwap (uint256 flow, bool isBuy, bool inBase)

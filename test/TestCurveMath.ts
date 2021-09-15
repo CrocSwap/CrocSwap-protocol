@@ -178,14 +178,15 @@ describe('CurveMath', () => {
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, true, false);
       expect(result.qtyLeft).to.equal(0);
-      expect(fromSqrtPrice(result.rollPrice)).to.gte(8.99999);
-      expect(fromSqrtPrice(result.rollPrice)).to.lte(9.9);
-      expect(result.paidBase).to.equal(15000 + COLLATERAL_BUFFER);
+      expect(fromSqrtPrice(result.rollPrice)).to.gte(8.998);
+      expect(fromSqrtPrice(result.rollPrice)).to.lte(9.0);
+      expect(result.paidBase).to.equal(14997 + COLLATERAL_BUFFER);
       expect(result.paidQuote).to.equal(-3333);
 
       result = await curve.testRoll(3333, toSqrtPrice(2.25), 10000, false, false);
       expect(result.qtyLeft).to.equal(0);
-      expect(fromSqrtPrice(result.rollPrice)).to.equal(1.0);
+      expect(fromSqrtPrice(result.rollPrice)).to.gte(1.0);
+      expect(fromSqrtPrice(result.rollPrice)).to.lte(1.0001);
       expect(result.paidBase).to.equal(-4999 + COLLATERAL_BUFFER);
       expect(result.paidQuote).to.equal(3333);
    })
@@ -286,84 +287,70 @@ describe('CurveMath', () => {
      
    it("derive liq and price flow impact", async() => {
       let impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, true, true);
-      expect(impact[0]).eq(-33);
+      expect(impact[0]).eq(33);
       expect(fromSqrtPrice(impact[1])).eq(2.25);
-      let indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(1), 100, 50, true, true);
-      expect(fromSqrtPrice(indepPrice)).eq(2.25);
-      let indepFlow = await curve.testDeltaFlow(100, toSqrtPrice(1), toSqrtPrice(2.25), false);
-      expect(indepFlow).eq(-33);
-   
-      impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, true, false);
-      expect(impact[0]).eq(101);
-      expect(fromSqrtPrice(impact[1])).eq(4);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(1), 100, 50, true, false);
-      expect(fromSqrtPrice(indepPrice)).eq(4);
-      indepFlow = await curve.testDeltaFlow(100, toSqrtPrice(1), toSqrtPrice(4), true);
-      expect(indepFlow).eq(101);
 
       impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, false, false);
-      expect(impact[0]).eq(-33);
-      expect(fromSqrtPrice(impact[1])).gt(.444444);
-      expect(fromSqrtPrice(impact[1])).lt(.444445);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(1), 100, 50, false, false);
-      expect(fromSqrtPrice(indepPrice)).gt(.444444);
-      expect(fromSqrtPrice(indepPrice)).lt(.444445);
-      indepFlow = await curve.testDeltaFlow(100, toSqrtPrice(1), toSqrtPrice(.444444), true);
-      expect(indepFlow).eq(-33);
+      expect(impact[0]).eq(33);
+      expect(fromSqrtPrice(impact[1])).gte(.444444);
+      expect(fromSqrtPrice(impact[1])).lte(.444445);
+
+      impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, true, false);
+      expect(impact[0]).eq(100);
+      expect(fromSqrtPrice(impact[1])).eq(4);
 
       impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, false, true);
-      expect(impact[0]).eq(101);
-      expect(fromSqrtPrice(impact[1])).eq(.25);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(1), 100, 50, false, true);
-      expect(fromSqrtPrice(indepPrice)).eq(.25);
-      indepFlow = await curve.testDeltaFlow(100, toSqrtPrice(1), toSqrtPrice(.25), false);
-      expect(indepFlow).eq(101);
+      expect(impact[0]).eq(100);
+      expect(fromSqrtPrice(impact[1])).lte(.25);
+      expect(fromSqrtPrice(impact[1])).gte(.249999);
 
       impact = await curve.testDeriveImpact(toSqrtPrice(3), 0, 0, 866, 500, true, true);
-      expect(impact[0]).eq(-124)
-      expect(fromSqrtPrice(impact[1])).gt(5.33);
-      expect(fromSqrtPrice(impact[1])).lt(5.34);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(3), 1500, 500, true, true);
-      expect(fromSqrtPrice(indepPrice)).gt(5.33);
-      expect(fromSqrtPrice(indepPrice)).lt(5.34);
-      indepFlow = await curve.testDeltaFlow(866, toSqrtPrice(3), toSqrtPrice(5.34), false);
-      expect(indepFlow).eq(-124);
+      expect(impact[0]).eq(124)
+      expect(fromSqrtPrice(impact[1])).gte(5.33341);
+      expect(fromSqrtPrice(impact[1])).lte(5.33342);
 
       impact = await curve.testDeriveImpact(toSqrtPrice(.25), 0, 0, 1000, 100, false, true);
-      expect(impact[0]).eq(501)
+      expect(impact[0]).eq(500)
       expect(fromSqrtPrice(impact[1])).lt(.16)
       expect(fromSqrtPrice(impact[1])).gt(.1599999)
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(.25), 500, 100, false, true);
-      expect(fromSqrtPrice(indepPrice)).lt(.16)
-      expect(fromSqrtPrice(indepPrice)).gt(.1599999)
-      indepFlow = await curve.testDeltaFlow(1000, toSqrtPrice(.25), toSqrtPrice(.16), false);
-      expect(indepFlow).eq(501);
+   })
 
-      impact = await curve.testDeriveImpact(toSqrtPrice(.01), 0, 5, 1000, 150, true, true);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(.01), 100, 150, true, true);
-      expect(fromSqrtPrice(indepPrice)).lt(.0625);
-      expect(fromSqrtPrice(indepPrice)).gt(.06249);
-      indepFlow = await curve.testDeltaFlow(1000, toSqrtPrice(.01), toSqrtPrice(.0625), false);
-      expect(indepFlow).eq(-5999);
+   it("derive liq and price reserve rounding", async() => {
+      let impact = await curve.testDeriveImpact(toSqrtPrice(100), 0, 0, 1000, 150, false, false);
+      expect(impact[0]).eq(5999);                                // Counterlow input rounds down qty
+      expect(fromSqrtPrice(impact[1])).eq(16);
 
-      //Breaking
-      expect(impact[0]).eq(-6000);
-      expect(fromSqrtPrice(impact[1])).eq(.0625);
+      impact = await curve.testDeriveImpact(toSqrtPrice(.01), 0, 0, 1000, 150, true, true);
+      expect(impact[0]).eq(6000);
+      expect(fromSqrtPrice(impact[1])).lte(0.0625);              // Base flow rounds price down.
+      expect(fromSqrtPrice(impact[1])).gte(0.06249);
+
+      impact = await curve.testDeriveImpact(toSqrtPrice(100), 0, 0, 1000, 50, true, false);
+      expect(impact[0]).eq(10000);
+      expect(fromSqrtPrice(impact[1])).equal(400.0);
+
+      impact = await curve.testDeriveImpact(toSqrtPrice(0.01), 0, 0, 1000, 50, false, true);
+      expect(impact[0]).eq(10000);
+      expect(fromSqrtPrice(impact[1])).lte(0.0025);              // Base flow rounds price down
+      expect(fromSqrtPrice(impact[1])).gte(0.0024990);
+
+      impact = await curve.testDeriveImpact(toSqrtPrice(.0625), 0, 0, 1000, 1000, true, false);
+      expect(impact[0]).eq(83);                                  // Counterlow output rounds up qty
+      expect(fromSqrtPrice(impact[1])).lte(.11111111);           // Quote flow rounds down price
+      expect(fromSqrtPrice(impact[1])).gte(.11111110);
+
+      impact = await curve.testDeriveImpact(toSqrtPrice(.0625), 0, 0, 1000, 2000, false, false);
+      //expect(impact[0]).eq(47);
+      expect(fromSqrtPrice(impact[1])).lte(.02777777778);       // Quote flow rounds down
+      expect(fromSqrtPrice(impact[1])).gte(.0277777);
    })
 
    it("derive liq and price flow entire reserve", async() => {
-      let impact = await curve.testDeriveImpact(toSqrtPrice(4), 0, 3, 600, 300, true, false);
+      let impact = await curve.testDeriveImpact(toSqrtPrice(4), 0, 0, 600, 300, true, false);
       expect(impact[0]).gt(99999999999999)
       expect(impact[1]).eq(maxSqrtPrice());
-      let indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(4), 300, 300, true, false);
-      expect(indepPrice).eq(maxSqrtPrice());
 
-      // Appears to be an off-by-one reserve quantity issue
       impact = await curve.testDeriveImpact(toSqrtPrice(.01), 0, 0, 1000, 99, false, true);
-      indepPrice = await curve.testDeriveFlowPrice(toSqrtPrice(.01), 100, 99, false, true);
-      expect(indepPrice).gt(minSqrtPrice());
-      let indepFlow = await curve.testDeltaFlow(1000, toSqrtPrice(.01), indepPrice, false);
-      expect(indepFlow).lt(99999999999999);
       expect(impact[0]).lt(99999999999999);
       expect(impact[1]).gt(minSqrtPrice());
 
