@@ -146,8 +146,9 @@ library CurveMath {
      *
      * @dev The fixed-point result approximates the real valued formula with close but
      *   directionally unpredicable precision. It could be slightly above or slightly
-     *   below. In the case of zero flows this could be substantially over. This function should not be used in any context with strict directional 
-     *   boundness requirements. */
+     *   below. In the case of zero flows this could be substantially over. This 
+     *   function should not be used in any context with strict directional boundness 
+     *   requirements. */
     function calcLimitCounter (CurveState memory curve, SwapAccum memory swap,
                                uint160 limitPrice) internal pure returns (uint256) {
         bool isBuy = limitPrice > curve.priceRoot_;
