@@ -7,7 +7,8 @@ import "../libraries/CurveRoll.sol";
 import "../libraries/SwapCurve.sol";
 
 contract TestCurveMath {
-
+    using CurveMath for CurveMath.SwapFrame;
+    
     function testActiveLiq (uint128 seed, uint256 growth, uint128 concentrated)
         public pure returns (uint128) {
         return CurveMath.activeLiquidity(
@@ -167,10 +168,23 @@ contract TestCurveMath {
         CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         return CurveRoll.deriveImpact(curve, flow, swap.cntx_);
     }
+    
+    function testIsFlowInput(bool isBuy, bool inBase)
+        public pure returns (bool) {
+        CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
+        return cntx.isFlowInput();
+    }
+    
+    function buildSwapFrame (bool isBuy, bool inBase)
+        private pure returns (CurveMath.SwapFrame memory) {
+        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
+            (isBuy, inBase, 0, 0);            
+        return cntx;
+    }
 
     function buildSwap (uint256 flow, bool isBuy, bool inBase)
         private pure returns (CurveMath.SwapAccum memory) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, 0, 0);
+        CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
         return CurveMath.SwapAccum(flow, 0, 0, 0, cntx);
     }
     

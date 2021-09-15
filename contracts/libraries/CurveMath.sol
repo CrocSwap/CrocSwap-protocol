@@ -90,8 +90,8 @@ library CurveMath {
      *                 isBuy    /   inBaseQty    /   Result
      *                   T              T              Buying with a fixed payment
      *                   T              F              Buying for a fixed receivable
-     *                   T              T              Selling for a fixed payment
-     *                   T              F              Selling with a fixed payment
+     *                   F              T              Selling for a fixed payment
+     *                   F              F              Selling with a fixed payment
      *
      * @param feeRate_ - The exchange fee of the pool represented in hundreths of a 
      *     basis point (i.e. 0.0001%) applied to the notional traded.
@@ -113,7 +113,7 @@ library CurveMath {
      *    swap. (Denominated on the side from inBaseQty_ (see above comments))
      * @param paidBase_ - The total accumulated number of base tokens filled by the swap.
      *    Negative represents tokens paid from the pool to the user. Positive vice versa.
-     * @param paidBase_ - The total accumulated number of quote tokens filled by swap.
+     * @param paidQuote_ - The total accumulated number of quote tokens filled by swap.
      *    Negative represents tokens paid from the pool to the user. Positive vice versa.
      * @param paidProto_ - The total amount of tokens collected in the form of protocol
      *    fees. (Denominated on the side from inBaseQty_ (see above comments)) */

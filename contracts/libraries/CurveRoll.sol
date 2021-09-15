@@ -146,7 +146,7 @@ library CurveRoll {
      * @dev    Both sides of the flow are rounded down at up to 2 wei of precision loss
      *         (see CurveMath.sol). The results should not be used directly without 
      *         buffering the counterflow in the direction of collateral support. */
-     function deriveDemand (CurveMath.CurveState memory curve, uint160 price,
+    function deriveDemand (CurveMath.CurveState memory curve, uint160 price,
                            CurveMath.SwapAccum memory swap) private pure
         returns (uint256 flow, uint256 counterFlow) {
         uint128 liq = curve.activeLiquidity();
@@ -156,6 +156,7 @@ library CurveRoll {
             (flow, counterFlow) = (baseFlow, quoteFlow);
         } else {
             (flow, counterFlow) = (quoteFlow, baseFlow);
+            
         }
     }
 
