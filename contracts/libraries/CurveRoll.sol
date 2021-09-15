@@ -11,6 +11,8 @@ import './LiquidityMath.sol';
 import './CompoundMath.sol';
 import './CurveMath.sol';
 
+import "hardhat/console.sol";
+
 /* @title Curve roll library
  * @notice Provides functionality for rolling swap flows onto a constant-product
  *         AMM liquidity curve. */
@@ -46,13 +48,13 @@ library CurveRoll {
      *   incremented based on the swapped flow and its relevant impact. */
     function rollFlow (CurveMath.CurveState memory curve, uint256 flow,
                        CurveMath.SwapAccum memory swap) internal pure {        
-        (uint256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap);
+        (uint256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap.cntx_);
         (int256 paidFlow, int256 paidCounter) = signFlow(flow, counterFlow, swap.cntx_);
         setCurvePos(curve, swap, nextPrice, paidFlow, paidCounter);
     }
 
     /* @notice Moves a curve to a pre-determined price target, and adjusts the swap flows
-     *   as necessary to reach the target. The final curve will end at exactly that price,
+     *   as necessary to reach the target. The final curve will end at exactly that price
      *   and the flows are set to guarantee incremental collateral safety.
      *
      * @dev Note that this function does *NOT* check whether the curve is liquidity 
@@ -162,54 +164,105 @@ library CurveRoll {
      *   constant product stable through the impact range. It's the caller's 
      *   responsibility to check that we're not passing liquidity bump tick boundaries.
      *
-     * @dev The fixed-point calculated price will be within one unit of precision from 
-     *   the real-valued price give the swap flow. The counter flow is calculated off the
-     *   rounded price (not the real valued price), because that's what the curves price 
-     *   will finalize at, and where the collateral needs to support. The counter flow 
-     *   always rounds in the direction of the pool. Hence applying the flow, counterflow
-     *   and price from this function is guaranteed to be curve collateral safe. */
+     * @dev The price and counter-flow guarantee collateral stability on the AMM curve.
+     *   Because of fixed-point effects the price may be arbitarily rounded, but the 
+     *   counter-flow will always be set correctly to match. The result of this function
+     *   is based on the AMM curve being constant through the entire range. Note that 
+     *   this function only calulcates a result it does *not* write into the Curve or 
+     *   Swap structs.
+     *
+     * @param curve The constant-product AMM curve
+     * @param flow  The fixed token flow from the side the swap is denominated in.
+     * @param cntx  The context of the executiing swap
+     *
+     * @return counterFlow The magnitude of token flow on the opposite side the swap
+     *                     is denominated in. Note that this value is *not* signed. Also
+     *                     note that this value is always rounded down. 
+     * @return nextPrice   The ending price of the curve assumign the full flow is 
+     *                     processed. Note that this value is *not* written into the 
+     *                     curve struct. */
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
-                           CurveMath.SwapAccum memory swap) internal pure
+                           CurveMath.SwapFrame memory cntx) internal pure
         returns (uint256 counterFlow, uint160 nextPrice) {
         uint128 liq = curve.activeLiquidity();
-        uint256 reserve = liq.reserveAtPrice(curve.priceRoot_, swap.cntx_.inBaseQty_);
-        nextPrice = deriveFlowPrice(curve.priceRoot_, reserve, flow, swap.cntx_);
-        counterFlow = !swap.cntx_.inBaseQty_ ?
+        nextPrice = deriveFlowPrice(curve.priceRoot_, liq, flow, cntx);
+
+        /* We calculate the counterflow exactly off the computed price. Ultimately safe
+         * collateralization only cares about the price, not the contravening flow.
+         * Therefore we always compute based on the final, rounded price, not from the
+         * original fixed flow. */
+        counterFlow = !cntx.inBaseQty_ ?
             liq.deltaBase(curve.priceRoot_, nextPrice) :
             liq.deltaQuote(curve.priceRoot_, nextPrice);
     }
 
-    /* @dev The end price is always rounded to the inside of the token making up the flow
-     *   I.e. a buy in input/base tokens will round the price down, a buy in output/quote
-     *   tokens will round up, a sell in input/quote rounds up, a buy in output/base 
-     *   rounds down. This is because the magnitude of the flow tokens are fixed by the
-     *   user's swap specification and can't be bumped to over-collateralize. Therefore
-     *   we set the price in the direction that over-collateralizes the virtual reserves
-     *   on the fixed flow. */
-    function deriveFlowPrice (uint160 price, uint256 reserve,
+    /* @dev The end price is always rounded to the inside of the flow token:
+     *
+     *       Flow   |   Dir   |  Price Roudning  | Loss of Precision
+     *     ---------------------------------------------------------------
+     *       Base   |   Buy   |     Down         |    1 wei
+     *       Base   |   Sell  |     Down         |    1 wei
+     *       Quote  |   Buy   |     Up           |   Arbitrary
+     *       Quote  |   Buy   |     Up           |   Arbitrary
+     * 
+     *   This guarantees that the pool is adaquately collateralized given the flow of the
+     *   fixed side. Because of the arbitrary roudning, it's critical that the counter-
+     *   flow is computed using the exact price returned by this function, and not 
+     *   independently. */
+    function deriveFlowPrice (uint160 price, uint128 liq,
                               uint256 flow, CurveMath.SwapFrame memory cntx)
-        internal pure returns (uint160) {
-        uint256 nextReserve = cntx.isFlowInput() ?
-            reserve.add(flow) : reserve.sub(flow);
-
+        private pure returns (uint160) {
         uint256 curvePrice = cntx.inBaseQty_ ?
-            FullMath.mulDivTrapZero(price, nextReserve, reserve) :
-            FullMath.mulDivTrapZero(price, reserve, nextReserve);
-
-        if (priceRoundsUp(cntx)) {
-            curvePrice = curvePrice + 1;
-        }        
+            calcBaseFlowPrice(price, liq, flow, cntx.isBuy_) :
+            calcQuoteFlowPrice(price, liq, flow, cntx.isBuy_);
 
         if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO - 1;}
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
         return curvePrice.toUint160();
     }
 
-    // To be conservative, round the curve precision to the inside of the price
-    // move. That prevents us from inadvertantly crossing a fixed limit price.
-    function priceRoundsUp (CurveMath.SwapFrame memory cntx) private pure returns (bool) {
-        return cntx.isBuy_ != cntx.isFlowInput();
+    /* Because the base flow is fixed, we want to always set the price to in favor of 
+     * base token over-collateralization. Upstream, we'll independently set quote token
+     * flows based off the price calculated here. Since higher price increases base 
+     * collateral, we round price down regardless of whether the fixed base flow is a 
+     * buy or a sell. 
+     *
+     * This seems counterintuitive when base token is the output, but even then moving 
+     * the price further down will increase the quote token input and over-collateralize
+     * the base token. The max loss of precision is 1 unit of fixed-point price. */
+    function calcBaseFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
+        private pure returns (uint256) {
+        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint96.Q96, liq);
+        if (isBuy) {
+            return price.add(priceDelta);
+        } else {
+            if (priceDelta >= price) { return 0; }
+            return price.sub(priceDelta.add(1));
+        }
     }
+
+    /* The same rounding logic as calcBaseFlowPrice applies, but because it's the 
+     * opposite side we want to conservatively round the price *up*, regardless of 
+     * whether it's a buy or sell. 
+     * 
+     * Calculating flow price for quote flow is more complex because the flow delta 
+     * applies to the inverse of the price. So when calculating the inverse, we make 
+     * sure to round in the direction that founds up the final price.
+     *
+     * Because the calculation involves multiple nested divisors there's an arbitrary 
+     * loss of precision due to rounding. However this is almost always small unless
+     * liquidity is very small, flow is very large or price is very extreme. */
+    function calcQuoteFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
+        private pure returns (uint256) {
+        // Since this is a term in the quotient rounding down, rounds up the final price
+        uint256 invPrice = FullMath.mulDiv(FixedPoint96.Q96, FixedPoint96.Q96, price);
+        // This is also a quotient term so we use this function's round down logic
+        uint256 invNext = calcBaseFlowPrice(invPrice, liq, flow, !isBuy);
+        if (invNext == 0) { return TickMath.MAX_SQRT_RATIO; }
+        // Round up the final division operation. 
+        return FullMath.mulDiv(FixedPoint96.Q96, FixedPoint96.Q96, invNext) + 1;
+    }
+
 
     // Max round precision loss is 2 wei, but a 4 wei cushion provides extra margin
     // and is economically meaningless.
