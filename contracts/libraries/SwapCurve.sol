@@ -95,27 +95,49 @@ library SwapCurve {
 
         if (hitsLimit) {
             curve.rollPrice(limitPrice, accum);
+            assertPriceEndStable(curve, accum, limitPrice);
         } else {
             curve.rollFlow(realFlows, accum);
+            assertFlowEndStable(curve, accum, limitPrice);
         }
-        assertEndStable(curve, accum, limitPrice);
     }
-    
-    /* @dev In rare corner cases, swap can result in a corrupt end state. This occurs
-     *   when the swap flow lands within a wei or two of the limit price boundary. The
-     *   corrupt condition can be reached by multiple paths, but always results in 
-     *   simultaneously hitting the limit and exactly exhausting the swap's liquidity.
-     *   The problem is upstream logic will think the swap is complete, fail to knock in
-     *   new liquidity and corrupt the state of the book. Since this is so astronomically
-     *   rare, just crash the transaction. */
-    function assertEndStable (CurveMath.CurveState memory curve,
-                              CurveMath.SwapAccum memory swap,
-                              uint160 limitPrice) pure private {
+
+    /* In rare corner cases, swap can result in a corrupt end state. This occurs
+     * when the swap flow lands within in a rounding error of the limit price. That 
+     * potentially creates an error where we're swapping through a curve price range
+     * without supported liquidity. 
+     *
+     * The other corner case is the flow based swap not exhausting liquidity for some
+     * code or rounding reason. The upstream logic uses the exhaustion of the swap qty
+     * to determine whether a liquidity bump was reached. In this case it would try to
+     * inappropriately kick in liquidity at a bump the price hasn't reached.
+     *
+     * In both cases the condition is so astronomically rare that we just crash the 
+     * transaction. */
+    function assertFlowEndStable (CurveMath.CurveState memory curve,
+                                  CurveMath.SwapAccum memory swap,
+                                  uint160 limitPrice) pure private {
         bool insideLimit = swap.cntx_.isBuy_ ?
             curve.priceRoot_ < limitPrice :
             curve.priceRoot_ > limitPrice;
+        bool hasNone = swap.qtyLeft_ == 0;
+        require(insideLimit && hasNone, "RF");
+    }
+
+    /* Similar to asserFlowEndStable() but for limit-bound swap legs. Due to rounding 
+     * effects we may also simultaneously exhaust the flow at the same exact point we
+     * reach the limit barrier. This could corrupt the upstream logic which uses the
+     * remaining qty to determine whether we've reached a tick bump. 
+     * 
+     * In this case the corner case would mean it would fail to kick in new liquidity 
+     * that's required by reacking the tick bump limit. Again this is so astronomically 
+     * rare for non-pathological curves that we just crash the transaction. */
+    function assertPriceEndStable (CurveMath.CurveState memory curve,
+                                   CurveMath.SwapAccum memory swap,
+                                   uint160 limitPrice) pure private {
+        bool atLimit = curve.priceRoot_ == limitPrice;
         bool hasRemaining = swap.qtyLeft_ > 0;
-        require(hasRemaining != insideLimit, "RB");
+        require(atLimit && hasRemaining, "RP");
     }
 
     /* @notice Determines an effective limit price given the combination of swap-
