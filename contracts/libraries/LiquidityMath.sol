@@ -13,10 +13,12 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function addDelta(uint128 x, int128 y) internal pure returns (uint128 z) {
+        unchecked {
         if (y < 0) {
             require((z = x - uint128(-y)) < x, 'LS');
         } else {
             require((z = x + uint128(y)) >= x, 'LA');
+        }
         }
     }
 
@@ -25,7 +27,9 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function addDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
+        unchecked {
         require((z = x + y) >= x, 'LA');
+        }
     }
 
     /// @notice Subtract an unsigned liquidity delta to liquidity and revert if it overflows or underflows
