@@ -22,6 +22,7 @@ import "hardhat/console.sol";
 library SwapCurve {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
+    using SafeCast for uint256;
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
@@ -195,9 +196,9 @@ library SwapCurve {
                          CurveMath.SwapAccum memory accum) pure private {
         uint256 totalFees = liqFees + exchFees;
         if (accum.cntx_.inBaseQty_) {
-            accum.paidQuote_ = accum.paidQuote_.add(int256(totalFees));
+            accum.paidQuote_ = accum.paidQuote_.add(totalFees.toInt256());
         } else {
-            accum.paidBase_ = accum.paidBase_.add(int256(totalFees));
+            accum.paidBase_ = accum.paidBase_.add(totalFees.toInt256());
         }
         accum.paidProto_ = accum.paidProto_.add(exchFees);
     }

@@ -22,6 +22,7 @@ library CurveRoll {
     using SafeCast for uint256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
+    using SafeCast for uint256;
     using CurveMath for CurveMath.CurveState;
     using CurveMath for CurveMath.SwapFrame;
     using CurveMath for uint128;

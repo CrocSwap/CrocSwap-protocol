@@ -2,6 +2,7 @@
 
 import '../libraries/TransferHelper.sol';
 import '../libraries/CurveMath.sol';
+import '../libraries/SafeCast.sol';
 
 pragma solidity >0.7.1;
 
@@ -11,7 +12,8 @@ pragma solidity >0.7.1;
  * @dev Unlike liquidity fees, protocol fees are accumulated as resting tokens 
  *      instead of ambient liquidity. */
 contract ProtocolAccount {
-    
+    using SafeCast for uint256;
+
     uint128 private protoFeesBase_;
     uint128 private protoFeesQuote_;
 
@@ -19,9 +21,9 @@ contract ProtocolAccount {
      *         fees accumulated in the swap. */
     function accumProtocolFees (CurveMath.SwapAccum memory accum) internal {
         if (accum.cntx_.inBaseQty_) {
-            protoFeesBase_ += uint128(accum.paidProto_);
+            protoFeesBase_ += accum.paidProto_.toUint128();
         } else {
-            protoFeesQuote_ += uint128(accum.paidProto_);
+            protoFeesQuote_ += accum.paidProto_.toUint128();
         }
     }
 

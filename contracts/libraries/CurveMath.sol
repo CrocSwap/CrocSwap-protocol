@@ -19,6 +19,7 @@ library CurveMath {
     using LowGasSafeMath for int256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
+    using SafeCast for uint256;
 
     /* All CrocSwap swaps occur along a locally stable constant-product AMM curve.
      * For large moves across tick boundaries, the state of this curve might change

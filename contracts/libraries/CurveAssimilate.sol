@@ -19,6 +19,7 @@ library CurveAssimilate {
     using LowGasSafeMath for int256;
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
+    using SafeCast for uint256;
     using CurveMath for CurveMath.CurveLiquidity;
     using CurveMath for CurveMath.SwapAccum;
 
@@ -131,7 +132,7 @@ library CurveAssimilate {
         uint256 nextPrice = inBaseQty ?
             CompoundMath.compoundGrow(curve.priceRoot_, inflator) + 1:
             CompoundMath.compoundShrink(curve.priceRoot_, inflator);
-        curve.priceRoot_ = uint160(nextPrice);
+        curve.priceRoot_ = nextPrice.toUint160();
     }
 
     /* @notice Given a targeted aggregate liquidity inflator, affects that change in
@@ -176,7 +177,7 @@ library CurveAssimilate {
         uint256 concRewarded = adjustConcRewards(concInflator, ambientInject);
 
         curve.liq_.ambientSeed_ = curve.liq_.ambientSeed_
-            .addDelta(uint128(ambientInject));
+            .addDelta(ambientInject.toUint128());
         curve.accum_.concTokenGrowth_ = curve.accum_.concTokenGrowth_
             .add(concRewarded);
     }

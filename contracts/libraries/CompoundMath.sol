@@ -5,6 +5,7 @@ import "./FixedPoint128.sol";
 import "./FullMath.sol";
 import "./LowGasSafeMath.sol";
 import "./TickMath.sol";
+import "./SafeCast.sol";
 
 /* @title Compounding math library
  * @notice Library provides convenient math functionality for various transformations
@@ -12,6 +13,7 @@ import "./TickMath.sol";
 library CompoundMath {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
+    using SafeCast for uint256;
 
     /* @notice Provides a safe lower-bound approximation of the square root of 1+x
      *         based on a two-term Taylor series expansion.
@@ -104,6 +106,6 @@ library CompoundMath {
         uint256 inflated = compoundGrow(seed, growth);
         return inflated > TickMath.MAX_TICK_LIQUIDITY ?
             TickMath.MAX_TICK_LIQUIDITY :
-            uint128(inflated);
+            inflated.toUint128();
     }
 }
