@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed                                                          
-pragma solidity >0.7.1;
+pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../libraries/FullMath.sol';
@@ -62,7 +62,7 @@ contract LevelBook is TickCensus {
     function crossLevel (int24 tick, bool isBuy, uint256 feeGlobal)
         internal returns (int256 liqDelta) {
         BookLevel memory lvl = levels_[tick];
-        int256 crossDelta = int256(lvl.bidLiq_) - int256(lvl.askLiq_);
+        int256 crossDelta = int256(uint256(lvl.bidLiq_)) - int256(uint256(lvl.askLiq_));
         liqDelta = isBuy ? crossDelta : -crossDelta;
         
         if (feeGlobal != lvl.feeOdometer_) {
@@ -102,8 +102,8 @@ contract LevelBook is TickCensus {
      *    only be allowed to add at tick indices module this set value. Set to 0 to
      *    allow orders at every tick. */
     function setTickSize (int24 tickSize) internal {
-        require(tickSize >= 0 && tickSize < type(uint16).max);
-        tickSize_ = uint16(tickSize);
+        require(tickSize >= 0 && uint24(tickSize) < type(uint16).max);
+        tickSize_ = uint16(uint24(tickSize));
     }
 
     /* @notice Returns the currently set tick spacing contraint. */
@@ -113,8 +113,8 @@ contract LevelBook is TickCensus {
 
     function assertTickSize (int24 bidTick, int24 askTick) internal view {
         if (tickSize_ > 0) {
-            require(bidTick % tickSize_ == 0, "D");
-            require(askTick % tickSize_ == 0, "D");
+            require(bidTick % int24(uint24(tickSize_)) == 0, "D");
+            require(askTick % int24(uint24(tickSize_)) == 0, "D");
         }
     }
 
@@ -211,7 +211,9 @@ contract LevelBook is TickCensus {
         internal view returns (uint256) {
         uint256 feeLower = pivotFeeBelow(lowerTick, currentTick, feeGlobal);
         uint256 feeUpper = pivotFeeBelow(upperTick, currentTick, feeGlobal);
-        return feeUpper - feeLower;
+        unchecked {
+            return feeUpper - feeLower;
+        }
     }
 
     /* @dev Internally we checkpoint the last global accumulator value from the last

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed                                         
-pragma solidity >=0.7.1;
+pragma solidity >=0.8.4;
 
 import '../libraries/BitMath.sol';
 import '../libraries/Bitmaps.sol';
@@ -145,10 +145,9 @@ contract TickCensus {
 
     function spillOverPin (bool isUpper, int16 tickMezz) private pure returns (int24) {
         if (isUpper) {
-            int16 stepMezz = tickMezz + 1;
             return tickMezz == Bitmaps.zeroMezz(isUpper) ?
                 Bitmaps.zeroTick(isUpper) :
-                Bitmaps.weldMezzTerm(stepMezz, Bitmaps.zeroTerm(!isUpper));
+                Bitmaps.weldMezzTerm(tickMezz + 1, Bitmaps.zeroTerm(!isUpper));
         } else {
             return Bitmaps.weldMezzTerm(tickMezz, 0);
         }

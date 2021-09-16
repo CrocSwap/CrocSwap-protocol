@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity >0.7.1;
+pragma solidity >=0.8.4;
 
 import './interfaces/ICrocSwapPool.sol';
 
@@ -83,7 +83,7 @@ contract CrocSwapPool is ICrocSwapPool,
         return feeRate_;
     }
     function tickSpacing() external view override returns (int24) {
-        return getTickSize();
+        return int24(uint24(getTickSize()));
     }
     function maxLiquidityPerTick() external pure override returns (uint128) {
         return TickMath.MAX_TICK_LIQUIDITY;

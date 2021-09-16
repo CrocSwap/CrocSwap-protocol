@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity >=0.7.6;
+pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../libraries/FullMath.sol';
@@ -184,11 +184,19 @@ contract LiquidityCurve {
         bumpAmbient(-(seeds.toInt256()));
     }
 
+    function bumpAmbient (uint128 seedDelta) private {
+        bumpAmbient(int256(uint256(seedDelta)));
+    }
+
     function bumpAmbient (int256 seedDelta) private {
         curve_.liq_.ambientSeed_ = LiquidityMath.addDelta
             (curve_.liq_.ambientSeed_, seedDelta.toInt128());
     }
 
+    function bumpConcentrated (uint128 liqDelta, bool inRange) private {
+        bumpConcentrated(int256(uint256(liqDelta)), inRange);
+    }
+    
     function bumpConcentrated (int256 liqDelta, bool inRange) private {
         if (inRange) {
             uint128 prevLiq = curve_.liq_.concentrated_;

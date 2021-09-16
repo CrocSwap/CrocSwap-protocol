@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicensed
 
+pragma solidity >=0.8.4;
+
 import '../libraries/TransferHelper.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/SafeCast.sol';
-
-pragma solidity >0.7.1;
 
 /* @title Protocol Account Mixin
  * @notice Tracks and pays out the protocol fees in the pool I.e. these are the
