@@ -72,16 +72,20 @@ describe('BitmapsLib', () => {
    })
 
    it("castIndex", async() => {
-      let castNeg = await bitmaps.testUncastIndex(0);
+      let castNeg = await bitmaps.testUncastIndex(0);      
+      let castNegOne = await bitmaps.testUncastIndex(127);
       let castZero = await bitmaps.testUncastIndex(128);
       let castPos = await bitmaps.testUncastIndex(255);
       let uncastNeg = await bitmaps.testCastIndex(-128);
+      let uncastNegOne = await bitmaps.testCastIndex(-1);
       let uncastZero = await bitmaps.testCastIndex(0);
       let uncastPos = await bitmaps.testCastIndex(127);
       expect(castNeg).to.equal(-128);
+      expect(castNegOne).to.equal(-1);
       expect(castZero).to.equal(0);
       expect(castPos).to.equal(127);
       expect(uncastNeg).to.equal(0);
+      expect(uncastZero).to.equal(127);
       expect(uncastZero).to.equal(128);
       expect(uncastPos).to.equal(255);
    })
