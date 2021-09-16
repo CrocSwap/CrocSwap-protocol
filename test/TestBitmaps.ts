@@ -85,7 +85,7 @@ describe('BitmapsLib', () => {
       expect(castZero).to.equal(0);
       expect(castPos).to.equal(127);
       expect(uncastNeg).to.equal(0);
-      expect(uncastZero).to.equal(127);
+      expect(uncastNegOne).to.equal(127);
       expect(uncastZero).to.equal(128);
       expect(uncastPos).to.equal(255);
    })
