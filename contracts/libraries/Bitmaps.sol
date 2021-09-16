@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.4;
 
 import "./BitMath.sol";
 
@@ -58,13 +58,13 @@ library Bitmaps {
     function castBitmapIndex (int8 x) internal pure returns (uint8) {
         return x >= 0 ? 
             uint8(x) + 128 :
-            uint8(int16(x) + 128);
+            uint8(uint16(int16(x) + 128));
     }
 
     /* @notice Converts an unsigned integer bitmap index to a signed integer. */
     function uncastBitmapIndex (uint8 x) internal pure returns (int8) {
         return x < 128 ?
-            int8(int16(x) - 128) :
+            int8(int16(uint16(x)) - 128) :
             int8(x - 128);
     }
 
@@ -88,13 +88,13 @@ library Bitmaps {
     /* @notice Extracts the 8-bit mezznine bits (the middle 8-bits) from the full 24-bit 
      * tick index. Result can be used to index on a mezzanine bitmap. */
     function mezzBit (int24 tick) internal pure returns (uint8) {
-        return uint8(mezzKey(tick) % 256);
+        return uint8(uint16(mezzKey(tick) % 256));
     }
 
     /* @notice Extracts the 8-bit terminus bits (the last 8-bits) from the full 24-bit 
      * tick index. Result can be used to index on a terminus bitmap. */
     function termBit (int24 tick) internal pure returns (uint8) {
-        return uint8(tick % 256);
+        return uint8(uint24(tick % 256));
     }
 
     /* @notice Determines the next shift bump from a starting terminus value. Note for 
@@ -127,14 +127,14 @@ library Bitmaps {
      *   tick index. */
     function weldMezzTerm (int16 mezzBase, uint8 termBitArg)
         internal pure returns (int24) {
-        return (int24(mezzBase) << 8) + termBitArg;
+        return (int24(mezzBase) << 8) + int24(uint24(termBitArg));
     }
 
     /* @notice Converts an 8-bit lobby index and an 8-bit mezzanine bit into a 16-bit 
      *   tick base root. */
     function weldLobbyMezz (int8 lobbyIdx, uint8 mezzBitArg)
         internal pure returns (int16) {
-        return (int16(lobbyIdx) << 8) + mezzBitArg;
+        return (int16(lobbyIdx) << 8) + int16(uint16(mezzBitArg));
     }
 
     /* @notice Converts an 8-bit lobby index, an 8-bit mezzanine bit, and an 8-bit
@@ -142,7 +142,8 @@ library Bitmaps {
     function weldLobbyMezzTerm (int8 lobbyIdx, uint8 mezzBitArg, uint8 termBitArg)
         internal pure returns (int24) {
         return (int24(lobbyIdx) << 16) +
-            (int24(mezzBitArg) << 8) + termBitArg;
+            (int24(uint24(mezzBitArg)) << 8) +
+            int24(uint24(termBitArg));
     }
 
     /* @notice The minimum and maximum 24-bit integers are used to represent -/+ 
