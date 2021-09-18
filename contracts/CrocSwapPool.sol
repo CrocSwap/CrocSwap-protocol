@@ -144,7 +144,7 @@ contract CrocSwapPool is ICrocSwapPool,
         // Insert the range order into the book and position data structures
         uint256 odometer = addBookLiq(midTick, lowerTick, upperTick,
                                       liqAdded, tokenOdometer());
-        addPosLiq(owner, lowerTick, upperTick, liqAdded, odometer);
+        addPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
 
         // Calculate and collect the necessary collateral from the user.
         (baseOwed, quoteOwed) = liquidityReceivable(liqAdded, lowerTick, upperTick);
@@ -205,7 +205,7 @@ contract CrocSwapPool is ICrocSwapPool,
 
         // Return the range order's original committed liquidity inflated by its
         // cumulative rewards
-        uint256 rewards = burnPosLiq(msg.sender, lowerTick, upperTick,
+        uint256 rewards = burnPosLiq(msg.sender, DFLT_POOL_IDX, lowerTick, upperTick,
                                      liqRemoved, feeMileage);
         (basePaid, quotePaid) = liquidityPayable(liqRemoved, rewards.toUint128(),
                                                   lowerTick, upperTick);
@@ -445,7 +445,7 @@ contract CrocSwapPool is ICrocSwapPool,
      * @param upperTick The tick index of the upper bound of the range for the
      *        concentrated liquidity position. */
     function transfer (address receipient, int24 lowerTick, int24 upperTick) external {
-        changePosOwner(msg.sender, receipient, lowerTick, upperTick);
+        changePosOwner(msg.sender, receipient, DFLT_POOL_IDX, lowerTick, upperTick);
         emit Transfer(msg.sender, receipient, lowerTick, upperTick);
     }
     
@@ -499,5 +499,7 @@ contract CrocSwapPool is ICrocSwapPool,
     uint24 private immutable feeRate_;
     uint8 private protocolCut_;
     
-    bool private reEntrantLocked_;    
+    bool private reEntrantLocked_;
+
+    uint8 constant DFLT_POOL_IDX = 0;
 }

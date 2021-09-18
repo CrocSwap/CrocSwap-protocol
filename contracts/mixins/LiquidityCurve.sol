@@ -9,6 +9,7 @@ import '../libraries/FixedPoint96.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/SafeCast.sol';
 import '../libraries/LowGasSafeMath.sol';
+import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 
 /* @title Liquidity Curve Mixin
@@ -25,11 +26,11 @@ contract LiquidityCurve {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
 
-    CurveMath.CurveState private curve_;
+    mapping(uint8 => CurveMath.CurveState) private curves_;
 
     /* @notice Returns the total liquidity currently active in the curve. */
     function activeLiquidity() view internal returns (uint128) {
-        return curve_.activeLiquidity();
+        return curves_[0].activeLiquidity();
     }
 
     /* @notice Returns the cumulative concentrated liquidity reward growth since the
@@ -41,7 +42,7 @@ contract LiquidityCurve {
      *         realized growth. Concentrated liquidity rewards are accumulated in the
      *         form of ambient liquidity seeds (see library/CurveMath.sol) */
     function tokenOdometer() view internal returns (uint256) {
-        return curve_.accum_.concTokenGrowth_;
+        return curves_[0].accum_.concTokenGrowth_;
     }
 
     /* @notice Copies the current state of the curve in EVM storage to a memory clone.
@@ -49,7 +50,7 @@ contract LiquidityCurve {
      *         curve. But it's the callers responsibility to persist the changes back
      *         to storage when complete. */
     function snapCurve() view internal returns (CurveMath.CurveState memory curve) {
-        curve = curve_;
+        curve = curves_[0];
         require(curve.priceRoot_ > 0, "J");
     }
 
@@ -57,11 +58,11 @@ contract LiquidityCurve {
      *         persistent memory. Use for the working copy from snapCurve when 
      *         finalized. */
     function commitSwapCurve (CurveMath.CurveState memory curve) internal {
-        curve_.priceRoot_ = curve.priceRoot_;
-        curve_.accum_ = curve.accum_;
-        if (curve_.liq_.ambientSeed_ != curve.liq_.ambientSeed_ ||
-            curve_.liq_.concentrated_ != curve.liq_.concentrated_) {
-            curve_.liq_ = curve.liq_;
+        curves_[0].priceRoot_ = curve.priceRoot_;
+        curves_[0].accum_ = curve.accum_;
+        if (curves_[0].liq_.ambientSeed_ != curve.liq_.ambientSeed_ ||
+            curves_[0].liq_.concentrated_ != curve.liq_.concentrated_) {
+            curves_[0].liq_ = curve.liq_;
         }
     }
     
@@ -189,8 +190,8 @@ contract LiquidityCurve {
     }
 
     function bumpAmbient (int256 seedDelta) private {
-        curve_.liq_.ambientSeed_ = LiquidityMath.addDelta
-            (curve_.liq_.ambientSeed_, seedDelta.toInt128());
+        curves_[0].liq_.ambientSeed_ = LiquidityMath.addDelta
+            (curves_[0].liq_.ambientSeed_, seedDelta.toInt128());
     }
 
     function bumpConcentrated (uint128 liqDelta, bool inRange) private {
@@ -199,10 +200,10 @@ contract LiquidityCurve {
     
     function bumpConcentrated (int256 liqDelta, bool inRange) private {
         if (inRange) {
-            uint128 prevLiq = curve_.liq_.concentrated_;
+            uint128 prevLiq = curves_[0].liq_.concentrated_;
             uint128 nextLiq = LiquidityMath.addDelta
                 (prevLiq, liqDelta.toInt128());
-            curve_.liq_.concentrated_ = nextLiq;
+            curves_[0].liq_.concentrated_ = nextLiq;
         }
     }
     
@@ -234,8 +235,9 @@ contract LiquidityCurve {
      *   safety. */
     function liquidityFlows (uint128 seeds)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
-        uint160 price  = curve_.priceRoot_;
-        uint128 liq = CompoundMath.inflateLiqSeed(seeds, curve_.accum_.ambientGrowth_);
+        uint160 price  = curves_[0].priceRoot_;
+        uint128 liq = CompoundMath.inflateLiqSeed
+            (seeds, curves_[0].accum_.ambientGrowth_);
         baseDebit = FullMath.mulDiv(liq, price, FixedPoint96.Q96);
         quoteDebit = (uint256(liq) << FixedPoint96.RESOLUTION) / price;
     }
@@ -247,8 +249,8 @@ contract LiquidityCurve {
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit tick index of the new price. */
     function updatePrice (uint160 priceRoot) internal returns (int24 priceTick) {
-        require(curve_.priceRoot_ > 0, "J");
-        curve_.priceRoot_ = priceRoot;
+        require(curves_[0].priceRoot_ > 0, "J");
+        curves_[0].priceRoot_ = priceRoot;
         priceTick = TickMath.getTickAtSqrtRatio(priceRoot);
     }
 
@@ -257,8 +259,8 @@ contract LiquidityCurve {
      * @dev Throws error if price was already initialized. 
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
     function initPrice (uint160 priceRoot) internal {
-        require(curve_.priceRoot_ == 0, "N");
-        curve_.priceRoot_ = priceRoot;
+        require(curves_[0].priceRoot_ == 0, "N");
+        curves_[0].priceRoot_ = priceRoot;
     }
 
     /* @notice Loads price info fromt the current state of the curve.
@@ -275,7 +277,7 @@ contract LiquidityCurve {
      *         so returns zero values. */
     function loadPriceTickMaybe() internal view
         returns (uint160 priceRoot, int24 priceTick) {
-        priceRoot = curve_.priceRoot_;
+        priceRoot = curves_[0].priceRoot_;
         if (priceRoot > 0) {
             priceTick = TickMath.getTickAtSqrtRatio(priceRoot);
         }
