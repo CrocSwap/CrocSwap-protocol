@@ -469,7 +469,7 @@ contract CrocSwapPool is ICrocSwapPool,
     }
     
     modifier protocolAuth() {
-        require(msg.sender == ICrocSwapFactory(factory_).owner());
+        require(msg.sender == ICrocSwapFactory(factory_).owner(), "PA");
         require(reEntrantLocked_ == false, "A");
         reEntrantLocked_ = true;
         _;

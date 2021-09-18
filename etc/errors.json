@@ -12,6 +12,7 @@
     "N": "Already initialized",
     "O": "Ticks out of order",
     "Q": "Insufficient quote token",
+    "PA": "Protocol authorization",
     "R": "Price outside tick range",
     "RB", "Swap Curve Boundary Crash",
     "S": "Mezzanine spill broken",
