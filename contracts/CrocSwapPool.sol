@@ -13,13 +13,13 @@ import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 import './libraries/CurveMath.sol';
 import './libraries/SwapCurve.sol';
+import './libraries/TickCensus.sol';
 
 import './interfaces/ICrocSwapFactory.sol';
 import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IUniswapV3MintCallback.sol';
 import './interfaces/callback/IUniswapV3SwapCallback.sol';
 
-import './mixins/TickCensus.sol';
 import './mixins/PositionRegistrar.sol';
 import './mixins/LiquidityCurve.sol';
 import './mixins/LevelBook.sol';
@@ -92,12 +92,6 @@ contract CrocSwapPool is ICrocSwapPool,
     function liquidity() external view override returns (uint128) {
         return activeLiquidity();
     }
-    
-    function tickBitmap (int16 wordPosition)
-        external view override returns (uint256) {
-        return mezzanineBitmap(wordPosition);
-    }
-
 
     function initialize (uint160 price) external override {
         initPrice(price);
@@ -302,12 +296,10 @@ contract CrocSwapPool is ICrocSwapPool,
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
         while (hasSwapLeft(curve, accum, limitPrice)) {
-            // Finds the next tick at which either A) an extant book level exists which
-            // would bump the liquidity in the curve. Or B) we reach the end of our
-            // locally visible bitmap. In either case we know that within this range,
-            // we can execute the swap on a locallys stable constant-product AMM curve.
-            (int24 bumpTick, bool spillsOver) =
-                pinBitmap(isBuy, midTick, terminusBitmap(midTick));
+            // Swap to furthest point we can based on the local bitmap. Don't bother
+            // seeking a bump outside the bump, because we're not sure if the swap will
+            // exhaust the bitmap. 
+            (int24 bumpTick, bool spillsOver) = pinBitmap(isBuy, midTick);
             curve.swapToLimit(accum, bumpTick, limitPrice);
 
             // The swap can be in one of three states at this point: 1) qty exhausted,
@@ -327,14 +319,14 @@ contract CrocSwapPool is ICrocSwapPool,
                 // we should query the global bitmap, find the next level bitmap, and
                 // keep swapping on the constant-product curve until we hit point.
                 if (spillsOver) {
-                    int24 borderTick = bumpTick;
-                    bumpTick = seekMezzSpill(borderTick, isBuy);
+                    (int24 liqTick, bool tightSpill) = seekTickSpill(bumpTick, isBuy);
+                    bumpTick = liqTick;
                     
                     // In some corner cases the local bitmap border also happens to
                     // be the next level bump. In which case we're done. Otherwise,
                     // we keep swapping since we still have some distance on the curve
                     // to cover.
-                    if (bumpTick != borderTick) {
+                    if (!tightSpill) {
                         curve.swapToLimit(accum, bumpTick, limitPrice);
                         atBump = hasSwapLeft(curve, accum, limitPrice);
                     }

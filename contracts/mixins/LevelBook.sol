@@ -6,13 +6,14 @@ import '../libraries/FullMath.sol';
 import '../libraries/FixedPoint128.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
-import './TickCensus.sol';
+import '../libraries/TickCensus.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
-contract LevelBook is TickCensus {
+contract LevelBook {
     using SafeCast for uint128;
+    using TickCensusLib for TickCensusLib.TickCensus;
 
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
@@ -32,7 +33,8 @@ contract LevelBook is TickCensus {
     }
     
     mapping(int24 => BookLevel) private levels_;
-
+    TickCensusLib.TickCensus private ticks_;
+    
     uint16 private tickSize_;
 
     /* @notice Retrieves the level book state associated with the tick. */
@@ -150,7 +152,7 @@ contract LevelBook is TickCensus {
             if (tick >= midTick) {
                 levels_[tick].feeOdometer_ = feeGlobal;
             }
-            bookmarkTick(tick);
+            ticks_.bookmarkTick(tick);
         }
     }
     
@@ -178,7 +180,7 @@ contract LevelBook is TickCensus {
         
         lvl.bidLiq_ = newLiq;
         if (newLiq == 0 && lvl.askLiq_ == 0) {
-            forgetTick(tick);
+            ticks_.forgetTick(tick);
             return true;
         }
         return false;
@@ -192,7 +194,7 @@ contract LevelBook is TickCensus {
         
         lvl.askLiq_ = newLiq;
         if (newLiq == 0 && lvl.bidLiq_ == 0) {
-            forgetTick(tick);
+            ticks_.forgetTick(tick);
             return true;
         }
         return false;
@@ -233,6 +235,40 @@ contract LevelBook is TickCensus {
         return lvlTick <= currentTick ?
             lvl.feeOdometer_ :
             feeGlobal - lvl.feeOdometer_;            
+    }
+
+    /* @notice Returns the next tick that we can safely swap to within the bitmap. This
+     *         will either be the next liquidity bump or the end of the bitmap.
+     *
+     * @param isBuy Set to true if we're looking at ticks above the current.
+     * @param midTick The 24-bit tick index of the current price.
+     * @return bumpTick The 24-bit tick index of the tick we can safely swap to in a 
+     *                  locally stable AMM curve.
+     * @return spllsOver Returns true if the bump is related to reaching the censored 
+     *                   end of the local bitmap instead of a genuine liquidity bump. */
+    function pinBitmap (bool isBuy, int24 midTick) internal view returns
+        (int24 bumpTick, bool spillsOver) {
+        uint256 termBitmap = ticks_.terminusBitmap(midTick);
+        (bumpTick, spillsOver) = TickCensusLib.pinBitmap(isBuy, midTick, termBitmap);
+    }
+
+    /* @notice Escalates a tick seek after spilling from the pinBitmap call from above.
+     *         Finds the location of the next liquidity bump from outside the bitmap.
+     *
+     * @param borderTick The 24-bit tick index returned by a pinBitmap() spill result.
+     * @param isbuy      Set to true, when we're seeking ticks above the current.
+     * @return bumpTick  The tick index of the next liquidity bump.
+     * @return tightSpill Returns true if the bump occurs immediately after the censored
+     *                    horizon. If this is true, it means pinBitmap() is already at a
+     *                    a liquidity bump border. */
+    function seekTickSpill (int24 borderTick, bool isBuy) internal view returns
+        (int24 bumpTick, bool tightSpill) {
+        bumpTick = ticks_.seekMezzSpill(borderTick, isBuy);
+        tightSpill = (bumpTick == borderTick);
+    }
+
+    function hasTick (int24 tick) internal view returns (bool) {
+        return ticks_.hasTickBookmark(tick);
     }
 }
 

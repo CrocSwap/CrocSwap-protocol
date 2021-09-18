@@ -33,7 +33,4 @@ interface ICrocSwapPoolState {
     /// @dev This value has no relationship to the total liquidity across all ticks
     function liquidity() external view returns (uint128);
 
-    /// @notice Returns 256 packed tick initialized boolean values. See TickBitmap for more information
-    function tickBitmap(int16 wordPosition) external view returns (uint256);
-
 }

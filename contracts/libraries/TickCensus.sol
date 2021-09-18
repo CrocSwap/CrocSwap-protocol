@@ -5,88 +5,86 @@ import '../libraries/BitMath.sol';
 import '../libraries/Bitmaps.sol';
 import '../libraries/TickMath.sol';
 
-/* @title Tick bitmap census mixin.
+/* @title Tick census library.
  * @notice Tracks which tick indices have an active liquidity bump, making it gas
  *   efficient for random read and writes, and to find the next bump tick boundary
  *   on the curve. */
-contract TickCensus {
+library TickCensusLib {
     using Bitmaps for uint256;
     using Bitmaps for int24;
 
     /* Tick positions are stored in three layers of 8-bit/256-slot bitmaps. Recursively
-     * they indicate whether a given 24-bit tick index is active. 
-     *
-     * The first layer (lobby) maps whether each 8-bit tick root is set. An entry will
-     * be set if and only if *any* tick index in the 16-bit range is set. */
-    uint256 private lobby_;
+     * they indicate whether any given 24-bit tick index is active.  */
+    struct TickCensus {
+        /* The first layer (lobby) maps whether each 8-bit tick root is set. An entry will
+         * be set if and only if *any* tick index in the 16-bit range is set. */
+        uint256 lobby_;
     
-    /* The second layer (mezzanine) maps whether each 16-bit tick root is set. An etnry
-     * will be set if and only if *any* tick index in the 8-bit range is set. Because 
-     * there are 256^2 slots, this is represented as map from the first 8-bits in the
-     * root to individual 8-bit/256-slot bitmaps for the middle 8-bits at that root. */
-    mapping(int8 => uint256) private mezzanine_;
-
-    /* The final layer (terminus) directly maps whether individual tick indices are
-     * set. Because there are 256^3 possible slots, this is represnted as a mapping from
-     * the first 16-bit tick root to individual 8-bit/256-slot bitmaps of the terminal
-     * 8-bits within that root. */
-    mapping(int16 => uint256) private terminus_;
+        /* The second layer (mezzanine) maps whether each 16-bit tick root is set. An 
+         * entry will be set if and only if *any* tick index in the 8-bit range is set. 
+         * Because there are 256^2 slots, this is represented as map from the first 8-
+         * bits in the root to individual 8-bit/256-slot bitmaps for the middle 8-bits 
+         * at that root. */
+        mapping(int8 => uint256) mezzanine_;
+        
+        /* The final layer (terminus) directly maps whether individual tick indices are
+         * set. Because there are 256^3 possible slots, this is represnted as a mapping 
+         * from the first 16-bit tick root to individual 8-bit/256-slot bitmaps of the 
+         * terminal 8-bits within that root. */
+        mapping(int16 => uint256) terminus_;
+    }
 
     /* @notice Returns the associated bitmap for the terminus position (bottom layer) 
      * of the tick index. */
-    function terminusBitmap (int24 tick)
+    function terminusBitmap (TickCensus storage census, int24 tick)
         internal view returns (uint256) {
         int16 wordPos = tick.mezzKey();
-        return terminus_[wordPos];
+        return census.terminus_[wordPos];
     }
-
+    
     /* @notice Returns the associated bitmap for the mezzanine position (middle layer) 
      * of the tick index. */
-    function mezzanineBitmap (int24 tick) internal view returns (uint256) {
+    function mezzanineBitmap (TickCensus storage census, int24 tick)
+        internal view returns (uint256) {
         int8 wordPos = tick.lobbyKey();
-        return mezzanine_[wordPos];
-    }
-
-    /* @notice Returns the associated bitmap for the lobby position (top layer) of the
-     * tick index. */
-    function lobbyBitmap() internal view returns (uint256) {
-        return lobby_;
+        return census.mezzanine_[wordPos];
     }
 
     /* @notice Returns true if the tick index is currently set. */
-    function hasTickBookmark (int24 tick) internal view returns (bool) {
-        uint256 bitmap = terminusBitmap(tick);
+    function hasTickBookmark (TickCensus storage census, int24 tick)
+        internal view returns (bool) {
+        uint256 bitmap = terminusBitmap(census, tick);
         uint8 term = tick.termBit();
         return bitmap.isBitSet(term);
     }
 
     /* @notice Mark the tick index as active.
      * @dev Idempotent. Can be called repeatedly on previously initialized ticks. */
-    function bookmarkTick (int24 tick) internal {
+    function bookmarkTick (TickCensus storage census, int24 tick) internal {
         uint256 lobbyMask = 1 << tick.lobbyBit();
         uint256 mezzMask = 1 << tick.mezzBit();
         uint256 termMask = 1 << tick.termBit();
-        lobby_ |= lobbyMask;
-        mezzanine_[tick.lobbyKey()] |= mezzMask;
-        terminus_[tick.mezzKey()] |= termMask;
+        census.lobby_ |= lobbyMask;
+        census.mezzanine_[tick.lobbyKey()] |= mezzMask;
+        census.terminus_[tick.mezzKey()] |= termMask;
     }
 
     /* @notice Unset the tick index as no longer active. Take care of any book keeping
      *   related to the recursive bitmap levels.
      * @dev Idempontent. Can be called repeatedly even if tick was previously 
      *   forgotten. */
-    function forgetTick(int24 tick) internal {
+    function forgetTick (TickCensus storage census, int24 tick) internal {
         uint256 lobbyMask = ~(1 << tick.lobbyBit());
         uint256 mezzMask = ~(1 << tick.mezzBit());
         uint256 termMask = ~(1 << tick.termBit());
-        uint256 termUpdate = terminus_[tick.mezzKey()] & termMask;
-        terminus_[tick.mezzKey()] = termUpdate;
+        uint256 termUpdate = census.terminus_[tick.mezzKey()] & termMask;
+        census.terminus_[tick.mezzKey()] = termUpdate;
         
         if (termUpdate == 0) {
-            uint256 mezzUpdate = mezzanine_[tick.lobbyKey()] & mezzMask;
-            mezzanine_[tick.lobbyKey()] = mezzUpdate;
+            uint256 mezzUpdate = census.mezzanine_[tick.lobbyKey()] & mezzMask;
+            census.mezzanine_[tick.lobbyKey()] = mezzUpdate;
             if (mezzUpdate == 0) {
-                lobby_ &= lobbyMask;
+                census.lobby_ &= lobbyMask;
             }
         }
     }
@@ -173,17 +171,18 @@ contract TickCensus {
      *   liquidity bump. The result is assymetric boundary for upper/lower ticks. 
      * @return (uint256) - The bitmap associated with the terminus of the boundary
      *   tick. Loaded here for gas efficiency reasons. */
-    function seekMezzSpill (int24 borderTick, bool isUpper)
+    function seekMezzSpill (TickCensus storage census, int24 borderTick, bool isUpper)
         internal view returns (int24) {
         (uint8 lobbyBit, uint8 mezzBit) = rootsForBorder(borderTick, isUpper);
-        (uint8 lobbyStep, bool spills) = determineSeekLobby(lobbyBit, mezzBit, isUpper);
+        (uint8 lobbyStep, bool spills) = determineSeekLobby
+            (census, lobbyBit, mezzBit, isUpper);
 
         if (spills) {
             return Bitmaps.zeroTick(isUpper);
         } else if (lobbyBit == lobbyStep) {
-            return seekAtMezz(lobbyBit, mezzBit, isUpper);
+            return seekAtMezz(census, lobbyBit, mezzBit, isUpper);
         } else {
-            return seekFromLobby(lobbyStep, isUpper);
+            return seekFromLobby(census, lobbyStep, isUpper);
         }
     }
 
@@ -196,43 +195,46 @@ contract TickCensus {
         mezzBit = pinTick.mezzBit();
     }
 
-    function determineSeekLobby (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
+    function determineSeekLobby (TickCensus storage census,
+                                 uint8 lobbyBit, uint8 mezzBit, bool isUpper)
         private view returns (uint8 stepLobbyBit, bool spills) {
         uint8 truncShift = Bitmaps.bitRelate(lobbyBit, isUpper);
-        (stepLobbyBit, spills) = lobby_.bitAfterTrunc(truncShift, isUpper);
+        (stepLobbyBit, spills) = census.lobby_.bitAfterTrunc(truncShift, isUpper);
         if (stepLobbyBit == lobbyBit) {
-            (,bool spillsMezz) = determineSeekMezz(lobbyBit, mezzBit, isUpper);
+            (,bool spillsMezz) = determineSeekMezz(census, lobbyBit, mezzBit, isUpper);
             if (spillsMezz) {
-                (stepLobbyBit, spills) = lobby_.bitAfterTrunc
+                (stepLobbyBit, spills) = census.lobby_.bitAfterTrunc
                     (truncShift + 1, isUpper);
             }
         }
     }
 
-    function determineSeekMezz (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
+    function determineSeekMezz (TickCensus storage census,
+                                uint8 lobbyBit, uint8 mezzBit, bool isUpper)
         private view returns (uint8 stepMezzBit, bool spillsMezz) {
         int8 mezzIdx = Bitmaps.uncastBitmapIndex(lobbyBit);
-        uint256 firstBitmap = mezzanine_[mezzIdx];
+        uint256 firstBitmap = census.mezzanine_[mezzIdx];
         require(firstBitmap != 0, "Y");
         
         uint8 mezzShift = Bitmaps.bitRelate(mezzBit, isUpper);
         (stepMezzBit, spillsMezz) = firstBitmap.bitAfterTrunc(mezzShift, isUpper);  
     }
 
-    function seekFromLobby (uint8 lobbyBit, bool isUpper)
+    function seekFromLobby (TickCensus storage census, uint8 lobbyBit, bool isUpper)
         private view returns (int24) {
-        return seekAtMezz(lobbyBit, Bitmaps.zeroTerm(!isUpper), isUpper);
+        return seekAtMezz(census, lobbyBit, Bitmaps.zeroTerm(!isUpper), isUpper);
     }
 
-    function seekAtMezz (uint8 lobbyBit, uint8 mezzBit, bool isUpper)
+    function seekAtMezz (TickCensus storage census, uint8 lobbyBit,
+                         uint8 mezzBit, bool isUpper)
         private view returns (int24) {
         (uint8 newMezz, bool spillsMezz) = determineSeekMezz
-            (lobbyBit, mezzBit, isUpper);
+            (census, lobbyBit, mezzBit, isUpper);
         require(!spillsMezz, "S");
 
         int16 mezzIdx = Bitmaps.weldLobbyMezz(Bitmaps.uncastBitmapIndex(lobbyBit),
                                               newMezz);
-        uint256 termBitmap = terminus_[mezzIdx];
+        uint256 termBitmap = census.terminus_[mezzIdx];
         
         (uint8 termIdx, bool spillsTerm) = termBitmap.bitAfterTrunc(0, isUpper);
         require(!spillsTerm, "ST");
