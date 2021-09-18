@@ -1,5 +1,6 @@
 import { TestPool } from '../typechain/TestPool'
 import { MockFactory } from '../typechain/MockFactory'
+import { MockProtoOwner } from '../typechain/MockProtoOwner'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -19,6 +20,7 @@ describe('Pool Gas Benchamrks', () => {
     let pool: CrocSwapPool
     let test: TestPool
     let test2: TestPool
+    let proto: MockProtoOwner
     let baseToken: MockERC20
     let quoteToken: MockERC20
     let offToken: MockERC20
@@ -37,6 +39,10 @@ describe('Pool Gas Benchamrks', () => {
        factory = await ethers.getContractFactory("MockFactory")
        poolFactory = await factory.deploy() as MockFactory
 
+       factory = await ethers.getContractFactory("MockProtoOwner")
+       proto = await factory.deploy() as MockProtoOwner
+       await poolFactory.setOwner(proto.address)
+
        await poolFactory.createPool(quoteAddr, baseAddr, feeRate)
        let poolAddr = await poolFactory.getPool(quoteAddr, baseAddr, feeRate)
        factory = await ethers.getContractFactory("TestPool")
@@ -47,6 +53,7 @@ describe('Pool Gas Benchamrks', () => {
 
        factory = await ethers.getContractFactory("CrocSwapPool")
        pool = await factory.attach(poolAddr) as CrocSwapPool
+       await proto.testProtocolSetFee(poolAddr, 6)
        
        await baseToken.deposit(test.address, 100000000);
        await quoteToken.deposit(test.address, 100000000); 
