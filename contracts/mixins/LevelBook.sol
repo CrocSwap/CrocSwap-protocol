@@ -211,6 +211,10 @@ contract LevelBook is TickCensus {
         internal view returns (uint256) {
         uint256 feeLower = pivotFeeBelow(lowerTick, currentTick, feeGlobal);
         uint256 feeUpper = pivotFeeBelow(upperTick, currentTick, feeGlobal);
+        
+        // This is unchecked because we often rely on circular overflow arithmetic
+        // when ticks are initialized at different times. Remember the output of this
+        // function is only used to compare across time.
         unchecked {
             return feeUpper - feeLower;
         }
