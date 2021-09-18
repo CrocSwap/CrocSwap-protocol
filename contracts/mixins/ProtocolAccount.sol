@@ -20,10 +20,12 @@ contract ProtocolAccount {
     /* @notice Called at the completion of a swap event, incrementing any protocol
      *         fees accumulated in the swap. */
     function accumProtocolFees (CurveMath.SwapAccum memory accum) internal {
-        if (accum.cntx_.inBaseQty_) {
-            protoFeesBase_ += accum.paidProto_.toUint128();
-        } else {
-            protoFeesQuote_ += accum.paidProto_.toUint128();
+        if (accum.paidProto_ > 0) {
+            if (accum.cntx_.inBaseQty_) {
+                protoFeesBase_ += accum.paidProto_.toUint128();
+            } else {
+                protoFeesQuote_ += accum.paidProto_.toUint128();
+            }
         }
     }
 
