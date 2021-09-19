@@ -90,18 +90,18 @@ contract CrocSwapPool is ICrocSwapPool,
     }
     
     function liquidity() external view override returns (uint128) {
-        return activeLiquidity();
+        return activeLiquidity(DFLT_POOL_IDX);
     }
 
     function initialize (uint160 price) external override {
-        initPrice(price);
+        initPrice(DFLT_POOL_IDX, price);
         int24 tick = TickMath.getTickAtSqrtRatio(price);
         emit Initialize(price, tick);
     }
 
     function slot0() external view override returns
         (uint160 sqrtPriceX96, int24 tick, uint8 feeProtocol, bool unlocked) {
-        (sqrtPriceX96, tick) = loadPriceTick();
+        (sqrtPriceX96, tick) = loadPriceTick(DFLT_POOL_IDX);
         feeProtocol = protocolCut_;
         unlocked = !reEntrantLocked_;
     }
@@ -133,15 +133,16 @@ contract CrocSwapPool is ICrocSwapPool,
     function mint (address owner, int24 lowerTick, int24 upperTick,
                    uint128 liqAdded, bytes calldata data)
         external override reEntrantLock returns (uint256 quoteOwed, uint256 baseOwed) {
-        (, int24 midTick) = loadPriceTick();
+        (, int24 midTick) = loadPriceTick(DFLT_POOL_IDX);
 
         // Insert the range order into the book and position data structures
         uint256 odometer = addBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
-                                      liqAdded, tokenOdometer());
+                                      liqAdded, tokenOdometer(DFLT_POOL_IDX));
         addPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
 
         // Calculate and collect the necessary collateral from the user.
-        (baseOwed, quoteOwed) = liquidityReceivable(liqAdded, lowerTick, upperTick);
+        (baseOwed, quoteOwed) = liquidityReceivable(DFLT_POOL_IDX, liqAdded,
+                                                    lowerTick, upperTick);
         commitReserves(baseOwed, quoteOwed, data);
         emit Mint(msg.sender, owner, lowerTick, upperTick, liqAdded,
                   quoteOwed, baseOwed);
@@ -190,20 +191,20 @@ contract CrocSwapPool is ICrocSwapPool,
     function burn (address recipient, int24 lowerTick, int24 upperTick,
                    uint128 liqRemoved)
         external override reEntrantLock returns (uint256 quotePaid, uint256 basePaid) {
-        (, int24 midTick) = loadPriceTick();
+        (, int24 midTick) = loadPriceTick(DFLT_POOL_IDX);
 
         // Remember feeMileage is the *global* liquidity growth in the range. We still
         // have to adjust for the growth that occured before the order was created.
         uint256 feeMileage = removeBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
-                                           liqRemoved, tokenOdometer());
+                                           liqRemoved, tokenOdometer(DFLT_POOL_IDX));
 
         // Return the range order's original committed liquidity inflated by its
         // cumulative rewards
         uint256 rewards = burnPosLiq(msg.sender, DFLT_POOL_IDX, lowerTick, upperTick,
                                      liqRemoved, feeMileage);
-        (basePaid, quotePaid) = liquidityPayable(liqRemoved, rewards.toUint128(),
-                                                  lowerTick, upperTick);
-
+        (basePaid, quotePaid) = liquidityPayable(DFLT_POOL_IDX, liqRemoved,
+                                                 rewards.toUint128(),
+                                                 lowerTick, upperTick);
         if (basePaid > 0) {
             TransferHelper.safeTransfer(tokenBase_, recipient, basePaid);
         }
@@ -249,7 +250,7 @@ contract CrocSwapPool is ICrocSwapPool,
          * accumulator. To conserve gas, the strategy is to initialize and track
          * these structures in memory. Then only commit them back to EVM storage
          * when the operation is finalized. */
-        CurveMath.CurveState memory curve = snapCurve();
+        CurveMath.CurveState memory curve = snapCurve(DFLT_POOL_IDX);
         CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
             ({isBuy_: !quoteToBase,
                     inBaseQty_: (qty < 0) ? quoteToBase : !quoteToBase,
@@ -259,7 +260,7 @@ contract CrocSwapPool is ICrocSwapPool,
                     cntx_: cntx, paidBase_: 0, paidQuote_: 0, paidProto_: 0});
 
         sweepSwapLiq(curve, accum, limitPrice);
-        commitSwapCurve(curve);
+        commitSwapCurve(DFLT_POOL_IDX, curve);
         accumProtocolFees(accum);
         settleSwapFlows(recipient, curve, accum, data);
         (quoteFlow, baseFlow) = (accum.paidQuote_, accum.paidBase_);
