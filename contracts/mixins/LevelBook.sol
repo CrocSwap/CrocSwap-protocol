@@ -31,16 +31,19 @@ contract LevelBook {
         uint128 askLiq_;
         uint256 feeOdometer_;
     }
+
+    struct PoolLevels {
+        mapping(int24 => BookLevel) levels_;
+        TickCensusLib.TickCensus ticks_;
+        uint16 tickSize_;
+    }
     
-    mapping(int24 => BookLevel) private levels_;
-    TickCensusLib.TickCensus private ticks_;
-    
-    uint16 private tickSize_;
+    mapping(uint8 => PoolLevels) private pools_;    
 
     /* @notice Retrieves the level book state associated with the tick. */
-    function levelState (int24 tick) internal view
+    function levelState (uint8 poolIdx, int24 tick) internal view
         returns (BookLevel memory) {
-        return levels_[tick];
+        return pools_[poolIdx].levels_[tick];
     }
 
     /* @notice Called when the curve price moves through the tick boundary. Performs
@@ -51,6 +54,7 @@ contract LevelBook {
      *         behavior is undefined. This is safe to call with non-initialized zero
      *         ticks but should generally be avoided for gas efficiency reasons.
      *
+     * @param poolIdx - The index of the pool being traded on.
      * @param tick - The 24-bit tick index being crossed.
      * @param isBuy - If true indicates that price is crossing the tick boundary from 
      *                 below. If false, means tick is being crossed from above. 
@@ -61,14 +65,14 @@ contract LevelBook {
      *
      * @return liqDelta - The net change in concentrated liquidity that should be applied
      *                    to the AMM curve following this level cross. */
-    function crossLevel (int24 tick, bool isBuy, uint256 feeGlobal)
+    function crossLevel (uint8 poolIdx, int24 tick, bool isBuy, uint256 feeGlobal)
         internal returns (int256 liqDelta) {
-        BookLevel memory lvl = levels_[tick];
+        BookLevel storage lvl = pools_[poolIdx].levels_[tick];
         int256 crossDelta = int256(uint256(lvl.bidLiq_)) - int256(uint256(lvl.askLiq_));
         liqDelta = isBuy ? crossDelta : -crossDelta;
         
         if (feeGlobal != lvl.feeOdometer_) {
-            levels_[tick].feeOdometer_ = feeGlobal - levels_[tick].feeOdometer_;
+            lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
         }
     }
 
@@ -78,6 +82,7 @@ contract LevelBook {
      * @dev This method will enforce the minimum tick spacing constraint by requiring 
      *      that any upper or lower bound tick index is modulo the current tick size. 
      * 
+     * @param poolIdx - The index of the pool the liquidity is being added to.
      * @param midTick - The tick index associated with the current price of the AMM curve
      * @param bidTick - The tick index for the lower bound of the range order.
      * @param askTick - The tick index for the upper bound of the range order.
@@ -88,41 +93,45 @@ contract LevelBook {
      * @return feeOdometer - Returns the current fee reward accumulator value for the
      *    range specified by the order. This is necessary, so we consumers of this mixin
      *    can subtract the rewards accumulated before the order was added. */
-    function addBookLiq (int24 midTick, int24 bidTick, int24 askTick, uint128 liq,
-                         uint256 feeGlobal)
+    function addBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                         uint128 liq, uint256 feeGlobal)
         internal returns (uint256 feeOdometer) {
-        assertTickSize(bidTick, askTick);
+        PoolLevels storage pool = pools_[poolIdx];
+        assertTickSize(bidTick, askTick, pool.tickSize_);
+
         // Make sure to init before add, because init logic relies on pre-add liquidity
-        initLevel(midTick, bidTick, feeGlobal);
-        initLevel(midTick, askTick, feeGlobal);
-        addBid(bidTick, liq);
-        addAsk(askTick, liq);
-        feeOdometer = clockFeeOdometer(midTick, bidTick, askTick, feeGlobal);
+        initLevel(pool, midTick, bidTick, feeGlobal);
+        initLevel(pool, midTick, askTick, feeGlobal);
+
+        addBid(pool, bidTick, liq);
+        addAsk(pool, askTick, liq);
+        feeOdometer = clockFeeOdometer(pool, midTick, bidTick, askTick, feeGlobal);
     }
 
     /* @notice Sets the tick spacing constraint. After being set all new orders will 
      *    only be allowed to add at tick indices module this set value. Set to 0 to
      *    allow orders at every tick. */
-    function setTickSize (int24 tickSize) internal {
-        require(tickSize >= 0 && uint24(tickSize) < type(uint16).max);
-        tickSize_ = uint16(uint24(tickSize));
+    function setTickSize (uint8 poolIdx, uint16 tickSize) internal {
+        pools_[poolIdx].tickSize_ = tickSize;
     }
 
     /* @notice Returns the currently set tick spacing contraint. */
-    function getTickSize() internal view returns (uint16) {
-        return tickSize_;
+    function getTickSize (uint8 poolIdx) internal view returns (uint16) {
+        return pools_[poolIdx].tickSize_;
     }
 
-    function assertTickSize (int24 bidTick, int24 askTick) internal view {
-        if (tickSize_ > 0) {
-            require(bidTick % int24(uint24(tickSize_)) == 0, "D");
-            require(askTick % int24(uint24(tickSize_)) == 0, "D");
+    function assertTickSize (int24 bidTick, int24 askTick, uint16 tickSize)
+        internal pure {
+        if (tickSize > 0) {
+            require(bidTick % int24(uint24(tickSize)) == 0, "D");
+            require(askTick % int24(uint24(tickSize)) == 0, "D");
         }
     }
 
     /* @notice Call when removing liquidity associated with a specific range order.
      *         Decrements the associated tick levels as necessary.
      *
+     * @param poolIdx - The index of the pool the liquidity is being removed from.
      * @param midTick - The tick index associated with the current price of the AMM curve
      * @param bidTick - The tick index for the lower bound of the range order.
      * @param askTick - The tick index for the upper bound of the range order.
@@ -136,65 +145,70 @@ contract LevelBook {
      *    downstream user's responsibility to adjust this value with the odometer clock
      *    from addBookLiq to correctly calculate the rewards accumulated over the 
      *    lifetime of the order. */     
-    function removeBookLiq (int24 midTick, int24 bidTick, int24 askTick, uint128 liq,
-                            uint256 feeGlobal)
+    function removeBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                            uint128 liq, uint256 feeGlobal)
         internal returns (uint256 feeOdometer) {
-        bool deleteBid = removeBid(bidTick, liq);
-        bool deleteAsk = removeAsk(askTick, liq);
-        feeOdometer = clockFeeOdometer(midTick, bidTick, askTick, feeGlobal);
+        PoolLevels storage pool = pools_[poolIdx];
+        bool deleteBid = removeBid(pool, bidTick, liq);
+        bool deleteAsk = removeAsk(pool, askTick, liq);
+        feeOdometer = clockFeeOdometer(pool, midTick, bidTick, askTick, feeGlobal);
         
-        if (deleteBid) { delete levels_[bidTick]; }
-        if (deleteAsk) { delete levels_[askTick]; }
+        if (deleteBid) { delete pool.levels_[bidTick]; }
+        if (deleteAsk) { delete pool.levels_[askTick]; }
     }
 
-    function initLevel (int24 midTick, int24 tick, uint256 feeGlobal) private {
-        if (levels_[tick].bidLiq_ == 0 && levels_[tick].askLiq_ == 0) {
+    function initLevel (PoolLevels storage pool, int24 midTick,
+                        int24 tick, uint256 feeGlobal) private {
+        BookLevel storage lvl = pool.levels_[tick];
+        if (lvl.bidLiq_ == 0 && lvl.askLiq_ == 0) {
             if (tick >= midTick) {
-                levels_[tick].feeOdometer_ = feeGlobal;
+                lvl.feeOdometer_ = feeGlobal;
             }
-            ticks_.bookmarkTick(tick);
+            pool.ticks_.bookmarkTick(tick);
         }
     }
     
-    function addBid (int24 tick, uint128 incrLiq) private {
-        BookLevel storage lvl = levels_[tick];
+    function addBid (PoolLevels storage pool, int24 tick, uint128 incrLiq) private {
+        BookLevel storage lvl = pool.levels_[tick];
         uint128 prevLiq = lvl.bidLiq_;
         uint128 newLiq = LiquidityMath.addDelta(prevLiq, incrLiq);
         require(newLiq <= TickMath.MAX_TICK_LIQUIDITY, "L");
         lvl.bidLiq_ = newLiq;
     }
 
-    function addAsk (int24 tick, uint128 incrLiq) private {
-        BookLevel storage lvl = levels_[tick];
+    function addAsk (PoolLevels storage pool, int24 tick, uint128 incrLiq) private {
+        BookLevel storage lvl = pool.levels_[tick];
         uint128 prevLiq = lvl.askLiq_;
         uint128 newLiq = LiquidityMath.addDelta(prevLiq, incrLiq);
         require(newLiq <= TickMath.MAX_TICK_LIQUIDITY, "L");
         lvl.askLiq_ = newLiq;
     }
     
-    function removeBid (int24 tick, uint128 subLiq) private returns (bool) {
-        BookLevel storage lvl = levels_[tick];
+    function removeBid (PoolLevels storage pool, int24 tick,
+                        uint128 subLiq) private returns (bool) {
+        BookLevel storage lvl = pool.levels_[tick];
         uint128 prevLiq = lvl.bidLiq_;
         require(subLiq <= prevLiq, "V");
         uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
         
         lvl.bidLiq_ = newLiq;
         if (newLiq == 0 && lvl.askLiq_ == 0) {
-            ticks_.forgetTick(tick);
+            pool.ticks_.forgetTick(tick);
             return true;
         }
         return false;
     }    
 
-    function removeAsk (int24 tick, uint128 subLiq) private returns (bool) {
-        BookLevel storage lvl = levels_[tick];
+    function removeAsk (PoolLevels storage pool, int24 tick,
+                        uint128 subLiq) private returns (bool) {
+        BookLevel storage lvl = pool.levels_[tick];
         uint128 prevLiq = lvl.askLiq_;
         require(subLiq <= prevLiq, "V");
         uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
         
         lvl.askLiq_ = newLiq;
         if (newLiq == 0 && lvl.bidLiq_ == 0) {
-            ticks_.forgetTick(tick);
+            pool.ticks_.forgetTick(tick);
             return true;
         }
         return false;
@@ -208,11 +222,18 @@ contract LevelBook {
      *      from the same method call on the same range at a different time. Any
      *      given range could have an arbitrary offset relative to the pool's actual
      *      cumulative rewards. */
-    function clockFeeOdometer (int24 currentTick, int24 lowerTick, int24 upperTick,
-                               uint256 feeGlobal)
+    function clockFeeOdometer (uint8 poolIdx, int24 currentTick,
+                               int24 lowerTick, int24 upperTick, uint256 feeGlobal)
         internal view returns (uint256) {
-        uint256 feeLower = pivotFeeBelow(lowerTick, currentTick, feeGlobal);
-        uint256 feeUpper = pivotFeeBelow(upperTick, currentTick, feeGlobal);
+        return clockFeeOdometer(pools_[poolIdx], currentTick, lowerTick, upperTick,
+                                feeGlobal);
+    }
+
+    function clockFeeOdometer (PoolLevels storage pool, int24 currentTick,
+                               int24 lowerTick, int24 upperTick, uint256 feeGlobal)
+        internal view returns (uint256) {
+        uint256 feeLower = pivotFeeBelow(pool, lowerTick, currentTick, feeGlobal);
+        uint256 feeUpper = pivotFeeBelow(pool, upperTick, currentTick, feeGlobal);
         
         // This is unchecked because we often rely on circular overflow arithmetic
         // when ticks are initialized at different times. Remember the output of this
@@ -229,9 +250,10 @@ contract LevelBook {
      *      that accumulated prior to level initialization. It doesn't matter, because
      *      all we use this value for is calculating the delta of fee accumulation 
      *      between two different post-initialization points in time.) */
-    function pivotFeeBelow (int24 lvlTick, int24 currentTick, uint256 feeGlobal)
+    function pivotFeeBelow (PoolLevels storage pool, int24 lvlTick,
+                            int24 currentTick, uint256 feeGlobal)
         private view returns (uint256) {
-        BookLevel storage lvl = levels_[lvlTick];
+        BookLevel storage lvl = pool.levels_[lvlTick];
         return lvlTick <= currentTick ?
             lvl.feeOdometer_ :
             feeGlobal - lvl.feeOdometer_;            
@@ -240,35 +262,38 @@ contract LevelBook {
     /* @notice Returns the next tick that we can safely swap to within the bitmap. This
      *         will either be the next liquidity bump or the end of the bitmap.
      *
+     * @param poolIdx Index of the pool who's ticks are being checked.
      * @param isBuy Set to true if we're looking at ticks above the current.
      * @param midTick The 24-bit tick index of the current price.
      * @return bumpTick The 24-bit tick index of the tick we can safely swap to in a 
      *                  locally stable AMM curve.
      * @return spllsOver Returns true if the bump is related to reaching the censored 
      *                   end of the local bitmap instead of a genuine liquidity bump. */
-    function pinBitmap (bool isBuy, int24 midTick) internal view returns
+    function pinTickMap (uint8 poolIdx, bool isBuy, int24 midTick) internal view returns
         (int24 bumpTick, bool spillsOver) {
-        uint256 termBitmap = ticks_.terminusBitmap(midTick);
+        uint256 termBitmap = pools_[poolIdx].ticks_.terminusBitmap(midTick);
         (bumpTick, spillsOver) = TickCensusLib.pinBitmap(isBuy, midTick, termBitmap);
     }
 
     /* @notice Escalates a tick seek after spilling from the pinBitmap call from above.
      *         Finds the location of the next liquidity bump from outside the bitmap.
      *
+     * @param poolIdx Index of the pool who's ticks are being checked.
      * @param borderTick The 24-bit tick index returned by a pinBitmap() spill result.
      * @param isbuy      Set to true, when we're seeking ticks above the current.
      * @return bumpTick  The tick index of the next liquidity bump.
      * @return tightSpill Returns true if the bump occurs immediately after the censored
      *                    horizon. If this is true, it means pinBitmap() is already at a
      *                    a liquidity bump border. */
-    function seekTickSpill (int24 borderTick, bool isBuy) internal view returns
+    function seekTickSpill (uint8 poolIdx, int24 borderTick, bool isBuy)
+        internal view returns
         (int24 bumpTick, bool tightSpill) {
-        bumpTick = ticks_.seekMezzSpill(borderTick, isBuy);
+        bumpTick = pools_[poolIdx].ticks_.seekMezzSpill(borderTick, isBuy);
         tightSpill = (bumpTick == borderTick);
     }
 
-    function hasTick (int24 tick) internal view returns (bool) {
-        return ticks_.hasTickBookmark(tick);
+    function hasTick (uint8 poolIdx, int24 tick) internal view returns (bool) {
+        return pools_[poolIdx].ticks_.hasTickBookmark(tick);
     }
 }
 

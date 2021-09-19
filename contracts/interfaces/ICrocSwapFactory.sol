@@ -19,14 +19,14 @@ interface ICrocSwapFactory {
         address indexed token0,
         address indexed token1,
         uint24 indexed fee,
-        int24 tickSpacing,
+        uint16 tickSpacing,
         address pool
     );
 
     /// @notice Emitted when a new fee amount is enabled for pool creation via the factory
     /// @param fee The enabled fee, denominated in hundredths of a bip
     /// @param tickSpacing The minimum number of ticks between initialized ticks for pools created with the given fee
-    event FeeAmountEnabled(uint24 indexed fee, int24 indexed tickSpacing);
+    event FeeAmountEnabled(uint24 indexed fee, uint16 indexed tickSpacing);
 
     /// @notice Returns the current owner of the factory
     /// @dev Can be changed by the current owner via setOwner
@@ -74,7 +74,7 @@ interface ICrocSwapFactory {
     /// @dev Fee amounts may never be removed once enabled
     /// @param fee The fee amount to enable, denominated in hundredths of a bip (i.e. 1e-6)
     /// @param tickSpacing The spacing between ticks to be enforced for all pools created with the given fee amount
-    function enableFeeAmount(uint24 fee, int24 tickSpacing) external;
+    function enableFeeAmount(uint24 fee, uint16 tickSpacing) external;
 
 
     /// Get/set the default protocol fee (as 1/n% of pool fees). This only applies

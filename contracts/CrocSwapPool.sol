@@ -64,10 +64,10 @@ contract CrocSwapPool is ICrocSwapPool,
      *                   points (0.01%). Unlike the other params, this value can be 
      *                   changed by the pool owner after the pool is created. */
     constructor (address factoryRef, address tokenQuote, address tokenBase,
-                 uint24 feeRate, int24 tickUnits) {
+                 uint24 feeRate, uint16 tickUnits) {
         (factory_, tokenBase_, tokenQuote_, feeRate_) =
             (factoryRef, tokenBase, tokenQuote, feeRate);
-        setTickSize(tickUnits);
+        setTickSize(DFLT_POOL_IDX, tickUnits);
     }
 
     function factory() external view override returns (address) {
@@ -82,8 +82,8 @@ contract CrocSwapPool is ICrocSwapPool,
     function fee() external view override returns (uint24) {
         return feeRate_;
     }
-    function tickSpacing() external view override returns (int24) {
-        return int24(uint24(getTickSize()));
+    function tickSpacing() external view override returns (uint16) {
+        return getTickSize(DFLT_POOL_IDX);
     }
     function maxLiquidityPerTick() external pure override returns (uint128) {
         return TickMath.MAX_TICK_LIQUIDITY;
@@ -136,7 +136,7 @@ contract CrocSwapPool is ICrocSwapPool,
         (, int24 midTick) = loadPriceTick();
 
         // Insert the range order into the book and position data structures
-        uint256 odometer = addBookLiq(midTick, lowerTick, upperTick,
+        uint256 odometer = addBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
                                       liqAdded, tokenOdometer());
         addPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
 
@@ -194,8 +194,8 @@ contract CrocSwapPool is ICrocSwapPool,
 
         // Remember feeMileage is the *global* liquidity growth in the range. We still
         // have to adjust for the growth that occured before the order was created.
-        uint256 feeMileage =
-            removeBookLiq(midTick, lowerTick, upperTick, liqRemoved, tokenOdometer());
+        uint256 feeMileage = removeBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
+                                           liqRemoved, tokenOdometer());
 
         // Return the range order's original committed liquidity inflated by its
         // cumulative rewards
@@ -299,7 +299,7 @@ contract CrocSwapPool is ICrocSwapPool,
             // Swap to furthest point we can based on the local bitmap. Don't bother
             // seeking a bump outside the bump, because we're not sure if the swap will
             // exhaust the bitmap. 
-            (int24 bumpTick, bool spillsOver) = pinBitmap(isBuy, midTick);
+            (int24 bumpTick, bool spillsOver) = pinTickMap(DFLT_POOL_IDX, isBuy, midTick);
             curve.swapToLimit(accum, bumpTick, limitPrice);
 
             // The swap can be in one of three states at this point: 1) qty exhausted,
@@ -319,7 +319,8 @@ contract CrocSwapPool is ICrocSwapPool,
                 // we should query the global bitmap, find the next level bitmap, and
                 // keep swapping on the constant-product curve until we hit point.
                 if (spillsOver) {
-                    (int24 liqTick, bool tightSpill) = seekTickSpill(bumpTick, isBuy);
+                    (int24 liqTick, bool tightSpill) = seekTickSpill(DFLT_POOL_IDX,
+                                                                     bumpTick, isBuy);
                     bumpTick = liqTick;
                     
                     // In some corner cases the local bitmap border also happens to
@@ -385,7 +386,8 @@ contract CrocSwapPool is ICrocSwapPool,
 
     function bumpLiquidity (int24 bumpTick, bool isBuy,
                             CurveMath.CurveState memory curve) private {
-        int256 liqDelta = crossLevel(bumpTick, isBuy, curve.accum_.concTokenGrowth_);
+        int256 liqDelta = crossLevel(DFLT_POOL_IDX, bumpTick, isBuy,
+                                     curve.accum_.concTokenGrowth_);
         curve.liq_.concentrated_ = LiquidityMath.addDelta
             (curve.liq_.concentrated_, liqDelta.toInt128());
     }

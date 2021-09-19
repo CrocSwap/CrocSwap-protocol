@@ -19,7 +19,7 @@ contract MockFactory is ICrocSwapFactory {
         owner = _owner;
     }
 
-    function enableFeeAmount (uint24 fee, int24 spacing) external override {
+    function enableFeeAmount (uint24 fee, uint16 spacing) external override {
         // Do nothing... All fees enabled...
     }
 

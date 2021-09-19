@@ -9,40 +9,43 @@ contract TestLevelBook is LevelBook {
 
     int256 public liqDelta;
     uint256 public odometer;
-    
-    function getLevelState (int24 tick) public view returns (BookLevel memory) {
-        return levelState(tick);
+
+    function getLevelState (uint8 poolIdx, int24 tick) public view returns
+        (BookLevel memory) {
+        return levelState(poolIdx, tick);
     }
 
-    function pullFeeOdometer (int24 mid, int24 bid, int24 ask, uint256 feeGlobal)
+    function pullFeeOdometer (uint8 poolIdx, int24 mid, int24 bid, int24 ask,
+                              uint256 feeGlobal)
         public view returns (uint256) {
-        return clockFeeOdometer(mid, bid, ask, feeGlobal);
+        return clockFeeOdometer(poolIdx, mid, bid, ask, feeGlobal);
     }
 
-    function testCrossLevel (int24 tick, bool isBuy, uint256 feeGlobal) public {
-        liqDelta = crossLevel(tick, isBuy, feeGlobal);
+    function testCrossLevel (uint8 poolIdx, int24 tick, bool isBuy,
+                             uint256 feeGlobal) public {
+        liqDelta = crossLevel(poolIdx, tick, isBuy, feeGlobal);
     }
 
-    function testAdd (int24 midTick, int24 bidTick, int24 askTick, uint128 liq,
-                      uint256 globalFee) public {
-        odometer = addBookLiq(midTick, bidTick, askTick, liq, globalFee);
+    function testAdd (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                      uint128 liq, uint256 globalFee) public {
+        odometer = addBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
-    function testRemove (int24 midTick, int24 bidTick, int24 askTick, uint128 liq,
-                      uint256 globalFee) public {
-        odometer = removeBookLiq(midTick, bidTick, askTick, liq, globalFee);
+    function testRemove (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                         uint128 liq, uint256 globalFee) public {
+        odometer = removeBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
-    function testSetTickSize (int24 tick) public {
-        setTickSize(tick);
+    function testSetTickSize (uint8 poolIdx, uint16 tickSize) public {
+        setTickSize(poolIdx, tickSize);
     }
 
-    function testGetTickSize() public view returns (uint16) {
-        return getTickSize();
+    function testGetTickSize (uint8 poolIdx) public view returns (uint16) {
+        return getTickSize(poolIdx);
     }
 
-    function hasTickBump (int24 tick) public view returns (bool) {
-        return hasTick(tick);
+    function hasTickBump (uint8 poolIdx, int24 tick) public view returns (bool) {
+        return hasTick(poolIdx, tick);
     }
 
 }
