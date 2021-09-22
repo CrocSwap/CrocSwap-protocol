@@ -7,12 +7,13 @@ contract TestTickCensus {
     using TickCensusLib for TickCensusLib.TickCensus;
     
     TickCensusLib.TickCensus private census;
+    uint16 constant poolIdx = 1986;
     
     function getBitmaps (int24 tick) public view returns
         (uint256 lobby, uint256 mezz, uint256 term) {
-        lobby = census.lobby_;
-        mezz = census.mezzanineBitmap(tick);
-        term = census.terminusBitmap(tick);
+        lobby = census.lobbyBitmap(poolIdx);
+        mezz = census.mezzanineBitmap(poolIdx, tick);
+        term = census.terminusBitmap(poolIdx, tick);
     }
 
     function testPinBuy (int24 tick, uint256 bitmap) public pure
@@ -26,20 +27,20 @@ contract TestTickCensus {
     }
 
     function testSeekBuy (int24 tick) public view returns (int24, uint256) {
-        int24 next = census.seekMezzSpill(tick, true);
-        return (next, census.terminusBitmap(next));
+        int24 next = census.seekMezzSpill(poolIdx, tick, true);
+        return (next, census.terminusBitmap(poolIdx, next));
     }
 
     function testSeekSell (int24 tick) public view returns (int24, uint256) {
-        int24 next = census.seekMezzSpill(tick, false);
-        return (next, census.terminusBitmap(next));
+        int24 next = census.seekMezzSpill(poolIdx, tick, false);
+        return (next, census.terminusBitmap(poolIdx, next));
     }
 
     function testBookmark (int24 tick) public {
-        census.bookmarkTick(tick);
+        census.bookmarkTick(poolIdx, tick);
     }
 
     function testForget (int24 tick) public {
-        census.forgetTick(tick);
+        census.forgetTick(poolIdx, tick);
     }
 }

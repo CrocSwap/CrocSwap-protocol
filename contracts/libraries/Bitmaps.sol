@@ -146,6 +146,15 @@ library Bitmaps {
             int24(uint24(termBitArg));
     }
 
+    
+    /* @notice Converts an 8-bit lobby index, an 8-bit mezzanine bit, and an 8-bit
+     *   terminus bit into a full 24-bit tick index. */
+    function weldLobbyPosMezzTerm (uint8 lobbyWord, uint8 mezzBitArg, uint8 termBitArg)
+        internal pure returns (int24) {
+        return weldLobbyMezzTerm(Bitmaps.uncastBitmapIndex(lobbyWord),
+                                 mezzBitArg, termBitArg);
+    }
+
     /* @notice The minimum and maximum 24-bit integers are used to represent -/+ 
      *   infinity range. We have to reserve these bits as non-standard range for when
      *   price shifts past the last representable tick.
