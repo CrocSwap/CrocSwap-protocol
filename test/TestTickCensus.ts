@@ -293,6 +293,29 @@ describe('TickCensus', () => {
       expect(resultSell[1].toNumber()).to.equal(2064); 
    });
 
+   it("seek mezz caged", async() => {
+      await populateTicks()
+      let tick = -120 * 256 * 256 + 10 * 256;
+      let resultBuy = await census.testSeekBuy(tick);
+      let resultSell = await census.testSeekSell(tick);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 4);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 15);
+      expect(resultBuy[1].toNumber()).to.equal(2064);
+      expect(resultSell[1].toNumber()).to.equal(32768 + 1024); 
+   });
+
+   it("seek mezz inner caged", async() => {
+      await populateTicks()
+      await census.testBookmark(-120 * 256 * 256 + 11 * 256 + 132)
+      await census.testBookmark(-120 * 256 * 256 + 11 * 256 + 103)
+      await census.testBookmark(-120 * 256 * 256 + 7 * 256 + 42)
+      await census.testBookmark(-120 * 256 * 256 + 7 * 256 + 212)
+      let tick = -120 * 256 * 256 + 9 * 256;
+      let resultBuy = await census.testSeekBuy(tick);
+      let resultSell = await census.testSeekSell(tick);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 11 * 256 + 103);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 7 * 256 + 212);
+   });
    it("seek through lobby", async() => {
       await populateTicks()
       let leftTick = -117 * 256 * 256 + 128 * 256;
@@ -303,17 +326,6 @@ describe('TickCensus', () => {
       expect(resultSell[0]).to.equal(-118 * 256 * 256 + 6 * 256 + 10);
       expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
       expect(resultSell[1].toNumber()).to.equal(1024); 
-   });
-
-   it("seek caged", async() => {
-      await populateTicks()
-      let tick = -120 * 256 * 256 + 10 * 256;
-      let resultBuy = await census.testSeekBuy(tick);
-      let resultSell = await census.testSeekSell(tick);
-      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 4);
-      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 15);
-      expect(resultBuy[1].toNumber()).to.equal(2064);
-      expect(resultSell[1].toNumber()).to.equal(32768 + 1024); 
    });
 
    it("seek lobby lookback", async() => {
