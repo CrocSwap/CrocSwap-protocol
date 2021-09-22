@@ -10,8 +10,7 @@ contract TestTickCensus {
     uint16 constant poolIdx = 1986;
     
     function getBitmaps (int24 tick) public view returns
-        (uint256 lobby, uint256 mezz, uint256 term) {
-        lobby = census.lobbyBitmap(poolIdx);
+        (uint256 mezz, uint256 term) {
         mezz = census.mezzanineBitmap(poolIdx, tick);
         term = census.terminusBitmap(poolIdx, tick);
     }

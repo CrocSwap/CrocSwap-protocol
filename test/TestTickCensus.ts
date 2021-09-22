@@ -19,16 +19,14 @@ describe('TickCensus', () => {
       let result = await census.getBitmaps(100);
       expect(result[0].toNumber()).to.equal(0);
       expect(result[1].toNumber()).to.equal(0);
-      expect(result[2].toNumber()).to.equal(0);
    })
 
    it("bookmark tick", async() => {
       let tick = -120 * 256 * 256 + 12 * 256 + 4
       await census.testBookmark(tick);
       let result = await census.getBitmaps(tick);
-      expect(result[0].toNumber()).to.equal(256);
-      expect(result[1].toNumber()).to.equal(4096);
-      expect(result[2].toNumber()).to.equal(16);
+      expect(result[0].toNumber()).to.equal(4096);
+      expect(result[1].toNumber()).to.equal(16);
    })
 
    it("bookmark repeat", async() => {
@@ -36,9 +34,8 @@ describe('TickCensus', () => {
       await census.testBookmark(tick);
       await census.testBookmark(tick);
       let result = await census.getBitmaps(tick);
-      expect(result[0].toNumber()).to.equal(256);
-      expect(result[1].toNumber()).to.equal(4096);
-      expect(result[2].toNumber()).to.equal(16);
+      expect(result[0].toNumber()).to.equal(4096);
+      expect(result[1].toNumber()).to.equal(16);
    })
    
    it("bookmark two shared", async() => {
@@ -48,9 +45,8 @@ describe('TickCensus', () => {
       await census.testBookmark(tickOne);
       await census.testBookmark(tickTwo);
       let result = await census.getBitmaps(tickOne);
-      expect(result[0].toNumber()).to.equal(256);
-      expect(result[1].toNumber()).to.equal(4096);
-      expect(result[2].toNumber()).to.equal(16 + 2048);
+      expect(result[0].toNumber()).to.equal(4096);
+      expect(result[1].toNumber()).to.equal(16 + 2048);
    })
 
 
@@ -66,19 +62,16 @@ describe('TickCensus', () => {
       await census.testBookmark(tickFour);
       
       let result = await census.getBitmaps(tickOne);
-      expect(result[0].toNumber()).to.equal(256 + 1024);
-      expect(result[1].toNumber()).to.equal(4096 + 64);
-      expect(result[2].toNumber()).to.equal(16 + 2048);
+      expect(result[0].toNumber()).to.equal(4096 + 64);
+      expect(result[1].toNumber()).to.equal(16 + 2048);
 
       result = await census.getBitmaps(tickThree);
-      expect(result[0].toNumber()).to.equal(256 + 1024);
-      expect(result[1].toNumber()).to.equal(4096 + 64);
-      expect(result[2].toNumber()).to.equal(32768);
+      expect(result[0].toNumber()).to.equal(4096 + 64);
+      expect(result[1].toNumber()).to.equal(32768);
 
       result = await census.getBitmaps(tickFour);
-      expect(result[0].toNumber()).to.equal(256 + 1024);
-      expect(result[1].toNumber()).to.equal(64);
-      expect(result[2].toNumber()).to.equal(1024);
+      expect(result[0].toNumber()).to.equal(64);
+      expect(result[1].toNumber()).to.equal(1024);
    })
 
 
@@ -90,7 +83,6 @@ describe('TickCensus', () => {
       let result = await census.getBitmaps(tickOne);
       expect(result[0].toNumber()).to.equal(0);
       expect(result[1].toNumber()).to.equal(0);
-      expect(result[2].toNumber()).to.equal(0);
    })
    
    it("forget repeat", async() => {
@@ -102,7 +94,6 @@ describe('TickCensus', () => {
       let result = await census.getBitmaps(tickOne);
       expect(result[0].toNumber()).to.equal(0);
       expect(result[1].toNumber()).to.equal(0);
-      expect(result[2].toNumber()).to.equal(0);
    })
 
    it("forget shared", async() => {
@@ -113,9 +104,8 @@ describe('TickCensus', () => {
       await census.testForget(tickOne);
       
       let result = await census.getBitmaps(tickTwo);
-      expect(result[0].toNumber()).to.equal(256);
-      expect(result[1].toNumber()).to.equal(4096);
-      expect(result[2].toNumber()).to.equal(2048);
+      expect(result[0].toNumber()).to.equal(4096);
+      expect(result[1].toNumber()).to.equal(2048);
    })
 
 
@@ -130,21 +120,18 @@ describe('TickCensus', () => {
       await census.testForget(tickOne);
 
       let result = await census.getBitmaps(tickOne);
-      expect(result[0].toNumber()).to.equal(256 + 1024);
-      expect(result[1].toNumber()).to.equal(64);
-      expect(result[2].toNumber()).to.equal(0);
+      expect(result[0].toNumber()).to.equal(64);
+      expect(result[1].toNumber()).to.equal(0);
 
       await census.testForget(tickThree);
       result = await census.getBitmaps(tickThree);
-      expect(result[0].toNumber()).to.equal(1024);
+      expect(result[0].toNumber()).to.equal(0);
       expect(result[1].toNumber()).to.equal(0);
-      expect(result[2].toNumber()).to.equal(0);
 
       await census.testForget(tickFour);
       result = await census.getBitmaps(tickFour);
       expect(result[0].toNumber()).to.equal(0);
       expect(result[1].toNumber()).to.equal(0);
-      expect(result[2].toNumber()).to.equal(0);
    })
 
 
@@ -260,16 +247,26 @@ describe('TickCensus', () => {
       expect(resultSell[1].toNumber()).to.equal(0); 
    });
 
-   it("seek through lobby", async() => {
+   it("seek terminus neighbor", async() => {
       await populateTicks()
-      let leftTick = -117 * 256 * 256 + 128 * 256;
-      let rightTick = -121 * 256 * 256 + 128 * 256;
+      let leftTick = -120 * 256 * 256 + 7 * 256;
+      let rightTick = -120 * 256 * 256 + 12 * 256;
       let resultBuy = await census.testSeekBuy(rightTick);
       let resultSell = await census.testSeekSell(leftTick);
-      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 10);
-      expect(resultSell[0]).to.equal(-118 * 256 * 256 + 6 * 256 + 10);
-      expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
-      expect(resultSell[1].toNumber()).to.equal(1024); 
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 4);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 15);
+   });
+
+   it("seek immediate neighbor", async() => {
+      await populateTicks()
+      await census.testBookmark(-120*256*256 + 6*256 + 255);
+      await census.testBookmark(-120*256*256 + 12*256);
+      let leftTick = -120 * 256 * 256 + 7 * 256;
+      let rightTick = -120 * 256 * 256 + 12 * 256;
+      let resultBuy = await census.testSeekBuy(rightTick);
+      let resultSell = await census.testSeekSell(leftTick);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 12 * 256);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 255);
    });
 
    it("seek through mezz", async() => {
@@ -282,6 +279,30 @@ describe('TickCensus', () => {
       expect(resultSell[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 11);
       expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
       expect(resultSell[1].toNumber()).to.equal(2064); 
+   });
+
+   it("seek immediate mezz", async() => {
+      await populateTicks()
+      let leftTick = -120 * 256 * 256 + 13 * 256;
+      let rightTick = -120 * 256 * 256 + 5 * 256;
+      let resultBuy = await census.testSeekBuy(rightTick);
+      let resultSell = await census.testSeekSell(leftTick);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 10);
+      expect(resultSell[0]).to.equal(-120 * 256 * 256 + 12 * 256 + 11);
+      expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
+      expect(resultSell[1].toNumber()).to.equal(2064); 
+   });
+
+   it("seek through lobby", async() => {
+      await populateTicks()
+      let leftTick = -117 * 256 * 256 + 128 * 256;
+      let rightTick = -121 * 256 * 256 + 128 * 256;
+      let resultBuy = await census.testSeekBuy(rightTick);
+      let resultSell = await census.testSeekSell(leftTick);
+      expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 6 * 256 + 10);
+      expect(resultSell[0]).to.equal(-118 * 256 * 256 + 6 * 256 + 10);
+      expect(resultBuy[1].toNumber()).to.equal(32768 + 1024);
+      expect(resultSell[1].toNumber()).to.equal(1024); 
    });
 
    it("seek caged", async() => {
