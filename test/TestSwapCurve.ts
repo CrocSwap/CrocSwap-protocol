@@ -336,7 +336,7 @@ describe('Swap Curve', () => {
       await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
       await curve.testSwapBumpInf(0, swap, toSqrtPrice(1.96))
 
-      let state = await curve.pullCurve(3);
+      let state = await curve.pullCurve(0);
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(1.959999)
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(1.96)
 
