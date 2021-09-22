@@ -215,9 +215,11 @@ library TickCensusLib {
         uint8 truncShift = Bitmaps.bitRelate(lobbyBit, isUpper);
         (stepLobbyBit, spills) = census.lobby_[poolIdx].bitAfterTrunc
             (truncShift, isUpper);
+
         if (stepLobbyBit == lobbyBit) {
             (,bool spillsMezz) = determineSeekMezz(census, poolIdx,
                                                    lobbyBit, mezzBit, isUpper);
+
             if (spillsMezz) {
                 (stepLobbyBit, spills) = census.lobby_[poolIdx].bitAfterTrunc
                     (truncShift + 1, isUpper);
@@ -281,8 +283,8 @@ library TickCensusLib {
 
     function encodeTermWord (uint16 poolIdx, uint8 lobbyPos, uint8 mezzPos)
         private pure returns (bytes32) {
-        int16 mezzIdx = Bitmaps.weldLobbyMezz(Bitmaps.uncastBitmapIndex(lobbyPos),
-                                              mezzPos);
+        int16 mezzIdx = Bitmaps.weldLobbyMezz
+            (Bitmaps.uncastBitmapIndex(lobbyPos), mezzPos);
         return keccak256(abi.encodePacked(poolIdx, mezzIdx)); 
     }
 }
