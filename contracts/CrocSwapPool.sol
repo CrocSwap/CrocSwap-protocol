@@ -404,9 +404,10 @@ contract CrocSwapPool is ICrocSwapPool,
                               CurveMath.SwapAccum memory accum,
                               bytes calldata data) internal {
         if (accum.cntx_.isBuy_) {
-            if (accum.paidQuote_ < 0)
+            if (accum.paidQuote_ < 0) {
                 TransferHelper.safeTransfer(tokenQuote_, recipient,
                                             uint256(-accum.paidQuote_));
+            }
             
             uint256 initBase = balanceBase();
             IUniswapV3SwapCallback(msg.sender).uniswapV3SwapCallback
