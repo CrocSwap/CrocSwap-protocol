@@ -76,7 +76,7 @@ library CurveMath {
      *   (represented in 96-bit fixed point). Stored as a square root to make fixed-
      *   point liquidity math linear. */
     struct CurveState {
-        uint160 priceRoot_;
+        uint128 priceRoot_;
         CurveLiquidity liq_;
         CurveFeeAccum accum_;
     }
@@ -151,7 +151,7 @@ library CurveMath {
      *   function should not be used in any context with strict directional boundness 
      *   requirements. */
     function calcLimitCounter (CurveState memory curve, SwapAccum memory swap,
-                               uint160 limitPrice) internal pure returns (uint256) {
+                               uint128 limitPrice) internal pure returns (uint256) {
         bool isBuy = limitPrice > curve.priceRoot_;
         uint256 denomFlow = calcLimitFlows(curve, swap, limitPrice);
         return invertFlow(activeLiquidity(curve), curve.priceRoot_,
@@ -184,13 +184,13 @@ library CurveMath {
      *           always return unsigned magnitude regardless of the direction. User
      *           can easily determine based on swap context. */
     function calcLimitFlows (CurveState memory curve, SwapAccum memory swap,
-                             uint160 limitPrice) internal pure returns (uint256) {
+                             uint128 limitPrice) internal pure returns (uint256) {
         uint256 limitFlow = calcLimitFlows(curve, swap.cntx_.inBaseQty_, limitPrice);
         return limitFlow > swap.qtyLeft_ ? swap.qtyLeft_ : limitFlow;
     }
     
     function calcLimitFlows (CurveState memory curve, bool inBaseQty,
-                             uint160 limitPrice) private pure returns (uint256) {
+                             uint128 limitPrice) private pure returns (uint256) {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
             deltaBase(liq, curve.priceRoot_, limitPrice) :
@@ -203,9 +203,9 @@ library CurveMath {
      * @dev Result is a tight lower-bound for fixed-point precision. Meaning if the
      *   the returned limit is X, then X will be inside the limit price and (X+1)
      *   will be outside the limit price. */
-    function deltaBase (uint128 liq, uint160 priceX, uint160 priceY)
+    function deltaBase (uint128 liq, uint128 priceX, uint128 priceY)
         internal pure returns (uint256) {
-        uint160 priceDelta = priceX > priceY ?
+        uint128 priceDelta = priceX > priceY ?
             priceX - priceY : priceY - priceX;
         return reserveAtPrice(liq, priceDelta, true);
     }
@@ -216,9 +216,9 @@ library CurveMath {
      * @dev Result is almost always within a fixed-point precision unit from the true
      *   real value. However in certain very rare cases, the result could be up to 2
      *   wei below the true real value. Caller should account for this upstream. */
-    function deltaQuote (uint128 liq, uint160 price, uint160 limitPrice)
+    function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint256) {
-        uint160 priceDelta = limitPrice > price ?
+        uint128 priceDelta = limitPrice > price ?
             limitPrice - price : price - limitPrice;
         
         /* The formula calculated is
@@ -259,11 +259,11 @@ library CurveMath {
          * the order of multiply/divides to assure the second mulDiv bounds the precision
          * loss from the first mulDiv() */
         if (limitPrice > priceDelta) {
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q96, price);
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q64, price);
             return FullMath.mulDiv(partTerm, priceDelta, limitPrice);
         } else {
             // Implies priceDelta < price
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q96, limitPrice);
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q64, limitPrice);
             return FullMath.mulDiv(partTerm, priceDelta, price);
         }
     }
@@ -284,18 +284,18 @@ library CurveMath {
      * @returns The virtual reserves of the token (rounded down to nearest integer). 
      *   Equivalent to the amount of tokens that would be held for an equivalent 
      *   classical constant- product AMM without concentrated liquidity.  */
-    function reserveAtPrice (uint128 liq, uint160 price, bool inBaseQty)
+    function reserveAtPrice (uint128 liq, uint128 price, bool inBaseQty)
         internal pure returns (uint256) {
         return inBaseQty ?
-            FullMath.mulDiv(liq, price, FixedPoint.Q96) :
-            FullMath.mulDiv(liq, FixedPoint.Q96, price);
+            FullMath.mulDiv(liq, price, FixedPoint.Q64) :
+            FullMath.mulDiv(liq, FixedPoint.Q64, price);
     }
 
     /* @dev The fixed point arithmetic results in output that's a close approximation
      *   to the true real value, but could be skewed in either direction. The output
      *   from this function should not be consumed in any context that requires strict
      *   boundness. */
-    function invertFlow (uint128 liq, uint160 price, uint256 denomFlow,
+    function invertFlow (uint128 liq, uint128 price, uint256 denomFlow,
                          bool isBuy, bool inBaseQty) private pure returns (uint256) {
         uint256 invertReserve = reserveAtPrice(liq, price, !inBaseQty);
         uint256 initReserve = reserveAtPrice(liq, price, inBaseQty);
@@ -334,7 +334,7 @@ library CurveMath {
      *   burned to over-collateralize a single precision unit of price rounding. If
      *   the price arithmetic involves multiple units of precision loss, this number
      *   should be multiplied by that factor. */
-    function priceToTokenPrecision (uint128 liq, uint160 price,
+    function priceToTokenPrecision (uint128 liq, uint128 price,
                                     bool isRoundUp) internal pure returns (uint256) {
         uint256 MULT_OVERHEAD = 4;
         uint256 shift = deriveTokenPrecision(MULT_OVERHEAD * uint256(liq),
@@ -344,7 +344,7 @@ library CurveMath {
 
     /* @notice Derives the amount of tokens it would take buffer the curve by one price
      *   precision unit. */
-    function deriveTokenPrecision (uint256 liqWeight, uint160 price,
+    function deriveTokenPrecision (uint256 liqWeight, uint128 price,
                                    bool inBaseToken) private pure returns (uint256) {
         // To provide more base token collateral than price precision rounding:
         //     delta(B) >= L * delta(P)
@@ -352,7 +352,7 @@ library CurveMath {
         //     delta(B) >= L * 2^-96
         //  (where L is liquidity, B is base token reserves, P is price)
         if (inBaseToken) {
-            return liqWeight / FixedPoint.Q96;
+            return liqWeight / FixedPoint.Q64;
         } else {
             // Proivde quote token collateral to buffer price precision roudning:
             //    delta(Q) >= L * delta(1/P)
@@ -361,14 +361,14 @@ library CurveMath {
             //    delta(Q) >= L * (1/(P-2^-96) - 1/P)
             //             >= L * 2^-96/(P^2 - P * 2^-96)
             //             >= L * 2^-96/(P - 2^-96)^2        (upper bound to above)
-            if (price <= FixedPoint.Q96) {
+            if (price <= FixedPoint.Q64) {
                 // The fixed point representation of Price in bits is
                 //    Pb = P * 2^96
                 // Therefore
                 //    delta(Q) >= L * 2^-96/(P/2^96)^2
                 //             >= L * 2^96/Pb^2
                 //
-                return FullMath.mulDiv(liqWeight, FixedPoint.Q96,
+                return FullMath.mulDiv(liqWeight, FixedPoint.Q64,
                                        // Price^2 fits in 256 bits since price < 96 bits
                                        uint256(price - 1)*uint256(price - 1));
             } else {
@@ -377,7 +377,7 @@ library CurveMath {
                 //           P >= 1
                 //    delta(Q) >= L * 2^-96/P^2
                 //             >= L * 2^-96
-                return liqWeight / FixedPoint.Q96;
+                return liqWeight / FixedPoint.Q64;
             }
         }
     }

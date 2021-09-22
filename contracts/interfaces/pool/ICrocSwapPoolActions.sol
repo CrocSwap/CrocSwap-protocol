@@ -7,7 +7,7 @@ interface ICrocSwapPoolActions {
     /// @notice Sets the initial price for the pool
     /// @dev Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value
     /// @param sqrtPriceX96 the initial sqrt price of the pool as a Q64.96
-    function initialize(uint160 sqrtPriceX96) external;
+    function initialize(uint128 sqrtPriceX96) external;
 
     /// @notice Adds liquidity for the given recipient/tickLower/tickUpper position
     /// @dev The caller of this method receives a callback in the form of IUniswapV3MintCallback#uniswapV3MintCallback
@@ -58,7 +58,7 @@ interface ICrocSwapPoolActions {
         address recipient,
         bool zeroForOne,
         int256 amountSpecified,
-        uint160 sqrtPriceLimitX96,
+        uint128 sqrtPriceLimitX96,
         bytes calldata data
     ) external returns (int256 amount0, int256 amount1);
 }

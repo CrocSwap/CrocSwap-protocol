@@ -316,6 +316,7 @@ describe('TickCensus', () => {
       expect(resultBuy[0]).to.equal(-120 * 256 * 256 + 11 * 256 + 103);
       expect(resultSell[0]).to.equal(-120 * 256 * 256 + 7 * 256 + 212);
    });
+
    it("seek through lobby", async() => {
       await populateTicks()
       let leftTick = -117 * 256 * 256 + 128 * 256;

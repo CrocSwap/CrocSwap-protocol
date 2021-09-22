@@ -8,7 +8,7 @@ interface ICrocSwapPoolEvents {
     /// @dev Mint/Burn/Swap cannot be emitted by the pool before Initialize
     /// @param sqrtPriceX96 The initial sqrt price of the pool, as a Q64.96
     /// @param tick The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool
-    event Initialize(uint160 sqrtPriceX96, int24 tick);
+    event Initialize(uint128 sqrtPriceX96, int24 tick);
 
     /// @notice Emitted when liquidity is minted for a given position
     /// @param sender The address that minted the liquidity
@@ -59,7 +59,7 @@ interface ICrocSwapPoolEvents {
         address indexed recipient,
         int256 amount0,
         int256 amount1,
-        uint160 sqrtPriceX96,
+        uint128 sqrtPriceX96,
         int24 tick
     );
 

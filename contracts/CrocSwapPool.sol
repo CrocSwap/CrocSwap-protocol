@@ -92,14 +92,14 @@ contract CrocSwapPool is ICrocSwapPool,
         return activeLiquidity(DFLT_POOL_IDX);
     }
 
-    function initialize (uint160 price) external override {
+    function initialize (uint128 price) external override {
         initPrice(DFLT_POOL_IDX, price);
         int24 tick = TickMath.getTickAtSqrtRatio(price);
         emit Initialize(price, tick);
     }
 
     function slot0() external view override returns
-        (uint160 sqrtPriceX96, int24 tick, uint8 feeProtocol, bool unlocked) {
+        (uint128 sqrtPriceX96, int24 tick, uint8 feeProtocol, bool unlocked) {
         (sqrtPriceX96, tick) = loadPriceTick(DFLT_POOL_IDX);
         feeProtocol = protocolCut_;
         unlocked = !reEntrantLocked_;
@@ -240,7 +240,7 @@ contract CrocSwapPool is ICrocSwapPool,
      *                    indicates tokens paid from the pool to the recipient.
      * @param baseFlow - The amount of base tokens exchanged in the swap. */
     function swap (address recipient, bool quoteToBase, int256 qty,
-                   uint160 limitPrice, bytes calldata data)
+                   uint128 limitPrice, bytes calldata data)
         external override reEntrantLock returns (int256 quoteFlow, int256 baseFlow) {
 
         /* A swap operation is a potentially long and iterative process that
@@ -288,7 +288,7 @@ contract CrocSwapPool is ICrocSwapPool,
      *     price within this bound, even if the specified quantity is higher. */
     function sweepSwapLiq (CurveMath.CurveState memory curve,
                            CurveMath.SwapAccum memory accum,
-                           uint160 limitPrice) internal {
+                           uint128 limitPrice) internal {
         bool isBuy = accum.cntx_.isBuy_;
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
         
@@ -345,12 +345,12 @@ contract CrocSwapPool is ICrocSwapPool,
 
     function hasSwapLeft (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
-                          uint160 limitPrice) private pure returns (bool) {
+                          uint128 limitPrice) private pure returns (bool) {
         return accum.qtyLeft_ > 0 &&
             inLimitPrice(curve.priceRoot_, limitPrice, accum.cntx_.isBuy_);
     }
     
-    function inLimitPrice (uint160 price, uint160 limitPrice, bool isBuy)
+    function inLimitPrice (uint128 price, uint128 limitPrice, bool isBuy)
         private pure returns (bool) {
         return isBuy ? price < limitPrice : price > limitPrice;
     }

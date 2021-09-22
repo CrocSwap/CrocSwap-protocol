@@ -222,8 +222,8 @@ contract LiquidityCurve {
     function liquidityFlows (uint8 poolIdx, uint128 liquidity,
                              int24 bidTick, int24 askTick)
         private view returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
-        (uint160 price, int24 priceTick) = loadPriceTick(poolIdx);
-        (uint160 bidPrice, uint160 askPrice) =
+        (uint128 price, int24 priceTick) = loadPriceTick(poolIdx);
+        (uint128 bidPrice, uint128 askPrice) =
             translateTickRange(bidTick, askTick);
 
         if (priceTick < bidTick) {
@@ -243,11 +243,11 @@ contract LiquidityCurve {
      *   safety. */
     function liquidityFlows (uint8 poolIdx, uint128 seeds)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
-        uint160 price  = curves_[poolIdx].priceRoot_;
+        uint128 price  = curves_[poolIdx].priceRoot_;
         uint128 liq = CompoundMath.inflateLiqSeed
             (seeds, curves_[poolIdx].accum_.ambientGrowth_);
-        baseDebit = FullMath.mulDiv(liq, price, FixedPoint.Q96);
-        quoteDebit = (uint256(liq) << 96) / price;
+        baseDebit = FullMath.mulDiv(liq, price, FixedPoint.Q64);
+        quoteDebit = (uint256(liq) << 64) / price;
     }
 
     /* @notice Writes a new price into the curve (without any adjustment to liquidity)
@@ -258,7 +258,7 @@ contract LiquidityCurve {
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit tick index of the new price. */
-    function updatePrice (uint8 poolIdx, uint160 priceRoot) internal returns
+    function updatePrice (uint8 poolIdx, uint128 priceRoot) internal returns
         (int24 priceTick) {
         require(curves_[poolIdx].priceRoot_ > 0, "J");
         curves_[poolIdx].priceRoot_ = priceRoot;
@@ -271,7 +271,7 @@ contract LiquidityCurve {
      *
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
-    function initPrice (uint8 poolIdx, uint160 priceRoot) internal {
+    function initPrice (uint8 poolIdx, uint128 priceRoot) internal {
         require(curves_[poolIdx].priceRoot_ == 0, "N");
         curves_[poolIdx].priceRoot_ = priceRoot;
     }
@@ -282,7 +282,7 @@ contract LiquidityCurve {
      * @return priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit price tick index of the price. */
     function loadPriceTick (uint8 poolIdx) internal view
-        returns (uint160 priceRoot, int24 priceTick) {
+        returns (uint128 priceRoot, int24 priceTick) {
         (priceRoot, priceTick) = loadPriceTickMaybe(poolIdx);
         require(priceRoot > 0, "J");
     }
@@ -290,7 +290,7 @@ contract LiquidityCurve {
     /* @notice Same as loadPriceTick() but safe to call for pre-initialized prices. If
      *         so returns zero values. */
     function loadPriceTickMaybe (uint8 poolIdx) internal view
-        returns (uint160 priceRoot, int24 priceTick) {
+        returns (uint128 priceRoot, int24 priceTick) {
         priceRoot = curves_[poolIdx].priceRoot_;
         if (priceRoot > 0) {
             priceTick = TickMath.getTickAtSqrtRatio(priceRoot);
@@ -298,7 +298,7 @@ contract LiquidityCurve {
     }
 
     function translateTickRange (int24 lowerTick, int24 upperTick)
-        private pure returns (uint160 bidPrice, uint160 askPrice) {
+        private pure returns (uint128 bidPrice, uint128 askPrice) {
         require(upperTick > lowerTick, "O");
         require(lowerTick >= TickMath.MIN_TICK, "I");
         require(upperTick <= TickMath.MAX_TICK, "X");

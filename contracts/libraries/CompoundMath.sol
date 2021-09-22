@@ -74,13 +74,14 @@ library CompoundMath {
      *                as 128-bit fixed-point.
      * @returns The post-growth price as in price*(1+g). Rounded up to next unsigned
      *          price representation. */
-    function compoundPrice (uint160 price, uint64 growth, bool shiftUp) internal
-        pure returns (uint256) {
+    function compoundPrice (uint128 price, uint64 growth, bool shiftUp) internal
+        pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
         uint256 multFactor = ONE + growth;
-        return shiftUp ?
+        uint256 z = shiftUp ?
             FullMath.mulDiv(uint256(price), multFactor, ONE) + 1 :
             FullMath.mulDiv(uint256(price), ONE, multFactor);
+        return z.toUint128();
     }
 
 

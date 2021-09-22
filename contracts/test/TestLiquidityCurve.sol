@@ -6,14 +6,14 @@ import "../mixins/LiquidityCurve.sol";
 import "../libraries/SwapCurve.sol";
 
 contract TestLiquidityCurve is LiquidityCurve {
-    using TickMath for uint160;
+    using TickMath for uint128;
     
     uint256 public baseFlow;
     uint256 public quoteFlow;
     CurveMath.SwapAccum public lastSwap;
     
     function testLiqRecConc (uint8 poolIdx, uint128 liq,
-                             uint160 lower, uint160 upper) public {
+                             uint128 lower, uint128 upper) public {
         (baseFlow, quoteFlow) = liquidityReceivable
             (poolIdx, liq, lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());
     }
@@ -27,7 +27,7 @@ contract TestLiquidityCurve is LiquidityCurve {
         (baseFlow, quoteFlow) = liquidityReceivable(poolIdx, liqSeed);
     }
 
-    function testLiqPayConc (uint8 poolIdx, uint128 liq, uint160 lower, uint160 upper,
+    function testLiqPayConc (uint8 poolIdx, uint128 liq, uint128 lower, uint128 upper,
                              uint64 rewards) public {
         (baseFlow, quoteFlow) = liquidityPayable
             (poolIdx, liq, rewards,
@@ -44,13 +44,13 @@ contract TestLiquidityCurve is LiquidityCurve {
     }
 
     function testSwap (uint8 poolIdx, CurveMath.SwapAccum memory accum,
-                       uint160 bumpPrice, uint160 swapLimit) public {
+                       uint128 bumpPrice, uint128 swapLimit) public {
         int24 bumpTick = TickMath.getTickAtSqrtRatio(bumpPrice);
         testSwapTick(poolIdx, accum, bumpTick, swapLimit);
     }
 
     function testSwapTick (uint8 poolIdx, CurveMath.SwapAccum memory accum,
-                           int24 bumpTick, uint160 swapLimit) public {
+                           int24 bumpTick, uint128 swapLimit) public {
         CurveMath.CurveState memory curve = snapCurve(poolIdx);
         SwapCurve.swapToLimit(curve, accum, bumpTick, swapLimit);
         commitSwapCurve(poolIdx, curve);
@@ -58,19 +58,19 @@ contract TestLiquidityCurve is LiquidityCurve {
     }
 
     function testSwapBumpInf (uint8 poolIdx, CurveMath.SwapAccum memory accum,
-                              uint160 swapLimit) public {
+                              uint128 swapLimit) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
         testSwapTick(poolIdx, accum, tick, swapLimit);
     }
     
     function testSwapLimitInf (uint8 poolIdx, CurveMath.SwapAccum memory accum) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
-        uint160 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
+        uint128 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
             TickMath.MIN_SQRT_RATIO-1;
         testSwapTick(poolIdx, accum, tick, limit);
     }
 
-    function fixCurve (uint8 poolIdx, uint160 price,
+    function fixCurve (uint8 poolIdx, uint128 price,
                        uint128 ambientLiq, uint128 concLiq) public {
         initPrice(poolIdx, price);
         CurveMath.CurveState memory curve = snapCurve(poolIdx);

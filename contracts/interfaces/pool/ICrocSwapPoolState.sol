@@ -7,7 +7,7 @@ pragma solidity >=0.5.0;
 interface ICrocSwapPoolState {
     /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas
     /// when accessed externally.
-    /// @return sqrtPriceX96 The current price of the pool as a sqrt(token1/token0) Q64.96 value
+    /// @return sqrtPriceX64 The current price of the pool as a sqrt(token1/token0) Q64.96 value
     /// tick The current tick of the pool, i.e. according to the last tick transition that was run.
     /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(sqrtPriceX96) if the price is on a tick
     /// boundary.
@@ -19,7 +19,7 @@ interface ICrocSwapPoolState {
         external
         view
         returns (
-            uint160 sqrtPriceX96,
+            uint128 sqrtPriceX64,
             int24 tick,
             uint8 feeProtocol,
             bool unlocked

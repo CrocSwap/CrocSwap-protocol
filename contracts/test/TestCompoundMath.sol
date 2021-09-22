@@ -21,7 +21,7 @@ contract TestCompoundMath {
         return x.compoundDivide(y);
     }
 
-    function testPrice (uint160 price, uint64 growth, bool up)
+    function testPrice (uint128 price, uint64 growth, bool up)
         public pure returns (uint256) {
         return price.compoundPrice(growth, up);
     }

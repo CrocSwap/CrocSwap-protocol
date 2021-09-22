@@ -54,8 +54,8 @@ library SwapCurve {
      *    limitPrice is inside the starting curvePrice 0 quantity will execute. */
     function swapToLimit (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
-                          int24 bumpTick, uint160 swapLimit) pure internal {
-        uint160 limitPrice = determineLimit(bumpTick, swapLimit, accum.cntx_.isBuy_);
+                          int24 bumpTick, uint128 swapLimit) pure internal {
+        uint128 limitPrice = determineLimit(bumpTick, swapLimit, accum.cntx_.isBuy_);
         bookExchFees(curve, accum, limitPrice);
         
         // limitPrice is still valid even though curve has move from ingesting liquidity
@@ -81,7 +81,7 @@ library SwapCurve {
      * @return protoFee The total fee accumulated to the CrocSwap protocol. */
     function vigOverFlow (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory swap,
-                          uint160 limitPrice)
+                          uint128 limitPrice)
         internal pure returns (uint256 liqFee, uint256 protoFee) {
         uint256 flow = curve.calcLimitCounter(swap, limitPrice);
         (liqFee, protoFee) = vigOverFlow(flow, swap);
@@ -89,7 +89,7 @@ library SwapCurve {
 
     function swapOverCurve (CurveMath.CurveState memory curve,
                             CurveMath.SwapAccum memory accum,
-                            uint160 limitPrice) pure private {
+                            uint128 limitPrice) pure private {
         uint256 realFlows = curve.calcLimitFlows(accum, limitPrice);
         bool hitsLimit = realFlows < accum.qtyLeft_;
 
@@ -116,7 +116,7 @@ library SwapCurve {
      * transaction. */
     function assertFlowEndStable (CurveMath.CurveState memory curve,
                                   CurveMath.SwapAccum memory swap,
-                                  uint160 limitPrice) pure private {
+                                  uint128 limitPrice) pure private {
         bool insideLimit = swap.cntx_.isBuy_ ?
             curve.priceRoot_ < limitPrice :
             curve.priceRoot_ > limitPrice;
@@ -134,7 +134,7 @@ library SwapCurve {
      * rare for non-pathological curves that we just crash the transaction. */
     function assertPriceEndStable (CurveMath.CurveState memory curve,
                                    CurveMath.SwapAccum memory swap,
-                                   uint160 limitPrice) pure private {
+                                   uint128 limitPrice) pure private {
         bool atLimit = curve.priceRoot_ == limitPrice;
         bool hasRemaining = swap.qtyLeft_ > 0;
         require(atLimit && hasRemaining, "RP");
@@ -144,23 +144,23 @@ library SwapCurve {
      *    specified limit, tick liquidity bump boundary on the locally stable AMM curve,
      *    and the numerical boundaries of the price field. Always picks the value that's
      *    most to the inside of the swap direction. */
-    function determineLimit (int24 bumpTick, uint160 limitPrice, bool isBuy)
-        pure private returns (uint160) {
-        uint160 bounded = boundLimit(bumpTick, limitPrice, isBuy);
+    function determineLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
+        pure private returns (uint128) {
+        uint128 bounded = boundLimit(bumpTick, limitPrice, isBuy);
         if (bounded < TickMath.MIN_SQRT_RATIO)  return TickMath.MIN_SQRT_RATIO;
         if (bounded >= TickMath.MAX_SQRT_RATIO)  return TickMath.MAX_SQRT_RATIO - 1;
         return bounded;
     }
 
-    function boundLimit (int24 bumpTick, uint160 limitPrice, bool isBuy)
-        pure private returns (uint160) {
+    function boundLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
+        pure private returns (uint128) {
         if (bumpTick <= TickMath.MIN_TICK || bumpTick >= TickMath.MAX_TICK) {
             return limitPrice;
         } else if (isBuy) {
-            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - 1;
+            uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - 1;
             return bumpPrice < limitPrice ? bumpPrice : limitPrice;
         } else {
-            uint160 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);
+            uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);
             return bumpPrice > limitPrice ? bumpPrice : limitPrice;
         }
     }
@@ -178,7 +178,7 @@ library SwapCurve {
      *   perspective. */
     function bookExchFees (CurveMath.CurveState memory curve,
                            CurveMath.SwapAccum memory accum,
-                           uint160 limitPrice) pure private {
+                           uint128 limitPrice) pure private {
         (uint256 liqFees, uint256 exchFees) = vigOverFlow(curve, accum, limitPrice);
         assignFees(liqFees, exchFees, accum);
         

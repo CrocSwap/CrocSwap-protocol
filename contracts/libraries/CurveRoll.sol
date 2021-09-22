@@ -49,7 +49,7 @@ library CurveRoll {
      *   incremented based on the swapped flow and its relevant impact. */
     function rollFlow (CurveMath.CurveState memory curve, uint256 flow,
                        CurveMath.SwapAccum memory swap) internal pure {        
-        (uint256 counterFlow, uint160 nextPrice) = deriveImpact(curve, flow, swap.cntx_);
+        (uint256 counterFlow, uint128 nextPrice) = deriveImpact(curve, flow, swap.cntx_);
         (int256 paidFlow, int256 paidCounter) = signFlow(flow, counterFlow, swap.cntx_);
         setCurvePos(curve, swap, nextPrice, paidFlow, paidCounter);
     }
@@ -71,7 +71,7 @@ library CurveRoll {
      * @param price - Price target that the curve will be re-pegged at.
      * @param swap - The in-progress swap object. The accumulator fields will be 
      *   incremented based on the swapped flow and its relevant impact. */
-    function rollPrice (CurveMath.CurveState memory curve, uint160 price,
+    function rollPrice (CurveMath.CurveState memory curve, uint128 price,
                         CurveMath.SwapAccum memory swap) internal pure {
         (uint256 flow, uint256 counterFlow) = deriveDemand(curve, price, swap);
         (int256 paidFlow, int256 paidCounter) = signFixed(flow, counterFlow, swap.cntx_);
@@ -122,7 +122,7 @@ library CurveRoll {
     }
 
     function setCurvePos (CurveMath.CurveState memory curve, 
-                          CurveMath.SwapAccum memory swap, uint160 price,
+                          CurveMath.SwapAccum memory swap, uint128 price,
                           int256 paidFlow, int256 paidCounter) private pure {
         uint256 spent = flowToSpent(paidFlow, swap.cntx_);
         swap.qtyLeft_ = spent >= swap.qtyLeft_ ? 0 :
@@ -147,7 +147,7 @@ library CurveRoll {
      * @dev    Both sides of the flow are rounded down at up to 2 wei of precision loss
      *         (see CurveMath.sol). The results should not be used directly without 
      *         buffering the counterflow in the direction of collateral support. */
-    function deriveDemand (CurveMath.CurveState memory curve, uint160 price,
+    function deriveDemand (CurveMath.CurveState memory curve, uint128 price,
                            CurveMath.SwapAccum memory swap) private pure
         returns (uint256 flow, uint256 counterFlow) {
         uint128 liq = curve.activeLiquidity();
@@ -185,7 +185,7 @@ library CurveRoll {
      *                     curve struct. */
     function deriveImpact (CurveMath.CurveState memory curve, uint256 flow,
                            CurveMath.SwapFrame memory cntx) internal pure
-        returns (uint256 counterFlow, uint160 nextPrice) {
+        returns (uint256 counterFlow, uint128 nextPrice) {
         uint128 liq = curve.activeLiquidity();
         nextPrice = deriveFlowPrice(curve.priceRoot_, liq, flow, cntx);
 
@@ -211,16 +211,16 @@ library CurveRoll {
      *   fixed side. Because of the arbitrary roudning, it's critical that the counter-
      *   flow is computed using the exact price returned by this function, and not 
      *   independently. */
-    function deriveFlowPrice (uint160 price, uint128 liq,
+    function deriveFlowPrice (uint128 price, uint128 liq,
                               uint256 flow, CurveMath.SwapFrame memory cntx)
-        private pure returns (uint160) {
+        private pure returns (uint128) {
         uint256 curvePrice = cntx.inBaseQty_ ?
             calcBaseFlowPrice(price, liq, flow, cntx.isBuy_) :
             calcQuoteFlowPrice(price, liq, flow, cntx.isBuy_);
 
         if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO - 1;}
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
-        return curvePrice.toUint160();
+        return curvePrice.toUint128();
     }
 
     /* Because the base flow is fixed, we want to always set the price to in favor of 
@@ -234,7 +234,7 @@ library CurveRoll {
      * the base token. The max loss of precision is 1 unit of fixed-point price. */
     function calcBaseFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
         private pure returns (uint256) {
-        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint.Q96, liq);
+        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint.Q64, liq);
         if (isBuy) {
             return price.add(priceDelta);
         } else {
@@ -257,12 +257,12 @@ library CurveRoll {
     function calcQuoteFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
         private pure returns (uint256) {
         // Since this is a term in the quotient rounding down, rounds up the final price
-        uint256 invPrice = FullMath.mulDiv(FixedPoint.Q96, FixedPoint.Q96, price);
+        uint256 invPrice = FullMath.mulDiv(FixedPoint.Q64, FixedPoint.Q64, price);
         // This is also a quotient term so we use this function's round down logic
         uint256 invNext = calcBaseFlowPrice(invPrice, liq, flow, !isBuy);
         if (invNext == 0) { return TickMath.MAX_SQRT_RATIO; }
         // Round up the final division operation. 
-        return FullMath.mulDiv(FixedPoint.Q96, FixedPoint.Q96, invNext) + 1;
+        return FullMath.mulDiv(FixedPoint.Q64, FixedPoint.Q64, invNext) + 1;
     }
 
 

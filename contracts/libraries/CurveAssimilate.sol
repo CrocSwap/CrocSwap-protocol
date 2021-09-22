@@ -132,7 +132,7 @@ library CurveAssimilate {
                           bool inBaseQty) private pure {
         uint256 nextPrice = CompoundMath.compoundPrice
             (curve.priceRoot_, inflator, inBaseQty);
-        curve.priceRoot_ = nextPrice.toUint160();
+        curve.priceRoot_ = nextPrice.toUint128();
     }
 
     /* @notice Given a targeted aggregate liquidity inflator, affects that change in

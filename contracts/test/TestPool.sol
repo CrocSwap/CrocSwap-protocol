@@ -7,7 +7,7 @@ import "../CrocSwapPool.sol";
 import "hardhat/console.sol";
 
 contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
-    using TickMath for uint160;
+    using TickMath for uint128;
 
     bytes public testCalldata;
     bytes public snapCalldata;
@@ -37,7 +37,7 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
         quote = quoteAddr;
     }
     
-    function testSwap (bool isSell, int256 qty, uint160 limitPrice) public {
+    function testSwap (bool isSell, int256 qty, uint128 limitPrice) public {
         (int quoteSwap, int baseSwap) = CrocSwapPool(pool).swap
             (address(this), isSell, qty, limitPrice, testCalldata);
         if (!gasProfileMode) {
