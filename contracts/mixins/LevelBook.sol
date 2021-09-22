@@ -28,7 +28,7 @@ contract LevelBook {
     struct BookLevel {
         uint128 bidLiq_;
         uint128 askLiq_;
-        uint256 feeOdometer_;
+        uint64 feeOdometer_;
     }
 
     mapping(bytes32 => BookLevel) private levels_;
@@ -55,7 +55,7 @@ contract LevelBook {
      *
      * @return liqDelta - The net change in concentrated liquidity that should be applied
      *                    to the AMM curve following this level cross. */
-    function crossLevel (uint8 poolIdx, int24 tick, bool isBuy, uint256 feeGlobal)
+    function crossLevel (uint8 poolIdx, int24 tick, bool isBuy, uint64 feeGlobal)
         internal returns (int256 liqDelta) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         int256 crossDelta = int256(uint256(lvl.bidLiq_)) - int256(uint256(lvl.askLiq_));
@@ -99,8 +99,8 @@ contract LevelBook {
      *    range specified by the order. This is necessary, so we consumers of this mixin
      *    can subtract the rewards accumulated before the order was added. */
     function addBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                         uint128 liq, uint256 feeGlobal)
-        internal returns (uint256 feeOdometer) {
+                         uint128 liq, uint64 feeGlobal)
+        internal returns (uint64 feeOdometer) {
         assertTickSize(bidTick, askTick, tickSizes_[poolIdx]);
 
         // Make sure to init before add, because init logic relies on pre-add liquidity
@@ -150,8 +150,8 @@ contract LevelBook {
      *    from addBookLiq to correctly calculate the rewards accumulated over the 
      *    lifetime of the order. */     
     function removeBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                            uint128 liq, uint256 feeGlobal)
-        internal returns (uint256 feeOdometer) {
+                            uint128 liq, uint64 feeGlobal)
+        internal returns (uint64 feeOdometer) {
         bool deleteBid = removeBid(poolIdx, bidTick, liq);
         bool deleteAsk = removeAsk(poolIdx, askTick, liq);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
@@ -161,7 +161,7 @@ contract LevelBook {
     }
 
     function initLevel (uint8 poolIdx, int24 midTick,
-                        int24 tick, uint256 feeGlobal) private {
+                        int24 tick, uint64 feeGlobal) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         if (lvl.bidLiq_ == 0 && lvl.askLiq_ == 0) {
             if (tick >= midTick) {
@@ -226,10 +226,10 @@ contract LevelBook {
      *      given range could have an arbitrary offset relative to the pool's actual
      *      cumulative rewards. */
     function clockFeeOdometer (uint8 poolIdx, int24 currentTick,
-                               int24 lowerTick, int24 upperTick, uint256 feeGlobal)
-        internal view returns (uint256) {
-        uint256 feeLower = pivotFeeBelow(poolIdx, lowerTick, currentTick, feeGlobal);
-        uint256 feeUpper = pivotFeeBelow(poolIdx, upperTick, currentTick, feeGlobal);
+                               int24 lowerTick, int24 upperTick, uint64 feeGlobal)
+        internal view returns (uint64) {
+        uint64 feeLower = pivotFeeBelow(poolIdx, lowerTick, currentTick, feeGlobal);
+        uint64 feeUpper = pivotFeeBelow(poolIdx, upperTick, currentTick, feeGlobal);
         
         // This is unchecked because we often rely on circular overflow arithmetic
         // when ticks are initialized at different times. Remember the output of this
@@ -247,8 +247,8 @@ contract LevelBook {
      *      all we use this value for is calculating the delta of fee accumulation 
      *      between two different post-initialization points in time.) */
     function pivotFeeBelow (uint8 poolIdx, int24 lvlTick,
-                            int24 currentTick, uint256 feeGlobal)
-        private view returns (uint256) {
+                            int24 currentTick, uint64 feeGlobal)
+        private view returns (uint64) {
         BookLevel storage lvl = fetchLevel(poolIdx, lvlTick);
         return lvlTick <= currentTick ?
             lvl.feeOdometer_ :

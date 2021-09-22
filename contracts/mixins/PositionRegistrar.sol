@@ -3,6 +3,7 @@
 pragma solidity >=0.8.4;
 
 import '../libraries/FullMath.sol';
+import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 
@@ -10,7 +11,8 @@ import '../libraries/LowGasSafeMath.sol';
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
 contract PositionRegistrar {
-    using LowGasSafeMath for uint256;
+    using LowGasSafeMath for uint64;
+    using SafeCast for uint256;
 
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
@@ -25,7 +27,7 @@ contract PositionRegistrar {
      * updating 5. */
     struct Position {
         uint128 liquidity_;
-        uint256 feeMileage_;
+        uint64 feeMileage_;
     }
 
     mapping(bytes32 => Position) private positions_;
@@ -71,18 +73,18 @@ contract PositionRegistrar {
      * @return rewards The rewards accumulated between the current and last checkpoined
      *                 fee mileage. */
     function burnPosLiq (address owner, uint8 poolIdx, int24 lowerTick, int24 upperTick,
-                         uint128 burnLiq, uint256 feeMileage)
-        internal returns (uint256 rewards) {
+                         uint128 burnLiq, uint64 feeMileage)
+        internal returns (uint64 rewards) {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint128 liq = pos.liquidity_;
-        uint256 oldMileage = pos.feeMileage_;
+        uint64 oldMileage = pos.feeMileage_;
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
         // Technically feeMileage should never be less than oldMileage, but we need to
         // handle it because it can happen due to fixed-point effects. (See blendMileage()
         // function.)
         if (feeMileage > oldMileage) {
-            rewards = feeMileage.sub(oldMileage);
+            rewards = feeMileage - oldMileage;
             // No need to adjust the position's mileage checkpoint. Rewards are in per
             // unit of liquidity, so the pro-rata rewards of the remaining liquidity
             // (if any) remain unnaffected. 
@@ -104,10 +106,10 @@ contract PositionRegistrar {
      * @param feeMileage The up-to-date fee mileage associated with the range. If the
      *                   position will be checkpointed with this value. */
     function addPosLiq (address owner, uint8 poolIdx, int24 lowerTick, int24 upperTick,
-                        uint128 liqAdd, uint256 feeMileage) internal {
+                        uint128 liqAdd, uint64 feeMileage) internal {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint128 liq = pos.liquidity_;
-        uint256 oldMileage;
+        uint64 oldMileage;
 
         if (liq > 0) {
             oldMileage = pos.feeMileage_;
@@ -130,12 +132,12 @@ contract PositionRegistrar {
      *   because mileage only increases through time. However this is a non-consequential
      *   failure. burnPosLiq() just treats it as a zero reward situation, and the staker
      *   loses an economically non-meaningful amount of rewards on the burn. */
-    function blendMileage (uint256 mileageX, uint128 liqX, uint256 mileageY, uint liqY)
-        private pure returns (uint256) {
+    function blendMileage (uint64 mileageX, uint128 liqX, uint64 mileageY, uint liqY)
+        private pure returns (uint64) {
         if (liqY == 0) { return mileageX; }
         if (liqX == 0) { return mileageY; }
-        uint256 termX = FullMath.mulDiv(mileageX, liqX, liqX + liqY);
-        uint256 termY = FullMath.mulDiv(mileageY, liqY, liqX + liqY);
+        uint64 termX = FullMath.mulDiv(mileageX, liqX, liqX + liqY).toUint64();
+        uint64 termY = FullMath.mulDiv(mileageY, liqY, liqX + liqY).toUint64();
 
         // With mileage we want to be conservative on the upside. Under-estimating
         // mileage means overpaying rewards. So, round up the fractional weights.

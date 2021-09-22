@@ -28,7 +28,7 @@ contract TestLiquidityCurve is LiquidityCurve {
     }
 
     function testLiqPayConc (uint8 poolIdx, uint128 liq, uint160 lower, uint160 upper,
-                             uint256 rewards) public {
+                             uint64 rewards) public {
         (baseFlow, quoteFlow) = liquidityPayable
             (poolIdx, liq, rewards,
              lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());

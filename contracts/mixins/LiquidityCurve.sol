@@ -43,7 +43,7 @@ contract LiquidityCurve {
      * @return Represented as 128-bit fixed point real corresponding to the cumulative
      *         realized growth. Concentrated liquidity rewards are accumulated in the
      *         form of ambient liquidity seeds (see library/CurveMath.sol) */
-    function tokenOdometer (uint8 poolIdx) view internal returns (uint256) {
+    function tokenOdometer (uint8 poolIdx) view internal returns (uint64) {
         return curves_[poolIdx].accum_.concTokenGrowth_;
     }
 
@@ -142,7 +142,7 @@ contract LiquidityCurve {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (uint8 poolIdx, uint128 liquidity, uint256 rewardRate,
+    function liquidityPayable (uint8 poolIdx, uint128 liquidity, uint64 rewardRate,
                                int24 lowerTick, int24 upperTick)
         internal returns (uint256 base, uint256 quote) {
         (base, quote) = liquidityPayable(poolIdx, liquidity, lowerTick, upperTick);

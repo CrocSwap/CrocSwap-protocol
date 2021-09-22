@@ -135,8 +135,8 @@ contract CrocSwapPool is ICrocSwapPool,
         (, int24 midTick) = loadPriceTick(DFLT_POOL_IDX);
 
         // Insert the range order into the book and position data structures
-        uint256 odometer = addBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
-                                      liqAdded, tokenOdometer(DFLT_POOL_IDX));
+        uint64 odometer = addBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
+                                     liqAdded, tokenOdometer(DFLT_POOL_IDX));
         addPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
 
         // Calculate and collect the necessary collateral from the user.
@@ -194,16 +194,15 @@ contract CrocSwapPool is ICrocSwapPool,
 
         // Remember feeMileage is the *global* liquidity growth in the range. We still
         // have to adjust for the growth that occured before the order was created.
-        uint256 feeMileage = removeBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
-                                           liqRemoved, tokenOdometer(DFLT_POOL_IDX));
+        uint64 feeMileage = removeBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
+                                          liqRemoved, tokenOdometer(DFLT_POOL_IDX));
 
         // Return the range order's original committed liquidity inflated by its
         // cumulative rewards
-        uint256 rewards = burnPosLiq(msg.sender, DFLT_POOL_IDX, lowerTick, upperTick,
-                                     liqRemoved, feeMileage);
+        uint64 rewards = burnPosLiq(msg.sender, DFLT_POOL_IDX, lowerTick, upperTick,
+                                    liqRemoved, feeMileage);
         (basePaid, quotePaid) = liquidityPayable(DFLT_POOL_IDX, liqRemoved,
-                                                 rewards.toUint128(),
-                                                 lowerTick, upperTick);
+                                                 rewards, lowerTick, upperTick);
         if (basePaid > 0) {
             TransferHelper.safeTransfer(tokenBase_, recipient, basePaid);
         }

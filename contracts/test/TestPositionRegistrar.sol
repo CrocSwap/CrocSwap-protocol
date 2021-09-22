@@ -7,12 +7,12 @@ contract TestPositionRegistrar is PositionRegistrar {
     uint256 public lastRewards;
     
     function testAdd (address owner, uint8 poolIdx, int24 lower, int24 upper,
-                      uint128 liq, uint256 mileage) public {
+                      uint128 liq, uint64 mileage) public {
         addPosLiq(owner, poolIdx, lower, upper, liq, mileage);
     }
 
     function testBurn (address owner, uint8 poolIdx, int24 lower, int24 upper,
-                       uint128 liq, uint256 mileage) public {
+                       uint128 liq, uint64 mileage) public {
         lastRewards = burnPosLiq(owner, poolIdx, lower, upper, liq, mileage);
     }
 

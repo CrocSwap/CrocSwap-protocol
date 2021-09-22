@@ -16,23 +16,23 @@ contract TestLevelBook is LevelBook {
     }
 
     function pullFeeOdometer (uint8 poolIdx, int24 mid, int24 bid, int24 ask,
-                              uint256 feeGlobal)
-        public view returns (uint256) {
+                              uint64 feeGlobal)
+        public view returns (uint64) {
         return clockFeeOdometer(poolIdx, mid, bid, ask, feeGlobal);
     }
 
     function testCrossLevel (uint8 poolIdx, int24 tick, bool isBuy,
-                             uint256 feeGlobal) public {
+                             uint64 feeGlobal) public {
         liqDelta = crossLevel(poolIdx, tick, isBuy, feeGlobal);
     }
 
     function testAdd (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                      uint128 liq, uint256 globalFee) public {
+                      uint128 liq, uint64 globalFee) public {
         odometer = addBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
     function testRemove (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                         uint128 liq, uint256 globalFee) public {
+                         uint128 liq, uint64 globalFee) public {
         odometer = removeBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
