@@ -18,6 +18,15 @@ library TickCensusLib {
     /* Tick positions are stored in three layers of 8-bit/256-slot bitmaps. Recursively
      * they indicate whether any given 24-bit tick index is active.  */
     struct TickCensus {
+        /* The first layer (lobby) represents the 8-bit tick root. If we did store this
+         * layer, we'd only need a single 256-bit bitmap per pool. However we do *not*
+         * store this layer, because it adds an unnecessary SLOAD/SSTORE operation on
+         * almost all operations. Instead users can query this layer by checking whether
+         * mezzanine key is set for each bit. The tradeoff is that lobby bitmap queries
+         * are no longer O(1) random access but O(N) seeks. However spills at the lobby
+         * layer are so rare (moving between lobby bits requires a 65,000% price change)
+         * that this gas tradeoff is virtually always justified. a bitmap */
+        
         /* The second layer (mezzanine) maps whether each 16-bit tick root is set. An 
          * entry will be set if and only if *any* tick index in the 8-bit range is set. 
          * Because there are 256^2 slots, this is represented as map from the first 8-
