@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import '../libraries/FullMath.sol';
 import '../libraries/TickMath.sol';
-import '../libraries/FixedPoint96.sol';
+import '../libraries/FixedPoint.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/SafeCast.sol';
 import '../libraries/LowGasSafeMath.sol';
@@ -151,7 +151,7 @@ contract LiquidityCurve {
             // Round down reward sees on payout, in contrast to rounding them up on
             // incremental accumulation (see CurveAssimilate.sol). This mathematicaly
             // guarantees that we never try to burn more tokens than exist on the curve.
-            uint256 rewards = FullMath.mulDiv(liquidity, rewardRate, FixedPoint128.Q128);
+            uint256 rewards = FullMath.mulDiv(liquidity, rewardRate, FixedPoint.Q48);
             
             if (rewards > 0) {
                 (uint256 baseRewards, uint256 quoteRewards) =
@@ -246,8 +246,8 @@ contract LiquidityCurve {
         uint160 price  = curves_[poolIdx].priceRoot_;
         uint128 liq = CompoundMath.inflateLiqSeed
             (seeds, curves_[poolIdx].accum_.ambientGrowth_);
-        baseDebit = FullMath.mulDiv(liq, price, FixedPoint96.Q96);
-        quoteDebit = (uint256(liq) << FixedPoint96.RESOLUTION) / price;
+        baseDebit = FullMath.mulDiv(liq, price, FixedPoint.Q96);
+        quoteDebit = (uint256(liq) << 96) / price;
     }
 
     /* @notice Writes a new price into the curve (without any adjustment to liquidity)

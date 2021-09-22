@@ -9,7 +9,7 @@ import "../libraries/SwapCurve.sol";
 contract TestCurveMath {
     using CurveMath for CurveMath.SwapFrame;
     
-    function testActiveLiq (uint128 seed, uint256 growth, uint128 concentrated)
+    function testActiveLiq (uint128 seed, uint64 growth, uint128 concentrated)
         public pure returns (uint128) {
         return CurveMath.activeLiquidity(
             buildCurve(seed, growth, concentrated, 0));
@@ -142,14 +142,14 @@ contract TestCurveMath {
                              int256 paidBase, int256 paidQuote) {
         uint128 flow = (isBuy == inBase) ? type(uint128).max :
             SafeCast.toUint128(inBase ?
-                    FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
-                    FullMath.mulDiv(liq, FixedPoint96.Q96, price));
+                    FullMath.mulDiv(liq, price, FixedPoint.Q96) :
+                    FullMath.mulDiv(liq, FixedPoint.Q96, price));
         (rollPrice, qtyLeft, paidBase, paidQuote) =
             testRoll(flow, price, liq, isBuy, inBase);
     }
 
     function testAssimilate (uint256 feesPaid, uint160 price,
-                             uint128 seed, uint128 conc, uint256 growth, bool inBase)
+                             uint128 seed, uint128 conc, uint64 growth, bool inBase)
         public pure returns (uint160 shiftPrice, uint128 shiftSeed,
                              uint256 shiftGrowth, uint256 concGrowth) {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
@@ -160,7 +160,7 @@ contract TestCurveMath {
                                      curve.accum_.concTokenGrowth_);
     }
 
-    function testDeriveImpact (uint160 price, uint128 seed, uint256 growth,
+    function testDeriveImpact (uint160 price, uint128 seed, uint64 growth,
                                uint128 conc, uint256 flow, 
                                bool isBuy, bool inBase)
         public pure returns (uint256, uint160) {
@@ -188,7 +188,7 @@ contract TestCurveMath {
         return CurveMath.SwapAccum(flow, 0, 0, 0, cntx);
     }
     
-    function buildCurve (uint128 seed, uint256 growth, uint128 conc, uint160 price)
+    function buildCurve (uint128 seed, uint64 growth, uint128 conc, uint160 price)
         private pure returns (CurveMath.CurveState memory) {
         CurveMath.CurveLiquidity memory liq = CurveMath.CurveLiquidity(seed, conc);
         CurveMath.CurveFeeAccum memory fee = CurveMath.CurveFeeAccum(growth, 0);

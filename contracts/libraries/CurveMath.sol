@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 import './FullMath.sol';
-import './FixedPoint96.sol';
+import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
 
@@ -68,8 +68,8 @@ library CurveMath {
      *      approximation is find, since all it will result in is slightly smaller 
      *      reward payouts. */
     struct CurveFeeAccum {
-        uint256 ambientGrowth_;
-        uint256 concTokenGrowth_;
+        uint64 ambientGrowth_;
+        uint64 concTokenGrowth_;
     }
 
     /* @param priceRoot_ The square root of the active price of the AMM curve 
@@ -259,11 +259,11 @@ library CurveMath {
          * the order of multiply/divides to assure the second mulDiv bounds the precision
          * loss from the first mulDiv() */
         if (limitPrice > priceDelta) {
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint96.Q96, price);
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q96, price);
             return FullMath.mulDiv(partTerm, priceDelta, limitPrice);
         } else {
             // Implies priceDelta < price
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint96.Q96, limitPrice);
+            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q96, limitPrice);
             return FullMath.mulDiv(partTerm, priceDelta, price);
         }
     }
@@ -287,8 +287,8 @@ library CurveMath {
     function reserveAtPrice (uint128 liq, uint160 price, bool inBaseQty)
         internal pure returns (uint256) {
         return inBaseQty ?
-            FullMath.mulDiv(liq, price, FixedPoint96.Q96) :
-            FullMath.mulDiv(liq, FixedPoint96.Q96, price);
+            FullMath.mulDiv(liq, price, FixedPoint.Q96) :
+            FullMath.mulDiv(liq, FixedPoint.Q96, price);
     }
 
     /* @dev The fixed point arithmetic results in output that's a close approximation
@@ -352,7 +352,7 @@ library CurveMath {
         //     delta(B) >= L * 2^-96
         //  (where L is liquidity, B is base token reserves, P is price)
         if (inBaseToken) {
-            return liqWeight / FixedPoint96.Q96;
+            return liqWeight / FixedPoint.Q96;
         } else {
             // Proivde quote token collateral to buffer price precision roudning:
             //    delta(Q) >= L * delta(1/P)
@@ -361,14 +361,14 @@ library CurveMath {
             //    delta(Q) >= L * (1/(P-2^-96) - 1/P)
             //             >= L * 2^-96/(P^2 - P * 2^-96)
             //             >= L * 2^-96/(P - 2^-96)^2        (upper bound to above)
-            if (price <= FixedPoint96.Q96) {
+            if (price <= FixedPoint.Q96) {
                 // The fixed point representation of Price in bits is
                 //    Pb = P * 2^96
                 // Therefore
                 //    delta(Q) >= L * 2^-96/(P/2^96)^2
                 //             >= L * 2^96/Pb^2
                 //
-                return FullMath.mulDiv(liqWeight, FixedPoint96.Q96,
+                return FullMath.mulDiv(liqWeight, FixedPoint.Q96,
                                        // Price^2 fits in 256 bits since price < 96 bits
                                        uint256(price - 1)*uint256(price - 1));
             } else {
@@ -377,7 +377,7 @@ library CurveMath {
                 //           P >= 1
                 //    delta(Q) >= L * 2^-96/P^2
                 //             >= L * 2^-96
-                return liqWeight / FixedPoint96.Q96;
+                return liqWeight / FixedPoint.Q96;
             }
         }
     }

@@ -7,7 +7,6 @@ import './interfaces/ICrocSwapPool.sol';
 import './libraries/LowGasSafeMath.sol';
 import './libraries/SafeCast.sol';
 
-import './libraries/FixedPoint128.sol';
 import './libraries/TransferHelper.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';

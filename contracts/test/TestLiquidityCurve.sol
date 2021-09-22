@@ -80,7 +80,7 @@ contract TestLiquidityCurve is LiquidityCurve {
         commitSwapCurve(poolIdx, curve);
     }
 
-    function fixAccum (uint8 poolIdx, uint256 ambient, uint256 conc) public {
+    function fixAccum (uint8 poolIdx, uint64 ambient, uint64 conc) public {
         CurveMath.CurveState memory curve = snapCurve(poolIdx);
         curve.accum_.ambientGrowth_ = ambient;
         curve.accum_.concTokenGrowth_ = conc;

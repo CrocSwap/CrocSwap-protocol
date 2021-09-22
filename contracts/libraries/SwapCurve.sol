@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import './FullMath.sol';
 import './TickMath.sol';
-import './FixedPoint96.sol';
 import './LiquidityMath.sol';
 import './SafeCast.sol';
 import './LowGasSafeMath.sol';

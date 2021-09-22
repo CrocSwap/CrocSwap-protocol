@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 import './FullMath.sol';
-import './FixedPoint96.sol';
+import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
 import './CurveMath.sol';
@@ -234,7 +234,7 @@ library CurveRoll {
      * the base token. The max loss of precision is 1 unit of fixed-point price. */
     function calcBaseFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
         private pure returns (uint256) {
-        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint96.Q96, liq);
+        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint.Q96, liq);
         if (isBuy) {
             return price.add(priceDelta);
         } else {
@@ -257,12 +257,12 @@ library CurveRoll {
     function calcQuoteFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
         private pure returns (uint256) {
         // Since this is a term in the quotient rounding down, rounds up the final price
-        uint256 invPrice = FullMath.mulDiv(FixedPoint96.Q96, FixedPoint96.Q96, price);
+        uint256 invPrice = FullMath.mulDiv(FixedPoint.Q96, FixedPoint.Q96, price);
         // This is also a quotient term so we use this function's round down logic
         uint256 invNext = calcBaseFlowPrice(invPrice, liq, flow, !isBuy);
         if (invNext == 0) { return TickMath.MAX_SQRT_RATIO; }
         // Round up the final division operation. 
-        return FullMath.mulDiv(FixedPoint96.Q96, FixedPoint96.Q96, invNext) + 1;
+        return FullMath.mulDiv(FixedPoint.Q96, FixedPoint.Q96, invNext) + 1;
     }
 
 
