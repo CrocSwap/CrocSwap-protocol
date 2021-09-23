@@ -12,24 +12,35 @@ import '../libraries/TickCensus.sol';
  *         accumulators on a per-tick basis. */
 contract LevelBook {
     using SafeCast for uint128;
+    using LiquidityMath for uint128;
+    using LiquidityMath for uint96;
     using TickCensusLib for TickCensusLib.TickCensus;
 
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
-     *    bidLiq_ - The concentrated liquidity bump that's added to the AMM curve when
-     *              the price moves into the tick from above.
-     *    askLiq_ - The concentrated liquidity bump that's added to the AMM curve when
-     *              the price moves into the tick from below.
+     *    bidLots_ - The concentrated liquidity bump that's added to the AMM curve when
+     *               the price moves into the tick from above.
+     *    askLots_ - The concentrated liquidity bump that's added to the AMM curve when
+     *               the price moves into the tick from below.
      *    feeOdometer_ - The liquidity fee rewards accumulator that's checkpointed 
      *       whenever the price crosses the tick boundary. Used to calculate the 
      *       cumulative fee rewards on any arbitrary lower-upper tick range. This is
      *       generically represented as a per-liquidity unit 128-bit fixed point 
      *       cumulative growth rate. */
     struct BookLevel {
+        uint96 bidLots_;
+        uint96 askLots_;
+        uint64 feeOdometer_;
+    }
+
+    struct BookLevelView {
         uint128 bidLiq_;
         uint128 askLiq_;
         uint64 feeOdometer_;
     }
+
+    uint16 constant LOT_SIZE = 1024;
+    uint8 constant LOT_SIZE_BITS = 10;
 
     mapping(bytes32 => BookLevel) private levels_;
     mapping(uint16 => uint16) private tickSizes_;
@@ -58,9 +69,10 @@ contract LevelBook {
     function crossLevel (uint8 poolIdx, int24 tick, bool isBuy, uint64 feeGlobal)
         internal returns (int256 liqDelta) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        int256 crossDelta = int256(uint256(lvl.bidLiq_)) - int256(uint256(lvl.askLiq_));
-        liqDelta = isBuy ? crossDelta : -crossDelta;
+        int256 crossDelta = LiquidityMath.netLotsOnLiquidity
+            (lvl.bidLots_, lvl.askLots_);
         
+        liqDelta = isBuy ? crossDelta : -crossDelta;
         if (feeGlobal != lvl.feeOdometer_) {
             lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
         }
@@ -68,8 +80,12 @@ contract LevelBook {
 
     /* @notice Retrieves the level book state associated with the tick. */
     function levelState (uint8 poolIdx, int24 tick) internal view returns
-        (BookLevel memory) {
-        return levels_[keccak256(abi.encodePacked(poolIdx, tick))];
+        (BookLevelView memory) {
+        BookLevel storage state = levels_[keccak256(abi.encodePacked(poolIdx, tick))];
+        return BookLevelView({feeOdometer_: state.feeOdometer_,
+                    bidLiq_: state.bidLots_.lotsToLiquidity(),
+                    askLiq_: state.askLots_.lotsToLiquidity()});
+                    
     }
 
     function fetchLevel (uint8 poolIdx, int24 tick) private view returns
@@ -101,14 +117,15 @@ contract LevelBook {
     function addBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
                          uint128 liq, uint64 feeGlobal)
         internal returns (uint64 feeOdometer) {
+        uint96 lots = liq.liquidityToLots();
         assertTickSize(bidTick, askTick, tickSizes_[poolIdx]);
 
         // Make sure to init before add, because init logic relies on pre-add liquidity
         initLevel(poolIdx, midTick, bidTick, feeGlobal);
         initLevel(poolIdx, midTick, askTick, feeGlobal);
 
-        addBid(poolIdx, bidTick, liq);
-        addAsk(poolIdx, askTick, liq);
+        addBid(poolIdx, bidTick, lots);
+        addAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
     }
 
@@ -152,8 +169,9 @@ contract LevelBook {
     function removeBookLiq (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
                             uint128 liq, uint64 feeGlobal)
         internal returns (uint64 feeOdometer) {
-        bool deleteBid = removeBid(poolIdx, bidTick, liq);
-        bool deleteAsk = removeAsk(poolIdx, askTick, liq);
+        uint96 lots = liq.liquidityToLots();
+        bool deleteBid = removeBid(poolIdx, bidTick, lots);
+        bool deleteAsk = removeAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
         
         if (deleteBid) { deleteLevel(poolIdx, bidTick); }
@@ -163,7 +181,7 @@ contract LevelBook {
     function initLevel (uint8 poolIdx, int24 midTick,
                         int24 tick, uint64 feeGlobal) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        if (lvl.bidLiq_ == 0 && lvl.askLiq_ == 0) {
+        if (lvl.bidLots_ == 0 && lvl.askLots_ == 0) {
             if (tick >= midTick) {
                 lvl.feeOdometer_ = feeGlobal;
             }
@@ -171,31 +189,28 @@ contract LevelBook {
         }
     }
     
-    function addBid (uint8 poolIdx, int24 tick, uint128 incrLiq) private {
+    function addBid (uint8 poolIdx, int24 tick, uint96 incrLots) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        uint128 prevLiq = lvl.bidLiq_;
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, incrLiq);
-        require(newLiq <= TickMath.MAX_TICK_LIQUIDITY, "L");
-        lvl.bidLiq_ = newLiq;
+        uint96 prevLiq = lvl.bidLots_;
+        uint96 newLiq = prevLiq.addLots(incrLots);
+        lvl.bidLots_ = newLiq;
     }
 
-    function addAsk (uint8 poolIdx, int24 tick, uint128 incrLiq) private {
+    function addAsk (uint8 poolIdx, int24 tick, uint96 incrLots) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        uint128 prevLiq = lvl.askLiq_;
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, incrLiq);
-        require(newLiq <= TickMath.MAX_TICK_LIQUIDITY, "L");
-        lvl.askLiq_ = newLiq;
+        uint96 prevLiq = lvl.askLots_;
+        uint96 newLiq = prevLiq.addLots(incrLots);
+        lvl.askLots_ = newLiq;
     }
     
     function removeBid (uint8 poolIdx, int24 tick,
-                        uint128 subLiq) private returns (bool) {
+                        uint96 subLots) private returns (bool) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        uint128 prevLiq = lvl.bidLiq_;
-        require(subLiq <= prevLiq, "V");
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
+        uint96 prevLiq = lvl.bidLots_;
+        uint96 newLiq = prevLiq.minusLots(subLots);
         
-        lvl.bidLiq_ = newLiq;
-        if (newLiq == 0 && lvl.askLiq_ == 0) {
+        lvl.bidLots_ = newLiq;
+        if (newLiq == 0 && lvl.askLots_ == 0) {
             ticks_.forgetTick(poolIdx, tick);
             return true;
         }
@@ -203,14 +218,13 @@ contract LevelBook {
     }    
 
     function removeAsk (uint8 poolIdx, int24 tick,
-                        uint128 subLiq) private returns (bool) {
+                        uint96 subLots) private returns (bool) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        uint128 prevLiq = lvl.askLiq_;
-        require(subLiq <= prevLiq, "V");
-        uint128 newLiq = LiquidityMath.addDelta(prevLiq, -(subLiq.uInt128ToInt128()));
+        uint96 prevLiq = lvl.askLots_;
+        uint96 newLiq = prevLiq.minusLots(subLots);
         
-        lvl.askLiq_ = newLiq;
-        if (newLiq == 0 && lvl.bidLiq_ == 0) {
+        lvl.askLots_ = newLiq;
+        if (newLiq == 0 && lvl.bidLots_ == 0) {
             ticks_.forgetTick(poolIdx, tick);
             return true;
         }

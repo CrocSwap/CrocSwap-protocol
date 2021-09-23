@@ -84,9 +84,6 @@ contract CrocSwapPool is ICrocSwapPool,
     function tickSpacing() external view override returns (uint16) {
         return getTickSize(DFLT_POOL_IDX);
     }
-    function maxLiquidityPerTick() external pure override returns (uint128) {
-        return TickMath.MAX_TICK_LIQUIDITY;
-    }
     
     function liquidity() external view override returns (uint128) {
         return activeLiquidity(DFLT_POOL_IDX);

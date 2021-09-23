@@ -9,8 +9,6 @@ library TickMath {
     int24 internal constant MIN_TICK = -665454;
     /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**120
     int24 internal constant MAX_TICK = 831818;
-
-    uint128 internal constant MAX_TICK_LIQUIDITY = type(uint128).max;
     
     /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
     uint128 internal constant MIN_SQRT_RATIO = 65538;

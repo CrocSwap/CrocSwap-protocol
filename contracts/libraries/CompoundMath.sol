@@ -111,8 +111,8 @@ library CompoundMath {
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
         uint256 inflated = FullMath.mulDiv(seed, ONE.add(growth), ONE);
-        return inflated > TickMath.MAX_TICK_LIQUIDITY ?
-            TickMath.MAX_TICK_LIQUIDITY :
+        return inflated > type(uint128).max ?
+            type(uint128).max :
             inflated.toUint128();
     }
 }

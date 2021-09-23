@@ -11,7 +11,7 @@ contract TestLevelBook is LevelBook {
     uint256 public odometer;
 
     function getLevelState (uint8 poolIdx, int24 tick) public view returns
-        (BookLevel memory) {
+        (BookLevelView memory) {
         return levelState(poolIdx, tick);
     }
 
