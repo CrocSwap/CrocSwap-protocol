@@ -13,9 +13,9 @@ library TickMath {
     uint128 internal constant MAX_TICK_LIQUIDITY = type(uint128).max;
     
     /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
-    uint128 internal constant MIN_SQRT_RATIO = 65483;
+    uint128 internal constant MIN_SQRT_RATIO = 65538;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
-    uint128 internal constant MAX_SQRT_RATIO = 42535295865117307932921825928971026432;
+    uint128 internal constant MAX_SQRT_RATIO = 21267430153580247136652501917186561138;
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96
     /// @dev Throws if |tick| > max tick
@@ -51,7 +51,7 @@ library TickMath {
         if (tick > 0) ratio = type(uint256).max / ratio;
 
         // this divides by 1<<64 rounding up to go from a Q128.128 to a Q64.64
-        // we then downcast because we know the result always fits within 64 bits due to our tick input constraint
+        // we then downcast because we know the result always fits within 128 bits due to our tick input constraint
         // we round up in the division so getTickAtSqrtRatio of the output price is always consistent
         sqrtPriceX64 = uint128((ratio >> 64) + (ratio % (1 << 64) == 0 ? 0 : 1));
         }
