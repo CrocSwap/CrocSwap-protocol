@@ -48,7 +48,6 @@ contract TestCurveMath {
         public view returns (uint256) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
         CurveMath.SwapAccum memory swap = buildSwap(1000000, true, true);
-        console.log("LimitBase", price, limitPrice, liq);
         return CurveMath.calcLimitFlows(curve, swap, limitPrice);
     }
 
