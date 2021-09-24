@@ -18,13 +18,13 @@ describe('LevelBook', () => {
 
     it("empty init", async() => {
         let lvl = await book.getLevelState(0, 100);
-        expect(lvl.askLiq_.toNumber()).to.equal(0);
-        expect(lvl.bidLiq_.toNumber()).to.equal(0);
+        expect(lvl.askLots_.toNumber()).to.equal(0);
+        expect(lvl.bidLots_.toNumber()).to.equal(0);
         expect(lvl.feeOdometer_.toNumber()).to.equal(0);
 
         lvl = await book.getLevelState(0, 100);
-        expect(lvl.askLiq_.toNumber()).to.equal(0);
-        expect(lvl.bidLiq_.toNumber()).to.equal(0);
+        expect(lvl.askLots_.toNumber()).to.equal(0);
+        expect(lvl.bidLots_.toNumber()).to.equal(0);
         expect(lvl.feeOdometer_.toNumber()).to.equal(0);
     })
 
@@ -34,14 +34,14 @@ describe('LevelBook', () => {
         let ask = await book.getLevelState(0, 105);
         let mid = await book.getLevelState(0, 100);
         let alt = await book.getLevelState(1, 95);
-        expect(bid.bidLiq_.toNumber()).to.equal(10000);
-        expect(bid.askLiq_.toNumber()).to.equal(0);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(10000);
-        expect(mid.bidLiq_.toNumber()).to.equal(0);
-        expect(mid.bidLiq_.toNumber()).to.equal(0);
-        expect(alt.bidLiq_.toNumber()).to.equal(0);
-        expect(alt.bidLiq_.toNumber()).to.equal(0);
+        expect(bid.bidLots_.toNumber()).to.equal(10000);
+        expect(bid.askLots_.toNumber()).to.equal(0);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(10000);
+        expect(mid.bidLots_.toNumber()).to.equal(0);
+        expect(mid.bidLots_.toNumber()).to.equal(0);
+        expect(alt.bidLots_.toNumber()).to.equal(0);
+        expect(alt.bidLots_.toNumber()).to.equal(0);
     })
 
     it("stack liq", async() => {
@@ -51,30 +51,30 @@ describe('LevelBook', () => {
         await book.testAdd(1, 100, 90, 95, 50000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(1, 95);
         let ask = await book.getLevelState(1, 105);
-        expect(bid.bidLiq_.toNumber()).to.equal(30000);
-        expect(bid.askLiq_.toNumber()).to.equal(50000);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(43000);
+        expect(bid.bidLots_.toNumber()).to.equal(30000);
+        expect(bid.askLots_.toNumber()).to.equal(50000);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(43000);
     })
 
     it("add above", async() => {
         await book.testAdd(3, 50, 95, 105, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(3, 95);
         let ask = await book.getLevelState(3, 105);
-        expect(bid.bidLiq_.toNumber()).to.equal(10000);
-        expect(bid.askLiq_.toNumber()).to.equal(0);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(10000);
+        expect(bid.bidLots_.toNumber()).to.equal(10000);
+        expect(bid.askLots_.toNumber()).to.equal(0);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(10000);
     })
 
     it("add below", async() => {
         await book.testAdd(0, 150, 95, 105, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(0, 95);
         let ask = await book.getLevelState(0, 105);
-        expect(bid.bidLiq_.toNumber()).to.equal(10000);
-        expect(bid.askLiq_.toNumber()).to.equal(0);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(10000);
+        expect(bid.bidLots_.toNumber()).to.equal(10000);
+        expect(bid.askLots_.toNumber()).to.equal(0);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(10000);
     })
 
     it("remove partial", async() => {
@@ -85,11 +85,11 @@ describe('LevelBook', () => {
         let bid = await book.getLevelState(2, 95);
         let ask = await book.getLevelState(2, 105);
         let ask2 = await book.getLevelState(2, 110);
-        expect(bid.bidLiq_.toNumber()).to.equal(22000);
-        expect(bid.askLiq_.toNumber()).to.equal(0);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(7000);
-        expect(ask2.askLiq_.toNumber()).to.equal(15000);
+        expect(bid.bidLots_.toNumber()).to.equal(22000);
+        expect(bid.askLots_.toNumber()).to.equal(0);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(7000);
+        expect(ask2.askLots_.toNumber()).to.equal(15000);
     })
 
     it("remove full", async() => {
@@ -98,10 +98,10 @@ describe('LevelBook', () => {
         await book.testRemove(0, 100, 95, 105, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(0, 95);
         let ask = await book.getLevelState(0, 105);
-        expect(bid.bidLiq_.toNumber()).to.equal(20000);
-        expect(bid.askLiq_.toNumber()).to.equal(0);
-        expect(ask.bidLiq_.toNumber()).to.equal(0);
-        expect(ask.askLiq_.toNumber()).to.equal(0);
+        expect(bid.bidLots_.toNumber()).to.equal(20000);
+        expect(bid.askLots_.toNumber()).to.equal(0);
+        expect(ask.bidLots_.toNumber()).to.equal(0);
+        expect(ask.askLots_.toNumber()).to.equal(0);
     })
 
     it("remove over", async() => {
@@ -176,25 +176,25 @@ describe('LevelBook', () => {
         await book.testAdd(2, 100, 90, 95, 35000, toFixedGrowth(0.8))
         
         await book.testCrossLevel(1, 95, true, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(-15000)
+        expect((await book.liqDelta()).toNumber()).to.equal(-15000*1024)
 
         await book.testCrossLevel(1, 95, false, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(15000)
+        expect((await book.liqDelta()).toNumber()).to.equal(15000*1024)
         
         await book.testCrossLevel(1, 90, false, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(-25000)
+        expect((await book.liqDelta()).toNumber()).to.equal(-25000*1024)
 
         await book.testCrossLevel(1, 90, true, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(25000)
+        expect((await book.liqDelta()).toNumber()).to.equal(25000*1024)
 
         await book.testCrossLevel(1, 105, false, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(10000)
+        expect((await book.liqDelta()).toNumber()).to.equal(10000*1024)
 
         await book.testCrossLevel(1, 106, false, toFixedGrowth(0.5))
         expect((await book.liqDelta()).toNumber()).to.equal(0)
 
         await book.testCrossLevel(2, 95, true, toFixedGrowth(0.8))
-        expect((await book.liqDelta()).toNumber()).to.equal(-35000)
+        expect((await book.liqDelta()).toNumber()).to.equal(-35000*1024)
     })
 
     // Test that we can safely cross non-initialized levels without breaking the
@@ -212,9 +212,9 @@ describe('LevelBook', () => {
         await book.testAdd(1, 100, 98, 102, 25000, toFixedGrowth(0.5))
         expect(await book.hasTickBump(1, 98)).to.equal(true)
         await book.testCrossLevel(1, 98, false, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(-25000)        
+        expect((await book.liqDelta()).toNumber()).to.equal(-25000*1024)        
         await book.testCrossLevel(1, 98, true, toFixedGrowth(0.5))
-        expect((await book.liqDelta()).toNumber()).to.equal(25000)        
+        expect((await book.liqDelta()).toNumber()).to.equal(25000*1024)        
         expect(await book.hasTickBump(1, 98)).to.equal(true)
 
         // Differnt pool

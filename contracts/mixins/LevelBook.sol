@@ -33,12 +33,6 @@ contract LevelBook {
         uint64 feeOdometer_;
     }
 
-    struct BookLevelView {
-        uint128 bidLiq_;
-        uint128 askLiq_;
-        uint64 feeOdometer_;
-    }
-
     uint16 constant LOT_SIZE = 1024;
     uint8 constant LOT_SIZE_BITS = 10;
 
@@ -80,12 +74,8 @@ contract LevelBook {
 
     /* @notice Retrieves the level book state associated with the tick. */
     function levelState (uint8 poolIdx, int24 tick) internal view returns
-        (BookLevelView memory) {
-        BookLevel storage state = levels_[keccak256(abi.encodePacked(poolIdx, tick))];
-        return BookLevelView({feeOdometer_: state.feeOdometer_,
-                    bidLiq_: state.bidLots_.lotsToLiquidity(),
-                    askLiq_: state.askLots_.lotsToLiquidity()});
-                    
+        (BookLevel memory) {
+        return levels_[keccak256(abi.encodePacked(poolIdx, tick))];
     }
 
     function fetchLevel (uint8 poolIdx, int24 tick) private view returns

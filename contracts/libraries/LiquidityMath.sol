@@ -78,6 +78,6 @@ library LiquidityMath {
     }
 
     function lotToNetLiq (uint96 lots) internal pure returns (int256) {
-        return int256(uint256(lots) >> LOT_SIZE_BITS);
+        return int256(uint256(lots) << LOT_SIZE_BITS);
     }
 }

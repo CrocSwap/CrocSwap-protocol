@@ -11,7 +11,7 @@ contract TestLevelBook is LevelBook {
     uint256 public odometer;
 
     function getLevelState (uint8 poolIdx, int24 tick) public view returns
-        (BookLevelView memory) {
+        (BookLevel memory) {
         return levelState(poolIdx, tick);
     }
 
@@ -27,12 +27,14 @@ contract TestLevelBook is LevelBook {
     }
 
     function testAdd (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                      uint128 liq, uint64 globalFee) public {
+                      uint128 lots, uint64 globalFee) public {
+        uint128 liq = lots * 1024;
         odometer = addBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
     function testRemove (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                         uint128 liq, uint64 globalFee) public {
+                         uint128 lots, uint64 globalFee) public {
+        uint128 liq = lots * 1024;
         odometer = removeBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
     }
 
