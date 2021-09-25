@@ -4,8 +4,8 @@ const PRECISION = 100000000
 const Q_64 = BigNumber.from(2).pow(64);
 const Q_48 = BigNumber.from(2).pow(48);
 
-export const MIN_TICK = -887272
-export const MAX_TICK = 887272
+export const MIN_TICK = -665454
+export const MAX_TICK = 831818
 
 export function toFixedGrowth (mult: number) {
     let multFixed = Math.round(mult * PRECISION);
