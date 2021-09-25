@@ -46,16 +46,18 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
     }
 
     function testMint (int24 lowerTick, int24 upperTick, uint128 liqAdded) public {
+        uint128 lots = liqAdded * 1024;
         (uint quoteMint, uint baseMint) = CrocSwapPool(pool).mint
-            (address(this), lowerTick, upperTick, liqAdded, testCalldata);
+            (address(this), lowerTick, upperTick, lots, testCalldata);
         if (!gasProfileMode) {
             (snapQuoteMint, snapBaseMint) = (quoteMint, baseMint);
         }
     }
     
     function testBurn (int24 lowerTick, int24 upperTick, uint128 liqBurn) public {
+        uint128 lots = liqBurn * 1024;
         (uint quoteBurn, uint baseBurn) = CrocSwapPool(pool).burn
-            (address(this), lowerTick, upperTick, liqBurn);
+            (address(this), lowerTick, upperTick, lots);
         if (!gasProfileMode) {            
             (snapQuoteBurn, snapBaseBurn) = (quoteBurn, baseBurn);
         }
