@@ -12,6 +12,8 @@ import '../libraries/LowGasSafeMath.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 
+import "hardhat/console.sol";
+
 /* @title Liquidity Curve Mixin
  * @notice Tracks the state of the locally stable constant product AMM liquid curve
  *         for the pool. Applies any adjustment to the curve as needed, either from
@@ -96,7 +98,7 @@ contract LiquidityCurve {
         (uint256 base, uint256 quote, bool inRange) =
             liquidityFlows(poolIdx, liquidity, lowerTick, upperTick);
         bumpConcentrated(poolIdx, liquidity, inRange);
-        return chargeConservative(base, quote);
+        return chargeConservative(base, quote, inRange);
     }
 
     /* @notice Equivalent to above, but used when adding non-range bound constant 
@@ -112,7 +114,7 @@ contract LiquidityCurve {
         internal returns (uint256, uint256) {
         (uint256 base, uint256 quote) = liquidityFlows(poolIdx, seeds);
         bumpAmbient(poolIdx, seeds);
-        return chargeConservative(base, quote);
+        return chargeConservative(base, quote, true);
     }
 
     /* @notice Called when liquidity is being removed from the pool Adjusts the curve
@@ -311,9 +313,9 @@ contract LiquidityCurve {
     // safe cushion and is economically meaningless.
     uint256 constant TOKEN_ROUND = 4;
     
-    function chargeConservative (uint256 liqBase, uint256 liqQuote)
+    function chargeConservative (uint256 liqBase, uint256 liqQuote, bool inRange)
         private pure returns (uint256, uint256) {
-        return (liqBase > 0 ? liqBase + TOKEN_ROUND : 0,
-                liqQuote > 0 ? liqQuote + TOKEN_ROUND : 0);
+        return ((liqBase > 0 || inRange) ? liqBase + TOKEN_ROUND : 0,
+                (liqQuote > 0 || inRange) ? liqQuote + TOKEN_ROUND : 0);
     }
 }
