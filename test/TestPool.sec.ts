@@ -40,10 +40,10 @@ describe('Pool Security', () => {
        factory = await ethers.getContractFactory("CrocSwapPool")
        pool = await factory.attach(poolAddr) as CrocSwapPool
        
-       await baseToken.deposit(test.address, 100000000);
-       await quoteToken.deposit(test.address, 100000000); 
-       await baseToken.deposit(test2.address, 100000000);
-       await quoteToken.deposit(test2.address, 100000000); 
+       await baseToken.deposit(test.address, 100000000*1024);
+       await quoteToken.deposit(test.address, 100000000*1024); 
+       await baseToken.deposit(test2.address, 100000000*1024);
+       await quoteToken.deposit(test2.address, 100000000*1024); 
     })
 
     it("double initialize", async() => {
