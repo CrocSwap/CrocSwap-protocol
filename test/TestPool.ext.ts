@@ -39,8 +39,8 @@ describe('Pool Externals', () => {
        factory = await ethers.getContractFactory("CrocSwapPool")
        pool = await factory.attach(poolAddr) as CrocSwapPool
        
-       await baseToken.deposit(test.address, 100000000);
-       await quoteToken.deposit(test.address, 100000000); 
+       await baseToken.deposit(test.address, 100000000*1024);
+       await quoteToken.deposit(test.address, 100000000*1024); 
     })
 
     it("mint arrears base", async() => {
@@ -144,7 +144,7 @@ describe('Pool Externals', () => {
 
         await test.testProtocolCollect(treasury)
         expect(await quoteToken.balanceOf(treasury)).to.equal(0)
-        expect(await baseToken.balanceOf(treasury)).to.equal(55)
+        expect(await baseToken.balanceOf(treasury)).to.equal(56)
     })
 
     it("protocol two side", async() => {
@@ -157,7 +157,7 @@ describe('Pool Externals', () => {
 
         await test.testProtocolCollect(treasury)
         expect(await quoteToken.balanceOf(treasury)).to.equal(25)
-        expect(await baseToken.balanceOf(treasury)).to.equal(55)
+        expect(await baseToken.balanceOf(treasury)).to.equal(56)
     })
 
     it("protocol idempotent", async() => {
@@ -171,11 +171,11 @@ describe('Pool Externals', () => {
 
         await test.testProtocolCollect(treasury)
         expect(await quoteToken.balanceOf(treasury)).to.equal(25)
-        expect(await baseToken.balanceOf(treasury)).to.equal(55)
+        expect(await baseToken.balanceOf(treasury)).to.equal(56)
 
         await test.testProtocolCollect(treasury)
         expect(await quoteToken.balanceOf(treasury)).to.equal(25)
-        expect(await baseToken.balanceOf(treasury)).to.equal(55)
+        expect(await baseToken.balanceOf(treasury)).to.equal(56)
     })
 
     it("burn emit log", async() => {
