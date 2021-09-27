@@ -19,9 +19,10 @@ contract LevelBook {
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
      *    bidLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from above.
+     *               the price moves into the tick from above. Denominated in (1024-unit)
+     *               lots.
      *    askLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from below.
+     *               the price moves into the tick from below. Denominated in lots.
      *    feeOdometer_ - The liquidity fee rewards accumulator that's checkpointed 
      *       whenever the price crosses the tick boundary. Used to calculate the 
      *       cumulative fee rewards on any arbitrary lower-upper tick range. This is
