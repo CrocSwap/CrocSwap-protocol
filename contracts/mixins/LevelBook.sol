@@ -34,9 +34,6 @@ contract LevelBook {
         uint64 feeOdometer_;
     }
 
-    uint16 constant LOT_SIZE = 1024;
-    uint8 constant LOT_SIZE_BITS = 10;
-
     mapping(bytes32 => BookLevel) private levels_;
     mapping(uint16 => uint16) private tickSizes_;
     TickCensusLib.TickCensus ticks_;
