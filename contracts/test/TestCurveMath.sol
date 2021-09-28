@@ -73,12 +73,12 @@ contract TestCurveMath {
     }
 
     function testLimitBaseMax (uint128 price, uint128 liq)
-        public view returns (uint256) {
+        public pure returns (uint256) {
         return testLimitBase(price, TickMath.MAX_SQRT_RATIO, liq);
     }    
 
     function testLimitBaseMin (uint128 price, uint128 liq)
-        public view returns (uint256) {
+        public pure returns (uint256) {
         return testLimitBase(price, TickMath.MIN_SQRT_RATIO, liq);
     }    
 
