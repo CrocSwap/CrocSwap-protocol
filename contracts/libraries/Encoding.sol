@@ -75,29 +75,47 @@ library OrderEncoding {
     function parsePassive (bytes calldata input, uint32 offset)
         private pure returns (Directives.PassiveDirective memory pass, uint32 next) {
         int128 ambientLiq;
+        uint8 concCnt;
+
+        (ambientLiq, next) = eatInt128(input, offset);
+        (concCnt, next) = eatUInt8(input, next);
+
+        Directives.ConcentratedDirective[] memory concs =
+            new Directives.ConcentratedDirective[](concCnt);
+
+        for (uint8 i = 0; i < concCnt; ++i) {
+            Directives.ConcentratedDirective memory elem;
+            (elem, next) = parseConcentrated(input, next);
+            concs[i] = elem;
+        }
+
+        pass = Directives.PassiveDirective(
+            {ambient_: Directives.AmbientDirective(ambientLiq), conc_: concs});
+    }
+
+    function parseConcentrated (bytes calldata input, uint32 offset)
+        private pure returns (Directives.ConcentratedDirective memory pass,
+                              uint32 next) {
+        uint8 bookendCnt;
         int128 concenLiq;
         uint24 openTick;
         uint24 closeTick;
-        uint8 bookendCnt;
-
-        (ambientLiq, next) = eatInt128(input, offset);
-        (openTick, next) = eatUInt24(input, next);
+        
+        (openTick, next) = eatUInt24(input, offset);
         (bookendCnt, next) = eatUInt8(input, next);
 
         Directives.ConcenBookend[] memory bookends =
             new Directives.ConcenBookend[](bookendCnt);
-
+            
         for (uint8 i = 0; i < bookendCnt; ++i) {
             (closeTick, next) = eatUInt24(input, next);
             (concenLiq, next) = eatInt128(input, next);
             bookends[i] = Directives.ConcenBookend({closeTick_: closeTick,
                         liquidity_: concenLiq});
         }
-
-        pass = Directives.PassiveDirective(
-            {ambient_: Directives.AmbientDirective(ambientLiq),
-                    conc_: Directives.ConcentratedDirective({openTick_: openTick,
-                                bookends_: bookends})});
+        
+        pass = Directives.ConcentratedDirective({openTick_: openTick,
+                    bookends_: bookends});
     }
 
     function parseSwap (bytes calldata input, uint32 offset)

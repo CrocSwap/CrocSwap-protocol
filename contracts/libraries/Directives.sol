@@ -30,7 +30,7 @@ library Directives {
 
     struct PassiveDirective {
         AmbientDirective ambient_;
-        ConcentratedDirective conc_;
+        ConcentratedDirective[] conc_;
     }
     
     struct PoolDirective {
