@@ -59,7 +59,7 @@ export interface ConcentratedBookend {
 
 
 function encodeSettlement (dir: SettlementDirective): BytesLike {
-    let token = ethers.utils.hexlify(dir.token)
+    let token = encodeToken(dir.token)
     let limit = encodeFullSigned(dir.limitQty)
     let dust = encodeFull(dir.dustThresh)
     let reserveFlag = encodeWord(dir.useReserves ? 1 : 0)
@@ -112,6 +112,10 @@ function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike
     return ethers.utils.concat([count].concat(vals))
 }
 
+function encodeToken (tokenAddr: BytesLike): BytesLike {    
+    return ethers.utils.hexZeroPad(tokenAddr, 32)
+}
+
 function encodeFull (val: BigNumber): BytesLike {
     return encodeNum(val, 32)
 }
@@ -136,17 +140,7 @@ function encodeSigned (val: BigNumber, nWords: number): BytesLike {
 
 function encodeNum (val: BigNumber, nWords: number): BytesLike {
     let hex = ethers.utils.hexValue(val)
-    let nZeros = nWords*2 - (hex.length - 2)
-    console.log(val.toString())
-    console.log(hex)
-    console.log(nZeros)
-    if (nZeros < 0) {
-        throw new RangeError(`${nWords} word encoding out-of-bounds: ${val}`)
-    } else if (nZeros === 0) { 
-        return hex
-    } else {
-        return ethers.utils.hexZeroPad(hex, nZeros)
-    }
+    return ethers.utils.hexZeroPad(hex, nWords)
 }
 
 function encodeWord (val: number): BytesLike {
