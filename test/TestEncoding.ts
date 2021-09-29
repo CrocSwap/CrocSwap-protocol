@@ -149,14 +149,15 @@ describe('Tick Math', () => {
 
     it ("ambient", async() => {
         await encoder.testEncodePool(0, 2, encodeOrderDirective(order))
-        let cmp = order.hops[0].pools[1]
-        expect((await encoder.ambientOpen())).to.equal(cmp.passive.ambient)
-        expect((await encoder.ambientClose())).to.equal(cmp.passivePost.ambient)
+        let cmp = order.hops[0].pools[2]
+        expect((await encoder.ambientOpen())).to.equal(cmp.passive.ambient.liquidity)
+        expect((await encoder.ambientClose())).to.equal(cmp.passivePost.ambient.liquidity)
     })
 
-    it ("concentrated", async() => {
-        await encoder.testEncodePassive(2, 1, 1, 2, encodeOrderDirective(order))
-        let cmp = order.hops[2].pools[1].passive.concentrated[1]
+    it ("concentrated post", async() => {
+        await encoder.testEncodePassivePost(2, 1, 1, 2, encodeOrderDirective(order))
+        
+        let cmp = order.hops[2].pools[1].passivePost.concentrated[1]
         let cmpEnd = cmp.bookends[2]
         
         expect((await encoder.openTick())).to.equal(cmp.openTick)
@@ -164,9 +165,9 @@ describe('Tick Math', () => {
         expect((await encoder.bookend()).liquidity_).to.equal(cmpEnd.liquidity)
     })
 
-    it ("concentrated post", async() => {
-        await encoder.testEncodePassivePost(0, 1, 0, 1, encodeOrderDirective(order))
-        let cmp = order.hops[0].pools[1].passivePost.concentrated[0]
+    it ("concentrated", async() => {
+        await encoder.testEncodePassive(0, 1, 0, 1, encodeOrderDirective(order))
+        let cmp = order.hops[0].pools[1].passive.concentrated[0]
         let cmpEnd = cmp.bookends[1]
         
         expect((await encoder.openTick())).to.equal(cmp.openTick)
