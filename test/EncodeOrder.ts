@@ -1,26 +1,75 @@
 import { BigNumber, BytesLike, ethers } from 'ethers';
 
 export function encodeOrderDirective (directive: OrderDirective): BytesLike {
-    let open = encodeSettlement(directive.openSettle)
-    let close = encodeSettlement(directive.closeSettle)
+    let open = encodeSettlement(directive.open)
     let hops = listEncoding(directive.hops, encodeHop)
-    return ethers.utils.concat([open, hops, close])
+    return ethers.utils.concat([open, hops])
+}
+
+export interface OrderDirective {
+    open: SettlementDirective
+    hops: HopDirective[]
+}
+
+export interface SettlementDirective {
+    token: string
+    limitQty: BigNumber,
+    dustThresh: BigNumber,
+    useReserves: boolean
+}
+
+export interface HopDirective {
+    pools: PoolDirective[]
+    settlement: SettlementDirective
+}
+
+export interface PoolDirective {
+    poolIdx: number
+    passive: PassiveDirective,
+    swap: SwapDirective,
+    passivePost: PassiveDirective
+}
+
+export interface SwapDirective {
+    liqMask: number
+    isBuy: boolean,
+    quoteToBase: boolean,
+    qty: BigNumber
+    limitPrice: BigNumber
+}
+
+export interface PassiveDirective {
+    ambient: AmbientDirective
+    concentrated: ConcentratedDirective[]
+}
+
+export interface AmbientDirective {
+    liquidity: BigNumber
+}
+
+export interface ConcentratedDirective {
+    openTick: number,
+    bookends: ConcentratedBookend[]
+}
+
+export interface ConcentratedBookend {
+    closeTick: number,
+    liquidity: BigNumber
 }
 
 
 function encodeSettlement (dir: SettlementDirective): BytesLike {
-    let limit = encodeFull(dir.limitQty)
+    let token = ethers.utils.hexlify(dir.token)
+    let limit = encodeFullSigned(dir.limitQty)
     let dust = encodeFull(dir.dustThresh)
-    let reserveFlag = encodeByte(dir.useReserves ? 1 : 0)
-    return ethers.utils.concat([limit, dust, reserveFlag])
+    let reserveFlag = encodeWord(dir.useReserves ? 1 : 0)
+    return ethers.utils.concat([token, limit, dust, reserveFlag])
 }
 
 function encodeHop (hop: HopDirective): BytesLike {
-    let tokenX = ethers.utils.hexlify(hop.pair.tokenX)
-    let tokenY = ethers.utils.hexlify(hop.pair.tokenY)
+    let pools = listEncoding(hop.pools, encodePool)
     let settle = encodeSettlement(hop.settlement)
-    let pools = listEncoding(hop.pair.pools, encodePool)
-    return ethers.utils.concat([tokenX, tokenY, pools, settle])
+    return ethers.utils.concat([pools, settle])
 }
 
 function encodePool (pool: PoolDirective): BytesLike {
@@ -32,33 +81,33 @@ function encodePool (pool: PoolDirective): BytesLike {
 }
 
 function encodeSwap (swap: SwapDirective): BytesLike {
-    let liqMask = encodeByte(swap.liqMask)
-    let dirFlags = encodeByte((swap.isBuy ? 2 : 0) + (swap.quoteToBase ? 1 : 0))
+    let liqMask = encodeWord(swap.liqMask)
+    let dirFlags = encodeWord((swap.isBuy ? 2 : 0) + (swap.quoteToBase ? 1 : 0))
     let qty = encodeFull(swap.qty)
     let limit = encodeFull(swap.limitPrice)
     return ethers.utils.concat([liqMask, dirFlags, qty, limit])
 }
 
 function encodePassive (passive: PassiveDirective): BytesLike {
-    let amb = encodeFull(passive.ambient.liquidity)
+    let amb = encodeFullSigned(passive.ambient.liquidity)
     let conc = listEncoding(passive.concentrated, encodeConc)
     return ethers.utils.concat([amb, conc])
 }
 
 function encodeConc (conc: ConcentratedDirective): BytesLike {
-    let openTick = encodeJsNum(conc.openTick, 3)
+    let openTick = encodeJsSigned(conc.openTick, 3)
     let bookends = listEncoding(conc.bookends, encodeBookend)
     return ethers.utils.concat([openTick, bookends])
 }
 
 function encodeBookend (bookend: ConcentratedBookend): BytesLike {
-    let closeTick = encodeJsNum(bookend.closeTick, 3)
-    let liq = encodeFull(bookend.liquidity)
+    let closeTick = encodeJsSigned(bookend.closeTick, 3)
+    let liq = encodeFullSigned(bookend.liquidity)
     return ethers.utils.concat([closeTick, liq])
 }
 
 function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike {
-    let count = encodeByte(elems.length)
+    let count = encodeWord(elems.length)
     let vals = elems.map(encoderFn)
     return ethers.utils.concat([count].concat(vals))
 }
@@ -67,79 +116,40 @@ function encodeFull (val: BigNumber): BytesLike {
     return encodeNum(val, 32)
 }
 
-function encodeJsNum (val: number, nBytes: number): BytesLike {
-    return encodeNum(BigNumber.from(val), nBytes)
+function encodeFullSigned (val: BigNumber): BytesLike {
+    return encodeSigned(val, 32)
 }
 
-function encodeNum (val: BigNumber, nBytes: number): BytesLike {
+function encodeJsNum (val: number, nWords: number): BytesLike {
+    return encodeNum(BigNumber.from(val), nWords)
+}
+
+function encodeJsSigned (val: number, nWords: number): BytesLike {
+    return encodeSigned(BigNumber.from(val), nWords)
+}
+
+function encodeSigned (val: BigNumber, nWords: number): BytesLike {
+    let sign = encodeWord(val.lt(0) ? 1 : 0)
+    let magn = encodeNum(val.abs(), nWords)
+    return ethers.utils.concat([sign, magn])
+}
+
+function encodeNum (val: BigNumber, nWords: number): BytesLike {
     let hex = ethers.utils.hexValue(val)
-    let nZeros = nBytes - hex.length
+    let nZeros = nWords*2 - (hex.length - 2)
+    console.log(val.toString())
+    console.log(hex)
+    console.log(nZeros)
     if (nZeros < 0) {
-        throw new RangeError(`${nBytes} Byte encoding out-of-bounds: ${val}`)
+        throw new RangeError(`${nWords} word encoding out-of-bounds: ${val}`)
+    } else if (nZeros === 0) { 
+        return hex
+    } else {
+        return ethers.utils.hexZeroPad(hex, nZeros)
     }
-    return ethers.utils.hexZeroPad(hex, nZeros)
 }
 
-function encodeByte (val: number): BytesLike {
-    if (val < 0 || val >= 256) {
-        throw new RangeError(`Single byte encode out-of-bounds: ${val}`)
-    }
-    return ethers.utils.hexValue(val)
+function encodeWord (val: number): BytesLike {
+    return encodeJsNum(val, 1)
 }
 
-interface OrderDirective {
-    openSettle: SettlementDirective
-    hops: HopDirective[]
-    closeSettle: SettlementDirective
-}
-
-interface SettlementDirective {
-    limitQty: BigNumber,
-    dustThresh: BigNumber,
-    useReserves: boolean
-}
-
-interface HopDirective {
-    pair: PairDirective,
-    settlement: SettlementDirective
-}
-
-interface PairDirective {
-    tokenX: string,
-    tokenY: string,
-    pools: PoolDirective[]
-}
-
-interface PoolDirective {
-    poolIdx: number
-    passive: PassiveDirective,
-    swap: SwapDirective,
-    passivePost: PassiveDirective
-}
-
-interface SwapDirective {
-    liqMask: number
-    isBuy: boolean,
-    quoteToBase: boolean,
-    qty: BigNumber
-    limitPrice: BigNumber
-}
-
-interface PassiveDirective {
-    ambient: AmbientDirective
-    concentrated: ConcentratedDirective[]
-}
-
-interface AmbientDirective {
-    liquidity: BigNumber
-}
-
-interface ConcentratedDirective {
-    openTick: number,
-    bookends: ConcentratedBookend[]
-}
-
-interface ConcentratedBookend {
-    closeTick: number,
-    liquidity: BigNumber
-}
