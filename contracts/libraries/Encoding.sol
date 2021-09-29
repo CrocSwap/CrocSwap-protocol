@@ -11,49 +11,37 @@ library OrderEncoding {
     function decodeOrder (bytes calldata input) internal pure returns
         (Directives.OrderDirective memory) {
         uint32 offset = 0;
-        uint8 tokenCnt;
-        (tokenCnt, offset) = eatUInt8(input, offset);
+        uint8 hopCnt;
 
-        address tokenX;
-        address tokenY;
-        (tokenX, offset) = eatToken(input, offset);
-        
         Directives.SettlementChannel memory settle;
         (settle, offset) = parseSettle(input, offset);
-        Directives.SettlementChannel memory openSettle = settle;
 
-        Directives.PairDirective memory pair;
-        Directives.HopDirective[] memory hops = new Directives.HopDirective[](tokenCnt);
+        (hopCnt, offset) = eatUInt8(input, offset);
+        Directives.HopDirective[] memory hops = new Directives.HopDirective[](hopCnt);
+        Directives.HopDirective memory hop;
         
-        for (uint i = 0; i < tokenCnt; ++i) {
-            (tokenY, offset) = eatToken(input, offset);
-            (pair, offset) = parsePair(tokenX, tokenY, input, offset);
-            (settle, offset) = parseSettle(input, offset);
-            
-            hops[i] = Directives.HopDirective({pair_: pair, settle_: settle});
-            tokenX = tokenY;
+        for (uint i = 0; i < hopCnt; ++i) {
+            (hop, offset) = parseHop(input, offset);
+            hops[i] = hop;
         }
 
-        (settle, offset) = parseSettle(input, offset);
-        return Directives.OrderDirective({open_: openSettle, hops_: hops,
-                    close_: settle});
+        return Directives.OrderDirective({open_: settle, hops_: hops });
     }
-
     
-    function parsePair (address tokenX, address tokenY, bytes calldata input,
-                        uint32 offset)
-        private pure returns (Directives.PairDirective memory pair, uint32 next) {
+    function parseHop (bytes calldata input, uint32 offset)
+        private pure returns (Directives.HopDirective memory hop, uint32 next) {
         uint8 poolCnt;
         (poolCnt, next) = eatUInt8(input, offset);
 
         Directives.PoolDirective[] memory pools =
             new Directives.PoolDirective[](poolCnt);
-                
         for (uint i = 0; i < poolCnt; ++i) {
             (pools[i], next) = parsePool(input, next);
         }
-        pair = Directives.PairDirective({tokenX_: tokenX, tokenY_: tokenY,
-                    pools_: pools});
+        
+        Directives.SettlementChannel memory settle;
+        (settle, next) = parseSettle(input, next);
+        hop = Directives.HopDirective({pools_: pools, settle_: settle});
     }
 
     function parsePool (bytes calldata input, uint32 offset)
@@ -98,17 +86,17 @@ library OrderEncoding {
                               uint32 next) {
         uint8 bookendCnt;
         int128 concenLiq;
-        uint24 openTick;
-        uint24 closeTick;
+        int24 openTick;
+        int24 closeTick;
         
-        (openTick, next) = eatUInt24(input, offset);
+        (openTick, next) = eatInt24(input, offset);
         (bookendCnt, next) = eatUInt8(input, next);
 
         Directives.ConcenBookend[] memory bookends =
             new Directives.ConcenBookend[](bookendCnt);
             
         for (uint8 i = 0; i < bookendCnt; ++i) {
-            (closeTick, next) = eatUInt24(input, next);
+            (closeTick, next) = eatInt24(input, next);
             (concenLiq, next) = eatInt128(input, next);
             bookends[i] = Directives.ConcenBookend({closeTick_: closeTick,
                         liquidity_: concenLiq});
@@ -138,15 +126,17 @@ library OrderEncoding {
 
     function parseSettle (bytes calldata input, uint32 offset)
         private pure returns (Directives.SettlementChannel memory settle, uint32 next) {
+        address token;
         int128 limitQty;
         uint128 dustThresh;
         uint8 reservesFlag;
-
-        (limitQty, next) = eatInt128(input, offset);
+        
+        (token, next) = eatToken(input, offset);
+        (limitQty, next) = eatInt128(input, next);
         (dustThresh, next) = eatUInt128(input, next);
         (reservesFlag, next) = eatUInt8(input, next);
 
-        settle = Directives.SettlementChannel({limitQty_: limitQty,
+        settle = Directives.SettlementChannel({token_: token, limitQty_: limitQty,
                     dustThresh_: dustThresh, useReserves_: reservesFlag > 0});
     }
 
@@ -171,15 +161,9 @@ library OrderEncoding {
         next = offset + 32;
     }
 
-    function eatInt256 (bytes calldata input, uint32 offset)
-        internal pure returns (int256 delta, uint32 next) {
-        delta = abi.decode(input[offset:(offset+32)], (int256));
-        next = offset + 32;
-    }
-
-    function eatInt128 (bytes calldata input, uint32 offset)
-        internal pure returns (int128 delta, uint32 next) {
-        delta = abi.decode(input[offset:(offset+32)], (int128));
+    function eatUInt256 (bytes calldata input, uint32 offset)
+        internal pure returns (uint256 delta, uint32 next) {
+        delta = abi.decode(input[offset:(offset+32)], (uint256));
         next = offset + 32;
     }
 
@@ -188,5 +172,32 @@ library OrderEncoding {
         delta = abi.decode(input[offset:(offset+32)], (uint128));
         next = offset + 32;
     }
-    
+
+    function eatInt256 (bytes calldata input, uint32 offset)
+        internal pure returns (int256 delta, uint32 next) {
+        uint8 isNegFlag;
+        uint256 magn;
+        (isNegFlag, next) = eatUInt8(input, offset);        
+        (magn, next) = eatUInt256(input, next);
+        delta = isNegFlag > 0 ? -int256(magn) : int256(magn);
+    }
+
+    function eatInt128 (bytes calldata input, uint32 offset)
+        internal pure returns (int128 delta, uint32 next) {
+        uint8 isNegFlag;
+        uint128 magn;
+        (isNegFlag, next) = eatUInt8(input, offset);
+        (magn, next) = eatUInt128(input, next);
+        delta = isNegFlag > 0 ? -int128(magn) : int128(magn);
+    }
+
+    function eatInt24 (bytes calldata input, uint32 offset)
+        internal pure returns (int24 delta, uint32 next) {
+        uint8 isNegFlag;
+        uint24 magn;
+        (isNegFlag, next) = eatUInt8(input, offset);
+        (magn, next) = eatUInt24(input, next);
+        delta = isNegFlag > 0 ? -int24(magn) : int24(magn);
+    }
+
 }

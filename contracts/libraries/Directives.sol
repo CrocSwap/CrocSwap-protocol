@@ -15,12 +15,12 @@ library Directives {
     }
     
     struct ConcentratedDirective {
-        uint24 openTick_;
+        int24 openTick_;
         ConcenBookend[] bookends_;
     }
     
     struct ConcenBookend {
-        uint24 closeTick_;
+        int24 closeTick_;
         int256 liquidity_;
     }
 
@@ -40,26 +40,20 @@ library Directives {
         PassiveDirective passivePost_;
     }
 
-    struct PairDirective {
-        address tokenX_;
-        address tokenY_;
-        PoolDirective[] pools_;
-    }
-
     struct SettlementChannel {
+        address token_;
         int256 limitQty_;
         uint256 dustThresh_;
         bool useReserves_;
     }
 
     struct HopDirective {
-        PairDirective pair_;
+        PoolDirective[] pools_;
         SettlementChannel settle_;
     }
 
     struct OrderDirective {
         SettlementChannel open_;
         HopDirective[] hops_;
-        SettlementChannel close_;
     }
 }
