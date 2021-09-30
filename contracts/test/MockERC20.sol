@@ -38,4 +38,9 @@ contract MockERC20 is IERC20Minimal {
         emit Approval(msg.sender, agent, qty);
         return true;
     }
+
+    function approveFor (address owner, address agent, uint256 qty) external {
+        allowance[owner][agent] = qty;
+        emit Approval(owner, agent, qty);
+    }
 }
