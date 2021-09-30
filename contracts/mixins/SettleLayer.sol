@@ -17,17 +17,10 @@ contract SettleLayer {
                          Directives.SettlementChannel memory directive,
                          RollingSpend memory cumulative) internal {
         require(passesLimit(flow, directive), "K");
-        if (beyondDust(flow, directive)) {
+        if (moreThanDust(flow, directive)) {
             pumpFlow(recv, flow, directive.token_, directive.useReserves_,
                      cumulative);
         }
-    }
-
-    function settleHop (address recv, int256 legFlow, int256 rollingFlow,
-                        Directives.SettlementChannel memory directive,
-                        RollingSpend memory cumulative) internal {
-        int256 netFlow = legFlow + rollingFlow;
-        settleFlat(recv, netFlow, directive, cumulative);
     }
 
     function pumpFlow (address recv, int256 flow, address token, bool useReserves,
@@ -70,7 +63,7 @@ contract SettleLayer {
             debit = debitSurplus(recv, value, token);
         }
         if (debit > 0) {
-            debitTransfer(recv, value, token);
+            debitTransfer(recv, debit, token);
         }
     }
 
@@ -122,13 +115,16 @@ contract SettleLayer {
 
     function passesLimit (int256 flow, Directives.SettlementChannel memory dir)
         private pure returns (bool) {
-        return flow < dir.limitQty_;
+        return flow <= dir.limitQty_;
     }
 
-    function beyondDust (int256 flow, Directives.SettlementChannel memory dir)
+    function moreThanDust (int256 flow, Directives.SettlementChannel memory dir)
         private pure returns (bool) {
-        uint256 magn = flow > 0 ? uint256(flow) : uint256(-flow);
-        return magn > dir.dustThresh_;
+        if (isDebit(flow)) {
+            return true;
+        } else {
+            return uint256(-flow) > dir.dustThresh_;
+        }
     }
 
     function encodeSurplusKey (address owner, address token) private
