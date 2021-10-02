@@ -7,7 +7,7 @@ contract TestTickCensus {
     using TickCensusLib for TickCensusLib.TickCensus;
     
     TickCensusLib.TickCensus private census;
-    uint16 constant poolIdx = 1986;
+    bytes32 constant poolIdx = bytes32(uint256(1986));
     
     function getBitmaps (int24 tick) public view returns
         (uint256 mezz, uint256 term) {

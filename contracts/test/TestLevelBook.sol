@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
+
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
@@ -10,44 +11,46 @@ contract TestLevelBook is LevelBook {
     int256 public liqDelta;
     uint256 public odometer;
 
-    function getLevelState (uint8 poolIdx, int24 tick) public view returns
+    function getLevelState (uint256 poolIdx, int24 tick) public view returns
         (BookLevel memory) {
-        return levelState(poolIdx, tick);
+        return levelState(bytes32(poolIdx), tick);
     }
 
-    function pullFeeOdometer (uint8 poolIdx, int24 mid, int24 bid, int24 ask,
+    function pullFeeOdometer (uint256 poolIdx, int24 mid, int24 bid, int24 ask,
                               uint64 feeGlobal)
         public view returns (uint64) {
-        return clockFeeOdometer(poolIdx, mid, bid, ask, feeGlobal);
+        return clockFeeOdometer(bytes32(poolIdx), mid, bid, ask, feeGlobal);
     }
 
-    function testCrossLevel (uint8 poolIdx, int24 tick, bool isBuy,
+    function testCrossLevel (uint256 poolIdx, int24 tick, bool isBuy,
                              uint64 feeGlobal) public {
-        liqDelta = crossLevel(poolIdx, tick, isBuy, feeGlobal);
+        liqDelta = crossLevel(bytes32(poolIdx), tick, isBuy, feeGlobal);
     }
 
-    function testAdd (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+    function testAdd (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
                       uint128 lots, uint64 globalFee) public {
         uint128 liq = lots * 1024;
-        odometer = addBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
+        odometer = addBookLiq(bytes32(poolIdx), midTick, bidTick, askTick,
+                              liq, globalFee);
     }
 
-    function testRemove (uint8 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+    function testRemove (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
                          uint128 lots, uint64 globalFee) public {
         uint128 liq = lots * 1024;
-        odometer = removeBookLiq(poolIdx, midTick, bidTick, askTick, liq, globalFee);
+        odometer = removeBookLiq(bytes32(poolIdx), midTick, bidTick, askTick,
+                                 liq, globalFee);
     }
 
-    function testSetTickSize (uint8 poolIdx, uint16 tickSize) public {
-        setTickSize(poolIdx, tickSize);
+    function testSetTickSize (uint256 poolIdx, uint16 tickSize) public {
+        setTickSize(bytes32(poolIdx), tickSize);
     }
 
-    function testGetTickSize (uint8 poolIdx) public view returns (uint16) {
-        return getTickSize(poolIdx);
+    function testGetTickSize (uint256 poolIdx) public view returns (uint16) {
+        return getTickSize(bytes32(poolIdx));
     }
 
-    function hasTickBump (uint8 poolIdx, int24 tick) public view returns (bool) {
-        return hasTick(poolIdx, tick);
+    function hasTickBump (uint256 poolIdx, int24 tick) public view returns (bool) {
+        return hasTick(bytes32(poolIdx), tick);
     }
 
 }

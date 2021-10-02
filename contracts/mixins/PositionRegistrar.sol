@@ -33,14 +33,14 @@ contract PositionRegistrar {
     mapping(bytes32 => Position) private positions_;
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
-    function encodePosKey (address owner, uint8 poolIdx, int24 lowerTick, int24 upperTick)
+    function encodePosKey (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx, lowerTick, upperTick));
     }
 
     /* @notice Returns the current position associated with the owner/range. If nothing
      *         exists the result will have zero liquidity. */
-    function lookupPosition (address owner, uint8 poolIdx, int24 lowerTick,
+    function lookupPosition (address owner, bytes32 poolIdx, int24 lowerTick,
                              int24 upperTick)
         internal view returns (Position storage) {
         return lookupPosKey(encodePosKey(owner, poolIdx, lowerTick, upperTick));
@@ -72,7 +72,7 @@ contract PositionRegistrar {
      *
      * @return rewards The rewards accumulated between the current and last checkpoined
      *                 fee mileage. */
-    function burnPosLiq (address owner, uint8 poolIdx, int24 lowerTick, int24 upperTick,
+    function burnPosLiq (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick,
                          uint128 burnLiq, uint64 feeMileage)
         internal returns (uint64 rewards) {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
@@ -105,7 +105,7 @@ contract PositionRegistrar {
      *               previously exists, position will be created.
      * @param feeMileage The up-to-date fee mileage associated with the range. If the
      *                   position will be checkpointed with this value. */
-    function addPosLiq (address owner, uint8 poolIdx, int24 lowerTick, int24 upperTick,
+    function addPosLiq (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick,
                         uint128 liqAdd, uint64 feeMileage) internal {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint128 liq = pos.liquidity_;
@@ -156,7 +156,7 @@ contract PositionRegistrar {
      *                  does *not* change during the ownership process.
      * @param upperTick The tick index of the upper boundary of the position. This
      *                  does *not* change during the ownership process. */
-    function changePosOwner (address owner, address receiver, uint8 poolIdx, 
+    function changePosOwner (address owner, address receiver, bytes32 poolIdx, 
                              int24 lowerTick, int24 upperTick) internal {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         Position storage newPos = lookupPosition(receiver, poolIdx, lowerTick, upperTick);

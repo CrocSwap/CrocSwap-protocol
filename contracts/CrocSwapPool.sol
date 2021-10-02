@@ -255,7 +255,7 @@ contract CrocSwapPool is ICrocSwapPool,
                     cntx_: cntx, paidBase_: 0, paidQuote_: 0, paidProto_: 0});
 
         sweepSwapLiq(curve, accum, limitPrice);
-        commitSwapCurve(DFLT_POOL_IDX, curve);
+        commitCurve(DFLT_POOL_IDX, curve);
         accumProtocolFees(accum);
         settleSwapFlows(recipient, curve, accum, data);
         (quoteFlow, baseFlow) = (accum.paidQuote_, accum.paidBase_);
@@ -492,5 +492,5 @@ contract CrocSwapPool is ICrocSwapPool,
     
     bool private reEntrantLocked_;
 
-    uint8 constant DFLT_POOL_IDX = 0;
+    bytes32 constant DFLT_POOL_IDX = bytes32(0);
 }

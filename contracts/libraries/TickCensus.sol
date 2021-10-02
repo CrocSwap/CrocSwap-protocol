@@ -43,7 +43,7 @@ library TickCensusLib {
 
     /* @notice Returns the associated bitmap for the terminus position (bottom layer) 
      * of the tick index. */
-    function terminusBitmap (TickCensus storage census, uint16 poolIdx, int24 tick)
+    function terminusBitmap (TickCensus storage census, bytes32 poolIdx, int24 tick)
         internal view returns (uint256) {
         bytes32 idx = encodeTerm(poolIdx, tick);
         return census.terminus_[idx];
@@ -51,14 +51,14 @@ library TickCensusLib {
     
     /* @notice Returns the associated bitmap for the mezzanine position (middle layer) 
      * of the tick index. */
-    function mezzanineBitmap (TickCensus storage census, uint16 poolIdx, int24 tick)
+    function mezzanineBitmap (TickCensus storage census, bytes32 poolIdx, int24 tick)
         internal view returns (uint256) {
         bytes32 idx = encodeMezz(poolIdx, tick);
         return census.mezzanine_[idx];
     }
 
     /* @notice Returns true if the tick index is currently set. */
-    function hasTickBookmark (TickCensus storage census, uint16 poolIdx, int24 tick)
+    function hasTickBookmark (TickCensus storage census, bytes32 poolIdx, int24 tick)
         internal view returns (bool) {
         uint256 bitmap = terminusBitmap(census, poolIdx, tick);
         uint8 term = tick.termBit();
@@ -67,7 +67,7 @@ library TickCensusLib {
 
     /* @notice Mark the tick index as active.
      * @dev Idempotent. Can be called repeatedly on previously initialized ticks. */
-    function bookmarkTick (TickCensus storage census, uint16 poolIdx, int24 tick)
+    function bookmarkTick (TickCensus storage census, bytes32 poolIdx, int24 tick)
         internal {
         uint256 mezzMask = 1 << tick.mezzBit();
         uint256 termMask = 1 << tick.termBit();
@@ -79,7 +79,7 @@ library TickCensusLib {
      *   related to the recursive bitmap levels.
      * @dev Idempontent. Can be called repeatedly even if tick was previously 
      *   forgotten. */
-    function forgetTick (TickCensus storage census, uint16 poolIdx, int24 tick) internal {
+    function forgetTick (TickCensus storage census, bytes32 poolIdx, int24 tick) internal {
         uint256 mezzMask = ~(1 << tick.mezzBit());
         uint256 termMask = ~(1 << tick.termBit());
 
@@ -176,7 +176,7 @@ library TickCensusLib {
      *   liquidity bump. The result is assymetric boundary for upper/lower ticks. 
      * @return (uint256) - The bitmap associated with the terminus of the boundary
      *   tick. Loaded here for gas efficiency reasons. */
-    function seekMezzSpill (TickCensus storage census, uint16 poolIdx,
+    function seekMezzSpill (TickCensus storage census, bytes32 poolIdx,
                             int24 borderTick, bool isUpper)
         internal view returns (int24) {
         (uint8 lobbyBorder, uint8 mezzBorder) = rootsForBorder(borderTick, isUpper);
@@ -197,7 +197,7 @@ library TickCensusLib {
         return seekOverLobby(census, poolIdx, lobbyBorder, isUpper);
     }
 
-    function seekAtTerm (TickCensus storage census, uint16 poolIdx, uint8 lobbyBit,
+    function seekAtTerm (TickCensus storage census, bytes32 poolIdx, uint8 lobbyBit,
                          uint8 mezzBit, bool isUpper)
         private view returns (int24, bool) {
         uint256 neighborBitmap = census.terminus_
@@ -207,7 +207,7 @@ library TickCensusLib {
         return (Bitmaps.weldLobbyPosMezzTerm(lobbyBit, mezzBit, termBit), false);
     }
 
-    function seekAtMezz (TickCensus storage census, uint16 poolIdx, uint8 lobbyBit,
+    function seekAtMezz (TickCensus storage census, bytes32 poolIdx, uint8 lobbyBit,
                          uint8 mezzBorder, bool isUpper)
         private view returns (int24, bool) {
         uint256 neighborMezz = census.mezzanine_
@@ -218,7 +218,7 @@ library TickCensusLib {
         return seekAtTerm(census, poolIdx, lobbyBit, mezzBit, isUpper);
     }
 
-    function seekOverLobby (TickCensus storage census, uint16 poolIdx, uint8 lobbyBit,
+    function seekOverLobby (TickCensus storage census, bytes32 poolIdx, uint8 lobbyBit,
                             bool isUpper)
         private view returns (int24) {
         return isUpper ?
@@ -230,7 +230,7 @@ library TickCensusLib {
      * layer. Instead we iterate through the top-level bits until we find an active
      * mezzanine. This requires a maximum of 256 iterations, and can be gas intensive.
      * However moves at this level represent 65,000% price changes and are very rare. */
-    function seekLobbyUp (TickCensus storage census, uint16 poolIdx, uint8 lobbyBit)
+    function seekLobbyUp (TickCensus storage census, bytes32 poolIdx, uint8 lobbyBit)
         private view returns (int24) {
         uint8 MAX_MEZZ = 0;
         unchecked {
@@ -245,7 +245,7 @@ library TickCensusLib {
     }
 
     /* Same logic as seekLobbyUp(), but the inverse direction. */
-    function seekLobbyDown (TickCensus storage census, uint16 poolIdx, uint8 lobbyBit)
+    function seekLobbyDown (TickCensus storage census, bytes32 poolIdx, uint8 lobbyBit)
         private view returns (int24) {
         uint8 MIN_MEZZ = 255;
         unchecked {
@@ -268,27 +268,27 @@ library TickCensusLib {
         mezzBit = pinTick.mezzBit();
     }
 
-    function encodeMezz (uint16 poolIdx, int24 tick) private pure returns (bytes32) {
+    function encodeMezz (bytes32 poolIdx, int24 tick) private pure returns (bytes32) {
         int8 wordPos = tick.lobbyKey();
         return keccak256(abi.encodePacked(poolIdx, wordPos)); 
     }
 
-    function encodeTerm (uint16 poolIdx, int24 tick) private pure returns (bytes32) {
+    function encodeTerm (bytes32 poolIdx, int24 tick) private pure returns (bytes32) {
         int16 wordPos = tick.mezzKey();
         return keccak256(abi.encodePacked(poolIdx, wordPos)); 
     }
 
-    function encodeMezzWord (uint16 poolIdx, int8 lobbyPos)
+    function encodeMezzWord (bytes32 poolIdx, int8 lobbyPos)
         private pure returns (bytes32) {
         return keccak256(abi.encodePacked(poolIdx, lobbyPos));  
     }
 
-    function encodeMezzWord (uint16 poolIdx, uint8 lobbyPos)
+    function encodeMezzWord (bytes32 poolIdx, uint8 lobbyPos)
         private pure returns (bytes32) {
         return encodeMezzWord(poolIdx, Bitmaps.uncastBitmapIndex(lobbyPos));
     }
 
-    function encodeTermWord (uint16 poolIdx, uint8 lobbyPos, uint8 mezzPos)
+    function encodeTermWord (bytes32 poolIdx, uint8 lobbyPos, uint8 mezzPos)
         private pure returns (bytes32) {
         int16 mezzIdx = Bitmaps.weldLobbyMezz
             (Bitmaps.uncastBitmapIndex(lobbyPos), mezzPos);

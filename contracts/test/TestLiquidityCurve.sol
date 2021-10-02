@@ -12,86 +12,88 @@ contract TestLiquidityCurve is LiquidityCurve {
     uint256 public quoteFlow;
     CurveMath.SwapAccum public lastSwap;
     
-    function testLiqRecConc (uint8 poolIdx, uint128 liq,
+    function testLiqRecConc (uint256 poolIdx, uint128 liq,
                              uint128 lower, uint128 upper) public {
         (baseFlow, quoteFlow) = liquidityReceivable
-            (poolIdx, liq, lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());
+            (bytes32(poolIdx), liq, lower.getTickAtSqrtRatio(),
+             upper.getTickAtSqrtRatio());
     }
     
-    function testLiqRecTicks (uint8 poolIdx, uint128 liq,
+    function testLiqRecTicks (uint256 poolIdx, uint128 liq,
                               int24 lower, int24 upper) public {
-        (baseFlow, quoteFlow) = liquidityReceivable(poolIdx, liq, lower, upper);
+        (baseFlow, quoteFlow) = liquidityReceivable(bytes32(poolIdx), liq, lower, upper);
     }
 
-    function testLiqRecAmb (uint8 poolIdx, uint128 liqSeed) public {
-        (baseFlow, quoteFlow) = liquidityReceivable(poolIdx, liqSeed);
+    function testLiqRecAmb (uint256 poolIdx, uint128 liqSeed) public {
+        (baseFlow, quoteFlow) = liquidityReceivable(bytes32(poolIdx), liqSeed);
     }
 
-    function testLiqPayConc (uint8 poolIdx, uint128 liq, uint128 lower, uint128 upper,
+    function testLiqPayConc (uint256 poolIdx, uint128 liq, uint128 lower, uint128 upper,
                              uint64 rewards) public {
         (baseFlow, quoteFlow) = liquidityPayable
-            (poolIdx, liq, rewards,
+            (bytes32(poolIdx), liq, rewards,
              lower.getTickAtSqrtRatio(), upper.getTickAtSqrtRatio());
     }
 
-    function testLiqPayTicks (uint8 poolIdx, uint128 liq,
+    function testLiqPayTicks (uint256 poolIdx, uint128 liq,
                               int24 lower, int24 upper) public {
-        (baseFlow, quoteFlow) = liquidityPayable(poolIdx, liq, lower, upper);
+        (baseFlow, quoteFlow) = liquidityPayable(bytes32(poolIdx), liq, lower, upper);
     }
     
-    function testLiqPayAmb (uint8 poolIdx, uint128 liqSeed) public {
-        (baseFlow, quoteFlow) = liquidityPayable(poolIdx, liqSeed);
+    function testLiqPayAmb (uint256 poolIdx, uint128 liqSeed) public {
+        (baseFlow, quoteFlow) = liquidityPayable(bytes32(poolIdx), liqSeed);
     }
 
-    function testSwap (uint8 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwap (uint256 poolIdx, CurveMath.SwapAccum memory accum,
                        uint128 bumpPrice, uint128 swapLimit) public {
         int24 bumpTick = TickMath.getTickAtSqrtRatio(bumpPrice);
         testSwapTick(poolIdx, accum, bumpTick, swapLimit);
     }
 
-    function testSwapTick (uint8 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwapTick (uint256 poolIdx, CurveMath.SwapAccum memory accum,
                            int24 bumpTick, uint128 swapLimit) public {
-        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
         SwapCurve.swapToLimit(curve, accum, bumpTick, swapLimit);
-        commitSwapCurve(poolIdx, curve);
+        commitCurve(bytes32(poolIdx), curve);
         lastSwap = accum;
     }
 
-    function testSwapBumpInf (uint8 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwapBumpInf (uint256 poolIdx, CurveMath.SwapAccum memory accum,
                               uint128 swapLimit) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
         testSwapTick(poolIdx, accum, tick, swapLimit);
     }
     
-    function testSwapLimitInf (uint8 poolIdx, CurveMath.SwapAccum memory accum) public {
+    function testSwapLimitInf (uint256 poolIdx, CurveMath.SwapAccum memory accum) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
         uint128 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
             TickMath.MIN_SQRT_RATIO-1;
         testSwapTick(poolIdx, accum, tick, limit);
     }
 
-    function fixCurve (uint8 poolIdx, uint128 price,
+    function fixCurve (uint256 poolIdx, uint128 price,
                        uint128 ambientLiq, uint128 concLiq) public {
-        initPrice(poolIdx, price);
-        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        initPrice(bytes32(poolIdx), price);
+        CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
         curve.liq_.ambientSeed_ = ambientLiq;
         curve.liq_.concentrated_ = concLiq;
         curve.priceRoot_ = price;
-        commitSwapCurve(poolIdx, curve);
+        commitCurve(bytes32(poolIdx), curve);
     }
 
-    function fixAccum (uint8 poolIdx, uint64 ambient, uint64 conc) public {
-        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+    function fixAccum (uint256 poolIdx, uint64 ambient, uint64 conc) public {
+        CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
         curve.accum_.ambientGrowth_ = ambient;
         curve.accum_.concTokenGrowth_ = conc;
-        commitSwapCurve(poolIdx, curve);
+        commitCurve(bytes32(poolIdx), curve);
     }
 
-    function pullCurve (uint8 poolIdx) public view returns (CurveMath.CurveState memory) {
-        return snapCurve(poolIdx);
+    function pullCurve (uint256 poolIdx) public view returns
+        (CurveMath.CurveState memory) {
+        return snapCurve(bytes32(poolIdx));
     }
 
-    function pullTotalLiq (uint8 poolIdx) public view returns (uint128) {
-        return activeLiquidity(poolIdx);
+    function pullTotalLiq (uint256 poolIdx) public view returns (uint128) {
+        return activeLiquidity(bytes32(poolIdx));
     }
 }

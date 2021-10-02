@@ -28,10 +28,10 @@ contract LiquidityCurve {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
 
-    mapping(uint8 => CurveMath.CurveState) private curves_;
+    mapping(bytes32 => CurveMath.CurveState) private curves_;
 
     /* @notice Returns the total liquidity currently active in the curve. */
-    function activeLiquidity (uint8 poolIdx) view internal returns (uint128) {
+    function activeLiquidity (bytes32 poolIdx) view internal returns (uint128) {
         return curves_[poolIdx].activeLiquidity();
     }
 
@@ -45,7 +45,7 @@ contract LiquidityCurve {
      * @return Represented as 128-bit fixed point real corresponding to the cumulative
      *         realized growth. Concentrated liquidity rewards are accumulated in the
      *         form of ambient liquidity seeds (see library/CurveMath.sol) */
-    function tokenOdometer (uint8 poolIdx) view internal returns (uint64) {
+    function tokenOdometer (bytes32 poolIdx) view internal returns (uint64) {
         return curves_[poolIdx].accum_.concTokenGrowth_;
     }
 
@@ -53,23 +53,17 @@ contract LiquidityCurve {
      * @dev    Use for light-weight gas ergonomics when iterarively operating on the 
      *         curve. But it's the callers responsibility to persist the changes back
      *         to storage when complete. */
-    function snapCurve (uint8 poolIdx) view internal returns
+    function snapCurve (bytes32 poolIdx) view internal returns
         (CurveMath.CurveState memory curve) {
         curve = curves_[poolIdx];
         require(curve.priceRoot_ > 0, "J");
     }
 
-    /* @notice Gas efficiently writes a CurveState modified in memory back into 
-     *         persistent memory. Use for the working copy from snapCurve when 
-     *         finalized. */
-    function commitSwapCurve (uint8 poolIdx, CurveMath.CurveState memory curve)
+    /* @notice Writes a CurveState modified in memory back into persistent storage. 
+     *         Use for the working copy from snapCurve when finalized. */
+    function commitCurve (bytes32 poolIdx, CurveMath.CurveState memory curve)
         internal {
-        curves_[poolIdx].priceRoot_ = curve.priceRoot_;
-        curves_[poolIdx].accum_ = curve.accum_;
-        if (curves_[poolIdx].liq_.ambientSeed_ != curve.liq_.ambientSeed_ ||
-            curves_[poolIdx].liq_.concentrated_ != curve.liq_.concentrated_) {
-            curves_[poolIdx].liq_ = curve.liq_;
-        }
+        curves_[poolIdx] = curve;
     }
     
     /* @notice Called whenever a user adds a fixed amount of concentrated liquidity
@@ -92,7 +86,7 @@ contract LiquidityCurve {
      *                following the addition of this liquidity.
      * @return quote - The amount of quote token collateral that must be collected 
      *                 following the addition of this liquidity. */
-    function liquidityReceivable (uint8 poolIdx, uint128 liquidity,
+    function liquidityReceivable (bytes32 poolIdx, uint128 liquidity,
                                   int24 lowerTick, int24 upperTick)
         internal returns (uint256, uint256) {
         (uint256 base, uint256 quote, bool inRange) =
@@ -110,7 +104,7 @@ contract LiquidityCurve {
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) */
-    function liquidityReceivable (uint8 poolIdx, uint128 seeds) 
+    function liquidityReceivable (bytes32 poolIdx, uint128 seeds) 
         internal returns (uint256, uint256) {
         (uint256 base, uint256 quote) = liquidityFlows(poolIdx, seeds);
         bumpAmbient(poolIdx, seeds);
@@ -144,7 +138,7 @@ contract LiquidityCurve {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (uint8 poolIdx, uint128 liquidity, uint64 rewardRate,
+    function liquidityPayable (bytes32 poolIdx, uint128 liquidity, uint64 rewardRate,
                                int24 lowerTick, int24 upperTick)
         internal returns (uint256 base, uint256 quote) {
         (base, quote) = liquidityPayable(poolIdx, liquidity, lowerTick, upperTick);
@@ -166,7 +160,7 @@ contract LiquidityCurve {
 
     /* @notice The same as the above liquidityPayable() but called when accumulated 
      *         rewards are zero. */
-    function liquidityPayable (uint8 poolIdx, uint128 liquidity,
+    function liquidityPayable (bytes32 poolIdx, uint128 liquidity,
                                int24 lowerTick, int24 upperTick)
         internal returns (uint256 base, uint256 quote) {
         bool inRange;
@@ -189,26 +183,26 @@ contract LiquidityCurve {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (uint8 poolIdx, uint128 seeds)
+    function liquidityPayable (bytes32 poolIdx, uint128 seeds)
         internal returns (uint256 base, uint256 quote) {
         (base, quote) = liquidityFlows(poolIdx, seeds);
         bumpAmbient(poolIdx, -(seeds.toInt256()));
     }
 
-    function bumpAmbient (uint8 poolIdx, uint128 seedDelta) private {
+    function bumpAmbient (bytes32 poolIdx, uint128 seedDelta) private {
         bumpAmbient(poolIdx, int256(uint256(seedDelta)));
     }
 
-    function bumpAmbient (uint8 poolIdx, int256 seedDelta) private {
+    function bumpAmbient (bytes32 poolIdx, int256 seedDelta) private {
         curves_[poolIdx].liq_.ambientSeed_ = LiquidityMath.addDelta
             (curves_[poolIdx].liq_.ambientSeed_, seedDelta.toInt128());
     }
 
-    function bumpConcentrated (uint8 poolIdx, uint128 liqDelta, bool inRange) private {
+    function bumpConcentrated (bytes32 poolIdx, uint128 liqDelta, bool inRange) private {
         bumpConcentrated(poolIdx, int256(uint256(liqDelta)), inRange);
     }
     
-    function bumpConcentrated (uint8 poolIdx, int256 liqDelta, bool inRange) private {
+    function bumpConcentrated (bytes32 poolIdx, int256 liqDelta, bool inRange) private {
         if (inRange) {
             uint128 prevLiq = curves_[poolIdx].liq_.concentrated_;
             uint128 nextLiq = LiquidityMath.addDelta
@@ -221,7 +215,7 @@ contract LiquidityCurve {
     /* @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
      *   flows. Safe to pay this flow, but when pool is receiving caller must make sure
      *   to round up for collateral safety. */
-    function liquidityFlows (uint8 poolIdx, uint128 liquidity,
+    function liquidityFlows (bytes32 poolIdx, uint128 liquidity,
                              int24 bidTick, int24 askTick)
         private view returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
         (uint128 price, int24 priceTick) = loadPriceTick(poolIdx);
@@ -243,7 +237,7 @@ contract LiquidityCurve {
      *   divisions, max precision loss is under 2 wei. Safe to pay this flow, but when
      *   when pool is receiving, caller must make sure to round up for collateral 
      *   safety. */
-    function liquidityFlows (uint8 poolIdx, uint128 seeds)
+    function liquidityFlows (bytes32 poolIdx, uint128 seeds)
         private view returns (uint256 baseDebit, uint256 quoteDebit) {
         uint128 price  = curves_[poolIdx].priceRoot_;
         uint128 liq = CompoundMath.inflateLiqSeed
@@ -260,7 +254,7 @@ contract LiquidityCurve {
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit tick index of the new price. */
-    function updatePrice (uint8 poolIdx, uint128 priceRoot) internal returns
+    function updatePrice (bytes32 poolIdx, uint128 priceRoot) internal returns
         (int24 priceTick) {
         require(curves_[poolIdx].priceRoot_ > 0, "J");
         curves_[poolIdx].priceRoot_ = priceRoot;
@@ -273,7 +267,7 @@ contract LiquidityCurve {
      *
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
-    function initPrice (uint8 poolIdx, uint128 priceRoot) internal {
+    function initPrice (bytes32 poolIdx, uint128 priceRoot) internal {
         require(curves_[poolIdx].priceRoot_ == 0, "N");
         curves_[poolIdx].priceRoot_ = priceRoot;
     }
@@ -283,7 +277,7 @@ contract LiquidityCurve {
      * @param poolIdx   The index of the pool applied to
      * @return priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit price tick index of the price. */
-    function loadPriceTick (uint8 poolIdx) internal view
+    function loadPriceTick (bytes32 poolIdx) internal view
         returns (uint128 priceRoot, int24 priceTick) {
         (priceRoot, priceTick) = loadPriceTickMaybe(poolIdx);
         require(priceRoot > 0, "J");
@@ -291,7 +285,7 @@ contract LiquidityCurve {
 
     /* @notice Same as loadPriceTick() but safe to call for pre-initialized prices. If
      *         so returns zero values. */
-    function loadPriceTickMaybe (uint8 poolIdx) internal view
+    function loadPriceTickMaybe (bytes32 poolIdx) internal view
         returns (uint128 priceRoot, int24 priceTick) {
         priceRoot = curves_[poolIdx].priceRoot_;
         if (priceRoot > 0) {
