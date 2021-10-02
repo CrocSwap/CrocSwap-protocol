@@ -12,6 +12,10 @@ contract SettleLayer {
     struct RollingSpend {
         bool spentMsgVal_;
     }
+
+    function initSettleRoll() internal pure returns (RollingSpend memory) {
+        return RollingSpend({spentMsgVal_: false});
+    }
     
     function settleFlat (address recv, int256 flow,
                          Directives.SettlementChannel memory directive,

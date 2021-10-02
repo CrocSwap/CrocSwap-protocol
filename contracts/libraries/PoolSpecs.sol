@@ -4,9 +4,9 @@ pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
 /* @title Pool specification library */
-library PoolSpec {
+library PoolSpecs {
 
-    struct PoolHeader {
+    struct Header {
         uint24 feeRate_;
         uint8 protocolTake_;
         uint16 tickSize_;
@@ -14,24 +14,30 @@ library PoolSpec {
         uint8 authFlags_;
     }
 
-    struct PoolExtended {
+    struct Extended {
         address authOracle_;
     }
     
-    struct PoolSpecs {
-        PoolHeader head_;
-        PoolExtended ext_;
+    struct Pool {
+        Header head_;
+        Extended ext_;
+    }
+
+    struct PoolCursor {
+        Header head_;
+        Extended ext_;
+        bytes32 hash_;
     }
 
     
-    function queryPool (mapping(bytes32 => PoolSpecs) storage pools,
+    function queryPool (mapping(bytes32 => Pool) storage pools,
                         address tokenX, address tokenY, uint256 poolIdx)
-        internal view returns (PoolSpecs memory specs) {
+        internal view returns (PoolCursor memory specs) {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
-        PoolHeader memory header = pools[key].head_;
-        PoolExtended memory ext = needsExt(header) ?
+        Header memory header = pools[key].head_;
+        Extended memory ext = needsExt(header) ?
             pools[key].ext_ : emptyExt();
-        return PoolSpecs ({head_: header, ext_: ext});
+        return PoolCursor ({head_: header, ext_: ext, hash_: key});
     }
 
     function encodeKey (address tokenX, address tokenY, uint256 poolIdx)
@@ -40,11 +46,11 @@ library PoolSpec {
         return keccak256(abi.encode(tokenX, tokenY, poolIdx));
     }
 
-    function needsExt (PoolHeader memory header) private pure returns (bool) {
+    function needsExt (Header memory header) private pure returns (bool) {
         return header.authFlags_ != 0;
     }
 
-    function emptyExt() private pure returns (PoolExtended memory specs) {
-        return PoolExtended({authOracle_: address(0)});
+    function emptyExt() private pure returns (Extended memory specs) {
+        return Extended({authOracle_: address(0)});
     }
 }
