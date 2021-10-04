@@ -84,7 +84,7 @@ contract PoolTrader is
                            CurveMath.CurveState memory curve)
         private returns (int256, int256) {
         (int256 ambientBase, int256 ambientQuote) =
-            applyAmbient(dir.ambient_, pool);
+            applyAmbient(dir.ambient_, pool, curve);
         (int256 concBase, int256 concQuote) =
             applyConcentrateds(dir.conc_, pool, curve);
         return (ambientBase + concBase,
@@ -92,15 +92,16 @@ contract PoolTrader is
     }
 
     function applyAmbient (Directives.AmbientDirective memory dir,
-                           PoolSpecs.PoolCursor memory pool)
+                           PoolSpecs.PoolCursor memory pool,
+                           CurveMath.CurveState memory curve)
         private returns (int256, int256) {
         
         if (dir.liquidity_ > 0) {
             uint128 liqAdded = dir.liquidity_.toUint256().toUint128();
-            return mintAmbient(liqAdded, pool);
+            return mintAmbient(liqAdded, curve, pool);
         } else if (dir.liquidity_ < 0) {
             uint128 liqBurned = (-dir.liquidity_).toUint256().toUint128();
-            return burnAmbient(liqBurned, pool);
+            return burnAmbient(liqBurned, curve, pool);
         } else {
             return (0, 0);
         }
@@ -127,7 +128,8 @@ contract PoolTrader is
         private returns (int256, int256) {
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
         (int24 lowerTick, int24 upperTick) = pinTickRange(openTick, bend);
-        return applyConcentrated(midTick, lowerTick, upperTick, bend.liquidity_, pool);
+        return applyConcentrated(midTick, lowerTick, upperTick, bend.liquidity_,
+                                 curve, pool);
     }
 
     function pinTickRange (int24 openTick, Directives.ConcenBookend memory bend)
@@ -140,54 +142,57 @@ contract PoolTrader is
     }
 
     function applyConcentrated (int24 midTick, int24 lowerTick, int24 upperTick,
-                                int256 liq, PoolSpecs.PoolCursor memory pool)
+                                int256 liq, CurveMath.CurveState memory curve,
+                                PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
         if (liq > 0) {
             uint128 liqMint = liq.toUint256().toUint128();
-            return mintConcentrated(midTick, lowerTick, upperTick, liqMint, pool);
+            return mintConcentrated(midTick, lowerTick, upperTick, liqMint, curve, pool);
         } else if (liq < 0) {
             uint128 liqBurn = (-liq).toUint256().toUint128();
-            return burnConcentrated(midTick, lowerTick, upperTick, liqBurn, pool);
+            return burnConcentrated(midTick, lowerTick, upperTick, liqBurn, curve, pool);
         } else {
             return (0, 0);
         }
     }
 
-    function mintAmbient (uint128 liqAdded,
+    function mintAmbient (uint128 liqAdded, CurveMath.CurveState memory curve,
                           PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
-        mintPosLiq(msg.sender, pool.hash_, liqAdded, tokenOdometer(pool.hash_));
-        (uint256 base, uint256 quote) = liquidityReceivable(pool.hash_, liqAdded);
+        mintPosLiq(msg.sender, pool.hash_, liqAdded, curve.accum_.concTokenGrowth_);
+        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
 
-    function burnAmbient (uint128 liqBurned,
+    function burnAmbient (uint128 liqBurned, CurveMath.CurveState memory curve,
                           PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
-        burnPosLiq(msg.sender, pool.hash_, liqBurned, tokenOdometer(pool.hash_));
-        (uint256 base, uint256 quote) = liquidityPayable(pool.hash_, liqBurned);
+        burnPosLiq(msg.sender, pool.hash_, liqBurned, curve.accum_.concTokenGrowth_);
+        (uint256 base, uint256 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }
     
     function mintConcentrated (int24 midTick, int24 lowerTick, int24 upperTick,
-                               uint128 liq, PoolSpecs.PoolCursor memory pool)
+                               uint128 liq, CurveMath.CurveState memory curve,
+                               PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
         uint64 feeMileage = addBookLiq(pool.hash_, midTick, lowerTick, upperTick,
-                                       liq, tokenOdometer(pool.hash_));
+                                       liq, curve.accum_.concTokenGrowth_);
         mintPosLiq(msg.sender, pool.hash_, lowerTick, upperTick, liq, feeMileage);
         (uint256 base, uint256 quote) = liquidityReceivable
-            (pool.hash_, liq, lowerTick, upperTick);
+            (curve, liq, lowerTick, upperTick);
         return signMintFlow(base, quote);
     }
 
     function burnConcentrated (int24 midTick, int24 lowerTick, int24 upperTick,
-                               uint128 liq, PoolSpecs.PoolCursor memory pool)
+                               uint128 liq,  CurveMath.CurveState memory curve,
+                               PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
         uint64 feeMileage = removeBookLiq(pool.hash_, midTick, lowerTick, upperTick,
-                                          liq, tokenOdometer(pool.hash_));
+                                          liq, curve.accum_.concTokenGrowth_);
         uint64 rewards = burnPosLiq(msg.sender, pool.hash_, lowerTick, upperTick,
                                     liq, feeMileage); 
-        (uint256 base, uint256 quote) = liquidityPayable(pool.hash_, liq, rewards,
+        (uint256 base, uint256 quote) = liquidityPayable(curve, liq, rewards,
                                                          lowerTick, upperTick);
         return signBurnFlow(base, quote);
     }

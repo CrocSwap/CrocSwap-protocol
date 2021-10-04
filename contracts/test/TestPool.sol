@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import "../interfaces/IERC20Minimal.sol";
+/*import "../interfaces/IERC20Minimal.sol";
 import "../CrocSwapPool.sol";
 import "hardhat/console.sol";
 
@@ -119,5 +119,5 @@ contract TestPool is IUniswapV3MintCallback, IUniswapV3SwapCallback {
             IERC20Minimal(quote).transfer(pool, uint256(quoteFlow) - debtHaircutQuote);
         }
     }
-}
+    }*/
 

@@ -30,25 +30,6 @@ contract LiquidityCurve {
 
     mapping(bytes32 => CurveMath.CurveState) private curves_;
 
-    /* @notice Returns the total liquidity currently active in the curve. */
-    function activeLiquidity (bytes32 poolIdx) view internal returns (uint128) {
-        return curves_[poolIdx].activeLiquidity();
-    }
-
-    /* @notice Returns the cumulative concentrated liquidity reward growth since the
-     *         the beggining of the pool. Represents the cumulative growth to a 
-     *         hypothetical single unit of liquidity that was staked and in-range since
-     *         the inception of the pool. Used downstream to benchmark liquidity rewards
-     *         for individual positions with varying time spent in-range.
-     *
-     * @param poolIdx Index of the pool to query.
-     * @return Represented as 128-bit fixed point real corresponding to the cumulative
-     *         realized growth. Concentrated liquidity rewards are accumulated in the
-     *         form of ambient liquidity seeds (see library/CurveMath.sol) */
-    function tokenOdometer (bytes32 poolIdx) view internal returns (uint64) {
-        return curves_[poolIdx].accum_.concTokenGrowth_;
-    }
-
     /* @notice Copies the current state of the curve in EVM storage to a memory clone.
      * @dev    Use for light-weight gas ergonomics when iterarively operating on the 
      *         curve. But it's the callers responsibility to persist the changes back
@@ -86,12 +67,12 @@ contract LiquidityCurve {
      *                following the addition of this liquidity.
      * @return quote - The amount of quote token collateral that must be collected 
      *                 following the addition of this liquidity. */
-    function liquidityReceivable (bytes32 poolIdx, uint128 liquidity,
+    function liquidityReceivable (CurveMath.CurveState memory curve, uint128 liquidity,
                                   int24 lowerTick, int24 upperTick)
-        internal returns (uint256, uint256) {
+        internal pure returns (uint256, uint256) {
         (uint256 base, uint256 quote, bool inRange) =
-            liquidityFlows(poolIdx, liquidity, lowerTick, upperTick);
-        bumpConcentrated(poolIdx, liquidity, inRange);
+            liquidityFlows(curve, liquidity, lowerTick, upperTick);
+        bumpConcentrated(curve, liquidity, inRange);
         return chargeConservative(base, quote, inRange);
     }
 
@@ -104,10 +85,10 @@ contract LiquidityCurve {
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) */
-    function liquidityReceivable (bytes32 poolIdx, uint128 seeds) 
-        internal returns (uint256, uint256) {
-        (uint256 base, uint256 quote) = liquidityFlows(poolIdx, seeds);
-        bumpAmbient(poolIdx, seeds);
+    function liquidityReceivable (CurveMath.CurveState memory curve, uint128 seeds) 
+        internal pure returns (uint256, uint256) {
+        (uint256 base, uint256 quote) = liquidityFlows(curve, seeds);
+        bumpAmbient(curve, seeds);
         return chargeConservative(base, quote, true);
     }
 
@@ -138,10 +119,10 @@ contract LiquidityCurve {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (bytes32 poolIdx, uint128 liquidity, uint64 rewardRate,
-                               int24 lowerTick, int24 upperTick)
-        internal returns (uint256 base, uint256 quote) {
-        (base, quote) = liquidityPayable(poolIdx, liquidity, lowerTick, upperTick);
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 liquidity,
+                               uint64 rewardRate, int24 lowerTick, int24 upperTick)
+        internal pure returns (uint256 base, uint256 quote) {
+        (base, quote) = liquidityPayable(curve, liquidity, lowerTick, upperTick);
 
         if (rewardRate > 0) {
             // Round down reward sees on payout, in contrast to rounding them up on
@@ -151,7 +132,7 @@ contract LiquidityCurve {
             
             if (rewards > 0) {
                 (uint256 baseRewards, uint256 quoteRewards) =
-                    liquidityPayable(poolIdx, rewards.toUint128());
+                    liquidityPayable(curve, rewards.toUint128());
                 base += baseRewards;
                 quote += quoteRewards;
             }
@@ -160,13 +141,13 @@ contract LiquidityCurve {
 
     /* @notice The same as the above liquidityPayable() but called when accumulated 
      *         rewards are zero. */
-    function liquidityPayable (bytes32 poolIdx, uint128 liquidity,
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 liquidity,
                                int24 lowerTick, int24 upperTick)
-        internal returns (uint256 base, uint256 quote) {
+        internal pure returns (uint256 base, uint256 quote) {
         bool inRange;
-        (base, quote, inRange) = liquidityFlows(poolIdx, liquidity,
+        (base, quote, inRange) = liquidityFlows(curve, liquidity,
                                                 lowerTick, upperTick);
-        bumpConcentrated(poolIdx, -(liquidity.toInt256()), inRange);
+        bumpConcentrated(curve, -(liquidity.toInt256()), inRange);
     }
 
     /* @notice Same as above liquidityPayable() but used for non-range based ambient
@@ -183,31 +164,35 @@ contract LiquidityCurve {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (bytes32 poolIdx, uint128 seeds)
-        internal returns (uint256 base, uint256 quote) {
-        (base, quote) = liquidityFlows(poolIdx, seeds);
-        bumpAmbient(poolIdx, -(seeds.toInt256()));
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 seeds)
+        internal pure returns (uint256 base, uint256 quote) {
+        (base, quote) = liquidityFlows(curve, seeds);
+        bumpAmbient(curve, -(seeds.toInt256()));
     }
 
-    function bumpAmbient (bytes32 poolIdx, uint128 seedDelta) private {
-        bumpAmbient(poolIdx, int256(uint256(seedDelta)));
+    function bumpAmbient (CurveMath.CurveState memory curve, uint128 seedDelta)
+        private pure {
+        bumpAmbient(curve, int256(uint256(seedDelta)));
     }
 
-    function bumpAmbient (bytes32 poolIdx, int256 seedDelta) private {
-        curves_[poolIdx].liq_.ambientSeed_ = LiquidityMath.addDelta
-            (curves_[poolIdx].liq_.ambientSeed_, seedDelta.toInt128());
+    function bumpAmbient (CurveMath.CurveState memory curve, int256 seedDelta)
+        private pure {
+        curve.liq_.ambientSeed_ = LiquidityMath.addDelta
+            (curve.liq_.ambientSeed_, seedDelta.toInt128());
     }
 
-    function bumpConcentrated (bytes32 poolIdx, uint128 liqDelta, bool inRange) private {
-        bumpConcentrated(poolIdx, int256(uint256(liqDelta)), inRange);
+    function bumpConcentrated (CurveMath.CurveState memory curve,
+                               uint128 liqDelta, bool inRange) private pure {
+        bumpConcentrated(curve, int256(uint256(liqDelta)), inRange);
     }
     
-    function bumpConcentrated (bytes32 poolIdx, int256 liqDelta, bool inRange) private {
+    function bumpConcentrated (CurveMath.CurveState memory curve,
+                               int256 liqDelta, bool inRange) private pure {
         if (inRange) {
-            uint128 prevLiq = curves_[poolIdx].liq_.concentrated_;
+            uint128 prevLiq = curve.liq_.concentrated_;
             uint128 nextLiq = LiquidityMath.addDelta
                 (prevLiq, liqDelta.toInt128());
-            curves_[poolIdx].liq_.concentrated_ = nextLiq;
+            curve.liq_.concentrated_ = nextLiq;
         }
     }
     
@@ -215,10 +200,10 @@ contract LiquidityCurve {
     /* @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
      *   flows. Safe to pay this flow, but when pool is receiving caller must make sure
      *   to round up for collateral safety. */
-    function liquidityFlows (bytes32 poolIdx, uint128 liquidity,
+    function liquidityFlows (CurveMath.CurveState memory curve, uint128 liquidity,
                              int24 bidTick, int24 askTick)
-        private view returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
-        (uint128 price, int24 priceTick) = loadPriceTick(poolIdx);
+        private pure returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
+        (uint128 price, int24 priceTick) = loadPriceTick(curve);
         (uint128 bidPrice, uint128 askPrice) =
             translateTickRange(bidTick, askTick);
 
@@ -237,28 +222,13 @@ contract LiquidityCurve {
      *   divisions, max precision loss is under 2 wei. Safe to pay this flow, but when
      *   when pool is receiving, caller must make sure to round up for collateral 
      *   safety. */
-    function liquidityFlows (bytes32 poolIdx, uint128 seeds)
-        private view returns (uint256 baseDebit, uint256 quoteDebit) {
-        uint128 price  = curves_[poolIdx].priceRoot_;
+    function liquidityFlows (CurveMath.CurveState memory curve, uint128 seeds)
+        private pure returns (uint256 baseDebit, uint256 quoteDebit) {
+        (uint128 price,) = loadPriceTick(curve);
         uint128 liq = CompoundMath.inflateLiqSeed
-            (seeds, curves_[poolIdx].accum_.ambientGrowth_);
+            (seeds, curve.accum_.ambientGrowth_);
         baseDebit = FullMath.mulDiv(liq, price, FixedPoint.Q64);
         quoteDebit = (uint256(liq) << 64) / price;
-    }
-
-    /* @notice Writes a new price into the curve (without any adjustment to liquidity)
-     * @dev For scenarios where the price is being incrementally updated, it'll be more
-     *      gas efficient to use the snapCurve()/commitCurve() workflow. Throws error
-     *      if price wasn't previously initialized.
-     *
-     * @param poolIdx   The index of the pool applied to
-     * @param priceRoot - Square root of the price. Represented as 96-bit fixed point.
-     * @return priceTick - 24-bit tick index of the new price. */
-    function updatePrice (bytes32 poolIdx, uint128 priceRoot) internal returns
-        (int24 priceTick) {
-        require(curves_[poolIdx].priceRoot_ > 0, "J");
-        curves_[poolIdx].priceRoot_ = priceRoot;
-        priceTick = TickMath.getTickAtSqrtRatio(priceRoot);
     }
 
     /* @notice Called exactly once at the initializing of the pool. Initializes the
@@ -277,17 +247,17 @@ contract LiquidityCurve {
      * @param poolIdx   The index of the pool applied to
      * @return priceRoot - Square root of the price. Represented as 96-bit fixed point.
      * @return priceTick - 24-bit price tick index of the price. */
-    function loadPriceTick (bytes32 poolIdx) internal view
+    function loadPriceTick (CurveMath.CurveState memory curve) internal pure
         returns (uint128 priceRoot, int24 priceTick) {
-        (priceRoot, priceTick) = loadPriceTickMaybe(poolIdx);
+        (priceRoot, priceTick) = loadPriceTickMaybe(curve);
         require(priceRoot > 0, "J");
     }
 
     /* @notice Same as loadPriceTick() but safe to call for pre-initialized prices. If
      *         so returns zero values. */
-    function loadPriceTickMaybe (bytes32 poolIdx) internal view
+    function loadPriceTickMaybe (CurveMath.CurveState memory curve) internal pure
         returns (uint128 priceRoot, int24 priceTick) {
-        priceRoot = curves_[poolIdx].priceRoot_;
+        priceRoot = curve.priceRoot_;
         if (priceRoot > 0) {
             priceTick = TickMath.getTickAtSqrtRatio(priceRoot);
         }

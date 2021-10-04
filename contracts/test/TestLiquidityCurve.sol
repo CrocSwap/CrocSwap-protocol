@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 import "../mixins/LiquidityCurve.sol";
 import "../libraries/SwapCurve.sol";
 
-contract TestLiquidityCurve is LiquidityCurve {
+/*contract TestLiquidityCurve is LiquidityCurve {
     using TickMath for uint128;
+    using CurveMath for CurveMath.CurveState;
     
     uint256 public baseFlow;
     uint256 public quoteFlow;
@@ -94,6 +95,6 @@ contract TestLiquidityCurve is LiquidityCurve {
     }
 
     function pullTotalLiq (uint256 poolIdx) public view returns (uint128) {
-        return activeLiquidity(bytes32(poolIdx));
+        return snapCurve(bytes32(poolIdx)).activeLiquidity();
     }
-}
+    }*/
