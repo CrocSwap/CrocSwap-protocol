@@ -134,7 +134,7 @@ contract CrocSwapPool is ICrocSwapPool,
         // Insert the range order into the book and position data structures
         uint64 odometer = addBookLiq(DFLT_POOL_IDX, midTick, lowerTick, upperTick,
                                      liqAdded, tokenOdometer(DFLT_POOL_IDX));
-        addPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
+        mintPosLiq(owner, DFLT_POOL_IDX, lowerTick, upperTick, liqAdded, odometer);
 
         // Calculate and collect the necessary collateral from the user.
         (baseOwed, quoteOwed) = liquidityReceivable(DFLT_POOL_IDX, liqAdded,

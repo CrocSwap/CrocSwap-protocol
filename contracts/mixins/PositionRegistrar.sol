@@ -33,7 +33,14 @@ contract PositionRegistrar {
     mapping(bytes32 => Position) private positions_;
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
-    function encodePosKey (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick)
+    function encodePosKey (address owner, bytes32 poolIdx)
+        internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(owner, poolIdx));
+    }
+
+    /* @notice Hashes the owner and concentrated liquidity range to the position key. */
+    function encodePosKey (address owner, bytes32 poolIdx,
+                           int24 lowerTick, int24 upperTick)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx, lowerTick, upperTick));
     }
@@ -44,6 +51,13 @@ contract PositionRegistrar {
                              int24 upperTick)
         internal view returns (Position storage) {
         return lookupPosKey(encodePosKey(owner, poolIdx, lowerTick, upperTick));
+    }
+
+    /* @notice Returns the current position associated with the owner's ambient 
+     *         position. If nothing exists the result will have zero liquidity. */
+    function lookupPosition (address owner, bytes32 poolIdx)
+        internal view returns (Position storage) {
+        return lookupPosKey(encodePosKey(owner, poolIdx));
     }
 
     /* @notice Returns the current position state associated with the hashed position
@@ -72,24 +86,37 @@ contract PositionRegistrar {
      *
      * @return rewards The rewards accumulated between the current and last checkpoined
      *                 fee mileage. */
-    function burnPosLiq (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick,
-                         uint128 burnLiq, uint64 feeMileage)
-        internal returns (uint64 rewards) {
+    function burnPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
+                         int24 upperTick, uint128 burnLiq, uint64 feeMileage)
+        internal returns (uint64) {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        return decrementLiq(pos, burnLiq, feeMileage);
+    }
+
+    function burnPosLiq (address owner, bytes32 poolIdx, uint128 burnLiq,
+                         uint64 feeMileage)
+        internal returns (uint64) {
+        Position storage pos = lookupPosition(owner, poolIdx);
+        return decrementLiq(pos, burnLiq, feeMileage);
+    }
+
+    function decrementLiq (Position storage pos,
+                           uint128 burnLiq, uint64 feeMileage) internal returns
+        (uint64 rewards) {
         uint128 liq = pos.liquidity_;
         uint64 oldMileage = pos.feeMileage_;
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
         // Technically feeMileage should never be less than oldMileage, but we need to
-        // handle it because it can happen due to fixed-point effects. (See blendMileage()
-        // function.)
+        // handle it because it can happen due to fixed-point effects.
+        // (See blendMileage() function.)
         if (feeMileage > oldMileage) {
             rewards = feeMileage - oldMileage;
             // No need to adjust the position's mileage checkpoint. Rewards are in per
             // unit of liquidity, so the pro-rata rewards of the remaining liquidity
             // (if any) remain unnaffected. 
         }
-        pos.liquidity_ = nextLiq;
+        pos.liquidity_ = nextLiq;        
     }
     
     /* @notice Adds liquidity to a given concentrated liquidity position, creating the
@@ -105,9 +132,20 @@ contract PositionRegistrar {
      *               previously exists, position will be created.
      * @param feeMileage The up-to-date fee mileage associated with the range. If the
      *                   position will be checkpointed with this value. */
-    function addPosLiq (address owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick,
-                        uint128 liqAdd, uint64 feeMileage) internal {
+    function mintPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
+                         int24 upperTick, uint128 liqAdd, uint64 feeMileage) internal {
         Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        incrementPosLiq(pos, liqAdd, feeMileage);
+    }
+
+    function mintPosLiq (address owner, bytes32 poolIdx, uint128 liqAdd,
+                         uint64 feeMileage) internal {
+        Position storage pos = lookupPosition(owner, poolIdx);
+        incrementPosLiq(pos, liqAdd, feeMileage);
+    }
+
+    function incrementPosLiq (Position storage pos, uint128 liqAdd,
+                              uint64 feeMileage) private {
         uint128 liq = pos.liquidity_;
         uint64 oldMileage;
 

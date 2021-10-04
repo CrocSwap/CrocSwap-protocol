@@ -32,6 +32,7 @@ library SafeCast {
         require((z = int128(y)) == y);
     }
 
+    
     /// @notice Cast a uint128 to a int128, revert on overflow
     /// @param y The uint128 to be casted
     /// @return z The casted integer, now type int128
@@ -48,4 +49,12 @@ library SafeCast {
         z = int256(y);
     }
 
+    /// @notice Cast a int256 to a uint256, revert on overflow or underflow
+    /// @param y The int256 to be downcasted
+    /// @return z The downcasted integer, now type uint256
+    function toUint256(int256 y) internal pure returns (uint256 z) {
+        require(y >= 0);
+        z = uint256(y);
+    }
+    
 }

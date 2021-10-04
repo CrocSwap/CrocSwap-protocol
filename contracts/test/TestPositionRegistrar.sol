@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.8.4;
     
@@ -8,7 +9,7 @@ contract TestPositionRegistrar is PositionRegistrar {
     
     function testAdd (address owner, uint256 poolIdx, int24 lower, int24 upper,
                       uint128 liq, uint64 mileage) public {
-        addPosLiq(owner, bytes32(poolIdx), lower, upper, liq, mileage);
+        mintPosLiq(owner, bytes32(poolIdx), lower, upper, liq, mileage);
     }
 
     function testBurn (address owner, uint256 poolIdx, int24 lower, int24 upper,
