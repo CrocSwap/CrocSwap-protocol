@@ -6,6 +6,7 @@ import '../libraries/FullMath.sol';
 import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
+import '../libraries/CompoundMath.sol';
 
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
@@ -13,6 +14,7 @@ import '../libraries/LowGasSafeMath.sol';
 contract PositionRegistrar {
     using LowGasSafeMath for uint64;
     using SafeCast for uint256;
+    using CompoundMath for uint128;
 
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
@@ -30,7 +32,12 @@ contract PositionRegistrar {
         uint64 feeMileage_;
     }
 
+    struct AmbientPosition {
+        uint128 seeds_;
+    }
+
     mapping(bytes32 => Position) private positions_;
+    mapping(bytes32 => AmbientPosition) private ambPositions_;
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
     function encodePosKey (address owner, bytes32 poolIdx)
@@ -50,21 +57,14 @@ contract PositionRegistrar {
     function lookupPosition (address owner, bytes32 poolIdx, int24 lowerTick,
                              int24 upperTick)
         internal view returns (Position storage) {
-        return lookupPosKey(encodePosKey(owner, poolIdx, lowerTick, upperTick));
+        return positions_[encodePosKey(owner, poolIdx, lowerTick, upperTick)];
     }
 
     /* @notice Returns the current position associated with the owner's ambient 
      *         position. If nothing exists the result will have zero liquidity. */
     function lookupPosition (address owner, bytes32 poolIdx)
-        internal view returns (Position storage) {
-        return lookupPosKey(encodePosKey(owner, poolIdx));
-    }
-
-    /* @notice Returns the current position state associated with the hashed position
-     *         key. If nothing exists result will have zero liquidity. */
-    function lookupPosKey (bytes32 posKey)
-        internal view returns (Position storage) {
-        return positions_[posKey];
+        internal view returns (AmbientPosition storage) {
+        return ambPositions_[encodePosKey(owner, poolIdx)];
     }
 
     /* @notice Removes all or some liquidity associated with a position. Calculates
@@ -94,10 +94,11 @@ contract PositionRegistrar {
     }
 
     function burnPosLiq (address owner, bytes32 poolIdx, uint128 burnLiq,
-                         uint64 feeMileage)
-        internal returns (uint64) {
-        Position storage pos = lookupPosition(owner, poolIdx);
-        return decrementLiq(pos, burnLiq, feeMileage);
+                         uint64 ambientGrowth)
+        internal returns (uint128 burnSeeds) {
+        AmbientPosition storage pos = lookupPosition(owner, poolIdx);
+        burnSeeds = burnLiq.deflateLiqSeed(ambientGrowth);
+        pos.seeds_ -= burnSeeds;
     }
 
     function decrementLiq (Position storage pos,
@@ -139,9 +140,10 @@ contract PositionRegistrar {
     }
 
     function mintPosLiq (address owner, bytes32 poolIdx, uint128 liqAdd,
-                         uint64 feeMileage) internal {
-        Position storage pos = lookupPosition(owner, poolIdx);
-        incrementPosLiq(pos, liqAdd, feeMileage);
+                         uint64 ambientGrowth) internal {
+        AmbientPosition storage pos = lookupPosition(owner, poolIdx);
+        uint128 seeds = liqAdd.deflateLiqSeed(ambientGrowth);
+        pos.seeds_ = seeds;
     }
 
     function incrementPosLiq (Position storage pos, uint128 liqAdd,

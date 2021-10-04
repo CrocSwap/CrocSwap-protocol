@@ -159,7 +159,7 @@ contract PoolTrader is
     function mintAmbient (uint128 liqAdded, CurveMath.CurveState memory curve,
                           PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
-        mintPosLiq(msg.sender, pool.hash_, liqAdded, curve.accum_.concTokenGrowth_);
+        mintPosLiq(msg.sender, pool.hash_, liqAdded, curve.accum_.ambientGrowth_);
         (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
@@ -167,7 +167,7 @@ contract PoolTrader is
     function burnAmbient (uint128 liqBurned, CurveMath.CurveState memory curve,
                           PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
-        burnPosLiq(msg.sender, pool.hash_, liqBurned, curve.accum_.concTokenGrowth_);
+        burnPosLiq(msg.sender, pool.hash_, liqBurned, curve.accum_.ambientGrowth_);
         (uint256 base, uint256 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }

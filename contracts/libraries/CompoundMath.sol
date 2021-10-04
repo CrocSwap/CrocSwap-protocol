@@ -115,4 +115,17 @@ library CompoundMath {
             type(uint128).max :
             inflated.toUint128();
     }
+
+    /* @notice Deflates a starting value by a cumulative growth rate.
+     * @dev    Rounds down from the real value.
+     * @param liq The post-inflated liquidity as unsigned integer
+     * @param growth Cumulative growth rate as 64-bit fixed-point value.
+     * @return The ending value = liq/* (1 + growth). Rounded down to nearest
+     *         integer value */
+    function deflateLiqSeed (uint128 liq, uint64 growth)
+        internal pure returns (uint128) {
+        uint256 ONE = FixedPoint.Q48;
+        uint256 deflated = FullMath.mulDiv(liq, ONE, ONE.sub(growth));
+        return deflated.toUint128();
+    }
 }
