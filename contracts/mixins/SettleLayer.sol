@@ -27,6 +27,12 @@ contract SettleLayer {
         }
     }
 
+    function settleInitFlow (address recv, address base, int256 baseFlow,
+                             address quote, int256 quoteFlow) internal {
+        transactFlow(recv, baseFlow, base, false);
+        transactFlow(recv, quoteFlow, quote, false);
+    }
+        
     function pumpFlow (address recv, int256 flow, address token, bool useReserves,
                        RollingSpend memory cumulative) private {
         transactFlow(recv, flow, token, useReserves);

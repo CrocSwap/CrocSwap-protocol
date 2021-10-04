@@ -13,9 +13,7 @@ import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ProtocolAccount.sol';
 
-import "hardhat/console.sol";
-
-contract PoolTrader is 
+contract CurveTrader is 
     PositionRegistrar, LiquidityCurve, LevelBook, ProtocolAccount {
 
     using SafeCast for int256;
@@ -28,14 +26,20 @@ contract PoolTrader is
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
-    function tradeOverPool (address base, address quote,
+    function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir)
         internal returns (int256 baseFlow, int256 quoteFlow) {
-        PoolSpecs.PoolCursor memory pool =
-            PoolSpecs.queryPool(pools_, base, quote, dir.poolIdx_);
-
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);
         (baseFlow, quoteFlow) = applyToCurve(dir, pool, curve);
+        commitCurve(pool.hash_, curve);
+    }
+
+    function initCurve (PoolSpecs.PoolCursor memory pool,
+                        uint128 price, uint128 initLiq)
+        internal returns (int256 baseFlow, int256 quoteFlow) {
+        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        initPrice(curve, price);
+        (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
         commitCurve(pool.hash_, curve);
     }
 
@@ -45,7 +49,8 @@ contract PoolTrader is
         private returns (int256, int256) {
         (int256 preBase, int256 preQuote) = applyPassive(dir.passive_, pool, curve);
         (int256 swapBase, int256 swapQuote) = applySwap(dir.swap_, pool, curve);
-        (int256 postBase, int256 postQuote) = applyPassive(dir.passivePost_, pool, curve);
+        (int256 postBase, int256 postQuote) = applyPassive(dir.passivePost_, pool,
+                                                           curve);
         return (preBase + swapBase + postBase,
                 preQuote + swapQuote + postQuote);
     }
@@ -162,6 +167,12 @@ contract PoolTrader is
         mintPosLiq(msg.sender, pool.hash_, liqAdded, curve.accum_.ambientGrowth_);
         (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
+    }
+
+    function lockAmbient (uint128 liqAdded, CurveMath.CurveState memory curve)
+        private pure returns (int256, int256) {
+        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
+        return signMintFlow(base, quote);        
     }
 
     function burnAmbient (uint128 liqBurned, CurveMath.CurveState memory curve,

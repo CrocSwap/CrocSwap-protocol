@@ -237,9 +237,10 @@ contract LiquidityCurve {
      *
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
-    function initPrice (bytes32 poolIdx, uint128 priceRoot) internal {
-        require(curves_[poolIdx].priceRoot_ == 0, "N");
-        curves_[poolIdx].priceRoot_ = priceRoot;
+    function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
+        internal pure {
+        require(curve.priceRoot_ == 0, "N");
+        curve.priceRoot_ = priceRoot;
     }
 
     /* @notice Loads price info fromt the current state of the curve.

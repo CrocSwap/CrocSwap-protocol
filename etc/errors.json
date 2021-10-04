@@ -17,6 +17,8 @@
     "OD", "Odd lot size",
     "Q": "Insufficient quote token",
     "PA": "Protocol authorization",
+    "PI": "Pool not initialized",
+    "PT": "No pool template at index",
     "R": "Price outside tick range",
     "RB", "Swap Curve Boundary Crash",
     "S": "Mezzanine spill broken",
