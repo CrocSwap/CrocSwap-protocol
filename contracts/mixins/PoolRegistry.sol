@@ -22,6 +22,12 @@ contract PoolRegistry {
         templates_[poolIdx] = pool;
     }
 
+    
+    function setProtocolTake (address base, address quote, uint24 poolIdx,
+                              uint8 protocolTake) authOnly public {
+        selectPool(base, quote, poolIdx).head_.protocolTake_ = protocolTake;        
+    }
+
     function registerPool (address base, address quote, uint24 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory) {
         PoolSpecs.Pool memory template = queryTemplate(base, quote, poolIdx);
@@ -32,6 +38,12 @@ contract PoolRegistry {
     function queryPool (address base, address quote, uint24 poolIdx)
         internal view returns (PoolSpecs.PoolCursor memory pool) {
         pool = PoolSpecs.queryPool(pools_, base, quote, poolIdx);
+        require(isPoolInit(pool), "PI");
+    }
+
+    function selectPool (address base, address quote, uint24 poolIdx)
+        internal view returns (PoolSpecs.Pool storage pool) {
+        pool = PoolSpecs.selectPool(pools_, base, quote, poolIdx);
         require(isPoolInit(pool), "PI");
     }
 

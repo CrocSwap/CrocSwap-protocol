@@ -30,9 +30,33 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
         swap: {
             liqMask: 0,
             isBuy: false,
-            quoteToBase: false,
+            inBaseQty: false,
             qty: BigNumber.from(0),
             limitPrice: BigNumber.from(0)
         }
     }
+}
+
+export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean, 
+    qty: number, limitPrice: BigNumber): PoolDirective  {
+    return { 
+       poolIdx: poolIdx,
+       passive: {
+        ambient: { liquidity: BigNumber.from(0) },
+        concentrated: [{ openTick: 0,
+            bookends: [] }]
+       },
+       passivePost: {
+           ambient: { liquidity: BigNumber.from(0) },
+           concentrated: [{ openTick: 0,
+               bookends: [] }]
+       },
+       swap: {
+           liqMask: 0,
+           isBuy: isBuy,
+           inBaseQty: inBaseQty,
+           qty: BigNumber.from(qty),
+           limitPrice: BigNumber.from(limitPrice)
+       }
+   }
 }

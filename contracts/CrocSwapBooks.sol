@@ -9,9 +9,7 @@ import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 
-
-
-contract CrocSwapSidecar is CurveTrader {
+contract CrocSwapBooks is CurveTrader {
 
     constructor (address authority) {
         authority_ = authority;
@@ -20,9 +18,9 @@ contract CrocSwapSidecar is CurveTrader {
     }
 
     function runPool (PoolSpecs.PoolCursor memory pool,
-                      Directives.PoolDirective memory dir)
+                      Directives.PoolDirective memory dir, address owner)
         masterOnly public returns (int256 baseFlow, int256 quoteFlow) {
-        return tradeOverPool(pool, dir);
+        return tradeOverPool(pool, dir, owner);
     }
 
     function runInit (PoolSpecs.PoolCursor memory pool, uint128 price)

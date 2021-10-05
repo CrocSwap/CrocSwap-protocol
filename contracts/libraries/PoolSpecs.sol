@@ -39,7 +39,14 @@ library PoolSpecs {
             pools[key].ext_ : emptyExt();
         return PoolCursor ({head_: header, ext_: ext, hash_: key});
     }
-    
+
+    function selectPool (mapping(bytes32 => Pool) storage pools,
+                         address tokenX, address tokenY, uint256 poolIdx)
+        internal view returns (Pool storage specs) {
+        bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
+        return pools[key];
+    }
+
     function writePool (mapping(bytes32 => Pool) storage pools,
                         address tokenX, address tokenY, uint256 poolIdx,
                         Pool memory val) internal {

@@ -121,9 +121,9 @@ library OrderEncoding {
         (limitPrice, next) = eatUInt128(input, next);
 
         bool isBuy = (dirFlags & 0x2) > 0;
-        bool quoteToBase = (dirFlags & 0x1) > 0;
+        bool inBaseQty_ = (dirFlags & 0x1) > 0;
         swap = Directives.SwapDirective({liqMask_: liqMask, isBuy_: isBuy,
-                    quoteToBase_: quoteToBase, qty_: qty, limitPrice_: limitPrice});
+                    inBaseQty_: inBaseQty_, qty_: qty, limitPrice_: limitPrice});
     }
 
     function parseSettle (bytes calldata input, uint32 offset)

@@ -8,6 +8,8 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/CompoundMath.sol';
 
+import "hardhat/console.sol";
+
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
@@ -106,6 +108,7 @@ contract PositionRegistrar {
         (uint64 rewards) {
         uint128 liq = pos.liquidity_;
         uint64 oldMileage = pos.feeMileage_;
+
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
         // Technically feeMileage should never be less than oldMileage, but we need to

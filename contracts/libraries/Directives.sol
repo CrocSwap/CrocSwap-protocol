@@ -9,7 +9,7 @@ library Directives {
     struct SwapDirective {
         uint8 liqMask_;
         bool isBuy_;
-        bool quoteToBase_;
+        bool inBaseQty_;
         uint128 qty_;
         uint128 limitPrice_;
     }

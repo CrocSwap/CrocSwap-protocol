@@ -8,9 +8,9 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { CrocSwapSidecar } from '../typechain/CrocSwapSidecar';
+import { CrocSwapBooks } from '../typechain/CrocSwapBooks';
 import { Signer, ContractFactory, BigNumber } from 'ethers';
-import { simpleSettle, singleHop, simpleMint } from './EncodeSimple';
+import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
 
 chai.use(solidity);
 
@@ -19,9 +19,10 @@ const POOL_IDX = 85365
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
-    sidecar: Promise<CrocSwapSidecar>
+    sidecar: Promise<CrocSwapBooks>
     trader: Promise<Signer>
     auth: Promise<Signer>
+    other: Promise<Signer>
     base: Promise<MockERC20>
     quote: Promise<MockERC20>
     baseSnap: Promise<BigNumber>
@@ -29,21 +30,25 @@ export class TestPool {
 
     constructor() {
         let factory = ethers.getContractFactory("MockERC20") as Promise<ContractFactory>
-        this.base = factory.then(f => f.deploy()) as Promise<MockERC20>
-        this.quote = factory.then(f => f.deploy()) as Promise<MockERC20>
+        let tokenX = factory.then(f => f.deploy()) as Promise<MockERC20>
+        let tokenY = factory.then(f => f.deploy()) as Promise<MockERC20>
+
+        this.base = sortBaseToken(tokenX, tokenY)
+        this.quote = sortQuoteToken(tokenX, tokenY)
 
         let accts = ethers.getSigners() as Promise<Signer[]>
         this.trader = accts.then(a => a[0])
         this.auth = accts.then(a => a[1])
+        this.other = accts.then(a => a[2])
 
         factory = ethers.getContractFactory("CrocSwapDex")
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
 
-        factory = ethers.getContractFactory("CrocSwapSidecar")
+        factory = ethers.getContractFactory("CrocSwapBooks")
         this.sidecar = factory.then(f => this.dex.then(d => 
-                d.getSidecar()).then(a =>
-                f.attach(a))) as Promise<CrocSwapSidecar>
+                d.getBooksSidecar()).then(a =>
+                f.attach(a))) as Promise<CrocSwapBooks>
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
@@ -52,8 +57,10 @@ export class TestPool {
     async fundTokens() {
         await fundToken(this.base, this.trader, this.dex)
         await fundToken(this.quote, this.trader, this.dex)
-        this.baseSnap = (await this.base).balanceOf((await this.dex).address)
-        this.quoteSnap = (await this.quote).balanceOf((await this.dex).address)
+        await fundToken(this.base, this.other, this.dex)
+        await fundToken(this.quote, this.other, this.dex)
+        this.baseSnap = this.traderBalance(this.base)
+        this.quoteSnap = this.traderBalance(this.quote)
     }
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
@@ -68,27 +75,80 @@ export class TestPool {
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
         
-        this.baseSnap = (await this.base).balanceOf((await this.dex).address)
-        this.quoteSnap = (await this.quote).balanceOf((await this.dex).address)                
+        this.baseSnap = this.traderBalance(this.base)
+        this.quoteSnap = this.traderBalance(this.quote)
     }
 
     async testMint (lower: number, upper: number, liq: number) {
+        await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
         await (await this.dex).connect(await this.trader).trade(inputBytes)
     }
 
+    async testMintOther (lower: number, upper: number, liq: number) {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
+        let inputBytes = encodeOrderDirective(directive);
+        await (await this.dex).connect(await this.other).trade(inputBytes)
+    }
+
+    async testBurn (lower: number, upper: number, liq: number) {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
+        let inputBytes = encodeOrderDirective(directive);
+        await (await this.dex).connect(await this.trader).trade(inputBytes)
+    }
+
+    async testBurnOther (lower: number, upper: number, liq: number) {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
+        let inputBytes = encodeOrderDirective(directive);
+        await (await this.dex).connect(await this.other).trade(inputBytes)
+    }
+
+    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber) {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
+        let inputBytes = encodeOrderDirective(directive);
+        await (await this.dex).connect(await this.trader).trade(inputBytes)
+    }
+
+    async testProtocolSetFee (takeRate: number) {
+        await (await this.dex)
+            .connect(await this.auth)
+            .setProtocolTake((await this.base).address, 
+            (await this.quote).address, POOL_IDX, takeRate)
+    }
+
     async snapBaseOwed(): Promise<BigNumber> {
         let lastSnap = await this.baseSnap
-        this.baseSnap = (await this.base).balanceOf((await this.dex).address)
-        return (await this.baseSnap).sub(lastSnap)
+        this.baseSnap = this.traderBalance(this.base)
+        return lastSnap.sub(await this.baseSnap)
     }
 
     async snapQuoteOwed(): Promise<BigNumber> {
         let lastSnap = await this.quoteSnap
-        this.quoteSnap = (await this.quote).balanceOf((await this.dex).address)
-        return (await this.quoteSnap).sub(lastSnap)
+        this.quoteSnap = this.traderBalance(this.quote)
+        return lastSnap.sub(await this.quoteSnap)
+    }
+
+    async snapStart() {
+        await this.snapBaseOwed();
+        await this.snapQuoteOwed();
+    }
+
+    async snapBaseFlow(): Promise<BigNumber> {
+        return (await this.snapBaseOwed())
+    }
+
+    async snapQuoteFlow(): Promise<BigNumber> {
+        return (await this.snapQuoteOwed())
     }
 
     async liquidity(): Promise<BigNumber> {
@@ -101,6 +161,11 @@ export class TestPool {
             ((await this.base).address, (await this.quote).address, POOL_IDX))
             .priceRoot_
     }
+
+    async traderBalance (token: Promise<MockERC20>): Promise<BigNumber> {
+        let addr = (await (await this.trader).getAddress())
+        return (await token).balanceOf(addr)
+    }
 }
 
 async function fundToken (token: Promise<MockERC20>, trader: Promise<Signer>, 
@@ -109,4 +174,20 @@ async function fundToken (token: Promise<MockERC20>, trader: Promise<Signer>,
     let traderR = await trader
     await tokenR.deposit(await traderR.getAddress(), INIT_BAL)
     await tokenR.approveFor(await traderR.getAddress(), (await dex).address, INIT_BAL)
+}
+
+async function sortBaseToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+    Promise<MockERC20> {
+    return addrLessThan((await tokenX).address, (await tokenY).address) ?
+        tokenX : tokenY;
+}
+
+async function sortQuoteToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+    Promise<MockERC20> {
+    return addrLessThan((await tokenX).address, (await tokenY).address) ?
+        tokenY : tokenX;
+}
+
+function addrLessThan (addrX: string, addrY: string): boolean {
+    return addrX.toLowerCase().localeCompare(addrY.toLowerCase()) < 0
 }

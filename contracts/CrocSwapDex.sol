@@ -8,7 +8,7 @@ import './libraries/TokenFlow.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
-import './CrocSwapSidecar.sol';
+import './CrocSwapBooks.sol';
 
 import "hardhat/console.sol";
 
@@ -18,7 +18,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
 
     constructor (address authority) {
         setPoolAuthority(authority);
-        sidecar_ = address(new CrocSwapSidecar(authority));
+        booksSidecar_ = address(new CrocSwapBooks(authority));
     }
     
     function trade (bytes calldata input) reEntrantLock public {
@@ -36,8 +36,8 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
                               order.hops_[i].pools_[j].poolIdx_);
 
                 (int256 baseFlow, int256 quoteFlow) =
-                    CrocSwapSidecar(sidecar_).runPool
-                    (pool, order.hops_[i].pools_[j]);
+                    CrocSwapBooks(booksSidecar_).runPool
+                    (pool, order.hops_[i].pools_[j], msg.sender);
 
                 pairs.accumFlow(baseFlow, quoteFlow);
             }
@@ -53,7 +53,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int256 baseFlow, int256 quoteFlow) = CrocSwapSidecar(sidecar_).
+        (int256 baseFlow, int256 quoteFlow) = CrocSwapBooks(booksSidecar_).
             runInit(pool, price);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
@@ -61,7 +61,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
     function queryCurve (address base, address quote, uint24 poolIdx)
         public view returns (CurveMath.CurveState memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        return CrocSwapSidecar(sidecar_).queryCurve(pool);
+        return CrocSwapBooks(booksSidecar_).queryCurve(pool);
     }
 
     function queryLiquidity (address base, address quote, uint24 poolIdx)
@@ -76,11 +76,11 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
         reEntrantLocked_ = false;
     }
 
-    function getSidecar() public view returns (address) {
-        return sidecar_;
+    function getBooksSidecar() public view returns (address) {
+        return booksSidecar_;
     }
     
     bool private reEntrantLocked_;
-    address private sidecar_;
+    address private booksSidecar_;
     
 }

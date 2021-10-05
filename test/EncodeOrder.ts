@@ -33,7 +33,7 @@ export interface PoolDirective {
 export interface SwapDirective {
     liqMask: number
     isBuy: boolean,
-    quoteToBase: boolean,
+    inBaseQty: boolean,
     qty: BigNumber
     limitPrice: BigNumber
 }
@@ -82,7 +82,7 @@ function encodePool (pool: PoolDirective): BytesLike {
 
 function encodeSwap (swap: SwapDirective): BytesLike {
     let liqMask = encodeWord(swap.liqMask)
-    let dirFlags = encodeWord((swap.isBuy ? 2 : 0) + (swap.quoteToBase ? 1 : 0))
+    let dirFlags = encodeWord((swap.isBuy ? 2 : 0) + (swap.inBaseQty ? 1 : 0))
     let qty = encodeFull(swap.qty)
     let limit = encodeFull(swap.limitPrice)
     return ethers.utils.concat([liqMask, dirFlags, qty, limit])

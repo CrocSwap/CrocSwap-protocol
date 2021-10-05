@@ -29,7 +29,7 @@ describe('LevelBook', () => {
     })
 
     it("add fresh liq", async() => {
-        await book.testAdd(0, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(0, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(0, 95);
         let ask = await book.getLevelState(0, 105);
         let mid = await book.getLevelState(0, 100);
@@ -45,10 +45,10 @@ describe('LevelBook', () => {
     })
 
     it("stack liq", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 95, 110, 20000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 105, 33000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 95, 50000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 105, 1, 33000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 95, 1, 50000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(1, 95);
         let ask = await book.getLevelState(1, 105);
         expect(bid.bidLots_.toNumber()).to.equal(30000);
@@ -58,7 +58,7 @@ describe('LevelBook', () => {
     })
 
     it("add above", async() => {
-        await book.testAdd(3, 50, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(3, 50, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(3, 95);
         let ask = await book.getLevelState(3, 105);
         expect(bid.bidLots_.toNumber()).to.equal(10000);
@@ -68,7 +68,7 @@ describe('LevelBook', () => {
     })
 
     it("add below", async() => {
-        await book.testAdd(0, 150, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(0, 150, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(0, 95);
         let ask = await book.getLevelState(0, 105);
         expect(bid.bidLots_.toNumber()).to.equal(10000);
@@ -78,8 +78,8 @@ describe('LevelBook', () => {
     })
 
     it("remove partial", async() => {
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(2, 100, 95, 110, 20000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
         await book.testRemove(2, 100, 95, 105, 3000, toFixedGrowth(0.5))
         await book.testRemove(2, 100, 95, 110, 5000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(2, 95);
@@ -93,8 +93,8 @@ describe('LevelBook', () => {
     })
 
     it("remove full", async() => {
-        await book.testAdd(0, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(0, 100, 95, 110, 20000, toFixedGrowth(0.5))
+        await book.testAdd(0, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(0, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
         await book.testRemove(0, 100, 95, 105, 10000, toFixedGrowth(0.5))
         let bid = await book.getLevelState(0, 95);
         let ask = await book.getLevelState(0, 105);
@@ -105,16 +105,16 @@ describe('LevelBook', () => {
     })
 
     it("remove over", async() => {
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(2, 100, 95, 110, 20000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
         expect(book.testRemove(2, 100, 95, 105, 11000, toFixedGrowth(0.5))).to.be.reverted;
     })
     
     it("bookmark ticks", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 95, 110, 20000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 105, 33000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 95, 50000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 105, 1, 33000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 95, 1, 50000, toFixedGrowth(0.5))
 
         expect(await book.hasTickBump(1, 90)).to.equal(true)
         expect(await book.hasTickBump(1, 94)).to.equal(false)
@@ -128,11 +128,11 @@ describe('LevelBook', () => {
     })
 
     it("forget ticks", async() => {
-        await book.testAdd(3, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(3, 100, 95, 110, 20000, toFixedGrowth(0.5))
-        await book.testAdd(3, 100, 90, 105, 33000, toFixedGrowth(0.5))
-        await book.testAdd(3, 100, 90, 95, 50000, toFixedGrowth(0.5))
-        await book.testAdd(0, 100, 90, 110, 8000, toFixedGrowth(0.5))
+        await book.testAdd(3, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(3, 100, 95, 110, 1, 20000, toFixedGrowth(0.5))
+        await book.testAdd(3, 100, 90, 105, 1, 33000, toFixedGrowth(0.5))
+        await book.testAdd(3, 100, 90, 95, 1, 50000, toFixedGrowth(0.5))
+        await book.testAdd(0, 100, 90, 110, 1, 8000, toFixedGrowth(0.5))
 
         await book.testRemove(3, 100, 95, 110, 12000, toFixedGrowth(0.5))
         expect(await book.hasTickBump(3, 90)).to.equal(true)
@@ -171,9 +171,9 @@ describe('LevelBook', () => {
     })
 
     it("cross level liq", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 95, 25000, toFixedGrowth(0.5))
-        await book.testAdd(2, 100, 90, 95, 35000, toFixedGrowth(0.8))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 95, 1, 25000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 90, 95, 1, 35000, toFixedGrowth(0.8))
         
         await book.testCrossLevel(1, 95, true, toFixedGrowth(0.5))
         expect((await book.liqDelta()).toNumber()).to.equal(-15000*1024)
@@ -200,8 +200,8 @@ describe('LevelBook', () => {
     // Test that we can safely cross non-initialized levels without breaking the
     // tick bitmap or screwing up liquidity.
     it("cross non level", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.5))
-        await book.testAdd(1, 100, 90, 95, 25000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 90, 95, 1, 25000, toFixedGrowth(0.5))
         
         await book.testCrossLevel(1, 98, false, toFixedGrowth(0.5))
         expect((await book.liqDelta()).toNumber()).to.equal(0)
@@ -209,7 +209,7 @@ describe('LevelBook', () => {
         expect((await book.liqDelta()).toNumber()).to.equal(0)
         expect(await book.hasTickBump(1, 98)).to.equal(false)
 
-        await book.testAdd(1, 100, 98, 102, 25000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 98, 102, 1, 25000, toFixedGrowth(0.5))
         expect(await book.hasTickBump(1, 98)).to.equal(true)
         await book.testCrossLevel(1, 98, false, toFixedGrowth(0.5))
         expect((await book.liqDelta()).toNumber()).to.equal(-25000*1024)        
@@ -223,15 +223,15 @@ describe('LevelBook', () => {
     })
 
     it("odometer add", async() => {
-        await book.testAdd(0, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(0, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
-        await book.testAdd(0, 100, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(0, 100, 95, 105, 1, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0.25)
     })
 
     it("odometer remove partial", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
         await book.testRemove(1, 100, 95, 105, 5000, toFixedGrowth(0.75))
         let end = await book.odometer()
@@ -239,7 +239,7 @@ describe('LevelBook', () => {
     })
 
     it("odometer remove full", async() => {
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
         await book.testRemove(2, 100, 95, 105, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()
@@ -247,36 +247,36 @@ describe('LevelBook', () => {
     })
 
     it("odometer add/rmove sequence", async() => {
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         await book.testRemove(2, 100, 95, 105, 10000, toFixedGrowth(0.75))
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(1.25))
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(1.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(1.25))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(1.5))
         await book.testRemove(2, 100, 95, 105, 10000, toFixedGrowth(1.75))
         await book.testRemove(2, 100, 95, 105, 3000, toFixedGrowth(2.5))
         let start = await book.odometer()
-        await book.testAdd(2, 100, 95, 105, 3000, toFixedGrowth(3.25))
+        await book.testAdd(2, 100, 95, 105, 1, 3000, toFixedGrowth(3.25))
         let end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0.75)
     })
 
     it("above re-clock", async() => {
-        await book.testAdd(3, 110, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(3, 110, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
-        await book.testAdd(3, 110, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(3, 110, 95, 105, 1, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0)
     })
 
     it("odometer boundary", async() => {
-        await book.testAdd(4, 95, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(4, 95, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
-        await book.testAdd(4, 95, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(4, 95, 95, 105, 1, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0.25)
 
-        await book.testAdd(4, 105, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(4, 105, 95, 105, 1, 10000, toFixedGrowth(0.5))
         start = await book.odometer()
-        await book.testAdd(4, 105, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(4, 105, 95, 105, 1, 10000, toFixedGrowth(0.75))
         end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0)
     })
@@ -285,27 +285,27 @@ describe('LevelBook', () => {
     // use zero odometer as an initialization condition, but this may not be the case for these
     // levels. Verify that we don't erroneously re-initialize in these cases.
     it("odometer zero init", async() => {
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0))
         let start = await book.odometer()
-        await book.testAdd(1, 100, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(1, 100, 95, 105, 1, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()        
         expect(fromFixedGrowth(end.sub(start))).to.equal(0.75)
     })
 
     it("below re-clock", async() => {
-        await book.testAdd(2, 110, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 110, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
-        await book.testAdd(2, 110, 95, 105, 10000, toFixedGrowth(0.75))
+        await book.testAdd(2, 110, 95, 105, 1, 10000, toFixedGrowth(0.75))
         let end = await book.odometer()
         expect(fromFixedGrowth(end.sub(start))).to.equal(0)
     })
 
     it("cross fee", async() => {
-        await book.testAdd(2, 100, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 100, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let startOne = await book.odometer()
-        await book.testAdd(2, 100, 93, 98, 10000, toFixedGrowth(0.5))        
+        await book.testAdd(2, 100, 93, 98, 1, 10000, toFixedGrowth(0.5))        
         let startTwo = await book.odometer()
-        await book.testAdd(0, 100, 93, 98, 10000, toFixedGrowth(0.8))        
+        await book.testAdd(0, 100, 93, 98, 1, 10000, toFixedGrowth(0.8))        
         let startAlt = await book.odometer()
 
         await book.testCrossLevel(2, 98, false, toFixedGrowth(0.75))
@@ -325,9 +325,9 @@ describe('LevelBook', () => {
     })
 
     it("cross up", async() => {
-        await book.testAdd(2, 94, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 94, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let startOne = await book.odometer()
-        await book.testAdd(2, 94, 93, 98, 10000, toFixedGrowth(0.5))        
+        await book.testAdd(2, 94, 93, 98, 1, 10000, toFixedGrowth(0.5))        
         let startTwo = await book.odometer()
 
         await book.testCrossLevel(2, 95, true, toFixedGrowth(0.75))
@@ -344,7 +344,7 @@ describe('LevelBook', () => {
     })
 
     it("cross sequence", async() => {
-        await book.testAdd(2, 98, 95, 105, 10000, toFixedGrowth(0.5))
+        await book.testAdd(2, 98, 95, 105, 1, 10000, toFixedGrowth(0.5))
         let start = await book.odometer()
 
         await book.testCrossLevel(2, 95, false, toFixedGrowth(0.75))
