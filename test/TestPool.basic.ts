@@ -103,6 +103,9 @@ describe('Pool', () => {
         expect(await test.liquidity()).to.equal(1000000*1024 + liqGrowth)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10000)
+
+        expect((await test.dex).protoFeeAccum((await test.quote).address)).to.equal(24)
+        expect((await test.dex).protoFeeAccum((await test.quote).address)).to.equal(0)
     })
 
     it("swap sell", async() => {
@@ -144,6 +147,9 @@ describe('Pool', () => {
         expect(await test.liquidity()).to.equal(1000000*1024 + liqGrowth)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-10000*1024)
+
+        expect((await test.dex).protoFeeAccum((await test.quote).address)).to.equal(24)
+        expect((await test.dex).protoFeeAccum((await test.quote).address)).to.equal(0)
     })
 
     it("swap wrong direction", async() => {

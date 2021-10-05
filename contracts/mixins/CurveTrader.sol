@@ -30,9 +30,11 @@ contract CurveTrader is
 
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir, address owner)
-        internal returns (int256 baseFlow, int256 quoteFlow) {
+        internal returns (int256 baseFlow, int256 quoteFlow,
+                          uint256 baseProtoFlow, uint256 quoteProtoFlow) {
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);
-        (baseFlow, quoteFlow) = applyToCurve(dir, pool, curve, owner);
+        (baseFlow, quoteFlow, baseProtoFlow, quoteProtoFlow) =
+            applyToCurve(dir, pool, curve, owner);
         commitCurve(pool.hash_, curve);
     }
 
@@ -50,28 +52,47 @@ contract CurveTrader is
     function applyToCurve (Directives.PoolDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
                            CurveMath.CurveState memory curve, address owner)
+        private returns (int256, int256, uint256, uint256) {
+        (int256 swapBase, int256 swapQuote, uint256 protoBase, uint256 protoQuote) =
+            applySwap(dir.swap_, pool, curve);
+        (int256 passiveBase, int256 passiveQuote) =
+            applyPassives(dir, pool, curve, owner);
+        
+        return (passiveBase + swapBase, passiveQuote + swapQuote,
+                protoBase, protoQuote);
+    }
+
+    function applyPassives (Directives.PoolDirective memory dir,
+                            PoolSpecs.PoolCursor memory pool,
+                            CurveMath.CurveState memory curve, address owner)
         private returns (int256, int256) {
         (int256 preBase, int256 preQuote) =
             applyPassive(dir.passive_, pool, curve, owner);
-        (int256 swapBase, int256 swapQuote) =
-            applySwap(dir.swap_, pool, curve);
         (int256 postBase, int256 postQuote) =
             applyPassive(dir.passivePost_, pool, curve, owner);
-        
-        return (preBase + swapBase + postBase,
-                preQuote + swapQuote + postQuote);
-    }
+        return (preBase + postBase, preQuote + postQuote);
+    }        
 
     function applySwap (Directives.SwapDirective memory dir,
                         PoolSpecs.PoolCursor memory pool,
                         CurveMath.CurveState memory curve)
-        private returns (int256 flowBase, int256 flowQuote) {
+        private returns (int256 flowBase, int256 flowQuote,
+                         uint256 protoBase, uint256 protoQuote) {
         if (dir.qty_ != 0) {
             CurveMath.SwapAccum memory accum = initSwapAccum(dir, pool, dir.qty_);
             sweepSwapLiq(curve, accum, pool, dir.limitPrice_);
-            accumProtocolFees(accum);
             (flowBase, flowQuote) = (accum.paidBase_, accum.paidQuote_);
+            (protoBase, protoQuote) = assignProtoFees(accum);            
         }
+    }
+
+    function assignProtoFees (CurveMath.SwapAccum memory accum) private pure
+        returns (uint256 paidQuote, uint256 paidBase) {
+        if (accum.cntx_.inBaseQty_) {
+            paidQuote = accum.paidProto_;
+        } else {
+            paidBase = accum.paidProto_;
+        }        
     }
 
     /* A swap operation is a potentially long and iterative process that

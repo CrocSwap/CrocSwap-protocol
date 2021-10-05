@@ -176,18 +176,18 @@ async function fundToken (token: Promise<MockERC20>, trader: Promise<Signer>,
     await tokenR.approveFor(await traderR.getAddress(), (await dex).address, INIT_BAL)
 }
 
-async function sortBaseToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+export async function sortBaseToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
     Promise<MockERC20> {
     return addrLessThan((await tokenX).address, (await tokenY).address) ?
         tokenX : tokenY;
 }
 
-async function sortQuoteToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+export async function sortQuoteToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
     Promise<MockERC20> {
     return addrLessThan((await tokenX).address, (await tokenY).address) ?
         tokenY : tokenX;
 }
 
-function addrLessThan (addrX: string, addrY: string): boolean {
+export function addrLessThan (addrX: string, addrY: string): boolean {
     return addrX.toLowerCase().localeCompare(addrY.toLowerCase()) < 0
 }

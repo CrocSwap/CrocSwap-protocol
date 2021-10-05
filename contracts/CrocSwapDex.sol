@@ -12,12 +12,13 @@ import './CrocSwapBooks.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is SettleLayer, PoolRegistry {
+contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
 
     constructor (address authority) {
         setPoolAuthority(authority);
+        setProtoAcctAuthority(authority);
         booksSidecar_ = address(new CrocSwapBooks(authority));
     }
     
@@ -35,12 +36,16 @@ contract CrocSwapDex is SettleLayer, PoolRegistry {
                     queryPool(pairs.baseToken_, pairs.quoteToken_,
                               order.hops_[i].pools_[j].poolIdx_);
 
-                (int256 baseFlow, int256 quoteFlow) =
+                (int256 baseFlow, int256 quoteFlow,
+                 uint256 baseProto, uint256 quoteProto) =
                     CrocSwapBooks(booksSidecar_).runPool
                     (pool, order.hops_[i].pools_[j], msg.sender);
 
-                pairs.accumFlow(baseFlow, quoteFlow);
+                pairs.accumFlow(baseFlow, quoteFlow, baseProto, quoteProto);
             }
+
+            // Make sure to call before clipping the pair.
+            accumProtocolFees(pairs);
 
             int settleFlow = pairs.clipFlow();
             settleFlat(msg.sender, settleFlow, settleChannel, rollSpend);
