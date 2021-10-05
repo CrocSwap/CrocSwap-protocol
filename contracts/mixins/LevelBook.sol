@@ -35,7 +35,6 @@ contract LevelBook {
     }
 
     mapping(bytes32 => BookLevel) private levels_;
-    mapping(bytes32 => uint16) private tickSizes_;
     TickCensusLib.TickCensus ticks_;
 
 
@@ -103,10 +102,10 @@ contract LevelBook {
      *    range specified by the order. This is necessary, so we consumers of this mixin
      *    can subtract the rewards accumulated before the order was added. */
     function addBookLiq (bytes32 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                         uint128 liq, uint64 feeGlobal)
+                         uint16 tickSize, uint128 liq, uint64 feeGlobal)
         internal returns (uint64 feeOdometer) {
         uint96 lots = liq.liquidityToLots();
-        assertTickSize(bidTick, askTick, tickSizes_[poolIdx]);
+        assertTickSize(bidTick, askTick, tickSize);
 
         // Make sure to init before add, because init logic relies on pre-add liquidity
         initLevel(poolIdx, midTick, bidTick, feeGlobal);
@@ -115,18 +114,6 @@ contract LevelBook {
         addBid(poolIdx, bidTick, lots);
         addAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
-    }
-
-    /* @notice Sets the tick spacing constraint. After being set all new orders will 
-     *    only be allowed to add at tick indices module this set value. Set to 0 to
-     *    allow orders at every tick. */
-    function setTickSize (bytes32 poolIdx, uint16 tickSize) internal {
-        tickSizes_[poolIdx] = tickSize;
-    }
-
-    /* @notice Returns the currently set tick spacing contraint. */
-    function getTickSize (bytes32 poolIdx) internal view returns (uint16) {
-        return tickSizes_[poolIdx];
     }
 
     function assertTickSize (int24 bidTick, int24 askTick, uint16 tickSize)

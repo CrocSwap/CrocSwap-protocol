@@ -28,10 +28,10 @@ contract TestLevelBook is LevelBook {
     }
 
     function testAdd (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                      uint128 lots, uint64 globalFee) public {
+                      uint16 tickSize, uint128 lots, uint64 globalFee) public {
         uint128 liq = lots * 1024;
         odometer = addBookLiq(bytes32(poolIdx), midTick, bidTick, askTick,
-                              liq, globalFee);
+                              tickSize, liq, globalFee);
     }
 
     function testRemove (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
@@ -39,14 +39,6 @@ contract TestLevelBook is LevelBook {
         uint128 liq = lots * 1024;
         odometer = removeBookLiq(bytes32(poolIdx), midTick, bidTick, askTick,
                                  liq, globalFee);
-    }
-
-    function testSetTickSize (uint256 poolIdx, uint16 tickSize) public {
-        setTickSize(bytes32(poolIdx), tickSize);
-    }
-
-    function testGetTickSize (uint256 poolIdx) public view returns (uint16) {
-        return getTickSize(bytes32(poolIdx));
     }
 
     function hasTickBump (uint256 poolIdx, int24 tick) public view returns (bool) {

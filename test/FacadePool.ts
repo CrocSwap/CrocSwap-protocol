@@ -8,6 +8,7 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
+import { CrocSwapSidecar } from '../typechain/CrocSwapSidecar';
 import { Signer, ContractFactory, BigNumber } from 'ethers';
 import { simpleSettle, singleHop, simpleMint } from './EncodeSimple';
 
@@ -18,6 +19,7 @@ const POOL_IDX = 85365
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
+    sidecar: Promise<CrocSwapSidecar>
     trader: Promise<Signer>
     auth: Promise<Signer>
     base: Promise<MockERC20>
@@ -38,6 +40,11 @@ export class TestPool {
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
 
+        factory = ethers.getContractFactory("CrocSwapSidecar")
+        this.sidecar = factory.then(f => this.dex.then(d => 
+                d.getSidecar()).then(a =>
+                f.attach(a))) as Promise<CrocSwapSidecar>
+    
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
     }
@@ -51,6 +58,9 @@ export class TestPool {
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
         price: number) {
+        await (await this.sidecar)
+            .connect(await this.auth)
+            .setInitLock(0)
         await (await this.dex)
             .connect(await this.auth)
             .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize)
@@ -64,9 +74,9 @@ export class TestPool {
 
     async testMint (lower: number, upper: number, liq: number) {
         let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(POOL_IDX, lower*1024, upper*1024, liq))
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        (await this.dex).connect(await this.trader).trade(inputBytes)
+        await (await this.dex).connect(await this.trader).trade(inputBytes)
     }
 
     async snapBaseOwed(): Promise<BigNumber> {
@@ -78,7 +88,18 @@ export class TestPool {
     async snapQuoteOwed(): Promise<BigNumber> {
         let lastSnap = await this.quoteSnap
         this.quoteSnap = (await this.quote).balanceOf((await this.dex).address)
-        return (await this.baseSnap).sub(lastSnap)
+        return (await this.quoteSnap).sub(lastSnap)
+    }
+
+    async liquidity(): Promise<BigNumber> {
+        return await (await this.dex).queryLiquidity
+            ((await this.base).address, (await this.quote).address, POOL_IDX)
+    }
+
+    async price(): Promise<BigNumber> {
+        return (await (await this.dex).queryCurve
+            ((await this.base).address, (await this.quote).address, POOL_IDX))
+            .priceRoot_
     }
 }
 

@@ -41,7 +41,9 @@ contract CurveTrader is
         internal returns (int256 baseFlow, int256 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInit(pool.hash_);
         initPrice(curve, price);
-        (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
+        if (initLiq > 0) {
+            (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
+        }
         commitCurve(pool.hash_, curve);
     }
 
@@ -51,8 +53,9 @@ contract CurveTrader is
         private returns (int256, int256) {
         (int256 preBase, int256 preQuote) = applyPassive(dir.passive_, pool, curve);
         (int256 swapBase, int256 swapQuote) = applySwap(dir.swap_, pool, curve);
-        (int256 postBase, int256 postQuote) = applyPassive(dir.passivePost_, pool,
-                                                           curve);
+        (int256 postBase, int256 postQuote) =
+            applyPassive(dir.passivePost_, pool, curve);
+        
         return (preBase + swapBase + postBase,
                 preQuote + swapQuote + postQuote);
     }
@@ -190,11 +193,11 @@ contract CurveTrader is
                                PoolSpecs.PoolCursor memory pool)
         private returns (int256, int256) {
         uint64 feeMileage = addBookLiq(pool.hash_, midTick, lowerTick, upperTick,
-                                       liq, curve.accum_.concTokenGrowth_);
+                                       pool.head_.tickSize_, liq,
+                                       curve.accum_.concTokenGrowth_);
         mintPosLiq(msg.sender, pool.hash_, lowerTick, upperTick, liq, feeMileage);
         (uint256 base, uint256 quote) = liquidityReceivable
             (curve, liq, lowerTick, upperTick);
-        console.log("Mint Conc", base, quote);
         return signMintFlow(base, quote);
     }
 

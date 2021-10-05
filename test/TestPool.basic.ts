@@ -56,13 +56,35 @@ describe('Pool', () => {
     it("mint liquidity", async() => {
         await test.testMint(-100, 100, 5000);
         await test.testMint(5000, 6000, 6000);
-        /*expect(await test.liquidity()).to.equal(0)
-        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))*/
+        expect(await test.liquidity()).to.equal(0)
+        expect((await test.price())).to.equal(toSqrtPrice(1.5))
         
         await test.testMint(3000, 5000, 10000);
         await test.testMint(3500, 4500, 20000);
-        /*expect(await pool.liquidity()).to.equal(30000*1024)
-        expect((await pool.slot0()).sqrtPriceX96).to.equal(toSqrtPrice(1.5))*/
+        expect(await test.liquidity()).to.equal(30000*1024)
+        expect((await test.price())).to.equal(toSqrtPrice(1.5))
     })
+
+    it("swap simple", async() => {
+        await test.testMint(-5000, 8000, 1000000); 
+        let startQuote = await quoteToken.balanceOf((await test.dex).address)
+        let startBase = await baseToken.balanceOf((await test.dex).address)
+        
+        const liqGrowth = 93172
+        const counterFlow = -6620438
+
+        await test.testSwap(false, 10000*1024, toSqrtPrice(2.0))
+        expect(await test.snapBaseFlow()).to.equal(10240000)
+        expect(await test.snapQuoteFlow()).to.equal(counterFlow)
+
+        expect(await test.liquidity()).to.equal(1000000*1024 + liqGrowth)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10240000)
+
+        let price = fromSqrtPrice((await test.price()))
+        expect(price).to.gte(1.524317)
+        expect(price).to.lte(1.524318)
+    })
+    
 
 })

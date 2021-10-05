@@ -9,7 +9,7 @@ export function singleHop (open: string, close: string, pool: PoolDirective): Or
 }
 
 export function simpleSettle (token: string): SettlementDirective {
-    return { token: token, limitQty: BigNumber.from("-1000000000000000"),
+    return { token: token, limitQty: BigNumber.from("100000000000000000"),
         dustThresh: BigNumber.from(0), useReserves: false }
 }
 

@@ -8,14 +8,17 @@ import './libraries/TokenFlow.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
+import './CrocSwapSidecar.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
+contract CrocSwapDex is SettleLayer, PoolRegistry {
     using TokenFlow for TokenFlow.PairSeq;
+    using CurveMath for CurveMath.CurveState;
 
     constructor (address authority) {
         setPoolAuthority(authority);
+        sidecar_ = address(new CrocSwapSidecar(authority));
     }
     
     function trade (bytes calldata input) reEntrantLock public {
@@ -31,9 +34,11 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
                 PoolSpecs.PoolCursor memory pool =
                     queryPool(pairs.baseToken_, pairs.quoteToken_,
                               order.hops_[i].pools_[j].poolIdx_);
-                
+
                 (int256 baseFlow, int256 quoteFlow) =
-                    tradeOverPool(pool, order.hops_[i].pools_[j]);
+                    CrocSwapSidecar(sidecar_).runPool
+                    (pool, order.hops_[i].pools_[j]);
+
                 pairs.accumFlow(baseFlow, quoteFlow);
             }
 
@@ -48,10 +53,21 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int256 baseFlow, int256 quoteFlow) = initCurve(pool, price, INIT_LOCK_LIQ);
+        (int256 baseFlow, int256 quoteFlow) = CrocSwapSidecar(sidecar_).
+            runInit(pool, price);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
- 
+
+    function queryCurve (address base, address quote, uint24 poolIdx)
+        public view returns (CurveMath.CurveState memory) {
+        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        return CrocSwapSidecar(sidecar_).queryCurve(pool);
+    }
+
+    function queryLiquidity (address base, address quote, uint24 poolIdx)
+        public view returns (uint128) {
+        return queryCurve(base, quote, poolIdx).activeLiquidity();
+    }
     
     modifier reEntrantLock() {
         require(reEntrantLocked_ == false, "A");
@@ -59,7 +75,12 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
         _;
         reEntrantLocked_ = false;
     }
+
+    function getSidecar() public view returns (address) {
+        return sidecar_;
+    }
     
     bool private reEntrantLocked_;
-    uint128 private constant INIT_LOCK_LIQ = 1000000;
+    address private sidecar_;
+    
 }
