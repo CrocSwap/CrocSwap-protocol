@@ -13,6 +13,8 @@ import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ProtocolAccount.sol';
 
+import "hardhat/console.sol";
+
 contract CurveTrader is 
     PositionRegistrar, LiquidityCurve, LevelBook, ProtocolAccount {
 
@@ -37,7 +39,7 @@ contract CurveTrader is
     function initCurve (PoolSpecs.PoolCursor memory pool,
                         uint128 price, uint128 initLiq)
         internal returns (int256 baseFlow, int256 quoteFlow) {
-        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        CurveMath.CurveState memory curve = snapCurveInit(pool.hash_);
         initPrice(curve, price);
         (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
         commitCurve(pool.hash_, curve);
@@ -192,6 +194,7 @@ contract CurveTrader is
         mintPosLiq(msg.sender, pool.hash_, lowerTick, upperTick, liq, feeMileage);
         (uint256 base, uint256 quote) = liquidityReceivable
             (curve, liq, lowerTick, upperTick);
+        console.log("Mint Conc", base, quote);
         return signMintFlow(base, quote);
     }
 

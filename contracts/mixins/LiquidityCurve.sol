@@ -40,6 +40,11 @@ contract LiquidityCurve {
         require(curve.priceRoot_ > 0, "J");
     }
 
+    function snapCurveInit (bytes32 poolIdx) view internal returns
+        (CurveMath.CurveState memory) {
+        return curves_[poolIdx];
+    }
+
     /* @notice Writes a CurveState modified in memory back into persistent storage. 
      *         Use for the working copy from snapCurve when finalized. */
     function commitCurve (bytes32 poolIdx, CurveMath.CurveState memory curve)

@@ -22,7 +22,7 @@ contract PoolRegistry {
         templates_[poolIdx] = pool;
     }
 
-    function initPoolSpec (address base, address quote, uint24 poolIdx) internal
+    function registerPool (address base, address quote, uint24 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory) {
         PoolSpecs.Pool memory template = queryTemplate(base, quote, poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);

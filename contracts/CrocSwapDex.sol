@@ -23,10 +23,10 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
         Directives.SettlementChannel memory settleChannel = order.open_;
         RollingSpend memory rollSpend = initSettleRoll();
         TokenFlow.PairSeq memory pairs = TokenFlow.initSeq();
-        
+
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-            
+
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
                 PoolSpecs.PoolCursor memory pool =
                     queryPool(pairs.baseToken_, pairs.quoteToken_,
@@ -47,7 +47,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry {
 
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
-        PoolSpecs.PoolCursor memory pool = initPoolSpec(base, quote, poolIdx);
+        PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
         (int256 baseFlow, int256 quoteFlow) = initCurve(pool, price, INIT_LOCK_LIQ);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
