@@ -102,8 +102,16 @@ contract SettleLayer {
         if (token.isEtherNative()) {
             require(msg.value >= value, "EC");
         } else {
-            TransferHelper.safeTransferFrom(token, recv, address(this), value);
+            collectToken(recv, value, token);
         }
+    }
+
+    function collectToken (address recv, uint256 value, address token) private {
+        uint256 openBalance = IERC20Minimal(token).balanceOf(address(this));
+        TransferHelper.safeTransferFrom(token, recv, address(this), value);
+        uint256 postBalance = IERC20Minimal(token).balanceOf(address(this));
+        require(postBalance > openBalance &&
+                postBalance - openBalance >= value, "TD");
     }
 
     function creditSurplus (address recv, uint256 value, address token) private {
