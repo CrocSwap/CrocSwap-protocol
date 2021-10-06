@@ -87,7 +87,7 @@ contract CurveTrader is
     }
 
     function assignProtoFees (CurveMath.SwapAccum memory accum) private pure
-        returns (uint256 paidQuote, uint256 paidBase) {
+        returns (uint256 paidBase, uint256 paidQuote) {
         if (accum.cntx_.inBaseQty_) {
             paidQuote = accum.paidProto_;
         } else {
