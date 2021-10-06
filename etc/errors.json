@@ -5,6 +5,7 @@
     "C", "Oversized sqrt approx",
     "D", "Tick size below minimum increment",
     "DS", "Double spend msg val",
+    "EC", "Insufficient ether sent"
     "G", "Overwriting a non-zero position on transfer",
     "I": "Tick below min",
     "J": "Pool not initialized",
@@ -25,6 +26,7 @@
     "ST": "Terminus spill broken",
     "T": "Price below max tick",
     "TF": "Transfer failed",
+    "TD": "Token failed due to fee on transfer",
     "V": "Insufficient liquidity in level",
     "X": "Tick below max",
     "Y": "Lobby bitmap broken",

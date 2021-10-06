@@ -107,11 +107,11 @@ contract SettleLayer {
     }
 
     function collectToken (address recv, uint256 value, address token) private {
-        uint256 openBalance = IERC20Minimal(token).balanceOf(address(this));
+        uint256 openBal = IERC20Minimal(token).balanceOf(address(this));
         TransferHelper.safeTransferFrom(token, recv, address(this), value);
-        uint256 postBalance = IERC20Minimal(token).balanceOf(address(this));
-        require(postBalance > openBalance &&
-                postBalance - openBalance >= value, "TD");
+        uint256 postBal = IERC20Minimal(token).balanceOf(address(this));
+        require(postBal > openBal &&
+                postBal - openBal >= value, "TD");
     }
 
     function creditSurplus (address recv, uint256 value, address token) private {
