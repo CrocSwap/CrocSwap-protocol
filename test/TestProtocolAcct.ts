@@ -6,7 +6,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { TestProtocolAccount } from '../typechain/TestProtocolAccount';
 import { sortBaseToken, sortQuoteToken } from './FacadePool';
-import { Signer } from 'ethers';
+import { Signer, BigNumber, Overrides } from 'ethers';
 
 chai.use(solidity);
 
@@ -20,6 +20,7 @@ describe('Protocol Account', () => {
     let treasury: string 
 
     const INIT_BAL = 100000000
+    const ZERO_TOKEN = "0x0000000000000000000000000000000000000000"
 
     beforeEach("deploy",  async () => {
        let factory = await ethers.getContractFactory("MockERC20")
@@ -41,6 +42,8 @@ describe('Protocol Account', () => {
        test = await factory.deploy(await owner.getAddress()) as TestProtocolAccount
        await baseToken.deposit(test.address, INIT_BAL);
        await quoteToken.deposit(test.address, INIT_BAL); 
+       let overrides = { value: BigNumber.from(INIT_BAL) }
+       await test.noop(overrides)
     })
 
     it("accum", async() => {  
@@ -62,6 +65,20 @@ describe('Protocol Account', () => {
       expect(await quoteToken.balanceOf(treasury)).to.equal(0)
       expect(await test.protoFeeAccum(baseToken.address)).to.equal(0)
       expect(await test.protoFeeAccum(quoteToken.address)).to.equal(2500)
+    })
+
+    it("ethereum token", async() => {
+      await test.testAccum(ZERO_TOKEN, quoteToken.address, 5000, 2500)
+      await test.testAccum(ZERO_TOKEN, quoteToken.address, 9000, 8300)
+      expect(await test.protoFeeAccum(ZERO_TOKEN)).to.equal(14000)
+      expect(await test.protoFeeAccum(quoteToken.address)).to.equal(10800)
+
+      await test.connect(owner).disburseProtocol(treasury, ZERO_TOKEN)
+      
+      expect(await test.etherBalance(test.address)).to.equal(INIT_BAL - 14000)
+      expect(await test.etherBalance(treasury)).to.equal(14000)
+      expect(await test.protoFeeAccum(ZERO_TOKEN)).to.equal(0)
+      expect(await test.protoFeeAccum(quoteToken.address)).to.equal(10800)
     })
 
     it("disburse post", async() => {

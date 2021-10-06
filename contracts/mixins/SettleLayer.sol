@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import '../libraries/Directives.sol';
 import '../libraries/TransferHelper.sol';
+import '../libraries/TokenFlow.sol';
 
 import "hardhat/console.sol";
 
 contract SettleLayer {
+    using TokenFlow for address;
 
     struct RollingSpend {
         bool spentMsgVal_;
@@ -46,7 +48,7 @@ contract SettleLayer {
 
     function markCumulative (RollingSpend memory cumulative,
                              address token, int256 flow) private pure {
-        if (isEtherNative(token) && isDebit(flow)) {
+        if (token.isEtherNative() && isDebit(flow)) {
             require(!cumulative.spentMsgVal_, "DS");
             cumulative.spentMsgVal_ = true;
         }
@@ -87,7 +89,7 @@ contract SettleLayer {
     }
 
     function creditTransfer (address recv, uint256 value, address token) private {
-        if (isEtherNative(token)) {
+        if (token.isEtherNative()) {
             TransferHelper.safeEtherSend(recv, value);
         } else {
             TransferHelper.safeTransfer(token, recv, value);
@@ -97,7 +99,7 @@ contract SettleLayer {
     function debitTransfer (address recv, uint256 value, address token) private {
         // markCumulative() makes sure that the user can't double spend msg.value
         // on multiple Ether debits.
-        if (isEtherNative(token)) {
+        if (token.isEtherNative()) {
             require(msg.value >= value, "EC");
         } else {
             TransferHelper.safeTransferFrom(token, recv, address(this), value);
@@ -140,10 +142,6 @@ contract SettleLayer {
     function encodeSurplusKey (address owner, address token) private
         pure returns (bytes32) {
         return keccak256(abi.encode(owner, token));
-    }
-
-    function isEtherNative (address token) private pure returns (bool) {
-        return token == address(0);
     }
 
     

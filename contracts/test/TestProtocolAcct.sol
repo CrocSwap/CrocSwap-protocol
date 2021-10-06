@@ -20,4 +20,10 @@ contract TestProtocolAccount is ProtocolAccount {
         pair.quoteProto_ = quoteFees;
         accumProtocolFees(pair);
     }
+
+    function noop() payable public { }
+
+    function etherBalance (address x) public view returns (uint256) {
+        return x.balance;
+    }
 }

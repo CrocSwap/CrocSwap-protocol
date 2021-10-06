@@ -13,6 +13,7 @@ import '../libraries/SafeCast.sol';
  *      instead of ambient liquidity. */
 contract ProtocolAccount {
     using SafeCast for uint256;
+    using TokenFlow for address;
     
     mapping(address => uint256) feesAccum_;
     
@@ -35,7 +36,11 @@ contract ProtocolAccount {
         uint256 collected = feesAccum_[token];
         feesAccum_[token] = 0;
         if (collected > 0) {
-            TransferHelper.safeTransfer(token, recipient, collected);
+            if (token.isEtherNative()) {
+                TransferHelper.safeEtherSend(recipient, collected);
+            } else {
+                TransferHelper.safeTransfer(token, recipient, collected);
+            }
         }
         
     }
@@ -51,9 +56,12 @@ contract ProtocolAccount {
     }
 
     modifier protoAuthOnly() {
-        require(msg.sender == authority_);
+        require(msg.sender == authority_ && !reEntrantLock_);
+        reEntrantLock_ = true;
         _;
+        reEntrantLock_ = false;
     }
 
     address private authority_;
+    bool reEntrantLock_;
 }

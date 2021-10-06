@@ -63,5 +63,8 @@ library TokenFlow {
     function closeFlow (PairSeq memory seq) internal pure returns (int256) {
         return seq.rolledFlow_;
     }
-    
+
+    function isEtherNative (address token) internal pure returns (bool) {
+        return token == address(0);
+    }
 }
