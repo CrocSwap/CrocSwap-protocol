@@ -3,8 +3,12 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
+import "./SafeCast.sol";
+
 /* @title Pool directive library */
 library Directives {
+    using SafeCast for int256;
+    using SafeCast for uint256;
 
     struct SwapDirective {
         uint8 liqMask_;
@@ -40,6 +44,12 @@ library Directives {
         PassiveDirective passivePost_;
     }
 
+    struct RolloverDirective {
+        uint24 poolIdx_;
+        uint8 liqMask_;
+        uint128 limitPrice_;
+    }
+
     struct SettlementChannel {
         address token_;
         int256 limitQty_;
@@ -56,4 +66,22 @@ library Directives {
         SettlementChannel open_;
         HopDirective[] hops_;
     }
+
+
+    function useRollover (RolloverDirective memory dir) internal pure returns (bool) {
+        return dir.limitPrice_ > 0;
+    }
+    
+    function stubRollover (RolloverDirective memory dir,
+                           int256 rolledFlow, bool inBase) internal pure returns
+        (uint24 poolIdx, SwapDirective memory swap) {
+        poolIdx = dir.poolIdx_;
+        bool isBuy = inBase ?
+            rolledFlow < 0 : rolledFlow > 0; // Verify direction
+        uint128 qty = rolledFlow.toUint256().toUint128();
+        swap = SwapDirective({liqMask_: dir.liqMask_, isBuy_: isBuy,
+                    inBaseQty_: inBase, qty_: qty,
+                    limitPrice_: dir.limitPrice_});
+    }
+
 }
