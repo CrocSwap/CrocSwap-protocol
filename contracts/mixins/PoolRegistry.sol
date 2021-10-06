@@ -5,6 +5,7 @@ pragma solidity >=0.8.4;
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
 import '../libraries/PoolSpecs.sol';
+import '../interfaces/ICrocSwapPermitOracle.sol';
 
 import "hardhat/console.sol";
 
@@ -12,16 +13,31 @@ contract PoolRegistry {
 
     using PoolSpecs for PoolSpecs.Pool;
 
+    function verifyPermit (PoolSpecs.PoolCursor memory pool,
+                           address base, address quote,
+                           Directives.PoolDirective memory dir) view internal {
+        if (pool.ext_.permitOracle_ != address(0)) {
+            bool approved = ICrocSwapPermitOracle(pool.ext_.permitOracle_)
+                .isApprovedForCrocPool(msg.sender, base, quote, dir);
+            require(approved, "Z");
+        }
+    }
+    
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
-                              uint8 protocolTake, uint16 tickSize) public authOnly {
+                              uint8 protocolTake, uint16 tickSize,
+                              address permitOracle) public authOnly {
         PoolSpecs.Header memory head = PoolSpecs.Header({feeRate_: feeRate,
                     protocolTake_: protocolTake, tickSize_: tickSize,
-                    priceOracle_: 0, authFlags_: 0});
-        PoolSpecs.Extended memory ext = PoolSpecs.Extended({authOracle_: address(0)});
+                    priceOracle_: 0, extFlags_: formExtFlags(permitOracle)});
+        PoolSpecs.Extended memory ext =
+            PoolSpecs.Extended({permitOracle_: permitOracle});
         PoolSpecs.Pool memory pool = PoolSpecs.Pool({head_: head, ext_: ext});
         templates_[poolIdx] = pool;
     }
 
+    function formExtFlags (address permitOracle) private pure returns (uint8) {
+        return (permitOracle != address(0)) ? 1 : 0;
+    }
     
     function setProtocolTake (address base, address quote, uint24 poolIdx,
                               uint8 protocolTake) authOnly public {

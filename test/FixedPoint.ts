@@ -7,6 +7,9 @@ const Q_48 = BigNumber.from(2).pow(48);
 export const MIN_TICK = -665454
 export const MAX_TICK = 831818
 
+export const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
+
+
 export function toFixedGrowth (mult: number) {
     let multFixed = Math.round(mult * PRECISION);
     return BigNumber.from(multFixed).mul(Q_48).div(PRECISION)

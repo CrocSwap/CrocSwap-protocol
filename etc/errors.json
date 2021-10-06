@@ -30,4 +30,5 @@
     "V": "Insufficient liquidity in level",
     "X": "Tick below max",
     "Y": "Lobby bitmap broken",
+    "Z": "Not authorized for pool",
 }

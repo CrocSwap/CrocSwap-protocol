@@ -2,7 +2,7 @@ import { TestDex } from '../typechain/TestDex'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
@@ -11,6 +11,7 @@ import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { CrocSwapBooks } from '../typechain/CrocSwapBooks';
 import { Signer, ContractFactory, BigNumber } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
+import { MockPermit } from '../typechain/MockPermit';
 
 chai.use(solidity);
 
@@ -23,6 +24,7 @@ export class TestPool {
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
+    permit: Promise<MockPermit>
     base: Promise<MockERC20>
     quote: Promise<MockERC20>
     baseSnap: Promise<BigNumber>
@@ -35,6 +37,9 @@ export class TestPool {
 
         this.base = sortBaseToken(tokenX, tokenY)
         this.quote = sortQuoteToken(tokenX, tokenY)
+
+        factory = ethers.getContractFactory("MockPermit") as Promise<ContractFactory>
+        this.permit = factory.then(f => f.deploy()) as Promise<MockPermit>
 
         let accts = ethers.getSigners() as Promise<Signer[]>
         this.trader = accts.then(a => a[0])
@@ -70,7 +75,7 @@ export class TestPool {
             .setInitLock(0)
         await (await this.dex)
             .connect(await this.auth)
-            .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize)
+            .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
@@ -78,6 +83,21 @@ export class TestPool {
         this.baseSnap = this.traderBalance(this.base)
         this.quoteSnap = this.traderBalance(this.quote)
     }
+
+    async initPermitPool (feeRate: number, protoTake: number, tickSize: number,
+        price: number) {
+        await (await this.sidecar)
+            .connect(await this.auth)
+            .setInitLock(0)
+        await (await this.dex)
+            .connect(await this.auth)
+            .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, 
+                (await this.permit).address)
+        await (await this.dex)
+            .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
+                toSqrtPrice(price))
+    }
+
 
     async testMint (lower: number, upper: number, liq: number) {
         await this.snapStart()

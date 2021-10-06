@@ -11,11 +11,11 @@ library PoolSpecs {
         uint8 protocolTake_;
         uint16 tickSize_;
         uint8 priceOracle_;
-        uint8 authFlags_;
+        uint8 extFlags_;
     }
 
     struct Extended {
-        address authOracle_;
+        address permitOracle_;
     }
     
     struct Pool {
@@ -61,10 +61,10 @@ library PoolSpecs {
     }
 
     function needsExt (Header memory header) private pure returns (bool) {
-        return header.authFlags_ != 0;
+        return header.extFlags_ != 0;
     }
 
     function emptyExt() private pure returns (Extended memory specs) {
-        return Extended({authOracle_: address(0)});
+        return Extended({permitOracle_: address(0)});
     }
 }

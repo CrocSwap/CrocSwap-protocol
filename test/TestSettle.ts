@@ -8,6 +8,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapPool } from '../typechain/CrocSwapPool';
 import { Signer, BigNumber, Overrides, PayableOverrides } from 'ethers';
+import { ZERO_ADDR } from './FixedPoint';
 
 chai.use(solidity);
 
@@ -19,7 +20,6 @@ describe('Settle Layer', () => {
     let sendAddr: string
     const INIT_BAL = 100000000000
 
-    const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
     const RECV_ADDR = "0x00000000000000000000000000000000000E7ABC"
 
     beforeEach("deploy",  async () => {

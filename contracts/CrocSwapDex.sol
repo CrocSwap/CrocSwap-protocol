@@ -35,7 +35,10 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
                 PoolSpecs.PoolCursor memory pool =
                     queryPool(pairs.baseToken_, pairs.quoteToken_,
                               order.hops_[i].pools_[j].poolIdx_);
-
+                
+                verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_,
+                             order.hops_[i].pools_[j]);
+                
                 (int256 baseFlow, int256 quoteFlow,
                  uint256 baseProto, uint256 quoteProto) =
                     CrocSwapBooks(booksSidecar_).runPool
