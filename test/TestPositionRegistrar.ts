@@ -99,7 +99,9 @@ describe('PositionRegistrar', () => {
         await reg.testBurn(owner, 1, -100, 100, 150000, 12800);
         let result = await reg.getPos(owner, 1, -100, 100);
         expect(result[0].toNumber()).to.equal(0);
-        expect(result[1].toNumber()).to.equal(12500);
+        // Fee mileage on 0 liquidity doesn't matter for functionality, but
+        // current implementation is to reset to 0 for gas refund
+        expect(result[1].toNumber()).to.equal(0); 
     })
 
     it("burn position only", async() => {

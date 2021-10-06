@@ -17,6 +17,7 @@ contract PositionRegistrar {
     using LowGasSafeMath for uint64;
     using SafeCast for uint256;
     using CompoundMath for uint128;
+    using LiquidityMath for uint128;
 
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
@@ -32,10 +33,12 @@ contract PositionRegistrar {
     struct Position {
         uint128 liquidity_;
         uint64 feeMileage_;
+        uint32 timestamp_;
     }
 
     struct AmbientPosition {
         uint128 seeds_;
+        uint32 timestamp_;
     }
 
     mapping(bytes32 => Position) private positions_;
@@ -100,7 +103,15 @@ contract PositionRegistrar {
         internal returns (uint128 burnSeeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         burnSeeds = burnLiq.deflateLiqSeed(ambientGrowth);
-        pos.seeds_ -= burnSeeds;
+        uint128 nextSeeds = pos.seeds_.minusDelta(burnSeeds);
+        if (nextSeeds == 0) {
+            // Solidity optimizer should convert this to a single refunded SSTORE
+            pos.seeds_ = 0;
+            pos.timestamp_ = 0;
+        } else {
+            pos.seeds_ = nextSeeds;
+            // Decreasing liquidity does not lose time priority
+        }
     }
 
     function decrementLiq (Position storage pos,
@@ -120,7 +131,15 @@ contract PositionRegistrar {
             // unit of liquidity, so the pro-rata rewards of the remaining liquidity
             // (if any) remain unnaffected. 
         }
-        pos.liquidity_ = nextLiq;        
+        
+        if (nextLiq > 0) {
+            pos.liquidity_ = nextLiq;
+        } else {
+            // Solidity optimizer should convert this to a single refunded SSTORE
+            pos.liquidity_ = 0;
+            pos.feeMileage_ = 0;
+            pos.timestamp_ = 0;
+        }
     }
     
     /* @notice Adds liquidity to a given concentrated liquidity position, creating the
@@ -146,7 +165,8 @@ contract PositionRegistrar {
                          uint64 ambientGrowth) internal {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         uint128 seeds = liqAdd.deflateLiqSeed(ambientGrowth);
-        pos.seeds_ = seeds;
+        pos.seeds_ = pos.seeds_.addDelta(seeds);
+        pos.timestamp_ = timestamp(); // Increasing liquidity loses time priority.
     }
 
     function incrementPosLiq (Position storage pos, uint128 liqAdd,
@@ -160,11 +180,14 @@ contract PositionRegistrar {
             oldMileage = 0;
         }
 
-        // Save an SSTORE if there's no mileage change
-        if (feeMileage != oldMileage) {
-            pos.feeMileage_ = blendMileage(feeMileage, liqAdd, oldMileage, liq);
-        }
-        pos.liquidity_ = LiquidityMath.addDelta(liq, liqAdd);
+        uint128 liqNext = LiquidityMath.addDelta(liq, liqAdd);
+        uint64 mileage = blendMileage(feeMileage, liqAdd, oldMileage, liq);
+        uint32 stamp = timestamp(); 
+        
+        // Below should get optimized to a single SSTORE...
+        pos.liquidity_ = liqNext;
+        pos.feeMileage_ = mileage;
+        pos.timestamp_ = stamp;
     }
 
     /* @dev To be conservative in terms of rewards/collateral, this function always
@@ -179,6 +202,7 @@ contract PositionRegistrar {
         private pure returns (uint64) {
         if (liqY == 0) { return mileageX; }
         if (liqX == 0) { return mileageY; }
+        if (mileageX == mileageY) { return mileageX; }
         uint64 termX = FullMath.mulDiv(mileageX, liqX, liqX + liqY).toUint64();
         uint64 termY = FullMath.mulDiv(mileageY, liqY, liqX + liqY).toUint64();
 
@@ -210,5 +234,14 @@ contract PositionRegistrar {
         newPos.liquidity_ = pos.liquidity_;
         newPos.feeMileage_ = pos.feeMileage_;
         pos.liquidity_ = 0;
+    }
+
+    // Unix timestamp can fit into 32-bits until 2038. After which, the worse case
+    // is timestamps stop increasing. Since the timestamp is only used for informational
+    // purposes, this doesn't affect the functioning of the core smart contract.
+    function timestamp() private view returns (uint32) {
+        uint time = block.timestamp;
+        if (time > type(uint32).max) { return type(uint32).max; }
+        return uint32(time);
     }
 }
