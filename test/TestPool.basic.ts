@@ -343,8 +343,7 @@ describe('Pool', () => {
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(limitFlow)
 
         expect(await (await test.dex).protoFeeAccum((await test.quote).address)).to.equal(0)
-        expect(await (await test.dex).protoFeeAccum((await test.base).address)).to.equal(58407)
-        58407
+        expect(await (await test.dex).protoFeeAccum((await test.base).address)).to.equal(21211)
     })
 
     it("burn payout full", async() => {
