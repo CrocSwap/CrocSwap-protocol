@@ -18,7 +18,7 @@ describe('Price Improve', () => {
 
     const UP_MULTS = [3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8, 9]
 
-    /*it ("ticks out of order", async() => {
+    it ("ticks out of order", async() => {
         await expect(test.testThresh(true, 1024*1024, 500, UP_MULTS, 16, 0, 5, 5))
             .to.be.reverted
         await expect(test.testThresh(true, 1024*1024, 500, UP_MULTS, 16, 0, 5, -5))
@@ -139,7 +139,7 @@ describe('Price Improve', () => {
             425642,        // 1X over 96 ticks
             3677192]        // 9X over 100 ticks (100 is arbitrary but used in test)
 
-    /*it("scale thresh", async() => {
+    it("scale thresh", async() => {
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+1))
             .to.equal(scaled[0])
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+2))
@@ -177,7 +177,7 @@ describe('Price Improve', () => {
         // Should map to the 12 mult, with 12/11 liquidity to match collateral
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+11))
             .to.equal(18613062)
-    })*/
+    })
 
     it("grid pin ask wings", async() => {
         // Should map to the 4 mult, discounted by 50% for being on grid 
