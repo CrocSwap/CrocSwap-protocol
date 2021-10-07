@@ -3,8 +3,8 @@
 pragma solidity >=0.8.4;
 
 import '../libraries/Directives.sol';
-import '../libraries/Encoding.sol';
 import '../libraries/PoolSpecs.sol';
+import '../libraries/PriceImprove.sol';
 import '../libraries/SwapCurve.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
@@ -29,7 +29,9 @@ contract CurveTrader is
     using CurveMath for CurveMath.CurveState;
 
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
-                            Directives.PoolDirective memory dir, address owner)
+                            Directives.PoolDirective memory dir,
+                            PriceImprove.ImproveSettings memory improve,
+                            address owner)
         internal returns (int256 baseFlow, int256 quoteFlow,
                           uint256 baseProtoFlow, uint256 quoteProtoFlow) {
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);

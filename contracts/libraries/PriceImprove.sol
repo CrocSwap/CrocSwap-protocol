@@ -32,6 +32,25 @@ library PriceImprove {
         int8 mult96_;
     }
 
+    function emptySettings() internal pure returns (ImproveSettings memory) {
+        return ImproveSettings({
+            unitCollateral_: 0,
+                    awayTicks_: 0,
+                    mult1_: 0,
+                    mult2_: 0,
+                    mult4_: 0,
+                    mult6_: 0,
+                    mult8_: 0,
+                    mult12_: 0,
+                    mult16_: 0,
+                    mult24_: 0,
+                    mult32_: 0,
+                    mult40_: 0,
+                    mult48_: 0,
+                    mult64_: 0,
+                    mult96_: 0});
+    }
+    
     function formatSettings (uint128 unitCollateral, uint16 awayTicks,
                              int8[] calldata mults)
         internal pure returns (ImproveSettings memory) {

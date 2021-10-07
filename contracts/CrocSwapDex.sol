@@ -5,6 +5,7 @@ pragma solidity >=0.8.4;
 import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
+import './libraries/PriceImprove.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -42,7 +43,8 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
                 (int256 baseFlow, int256 quoteFlow,
                  uint256 baseProto, uint256 quoteProto) =
                     CrocSwapBooks(booksSidecar_).runPool
-                    (pool, order.hops_[i].pools_[j], msg.sender);
+                    (pool, order.hops_[i].pools_[j],
+                     PriceImprove.emptySettings(), msg.sender);
 
                 pairs.accumFlow(baseFlow, quoteFlow, baseProto, quoteProto);
             }
