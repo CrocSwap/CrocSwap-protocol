@@ -7,6 +7,7 @@ import "../libraries/Directives.sol";
 contract TestEncoding {
     Directives.SettlementChannel public settleOpen;
     Directives.SettlementChannel public settleHop;
+    Directives.PriceImproveReq public priceImprove;
     Directives.SwapDirective public swap;
     Directives.AmbientDirective public ambientOpen;
     Directives.AmbientDirective public ambientClose;
@@ -19,6 +20,7 @@ contract TestEncoding {
     function testEncodeHop (uint8 idx, bytes calldata input) public {
         Directives.OrderDirective memory directive = OrderEncoding.decodeOrder(input);
         settleHop = directive.hops_[idx].settle_;
+        priceImprove = directive.hops_[idx].improve_;
     }
 
     function testEncodePool (uint8 pairPos, uint8 poolPos,

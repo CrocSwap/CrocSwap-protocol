@@ -64,9 +64,15 @@ library Directives {
         bool useReserves_;
     }
 
+    struct PriceImproveReq {
+        bool isEnabled_;
+        bool useBaseSide_;
+    }
+
     struct HopDirective {
         PoolDirective[] pools_;
         SettlementChannel settle_;
+        PriceImproveReq improve_;
     }
 
     struct OrderDirective {

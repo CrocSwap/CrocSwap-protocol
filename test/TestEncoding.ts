@@ -5,12 +5,12 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import { toSqrtPrice } from './FixedPoint';
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective, ImproveDirective } from './EncodeOrder';
 import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
-describe('Tick Math', () => {
+describe('Encoding', () => {
     let encoder: TestEncoding
     let order: OrderDirective
 
@@ -49,18 +49,23 @@ describe('Tick Math', () => {
 
         
         let hopA = buildHop(buildSettle("DE0", 65000, 10, false),
+            { isEnabled: false, useBaseSide: false },
             [poolJ, poolK, poolL])
         let hopB = buildHop(buildSettle("9A8", -50000, 15, false),
+            { isEnabled: true, useBaseSide: false },
             [poolM, poolN])
         let hopC = buildHop(buildSettle("7C5", -800000, 5000, true),
+            { isEnabled: true, useBaseSide: true },
             [poolQ, poolR])
         return { open: buildSettle("A25", 512, 128, true),
             hops: [hopA, hopB, hopC] }
     }
 
     function buildHop (settle: SettlementDirective, 
+        improve: ImproveDirective,
         pools: PoolDirective[]): HopDirective {
-        return { pools: pools, settlement: settle }
+        return { pools: pools, settlement: settle, 
+            improve: improve }
     }
 
     function buildSettle (token: string, qty: number, 
@@ -78,9 +83,9 @@ describe('Tick Math', () => {
         return { poolIdx: poolIdx, passive: passive, swap: swap, passivePost: post }
     }
 
-    function buildSwap (liqMask: number, isBuy: boolean, quoteToBase: boolean, 
+    function buildSwap (liqMask: number, isBuy: boolean, inBaseQty: boolean, 
         qty: number, price: number): SwapDirective {
-        return { liqMask: liqMask, isBuy: isBuy, quoteToBase: quoteToBase,
+        return { liqMask: liqMask, isBuy: isBuy, inBaseQty: inBaseQty,
             qty: BigNumber.from(qty), limitPrice: toSqrtPrice(price) }
     }
 
@@ -130,6 +135,26 @@ describe('Tick Math', () => {
         expect(settle.useReserves_).to.equal(cmp.useReserves)
     })
 
+    it ("hop improve", async() => {
+        await encoder.testEncodeHop(0, encodeOrderDirective(order))
+        let improve = (await encoder.priceImprove())
+        let cmp = order.hops[0].improve
+        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
+
+        await encoder.testEncodeHop(1, encodeOrderDirective(order))
+        improve = (await encoder.priceImprove())
+        cmp = order.hops[1].improve
+        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
+
+        await encoder.testEncodeHop(2, encodeOrderDirective(order))
+        improve = (await encoder.priceImprove())
+        cmp = order.hops[2].improve
+        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
+    })
+
     it ("pool idx", async() => {
         await encoder.testEncodePool(2, 1, encodeOrderDirective(order))
         let cmp = order.hops[2].pools[1]
@@ -141,7 +166,7 @@ describe('Tick Math', () => {
         let cmp = order.hops[0].pools[1].swap
         let swap = (await encoder.swap())
         expect(swap.isBuy_).to.equal(cmp.isBuy)
-        expect(swap.quoteToBase_).to.equal(cmp.quoteToBase)
+        expect(swap.inBaseQty_).to.equal(cmp.inBaseQty)
         expect(swap.liqMask_).to.equal(cmp.liqMask)
         expect(swap.limitPrice_).to.equal(cmp.limitPrice)
         expect(swap.qty_).to.equal(cmp.qty)                

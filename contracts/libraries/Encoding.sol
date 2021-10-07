@@ -43,7 +43,12 @@ library OrderEncoding {
         
         Directives.SettlementChannel memory settle;
         (settle, next) = parseSettle(input, next);
-        hop = Directives.HopDirective({pools_: pools, settle_: settle});
+
+        Directives.PriceImproveReq memory improve;
+        (improve, next) = parseImprove(input, next);
+        
+        hop = Directives.HopDirective({pools_: pools, settle_: settle,
+                    improve_: improve});
     }
 
     function parsePool (bytes calldata input, uint32 offset)
@@ -140,6 +145,17 @@ library OrderEncoding {
         
         settle = Directives.SettlementChannel({token_: token, limitQty_: limitQty,
                     dustThresh_: dustThresh, useReserves_: reservesFlag > 0});
+    }
+
+    function parseImprove (bytes calldata input, uint32 offset)
+        private pure returns (Directives.PriceImproveReq memory req, uint32 next) {
+        uint8 flags;
+
+        (flags, next) = eatUInt8(input, offset);
+
+        bool isEnabled = (flags & 0x2) > 0;
+        bool useBase = (flags & 0x1) > 0;
+        req = Directives.PriceImproveReq({isEnabled_: isEnabled, useBaseSide_: useBase});
     }
 
     function eatUInt8 (bytes calldata input, uint32 offset)

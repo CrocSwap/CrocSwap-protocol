@@ -28,9 +28,12 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
         Directives.SettlementChannel memory settleChannel = order.open_;
         RollingSpend memory rollSpend = initSettleRoll();
         TokenFlow.PairSeq memory pairs = TokenFlow.initSeq();
-
+        
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
+            PriceGrid.ImproveSettings memory priceImprove =
+                queryPriceImprove(order.hops_[i].improve_,
+                                  pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
                 PoolSpecs.PoolCursor memory pool =
@@ -43,8 +46,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
                 (int256 baseFlow, int256 quoteFlow,
                  uint256 baseProto, uint256 quoteProto) =
                     CrocSwapBooks(booksSidecar_).runPool
-                    (pool, order.hops_[i].pools_[j],
-                     PriceGrid.emptySettings(), msg.sender);
+                    (pool, order.hops_[i].pools_[j], priceImprove, msg.sender);
 
                 pairs.accumFlow(baseFlow, quoteFlow, baseProto, quoteProto);
             }

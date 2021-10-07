@@ -33,7 +33,7 @@ library PriceGrid {
         return lowerTick % tickNorm == 0 &&
             upperTick % tickNorm == 0;
     }
-    
+
     struct ImproveSettings {
         bool inBase_;
         uint128 unitCollateral_;

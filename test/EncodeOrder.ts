@@ -18,9 +18,15 @@ export interface SettlementDirective {
     useReserves: boolean
 }
 
+export interface ImproveDirective {
+    isEnabled: boolean,
+    useBaseSide: boolean
+}
+
 export interface HopDirective {
     pools: PoolDirective[]
     settlement: SettlementDirective
+    improve: ImproveDirective
 }
 
 export interface PoolDirective {
@@ -69,7 +75,13 @@ function encodeSettlement (dir: SettlementDirective): BytesLike {
 function encodeHop (hop: HopDirective): BytesLike {
     let pools = listEncoding(hop.pools, encodePool)
     let settle = encodeSettlement(hop.settlement)
-    return ethers.utils.concat([pools, settle])
+    let improve = encodeImprove(hop.improve)
+    return ethers.utils.concat([pools, settle, improve])
+}
+
+function encodeImprove (improve: ImproveDirective): BytesLike {
+    let flag = (improve.isEnabled ? 2 : 0) + (improve.useBaseSide ? 1 : 0)
+    return encodeJsNum(flag, 1)
 }
 
 function encodePool (pool: PoolDirective): BytesLike {

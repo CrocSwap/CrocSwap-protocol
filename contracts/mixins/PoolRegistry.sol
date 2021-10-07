@@ -3,8 +3,8 @@
 pragma solidity >=0.8.4;
 
 import '../libraries/Directives.sol';
-import '../libraries/Encoding.sol';
 import '../libraries/PoolSpecs.sol';
+import '../libraries/PriceGrid.sol';
 import '../interfaces/ICrocSwapPermitOracle.sol';
 
 import "hardhat/console.sol";
@@ -44,11 +44,36 @@ contract PoolRegistry {
         selectPool(base, quote, poolIdx).head_.protocolTake_ = protocolTake;        
     }
 
+    function setPriceImprove (address token, uint128 unitTickCollateral,
+                              uint16 awayTickTol, int8[] calldata rangeMults)
+        authOnly public {
+        improves_[token] = PriceGrid.formatSettings(true, unitTickCollateral,
+                                                    awayTickTol, rangeMults);
+    }
+
     function registerPool (address base, address quote, uint24 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory) {
         PoolSpecs.Pool memory template = queryTemplate(base, quote, poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         return queryPool(base, quote, poolIdx);
+    }
+
+    function queryPriceImprove (Directives.PriceImproveReq memory req,
+                                address baseToken, address quoteToken)
+        internal view returns (PriceGrid.ImproveSettings memory) {
+        if (!req.isEnabled_) {
+            return PriceGrid.emptySettings();
+        } else if (req.useBaseSide_) {
+            return queryPriceImprove(baseToken, true);
+        } else {
+            return queryPriceImprove(quoteToken, false);
+        }
+    }
+    
+    function queryPriceImprove (address token, bool onBaseSide)
+        internal view returns (PriceGrid.ImproveSettings memory settings) {
+        settings = improves_[token];
+        settings.inBase_ = onBaseSide;
     }
 
     function queryPool (address base, address quote, uint24 poolIdx)
@@ -90,5 +115,6 @@ contract PoolRegistry {
 
     mapping(uint24 => PoolSpecs.Pool) private templates_;
     mapping(bytes32 => PoolSpecs.Pool) private pools_;
+    mapping(address => PriceGrid.ImproveSettings) private improves_;
     address private authority_;
 }

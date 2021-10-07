@@ -4,7 +4,9 @@ import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, Concent
 export function singleHop (open: string, close: string, pool: PoolDirective): OrderDirective {
     return {
         open: simpleSettle(open),
-        hops: [ { settlement: simpleSettle(close), pools: [pool]}]
+        hops: [ { settlement: simpleSettle(close), pools: [pool], 
+            improve: { isEnabled: false, useBaseSide: false }}],
+        
     }
 }
 

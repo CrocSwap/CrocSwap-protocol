@@ -28,6 +28,7 @@ contract CurveTrader is
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
     using Directives for Directives.ConcentratedDirective;
+    using PriceGrid for PriceGrid.ImproveSettings;
 
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir,
@@ -37,7 +38,7 @@ contract CurveTrader is
                           uint256 baseProtoFlow, uint256 quoteProtoFlow) {
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);
         (baseFlow, quoteFlow, baseProtoFlow, quoteProtoFlow) =
-            applyToCurve(dir, pool, curve, owner);
+            applyToCurve(dir, pool, curve, improve, owner);
         commitCurve(pool.hash_, curve);
     }
 
@@ -54,27 +55,17 @@ contract CurveTrader is
 
     function applyToCurve (Directives.PoolDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
-                           CurveMath.CurveState memory curve, address owner)
+                           CurveMath.CurveState memory curve, 
+                           PriceGrid.ImproveSettings memory improve, address owner)
         private returns (int256, int256, uint256, uint256) {
         (int256 swapBase, int256 swapQuote, uint256 protoBase, uint256 protoQuote) =
             applySwap(dir.swap_, pool, curve);
         (int256 passiveBase, int256 passiveQuote) =
-            applyPassives(dir, pool, curve, owner);
+            applyPassives(dir, pool, curve, improve, owner);
         
         return (passiveBase + swapBase, passiveQuote + swapQuote,
                 protoBase, protoQuote);
     }
-
-    function applyPassives (Directives.PoolDirective memory dir,
-                            PoolSpecs.PoolCursor memory pool,
-                            CurveMath.CurveState memory curve, address owner)
-        private returns (int256, int256) {
-        (int256 preBase, int256 preQuote) =
-            applyPassive(dir.passive_, pool, curve, owner);
-        (int256 postBase, int256 postQuote) =
-            applyPassive(dir.passivePost_, pool, curve, owner);
-        return (preBase + postBase, preQuote + postQuote);
-    }        
 
     function applySwap (Directives.SwapDirective memory dir,
                         PoolSpecs.PoolCursor memory pool,
@@ -113,15 +104,28 @@ contract CurveTrader is
             ({qtyLeft_: swapQty, cntx_: cntx,
                     paidBase_: 0, paidQuote_: 0, paidProto_: 0});
     }
+
+    function applyPassives (Directives.PoolDirective memory dir,
+                            PoolSpecs.PoolCursor memory pool,
+                            CurveMath.CurveState memory curve, 
+                            PriceGrid.ImproveSettings memory improve, address owner)
+        private returns (int256, int256) {
+        (int256 preBase, int256 preQuote) =
+            applyPassive(dir.passive_, pool, curve, improve, owner);
+        (int256 postBase, int256 postQuote) =
+            applyPassive(dir.passivePost_, pool, curve, improve, owner);
+        return (preBase + postBase, preQuote + postQuote);
+    }        
     
     function applyPassive (Directives.PassiveDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
-                           CurveMath.CurveState memory curve, address owner)
+                           CurveMath.CurveState memory curve,  
+                           PriceGrid.ImproveSettings memory improve, address owner)
         private returns (int256, int256) {
         (int256 ambientBase, int256 ambientQuote) =
             applyAmbient(dir.ambient_, pool, curve, owner);
         (int256 concBase, int256 concQuote) =
-            applyConcentrateds(dir.conc_, pool, curve, owner);
+            applyConcentrateds(dir.conc_, pool, curve, improve, owner);
         return (ambientBase + concBase,
                 ambientQuote + concQuote);
     }
@@ -144,14 +148,15 @@ contract CurveTrader is
 
     function applyConcentrateds (Directives.ConcentratedDirective[] memory dirs,
                                  PoolSpecs.PoolCursor memory pool,
-                                 CurveMath.CurveState memory curve, address owner)
+                                 CurveMath.CurveState memory curve,
+                                 PriceGrid.ImproveSettings memory improve, address owner)
         private returns (int256 baseFlow, int256 quoteFlow) {
         for (uint i = 0; i < dirs.length; ++i) {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
                 Directives.RangeOrder memory range = dirs[i].sliceBookend(j);
                 
                 (int256 nextBase, int256 nextQuote) = applyConcentrated
-                    (range, pool, curve, owner);
+                    (range, pool, curve, improve, owner);
                 baseFlow += nextBase;
                 quoteFlow += nextQuote;
             }
@@ -160,16 +165,12 @@ contract CurveTrader is
 
     function applyConcentrated (Directives.RangeOrder memory range,
                                 PoolSpecs.PoolCursor memory pool,
-                                CurveMath.CurveState memory curve, address owner)
+                                CurveMath.CurveState memory curve,
+                                PriceGrid.ImproveSettings memory improve, address owner)
         private returns (int256, int256) {
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
-        return applyConcentrated(midTick, range, curve, pool, owner);
-    }
+        improve.verifyFit(range, pool.head_.tickSize_, midTick);
 
-    function applyConcentrated (int24 midTick, Directives.RangeOrder memory range,
-                                CurveMath.CurveState memory curve,
-                                PoolSpecs.PoolCursor memory pool, address owner)
-        private returns (int256, int256) {
         if (range.liquidity_ == 0) { return (0, 0); }
         if (range.isAdd_) {
             return mintConcentrated(midTick, range.lowerTick_, range.upperTick_,
