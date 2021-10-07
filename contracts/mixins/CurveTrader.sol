@@ -4,7 +4,7 @@ pragma solidity >=0.8.4;
 
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
-import '../libraries/PriceImprove.sol';
+import '../libraries/PriceGrid.sol';
 import '../libraries/SwapCurve.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
@@ -31,7 +31,7 @@ contract CurveTrader is
 
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir,
-                            PriceImprove.ImproveSettings memory improve,
+                            PriceGrid.ImproveSettings memory improve,
                             address owner)
         internal returns (int256 baseFlow, int256 quoteFlow,
                           uint256 baseProtoFlow, uint256 quoteProtoFlow) {

@@ -11,13 +11,13 @@ import './Directives.sol';
 
 import "hardhat/console.sol";
 
-library PriceImprove {
+library PriceGrid {
     using TickMath for int24;
     using SafeCast for uint256;
 
     function verifyFit (ImproveSettings memory set,
                         Directives.RangeOrder memory range,
-                        uint16 gridSize, int24 priceTick) internal view {
+                        uint16 gridSize, int24 priceTick) internal pure {
         if (range.isAdd_) {
             if (!isOnGrid(range.lowerTick_, range.upperTick_, gridSize)) {
                 uint128 thresh = improveThresh(set, gridSize, priceTick,

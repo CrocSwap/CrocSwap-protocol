@@ -5,7 +5,7 @@ pragma solidity >=0.8.4;
 import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
-import './libraries/PriceImprove.sol';
+import './libraries/PriceGrid.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -20,7 +20,7 @@ contract CrocSwapBooks is CurveTrader {
 
     function runPool (PoolSpecs.PoolCursor memory pool,
                       Directives.PoolDirective memory dir,
-                      PriceImprove.ImproveSettings memory improve,
+                      PriceGrid.ImproveSettings memory improve,
                       address owner)
         masterOnly public returns (int256 baseFlow, int256 quoteFlow,
                                    uint256 baseProtoCut, uint256 quoteProtoCut) {

@@ -1,4 +1,4 @@
-import { TestPriceImprove } from '../typechain/TestPriceImprove';
+import { TestPriceGrid } from '../typechain/TestPriceGrid';
 import { expect } from "chai";
 import chai from "chai";
 import "@nomiclabs/hardhat-ethers";
@@ -9,11 +9,11 @@ import { toFixedGrowth, toSqrtPrice, fromSqrtPrice } from './FixedPoint';
 chai.use(solidity);
 
 describe('Price Improve', () => {
-    let test: TestPriceImprove
+    let test: TestPriceGrid
 
     beforeEach("deploy", async () => {
-        const libFactory = await ethers.getContractFactory("TestPriceImprove");
-        test = (await libFactory.deploy()) as TestPriceImprove
+        const libFactory = await ethers.getContractFactory("TestPriceGrid");
+        test = (await libFactory.deploy()) as TestPriceGrid
     })
 
     const UP_MULTS = [3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8, 9]
