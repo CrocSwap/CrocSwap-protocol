@@ -7,14 +7,35 @@ import './FullMath.sol';
 import './FixedPoint.sol';
 import './SafeCast.sol';
 import './CurveMath.sol';
+import './Directives.sol';
 
 import "hardhat/console.sol";
 
 library PriceImprove {
     using TickMath for int24;
     using SafeCast for uint256;
+
+    function verifyFit (ImproveSettings memory set,
+                        Directives.RangeOrder memory range,
+                        uint16 gridSize, int24 priceTick) internal view {
+        if (range.isAdd_) {
+            if (!isOnGrid(range.lowerTick_, range.upperTick_, gridSize)) {
+                uint128 thresh = improveThresh(set, gridSize, priceTick,
+                                               range.lowerTick_, range.upperTick_);
+                require(range.liquidity_ >= thresh, "D");
+            }
+        }
+    }
+
+    function isOnGrid (int24 lowerTick, int24 upperTick, uint16 gridSize)
+        internal pure returns (bool) {
+        int24 tickNorm = int24(uint24(gridSize));
+        return lowerTick % tickNorm == 0 &&
+            upperTick % tickNorm == 0;
+    }
     
     struct ImproveSettings {
+        bool inBase_;
         uint128 unitCollateral_;
         uint16 awayTicks_;
         int8 mult1_;
@@ -34,7 +55,8 @@ library PriceImprove {
 
     function emptySettings() internal pure returns (ImproveSettings memory) {
         return ImproveSettings({
-            unitCollateral_: 0,
+            inBase_: false,
+                    unitCollateral_: 0,
                     awayTicks_: 0,
                     mult1_: 0,
                     mult2_: 0,
@@ -51,12 +73,13 @@ library PriceImprove {
                     mult96_: 0});
     }
     
-    function formatSettings (uint128 unitCollateral, uint16 awayTicks,
-                             int8[] calldata mults)
+    function formatSettings (bool inBase, uint128 unitCollateral,
+                             uint16 awayTicks, int8[] calldata mults)
         internal pure returns (ImproveSettings memory) {
         require(mults.length == 13);
         return ImproveSettings({
-            unitCollateral_: unitCollateral,
+            inBase_: inBase,
+                    unitCollateral_: unitCollateral,
                     awayTicks_: awayTicks,
                     mult1_: mults[0],
                     mult2_: mults[1],
@@ -73,45 +96,45 @@ library PriceImprove {
                     mult96_: mults[12]});
     }
     
-    function improveThresh (ImproveSettings memory set, bool inBase,
+    function improveThresh (ImproveSettings memory set,
                             uint16 tickSize, int24 priceTick,
                             int24 bidTick, int24 askTick)
         internal pure returns (uint128) {
         require(bidTick < askTick);
         return canImprove(set, priceTick, bidTick, askTick) ?
-            improvableThresh(set, inBase, tickSize, bidTick, askTick) :
+            improvableThresh(set, tickSize, bidTick, askTick) :
             type(uint128).max;
     }
 
     
-    function improvableThresh (ImproveSettings memory set, bool inBase,
+    function improvableThresh (ImproveSettings memory set,
                                uint16 tickSize, int24 bidTick, int24 askTick)
         private pure returns (uint128) {
         uint24 unitClip = clipInside(tickSize, bidTick, askTick);
         if (unitClip > 0) {
-            return liqForClip(set, unitClip, bidTick, inBase);
+            return liqForClip(set, unitClip, bidTick);
         } else {
             uint24 bidWing = clipBelow(tickSize, bidTick);
             uint24 askWing = clipAbove(tickSize, askTick);
-            return liqForWing(set, bidWing, bidTick, inBase) +
-                liqForWing(set, askWing, askTick, inBase);
+            return liqForWing(set, bidWing, bidTick) +
+                liqForWing(set, askWing, askTick);
         }
     }
 
     // If neither side is tethered to the grid the gas burden is twice as high
     // because there's two out-of-band crossings
     function liqForClip (ImproveSettings memory set, uint24 wingSize,
-                         int24 refTick, bool inBase)
+                         int24 refTick)
         private pure returns (uint128 liqDemand) {
-        return 2 * liqForWing(set, wingSize, refTick, inBase);
+        return 2 * liqForWing(set, wingSize, refTick);
     }
 
     function liqForWing (ImproveSettings memory set, uint24 wingSize,
-                         int24 refTick, bool inBase)
+                         int24 refTick)
         private pure returns (uint128) {
         if (wingSize == 0) { return 0; }
         uint128 collateral = scaleCollateral(set, wingSize);
-        return convertToLiq(collateral, refTick, wingSize, inBase);
+        return convertToLiq(collateral, refTick, wingSize, set.inBase_);
     }
 
     function clipInside (uint16 tickSize, int24 bidTick, int24 askTick)
