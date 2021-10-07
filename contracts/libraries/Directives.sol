@@ -28,6 +28,13 @@ library Directives {
         int256 liquidity_;
     }
 
+    struct RangeOrder {
+        bool isAdd_;
+        int24 lowerTick_;
+        int24 upperTick_;
+        uint128 liquidity_;
+    }
+
     struct AmbientDirective {
         int256 liquidity_;
     }
@@ -67,7 +74,34 @@ library Directives {
         HopDirective[] hops_;
     }
 
+    function sliceBookend (ConcentratedDirective memory dir, uint idx)
+        internal pure returns (RangeOrder memory) {
+        (int24 lowerTick, int24 upperTick) =
+            pinLowerUpper(dir.openTick_, dir.bookends_[idx].closeTick_);
+        (bool isAdd, uint128 liq) = signLiq(dir.bookends_[idx].liquidity_);
+        
+        return RangeOrder({lowerTick_: lowerTick, upperTick_: upperTick,
+                    isAdd_: isAdd, liquidity_: liq}); 
+    }
 
+    function pinLowerUpper (int24 openTick, int24 closeTick)
+        private pure returns (int24 lowerTick, int24 upperTick) {
+        require(openTick != closeTick);
+        if (openTick < closeTick) {
+            (lowerTick, upperTick) = (openTick, closeTick);
+        } else {
+            (lowerTick, upperTick) = (closeTick, openTick);
+        }
+    }
+
+    function signLiq (int256 liq) private pure returns (bool isAdd, uint128 magn) {
+        if (liq < 0) {
+            return (false, (-liq).toUint256().toUint128());
+        } else {
+            return (true, (liq).toUint256().toUint128());
+        }
+    }
+    
     function useRollover (RolloverDirective memory dir) internal pure returns (bool) {
         return dir.limitPrice_ > 0;
     }
