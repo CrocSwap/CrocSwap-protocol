@@ -28,10 +28,10 @@ contract TestLevelBook is LevelBook {
     }
 
     function testAdd (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                      uint16 tickSize, uint128 lots, uint64 globalFee) public {
+                      uint128 lots, uint64 globalFee) public {
         uint128 liq = lots * 1024;
         odometer = addBookLiq(bytes32(poolIdx), midTick, bidTick, askTick,
-                              tickSize, liq, globalFee);
+                              liq, globalFee);
     }
 
     function testRemove (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,

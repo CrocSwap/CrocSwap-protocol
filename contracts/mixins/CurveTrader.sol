@@ -27,6 +27,7 @@ contract CurveTrader is
     using SwapCurve for CurveMath.SwapAccum;
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
+    using Directives for Directives.ConcentratedDirective;
 
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir,
@@ -146,49 +147,36 @@ contract CurveTrader is
                                  CurveMath.CurveState memory curve, address owner)
         private returns (int256 baseFlow, int256 quoteFlow) {
         for (uint i = 0; i < dirs.length; ++i) {
-            
-            for (uint j = 0; j < dirs[i].bookends_.length; ++j) {                
+            for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
+                Directives.RangeOrder memory range = dirs[i].sliceBookend(j);
+                
                 (int256 nextBase, int256 nextQuote) = applyConcentrated
-                    (dirs[i].openTick_, dirs[i].bookends_[j], pool, curve, owner);
+                    (range, pool, curve, owner);
                 baseFlow += nextBase;
                 quoteFlow += nextQuote;
             }
         }
     }
 
-    function applyConcentrated (int24 openTick, Directives.ConcenBookend memory bend,
+    function applyConcentrated (Directives.RangeOrder memory range,
                                 PoolSpecs.PoolCursor memory pool,
                                 CurveMath.CurveState memory curve, address owner)
         private returns (int256, int256) {
         int24 midTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
-        (int24 lowerTick, int24 upperTick) = pinTickRange(openTick, bend);
-        return applyConcentrated(midTick, lowerTick, upperTick, bend.liquidity_,
-                                 curve, pool, owner);
+        return applyConcentrated(midTick, range, curve, pool, owner);
     }
 
-    function pinTickRange (int24 openTick, Directives.ConcenBookend memory bend)
-        private pure returns (int24, int24) {
-        if (openTick < bend.closeTick_) {
-            return (openTick, bend.closeTick_);
-        } else {
-            return (bend.closeTick_, openTick);
-        }
-    }
-
-    function applyConcentrated (int24 midTick, int24 lowerTick, int24 upperTick,
-                                int256 liq, CurveMath.CurveState memory curve,
+    function applyConcentrated (int24 midTick, Directives.RangeOrder memory range,
+                                CurveMath.CurveState memory curve,
                                 PoolSpecs.PoolCursor memory pool, address owner)
         private returns (int256, int256) {
-        if (liq > 0) {
-            uint128 liqMint = liq.toUint256().toUint128();
-            return mintConcentrated(midTick, lowerTick, upperTick, liqMint,
-                                    curve, pool, owner);
-        } else if (liq < 0) {
-            uint128 liqBurn = (-liq).toUint256().toUint128();
-            return burnConcentrated(midTick, lowerTick, upperTick, liqBurn,
-                                    curve, pool, owner);
+        if (range.liquidity_ == 0) { return (0, 0); }
+        if (range.isAdd_) {
+            return mintConcentrated(midTick, range.lowerTick_, range.upperTick_,
+                                    range.liquidity_, curve, pool, owner);
         } else {
-            return (0, 0);
+            return burnConcentrated(midTick, range.lowerTick_, range.upperTick_,
+                                    range.liquidity_, curve, pool, owner);
         }
     }
 
@@ -219,8 +207,7 @@ contract CurveTrader is
                                PoolSpecs.PoolCursor memory pool, address owner)
         private returns (int256, int256) {
         uint64 feeMileage = addBookLiq(pool.hash_, midTick, lowerTick, upperTick,
-                                       pool.head_.tickSize_, liq,
-                                       curve.accum_.concTokenGrowth_);
+                                       liq, curve.accum_.concTokenGrowth_);
         mintPosLiq(owner, pool.hash_, lowerTick, upperTick, liq, feeMileage);
         (uint256 base, uint256 quote) = liquidityReceivable
             (curve, liq, lowerTick, upperTick);
