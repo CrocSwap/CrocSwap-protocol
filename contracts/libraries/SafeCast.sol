@@ -56,5 +56,14 @@ library SafeCast {
         require(y >= 0);
         z = uint256(y);
     }
+
+    // Unix timestamp can fit into 32-bits until 2038. After which, the worse case
+    // is timestamps stop increasing. Since the timestamp is only used for informational
+    // purposes, this doesn't affect the functioning of the core smart contract.
+    function timeUint32() internal view returns (uint32) {
+        uint time = block.timestamp;
+        if (time > type(uint32).max) { return type(uint32).max; }
+        return uint32(time);
+    }
     
 }

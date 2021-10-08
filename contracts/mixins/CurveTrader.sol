@@ -12,11 +12,12 @@ import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ProtocolAccount.sol';
+import './OracleHist.sol';
 
 import "hardhat/console.sol";
 
-contract CurveTrader is 
-    PositionRegistrar, LiquidityCurve, LevelBook, ProtocolAccount {
+contract CurveTrader is PositionRegistrar, LiquidityCurve,
+    LevelBook, ProtocolAccount, OracleHistorian {
 
     using SafeCast for int256;
     using SafeCast for int128;

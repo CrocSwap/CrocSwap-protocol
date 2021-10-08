@@ -166,7 +166,7 @@ contract PositionRegistrar {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         uint128 seeds = liqAdd.deflateLiqSeed(ambientGrowth);
         pos.seeds_ = pos.seeds_.addDelta(seeds);
-        pos.timestamp_ = timestamp(); // Increasing liquidity loses time priority.
+        pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }
 
     function incrementPosLiq (Position storage pos, uint128 liqAdd,
@@ -182,7 +182,7 @@ contract PositionRegistrar {
 
         uint128 liqNext = LiquidityMath.addDelta(liq, liqAdd);
         uint64 mileage = blendMileage(feeMileage, liqAdd, oldMileage, liq);
-        uint32 stamp = timestamp(); 
+        uint32 stamp = SafeCast.timeUint32();
         
         // Below should get optimized to a single SSTORE...
         pos.liquidity_ = liqNext;
@@ -234,14 +234,5 @@ contract PositionRegistrar {
         newPos.liquidity_ = pos.liquidity_;
         newPos.feeMileage_ = pos.feeMileage_;
         pos.liquidity_ = 0;
-    }
-
-    // Unix timestamp can fit into 32-bits until 2038. After which, the worse case
-    // is timestamps stop increasing. Since the timestamp is only used for informational
-    // purposes, this doesn't affect the functioning of the core smart contract.
-    function timestamp() private view returns (uint32) {
-        uint time = block.timestamp;
-        if (time > type(uint32).max) { return type(uint32).max; }
-        return uint32(time);
     }
 }
