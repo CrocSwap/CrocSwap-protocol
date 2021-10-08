@@ -23,10 +23,16 @@ export interface ImproveDirective {
     useBaseSide: boolean
 }
 
+export interface ChainingDirective {
+    rollExit: boolean,
+    swapDefer: boolean
+}
+
 export interface HopDirective {
     pools: PoolDirective[]
     settlement: SettlementDirective
     improve: ImproveDirective
+    chain: ChainingDirective
 }
 
 export interface PoolDirective {
@@ -50,6 +56,7 @@ export interface PassiveDirective {
 }
 
 export interface AmbientDirective {
+    isAdd: boolean
     liquidity: BigNumber
 }
 
@@ -60,6 +67,7 @@ export interface ConcentratedDirective {
 
 export interface ConcentratedBookend {
     closeTick: number,
+    isAdd: boolean,
     liquidity: BigNumber
 }
 
@@ -75,12 +83,13 @@ function encodeSettlement (dir: SettlementDirective): BytesLike {
 function encodeHop (hop: HopDirective): BytesLike {
     let pools = listEncoding(hop.pools, encodePool)
     let settle = encodeSettlement(hop.settlement)
-    let improve = encodeImprove(hop.improve)
+    let improve = encodeFlags(hop.improve, hop.chain)
     return ethers.utils.concat([pools, settle, improve])
 }
 
-function encodeImprove (improve: ImproveDirective): BytesLike {
-    let flag = (improve.isEnabled ? 2 : 0) + (improve.useBaseSide ? 1 : 0)
+function encodeFlags (improve: ImproveDirective, chain: ChainingDirective): BytesLike {
+    let flag = (improve.isEnabled ? 8 : 0) + (improve.useBaseSide ? 4 : 0) +
+        (chain.rollExit ? 2 : 0) + (chain.swapDefer ? 1 : 0)
     return encodeJsNum(flag, 1)
 }
 
@@ -101,9 +110,10 @@ function encodeSwap (swap: SwapDirective): BytesLike {
 }
 
 function encodePassive (passive: PassiveDirective): BytesLike {
-    let amb = encodeFullSigned(passive.ambient.liquidity)
+    let ambAdd = encodeBool(passive.ambient.isAdd)
+    let ambLiq = encodeFull(passive.ambient.liquidity)
     let conc = listEncoding(passive.concentrated, encodeConc)
-    return ethers.utils.concat([amb, conc])
+    return ethers.utils.concat([ambAdd, ambLiq, conc])
 }
 
 function encodeConc (conc: ConcentratedDirective): BytesLike {
@@ -114,8 +124,9 @@ function encodeConc (conc: ConcentratedDirective): BytesLike {
 
 function encodeBookend (bookend: ConcentratedBookend): BytesLike {
     let closeTick = encodeJsSigned(bookend.closeTick, 3)
-    let liq = encodeFullSigned(bookend.liquidity)
-    return ethers.utils.concat([closeTick, liq])
+    let isAdd = encodeBool(bookend.isAdd)
+    let liq = encodeFull(bookend.liquidity)
+    return ethers.utils.concat([closeTick, isAdd, liq])
 }
 
 function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike {
@@ -159,3 +170,6 @@ function encodeWord (val: number): BytesLike {
     return encodeJsNum(val, 1)
 }
 
+function encodeBool (flag: boolean): BytesLike {
+    return encodeWord(flag ? 1 : 0)
+}

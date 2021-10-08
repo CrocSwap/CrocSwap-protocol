@@ -5,7 +5,7 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import { toSqrtPrice } from './FixedPoint';
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective, ImproveDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective, ImproveDirective, ChainingDirective } from './EncodeOrder';
 import { BigNumber } from 'ethers';
 
 chai.use(solidity);
@@ -50,22 +50,30 @@ describe('Encoding', () => {
         
         let hopA = buildHop(buildSettle("DE0", 65000, 10, false),
             { isEnabled: false, useBaseSide: false },
+            { rollExit: true, swapDefer: false},
             [poolJ, poolK, poolL])
         let hopB = buildHop(buildSettle("9A8", -50000, 15, false),
             { isEnabled: true, useBaseSide: false },
+            { rollExit: false, swapDefer: false},
             [poolM, poolN])
         let hopC = buildHop(buildSettle("7C5", -800000, 5000, true),
-            { isEnabled: true, useBaseSide: true },
+            { isEnabled: false, useBaseSide: true },
+            { rollExit: false, swapDefer: false},
             [poolQ, poolR])
+        let hopD = buildHop(buildSettle("456", 80000, 0, false),
+            { isEnabled: true, useBaseSide: true },
+            { rollExit: false, swapDefer: true},
+            [])
+        
         return { open: buildSettle("A25", 512, 128, true),
-            hops: [hopA, hopB, hopC] }
+            hops: [hopA, hopB, hopC, hopD] }
     }
 
     function buildHop (settle: SettlementDirective, 
-        improve: ImproveDirective,
+        improve: ImproveDirective, chain: ChainingDirective,
         pools: PoolDirective[]): HopDirective {
         return { pools: pools, settlement: settle, 
-            improve: improve }
+            improve: improve, chain: chain }
     }
 
     function buildSettle (token: string, qty: number, 
@@ -104,14 +112,16 @@ describe('Encoding', () => {
             concs.push(buildConcentrated(openTicks[i], closeTicks[i], concLiqs[i]))
         }
         
-        return { ambient: { liquidity: BigNumber.from(ambientLiq) }, concentrated: concs }
+        return { ambient: { isAdd: ambientLiq > 0,
+            liquidity: BigNumber.from(ambientLiq) }, concentrated: concs }
     }
 
     function buildConcentrated (openTick: number, closeTicks: number[],
         concLiqs: number[]): ConcentratedDirective {
         let bookends: ConcentratedBookend[] = []
         for (let i = 0; i < closeTicks.length; ++i) {
-            bookends.push({closeTick: closeTicks[i], liquidity: BigNumber.from(concLiqs[i])})
+            bookends.push({closeTick: closeTicks[i], 
+                isAdd: concLiqs[i] > 0, liquidity: BigNumber.from(concLiqs[i])})
         }        
         return { openTick: openTick, bookends: bookends }
     }
@@ -138,21 +148,39 @@ describe('Encoding', () => {
     it ("hop improve", async() => {
         await encoder.testEncodeHop(0, encodeOrderDirective(order))
         let improve = (await encoder.priceImprove())
-        let cmp = order.hops[0].improve
-        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
-        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
-
+        let chain = (await encoder.chaining())
+        let cmp = order.hops[0]
+        expect(improve.isEnabled_).to.equal(cmp.improve.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
+        expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
+        expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        
         await encoder.testEncodeHop(1, encodeOrderDirective(order))
         improve = (await encoder.priceImprove())
-        cmp = order.hops[1].improve
-        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
-        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
+        chain = (await encoder.chaining())
+        cmp = order.hops[1]
+        expect(improve.isEnabled_).to.equal(cmp.improve.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
+        expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
+        expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
 
         await encoder.testEncodeHop(2, encodeOrderDirective(order))
         improve = (await encoder.priceImprove())
-        cmp = order.hops[2].improve
-        expect(improve.isEnabled_).to.equal(cmp.isEnabled)
-        expect(improve.useBaseSide_).to.equal(cmp.useBaseSide)
+        chain = (await encoder.chaining())
+        cmp = order.hops[2]
+        expect(improve.isEnabled_).to.equal(cmp.improve.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
+        expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
+        expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+
+        await encoder.testEncodeHop(3, encodeOrderDirective(order))
+        improve = (await encoder.priceImprove())
+        chain = (await encoder.chaining())
+        cmp = order.hops[3]
+        expect(improve.isEnabled_).to.equal(cmp.improve.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
+        expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
+        expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
     })
 
     it ("pool idx", async() => {

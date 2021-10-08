@@ -5,8 +5,8 @@ export function singleHop (open: string, close: string, pool: PoolDirective): Or
     return {
         open: simpleSettle(open),
         hops: [ { settlement: simpleSettle(close), pools: [pool], 
-            improve: { isEnabled: false, useBaseSide: false }}],
-        
+            improve: { isEnabled: false, useBaseSide: false },
+            chain: { rollExit: false, swapDefer: false}} ]
     }
 }
 
@@ -19,13 +19,14 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
      return { 
         poolIdx: poolIdx,
         passive: {
-            ambient: { liquidity: BigNumber.from(0) },
+            ambient: { isAdd: false, liquidity: BigNumber.from(0) },
             concentrated: [{ openTick: lowerTick,
-                bookends: [{ closeTick: upperTick, liquidity: BigNumber.from(liq)}]
+                bookends: [{ closeTick: upperTick, 
+                    isAdd: BigNumber.from(liq).gte(0), liquidity: BigNumber.from(liq).abs()}]
             }]
         },
         passivePost: {
-            ambient: { liquidity: BigNumber.from(0) },
+            ambient: { isAdd: false, liquidity: BigNumber.from(0) },
             concentrated: [{ openTick: 0,
                 bookends: [] }]
         },
@@ -44,12 +45,12 @@ export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean,
     return { 
        poolIdx: poolIdx,
        passive: {
-        ambient: { liquidity: BigNumber.from(0) },
+        ambient: { isAdd: false, liquidity: BigNumber.from(0) },
         concentrated: [{ openTick: 0,
             bookends: [] }]
        },
        passivePost: {
-           ambient: { liquidity: BigNumber.from(0) },
+           ambient: { isAdd: false, liquidity: BigNumber.from(0) },
            concentrated: [{ openTick: 0,
                bookends: [] }]
        },

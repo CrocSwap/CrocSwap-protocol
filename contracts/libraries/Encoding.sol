@@ -45,11 +45,8 @@ library OrderEncoding {
         (settle, next) = parseSettle(input, next);
 
         Directives.PriceImproveReq memory improve;
-        (improve, next) = parseImprove(input, next);
-
-        Directives.ChainingFlags memory chain =
-            Directives.ChainingFlags(false, false);
-        
+        Directives.ChainingFlags memory chain;
+        (improve, chain, next) = parseHopFlags(input, next);
         
         hop = Directives.HopDirective({pools_: pools, settle_: settle,
                     improve_: improve, chain_: chain});
@@ -161,15 +158,18 @@ library OrderEncoding {
                     dustThresh_: dustThresh, useReserves_: useReserves});
     }
 
-    function parseImprove (bytes calldata input, uint32 offset)
-        private pure returns (Directives.PriceImproveReq memory req, uint32 next) {
-        uint8 flags;
+    function parseHopFlags (bytes calldata input, uint32 offset)
+        private pure returns (Directives.PriceImproveReq memory req,
+                              Directives.ChainingFlags memory chain, uint32 next) {
+        bool isEnabled;
+        bool useBase;
+        bool rollExit;
+        bool swapDefer;
 
-        (flags, next) = eatUInt8(input, offset);
+        (isEnabled, useBase, rollExit, swapDefer, next) = eatBool4(input, offset);
 
-        bool isEnabled = (flags & 0x2) > 0;
-        bool useBase = (flags & 0x1) > 0;
         req = Directives.PriceImproveReq({isEnabled_: isEnabled, useBaseSide_: useBase});
+        chain = Directives.ChainingFlags({rollExit_: rollExit, swapDefer_: swapDefer});
     }
 
     function eatBool (bytes calldata input, uint32 offset)
