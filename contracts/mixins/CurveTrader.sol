@@ -49,7 +49,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                         uint128 price, uint128 initLiq)
         internal returns (int256 baseFlow, int256 quoteFlow) {
         CurveCache.Cache memory curve = CurveCache.initCache(snapCurveInit(pool.hash_));
-        initPrice(curve.curve_, price);
+        initPrice(curve, price);
         if (initLiq > 0) {
             (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
         }
@@ -166,13 +166,13 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                           PoolSpecs.PoolCursor memory pool, address owner)
         private returns (int256, int256) {
         mintPosLiq(owner, pool.hash_, liqAdded, curve.curve_.accum_.ambientGrowth_);
-        (uint256 base, uint256 quote) = liquidityReceivable(curve.curve_, liqAdded);
+        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
 
     function lockAmbient (uint128 liqAdded, CurveCache.Cache memory curve)
         private pure returns (int256, int256) {
-        (uint256 base, uint256 quote) = liquidityReceivable(curve.curve_, liqAdded);
+        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);        
     }
 
@@ -180,7 +180,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                           PoolSpecs.PoolCursor memory pool, address owner)
         private returns (int256, int256) {
         burnPosLiq(owner, pool.hash_, liqBurned, curve.curve_.accum_.ambientGrowth_);
-        (uint256 base, uint256 quote) = liquidityPayable(curve.curve_, liqBurned);
+        (uint256 base, uint256 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }
     
@@ -192,8 +192,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                                        lowerTick, upperTick, liq,
                                        curve.curve_.accum_.concTokenGrowth_);
         mintPosLiq(owner, pool.hash_, lowerTick, upperTick, liq, feeMileage);
-        (uint256 base, uint256 quote) = liquidityReceivable
-            (curve.curve_, liq, lowerTick, upperTick);
+        (uint256 base, uint256 quote) = liquidityReceivable(curve, liq,
+                                                            lowerTick, upperTick);
         return signMintFlow(base, quote);
     }
 
@@ -206,7 +206,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                                           liq, curve.curve_.accum_.concTokenGrowth_);
         uint64 rewards = burnPosLiq(owner, pool.hash_, lowerTick, upperTick,
                                     liq, feeMileage); 
-        (uint256 base, uint256 quote) = liquidityPayable(curve.curve_, liq, rewards,
+        (uint256 base, uint256 quote) = liquidityPayable(curve, liq, rewards,
                                                          lowerTick, upperTick);
         return signBurnFlow(base, quote);
     }
