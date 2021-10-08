@@ -135,7 +135,7 @@ library OrderEncoding {
         uint128 limitPrice;
 
         (liqMask, next) = eatUInt8(input, offset);
-        (isBuy, inBaseQty, next) = eatBool2(input, offset);
+        (isBuy, inBaseQty, next) = eatBool2(input, next);
         (qty, next) = eatUInt128(input, next);
         (limitPrice, next) = eatUInt128(input, next);
 

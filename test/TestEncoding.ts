@@ -33,9 +33,9 @@ describe('Encoding', () => {
             buildSwap(100, true, true, 7500000, 95.0),
             buildPassive(280*1024, [-5000], [[-6000, 4000]], [[300*1024, 400*1024]]))
         let poolM = buildPool(84, 
-            buildPassive(281*1024, [200], [[]], [[]]),
+            buildPassive(-295*1024, [200], [[]], [[]]),
             buildSwap(100, true, true, 7500000, 95.0),
-            buildPassive(280*1024, [-5000], [[-6000, 4000]], [[300*1024, 400*1024]]))
+            buildPassive(-296*1024, [-5000], [[-6000, 4000]], [[300*1024, 400*1024]]))
         let poolN = buildPool(128, 
             buildPassive(281*1024, [200], [[]], [[]]),
             buildSwap(0, false, false, 0, 0),
@@ -203,8 +203,17 @@ describe('Encoding', () => {
     it ("ambient", async() => {
         await encoder.testEncodePool(0, 2, encodeOrderDirective(order))
         let cmp = order.hops[0].pools[2]
-        expect((await encoder.ambientOpen())).to.equal(cmp.passive.ambient.liquidity)
-        expect((await encoder.ambientClose())).to.equal(cmp.passivePost.ambient.liquidity)
+        expect((await encoder.ambientOpen()).liquidity_).to.equal(cmp.passive.ambient.liquidity)
+        expect((await encoder.ambientClose()).liquidity_).to.equal(cmp.passivePost.ambient.liquidity)
+        expect((await encoder.ambientOpen()).isAdd_).to.equal(cmp.passive.ambient.isAdd)
+        expect((await encoder.ambientClose()).isAdd_).to.equal(cmp.passivePost.ambient.isAdd)
+
+        await encoder.testEncodePool(1, 0, encodeOrderDirective(order))
+        cmp = order.hops[1].pools[0]
+        expect((await encoder.ambientOpen()).liquidity_).to.equal(cmp.passive.ambient.liquidity)
+        expect((await encoder.ambientClose()).liquidity_).to.equal(cmp.passivePost.ambient.liquidity)
+        expect((await encoder.ambientOpen()).isAdd_).to.equal(cmp.passive.ambient.isAdd)
+        expect((await encoder.ambientClose()).isAdd_).to.equal(cmp.passivePost.ambient.isAdd)
     })
 
     it ("concentrated post", async() => {
@@ -216,6 +225,7 @@ describe('Encoding', () => {
         expect((await encoder.openTick())).to.equal(cmp.openTick)
         expect((await encoder.bookend()).closeTick_).to.equal(cmpEnd.closeTick)
         expect((await encoder.bookend()).liquidity_).to.equal(cmpEnd.liquidity)
+        expect((await encoder.bookend()).isAdd_).to.equal(cmpEnd.isAdd)
     })
 
     it ("concentrated", async() => {
@@ -226,5 +236,6 @@ describe('Encoding', () => {
         expect((await encoder.openTick())).to.equal(cmp.openTick)
         expect((await encoder.bookend()).closeTick_).to.equal(cmpEnd.closeTick)
         expect((await encoder.bookend()).liquidity_).to.equal(cmpEnd.liquidity)
+        expect((await encoder.bookend()).isAdd_).to.equal(cmpEnd.isAdd)
     })
 })
