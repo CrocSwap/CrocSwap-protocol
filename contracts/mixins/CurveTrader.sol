@@ -135,15 +135,12 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                            PoolSpecs.PoolCursor memory pool,
                            CurveMath.CurveState memory curve, address owner)
         private returns (int256, int256) {
-        
-        if (dir.liquidity_ > 0) {
-            uint128 liqAdded = dir.liquidity_.toUint256().toUint128();
-            return mintAmbient(liqAdded, curve, pool, owner);
-        } else if (dir.liquidity_ < 0) {
-            uint128 liqBurned = (-dir.liquidity_).toUint256().toUint128();
-            return burnAmbient(liqBurned, curve, pool, owner);
+
+        if (dir.liquidity_ == 0) { return (0, 0); }
+        if (dir.isAdd_) {
+            return mintAmbient(dir.liquidity_, curve, pool, owner);
         } else {
-            return (0, 0);
+            return burnAmbient(dir.liquidity_, curve, pool, owner);
         }
     }
 

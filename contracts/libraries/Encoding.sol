@@ -46,9 +46,13 @@ library OrderEncoding {
 
         Directives.PriceImproveReq memory improve;
         (improve, next) = parseImprove(input, next);
+
+        Directives.ChainingFlags memory chain =
+            Directives.ChainingFlags(false, false);
+        
         
         hop = Directives.HopDirective({pools_: pools, settle_: settle,
-                    improve_: improve});
+                    improve_: improve, chain_: chain});
     }
 
     function parsePool (bytes calldata input, uint32 offset)
@@ -69,12 +73,12 @@ library OrderEncoding {
 
     function parsePassive (bytes calldata input, uint32 offset)
         private pure returns (Directives.PassiveDirective memory pass, uint32 next) {
-        int128 ambientLiq;
         uint8 concCnt;
 
-        (ambientLiq, next) = eatInt128(input, offset);
+        Directives.AmbientDirective memory ambient;
+        (ambient, next) = parseAmbient(input, offset);
+        
         (concCnt, next) = eatUInt8(input, next);
-
         Directives.ConcentratedDirective[] memory concs =
             new Directives.ConcentratedDirective[](concCnt);
 
@@ -84,15 +88,25 @@ library OrderEncoding {
             concs[i] = elem;
         }
 
-        pass = Directives.PassiveDirective(
-            {ambient_: Directives.AmbientDirective(ambientLiq), conc_: concs});
+        pass = Directives.PassiveDirective({ambient_: ambient, conc_: concs});
+    }
+
+    function parseAmbient (bytes calldata input, uint32 offset)
+        private pure returns (Directives.AmbientDirective memory pass,
+                              uint32 next) {
+        bool isAdd;
+        uint128 liq;
+        (isAdd, next) = eatBool(input, offset);
+        (liq, next) = eatUInt128(input, next);
+        pass = Directives.AmbientDirective({isAdd_: isAdd, liquidity_: liq});
     }
 
     function parseConcentrated (bytes calldata input, uint32 offset)
         private pure returns (Directives.ConcentratedDirective memory pass,
                               uint32 next) {
         uint8 bookendCnt;
-        int128 concenLiq;
+        bool isAdd;
+        uint128 concenLiq;
         int24 openTick;
         int24 closeTick;
         
@@ -104,9 +118,10 @@ library OrderEncoding {
             
         for (uint8 i = 0; i < bookendCnt; ++i) {
             (closeTick, next) = eatInt24(input, next);
-            (concenLiq, next) = eatInt128(input, next);
+            (isAdd, next) = eatBool(input, next);
+            (concenLiq, next) = eatUInt128(input, next);
             bookends[i] = Directives.ConcenBookend({closeTick_: closeTick,
-                        liquidity_: concenLiq});
+                        isAdd_: isAdd, liquidity_: concenLiq});
         }
         
         pass = Directives.ConcentratedDirective({openTick_: openTick,
@@ -158,6 +173,13 @@ library OrderEncoding {
         req = Directives.PriceImproveReq({isEnabled_: isEnabled, useBaseSide_: useBase});
     }
 
+    function eatBool (bytes calldata input, uint32 offset)
+        internal pure returns (bool on, uint32 next) {
+        uint8 flag;
+        (flag, next) = eatUInt8(input, offset);
+        on = (flag > 0);
+    }
+    
     function eatUInt8 (bytes calldata input, uint32 offset)
         internal pure returns (uint8 cnt, uint32 next) {
         cnt = uint8(input[offset]);

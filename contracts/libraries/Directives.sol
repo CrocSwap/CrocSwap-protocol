@@ -25,7 +25,8 @@ library Directives {
     
     struct ConcenBookend {
         int24 closeTick_;
-        int256 liquidity_;
+        bool isAdd_;
+        uint128 liquidity_;
     }
 
     struct RangeOrder {
@@ -36,7 +37,8 @@ library Directives {
     }
 
     struct AmbientDirective {
-        int256 liquidity_;
+        bool isAdd_;
+        uint128 liquidity_;
     }
 
     struct PassiveDirective {
@@ -69,10 +71,16 @@ library Directives {
         bool useBaseSide_;
     }
 
+    struct ChainingFlags {
+        bool rollExit_;
+        bool swapDefer_;
+    }
+
     struct HopDirective {
         PoolDirective[] pools_;
         SettlementChannel settle_;
         PriceImproveReq improve_;
+        ChainingFlags chain_;
     }
 
     struct OrderDirective {
@@ -82,12 +90,12 @@ library Directives {
 
     function sliceBookend (ConcentratedDirective memory dir, uint idx)
         internal pure returns (RangeOrder memory) {
+        ConcenBookend memory bend = dir.bookends_[idx];
         (int24 lowerTick, int24 upperTick) =
-            pinLowerUpper(dir.openTick_, dir.bookends_[idx].closeTick_);
-        (bool isAdd, uint128 liq) = signLiq(dir.bookends_[idx].liquidity_);
+            pinLowerUpper(dir.openTick_, bend.closeTick_);
         
         return RangeOrder({lowerTick_: lowerTick, upperTick_: upperTick,
-                    isAdd_: isAdd, liquidity_: liq}); 
+                    isAdd_: bend.isAdd_, liquidity_: bend.liquidity_}); 
     }
 
     function pinLowerUpper (int24 openTick, int24 closeTick)
@@ -98,30 +106,6 @@ library Directives {
         } else {
             (lowerTick, upperTick) = (closeTick, openTick);
         }
-    }
-
-    function signLiq (int256 liq) private pure returns (bool isAdd, uint128 magn) {
-        if (liq < 0) {
-            return (false, (-liq).toUint256().toUint128());
-        } else {
-            return (true, (liq).toUint256().toUint128());
-        }
-    }
-    
-    function useRollover (RolloverDirective memory dir) internal pure returns (bool) {
-        return dir.limitPrice_ > 0;
-    }
-    
-    function stubRollover (RolloverDirective memory dir,
-                           int256 rolledFlow, bool inBase) internal pure returns
-        (uint24 poolIdx, SwapDirective memory swap) {
-        poolIdx = dir.poolIdx_;
-        bool isBuy = inBase ?
-            rolledFlow < 0 : rolledFlow > 0; // Verify direction
-        uint128 qty = rolledFlow.toUint256().toUint128();
-        swap = SwapDirective({liqMask_: dir.liqMask_, isBuy_: isBuy,
-                    inBaseQty_: inBase, qty_: qty,
-                    limitPrice_: dir.limitPrice_});
     }
 
 }
