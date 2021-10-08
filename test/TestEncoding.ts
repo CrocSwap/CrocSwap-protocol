@@ -113,7 +113,7 @@ describe('Encoding', () => {
         }
         
         return { ambient: { isAdd: ambientLiq > 0,
-            liquidity: BigNumber.from(ambientLiq) }, concentrated: concs }
+            liquidity: BigNumber.from(ambientLiq).abs() }, concentrated: concs }
     }
 
     function buildConcentrated (openTick: number, closeTicks: number[],
@@ -121,7 +121,7 @@ describe('Encoding', () => {
         let bookends: ConcentratedBookend[] = []
         for (let i = 0; i < closeTicks.length; ++i) {
             bookends.push({closeTick: closeTicks[i], 
-                isAdd: concLiqs[i] > 0, liquidity: BigNumber.from(concLiqs[i])})
+                isAdd: concLiqs[i] > 0, liquidity: BigNumber.from(concLiqs[i]).abs()})
         }        
         return { openTick: openTick, bookends: bookends }
     }

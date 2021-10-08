@@ -60,7 +60,6 @@ library OrderEncoding {
         Directives.PassiveDirective memory passivePost;
         
         (poolIdx, next) = eatUInt24(input, offset);
-        console.log("PoolIdx", poolIdx);
         (passive, next) = parsePassive(input, next);
         (swap, next) = parseSwap(input, next);
         (passivePost, next) = parsePassive(input, next);
