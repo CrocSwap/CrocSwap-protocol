@@ -41,10 +41,13 @@ contract OracleHistorian {
         int24 startCluster = clusterTick(startTick);
         int24 endCluster = clusterTick(endTick);
 
-        if (startCluster == endCluster) {
+        uint24 clusterMove = startCluster > endCluster ?
+            uint24(startCluster - endCluster) :
+            uint24(endCluster - startCluster);
+        
+        if (clusterMove == 0) {
             return false;
-        } else if (endCluster - startCluster > 1 ||
-                   startCluster - endCluster > 1) {
+        } else if (clusterMove > 1) {
             return true;
         } else {
             int24 lastCluster = clusterTick(hists_[poolKey].lastTick_);
