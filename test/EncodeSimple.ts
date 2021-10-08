@@ -25,11 +25,6 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
                     isAdd: BigNumber.from(liq).gte(0), liquidity: BigNumber.from(liq).abs()}]
             }]
         },
-        passivePost: {
-            ambient: { isAdd: false, liquidity: BigNumber.from(0) },
-            concentrated: [{ openTick: 0,
-                bookends: [] }]
-        },
         swap: {
             liqMask: 0,
             isBuy: false,
@@ -48,11 +43,6 @@ export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean,
         ambient: { isAdd: false, liquidity: BigNumber.from(0) },
         concentrated: [{ openTick: 0,
             bookends: [] }]
-       },
-       passivePost: {
-           ambient: { isAdd: false, liquidity: BigNumber.from(0) },
-           concentrated: [{ openTick: 0,
-               bookends: [] }]
        },
        swap: {
            liqMask: 0,

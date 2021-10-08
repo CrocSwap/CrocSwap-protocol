@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 /* @title Order encoding library */
 library OrderEncoding {
 
-    function decodeOrder (bytes calldata input) internal view returns
+    function decodeOrder (bytes calldata input) internal pure returns
         (Directives.OrderDirective memory) {
         uint32 offset = 0;
         uint8 hopCnt;
@@ -31,7 +31,7 @@ library OrderEncoding {
     }
     
     function parseHop (bytes calldata input, uint32 offset)
-        private view returns (Directives.HopDirective memory hop, uint32 next) {
+        private pure returns (Directives.HopDirective memory hop, uint32 next) {
         uint8 poolCnt;
         (poolCnt, next) = eatUInt8(input, offset);
 
@@ -53,23 +53,22 @@ library OrderEncoding {
     }
 
     function parsePool (bytes calldata input, uint32 offset)
-        private view returns (Directives.PoolDirective memory pair, uint32 next) {
+        private pure returns (Directives.PoolDirective memory pair, uint32 next) {
         uint24 poolIdx;
         Directives.PassiveDirective memory passive;
         Directives.SwapDirective memory swap;
-        Directives.PassiveDirective memory passivePost;
         
         (poolIdx, next) = eatUInt24(input, offset);
         (passive, next) = parsePassive(input, next);
         (swap, next) = parseSwap(input, next);
-        (passivePost, next) = parsePassive(input, next);
         
-        pair = Directives.PoolDirective({poolIdx_: poolIdx, passive_: passive,
-                    swap_: swap, passivePost_: passivePost});
+        pair = Directives.PoolDirective({poolIdx_: poolIdx,
+                    ambient_: passive.ambient_, swap_: swap,
+                    conc_: passive.conc_});
     }
 
     function parsePassive (bytes calldata input, uint32 offset)
-        private view returns (Directives.PassiveDirective memory pass, uint32 next) {
+        private pure returns (Directives.PassiveDirective memory pass, uint32 next) {
         uint8 concCnt;
 
         Directives.AmbientDirective memory ambient;
@@ -89,7 +88,7 @@ library OrderEncoding {
     }
 
     function parseAmbient (bytes calldata input, uint32 offset)
-        private view returns (Directives.AmbientDirective memory pass,
+        private pure returns (Directives.AmbientDirective memory pass,
                               uint32 next) {
         bool isAdd;
         uint128 liq;
@@ -99,7 +98,7 @@ library OrderEncoding {
     }
 
     function parseConcentrated (bytes calldata input, uint32 offset)
-        private view returns (Directives.ConcentratedDirective memory pass,
+        private pure returns (Directives.ConcentratedDirective memory pass,
                               uint32 next) {
         uint8 bookendCnt;
         bool isAdd;
@@ -126,7 +125,7 @@ library OrderEncoding {
     }
 
     function parseSwap (bytes calldata input, uint32 offset)
-        private view returns (Directives.SwapDirective memory swap, uint32 next) {
+        private pure returns (Directives.SwapDirective memory swap, uint32 next) {
         uint8 liqMask;
         bool isBuy;
         bool inBaseQty;
@@ -143,7 +142,7 @@ library OrderEncoding {
     }
 
     function parseSettle (bytes calldata input, uint32 offset)
-        private view returns (Directives.SettlementChannel memory settle, uint32 next) {
+        private pure returns (Directives.SettlementChannel memory settle, uint32 next) {
         address token;
         int128 limitQty;
         uint128 dustThresh;
@@ -159,7 +158,7 @@ library OrderEncoding {
     }
 
     function parseHopFlags (bytes calldata input, uint32 offset)
-        private view returns (Directives.PriceImproveReq memory req,
+        private pure returns (Directives.PriceImproveReq memory req,
                               Directives.ChainingFlags memory chain, uint32 next) {
         bool isEnabled;
         bool useBase;
@@ -175,14 +174,14 @@ library OrderEncoding {
     }
 
     function eatBool (bytes calldata input, uint32 offset)
-        internal view returns (bool on, uint32 next) {
+        internal pure returns (bool on, uint32 next) {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         on = (flag > 0);
     }
 
     function eatBool2 (bytes calldata input, uint32 offset)
-        internal view returns (bool onA, bool onB, uint32 next) {
+        internal pure returns (bool onA, bool onB, uint32 next) {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x2) > 0);
@@ -190,7 +189,7 @@ library OrderEncoding {
     }
 
     function eatBool4 (bytes calldata input, uint32 offset)
-        internal view returns (bool onA, bool onB, bool onC, bool onD, uint32 next) {
+        internal pure returns (bool onA, bool onB, bool onC, bool onD, uint32 next) {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x8) > 0);
@@ -200,7 +199,7 @@ library OrderEncoding {
     }
 
     function eatBool5 (bytes calldata input, uint32 offset)
-        internal view returns (bool onA, bool onB, bool onC, bool onD, bool onE,
+        internal pure returns (bool onA, bool onB, bool onC, bool onD, bool onE,
                                uint32 next) {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
@@ -213,13 +212,13 @@ library OrderEncoding {
     
     
     function eatUInt8 (bytes calldata input, uint32 offset)
-        internal view returns (uint8 cnt, uint32 next) {
+        internal pure returns (uint8 cnt, uint32 next) {
         cnt = uint8(input[offset]);
         next = offset + 1;
     }
 
     function eatUInt24 (bytes calldata input, uint32 offset)
-        internal view returns (uint24 val, uint32 next) {
+        internal pure returns (uint24 val, uint32 next) {
         bytes3 coded = input[offset] |
             (bytes3(input[offset+1]) >> 8) |
             (bytes3(input[offset+2]) >> 16);
@@ -228,25 +227,25 @@ library OrderEncoding {
     }
 
     function eatToken (bytes calldata input, uint32 offset)
-        internal view returns (address token, uint32 next) {
+        internal pure returns (address token, uint32 next) {
         token = abi.decode(input[offset:(offset+32)], (address));
         next = offset + 32;
     }
 
     function eatUInt256 (bytes calldata input, uint32 offset)
-        internal view returns (uint256 delta, uint32 next) {
+        internal pure returns (uint256 delta, uint32 next) {
         delta = abi.decode(input[offset:(offset+32)], (uint256));
         next = offset + 32;
     }
 
     function eatUInt128 (bytes calldata input, uint32 offset)
-        internal view returns (uint128 delta, uint32 next) {
+        internal pure returns (uint128 delta, uint32 next) {
         delta = abi.decode(input[offset:(offset+32)], (uint128));
         next = offset + 32;
     }
 
     function eatInt256 (bytes calldata input, uint32 offset)
-        internal view returns (int256 delta, uint32 next) {
+        internal pure returns (int256 delta, uint32 next) {
         uint8 isNegFlag;
         uint256 magn;
         (isNegFlag, next) = eatUInt8(input, offset);        
@@ -255,7 +254,7 @@ library OrderEncoding {
     }
 
     function eatInt128 (bytes calldata input, uint32 offset)
-        internal view returns (int128 delta, uint32 next) {
+        internal pure returns (int128 delta, uint32 next) {
         uint8 isNegFlag;
         uint128 magn;
         (isNegFlag, next) = eatUInt8(input, offset);
@@ -264,7 +263,7 @@ library OrderEncoding {
     }
 
     function eatInt24 (bytes calldata input, uint32 offset)
-        internal view returns (int24 delta, uint32 next) {
+        internal pure returns (int24 delta, uint32 next) {
         uint8 isNegFlag;
         uint24 magn;
         (isNegFlag, next) = eatUInt8(input, offset);

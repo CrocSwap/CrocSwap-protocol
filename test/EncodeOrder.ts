@@ -40,7 +40,6 @@ export interface PoolDirective {
     poolIdx: number
     passive: PassiveDirective,
     swap: SwapDirective,
-    passivePost: PassiveDirective
 }
 
 export interface SwapDirective {
@@ -99,8 +98,7 @@ function encodePool (pool: PoolDirective): BytesLike {
     let poolIdx = encodeJsNum(pool.poolIdx, 3)
     let passive = encodePassive(pool.passive)
     let swap = encodeSwap(pool.swap)
-    let post = encodePassive(pool.passivePost)
-    return ethers.utils.concat([poolIdx, passive, swap, post])
+    return ethers.utils.concat([poolIdx, passive, swap])
 }
 
 function encodeSwap (swap: SwapDirective): BytesLike {

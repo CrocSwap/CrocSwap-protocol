@@ -48,9 +48,9 @@ library Directives {
     
     struct PoolDirective {
         uint24 poolIdx_;
-        PassiveDirective passive_;
+        AmbientDirective ambient_;
+        ConcentratedDirective[] conc_;
         SwapDirective swap_;
-        PassiveDirective passivePost_;
     }
 
     struct RolloverDirective {

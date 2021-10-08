@@ -58,14 +58,21 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                            PoolSpecs.PoolCursor memory pool,
                            CurveMath.CurveState memory curve, 
                            PriceGrid.ImproveSettings memory improve, address owner)
-        private returns (int256, int256, uint256, uint256) {
-        (int256 swapBase, int256 swapQuote, uint256 protoBase, uint256 protoQuote) =
-            applySwap(dir.swap_, pool, curve);
-        (int256 passiveBase, int256 passiveQuote) =
-            applyPassives(dir, pool, curve, improve, owner);
+        private returns (int256 base, int256 quote,
+                         uint256 protoBase, uint256 protoQuote) {
+        int256 baseIncr;
+        int256 quoteIncr;
+
+        (base, quote, protoBase, protoQuote) = applySwap(dir.swap_, pool, curve);
         
-        return (passiveBase + swapBase, passiveQuote + swapQuote,
-                protoBase, protoQuote);
+        (baseIncr, quoteIncr) = applyAmbient(dir.ambient_, pool, curve, owner);
+        base += baseIncr;
+        quote += quoteIncr;
+
+        (baseIncr, quoteIncr) = applyConcentrateds(dir.conc_, pool, curve,
+                                                   improve, owner);
+        base += baseIncr;
+        quote += quoteIncr;
     }
 
     function applySwap (Directives.SwapDirective memory dir,
@@ -104,31 +111,6 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
         accum = CurveMath.SwapAccum
             ({qtyLeft_: swapQty, cntx_: cntx,
                     paidBase_: 0, paidQuote_: 0, paidProto_: 0});
-    }
-
-    function applyPassives (Directives.PoolDirective memory dir,
-                            PoolSpecs.PoolCursor memory pool,
-                            CurveMath.CurveState memory curve, 
-                            PriceGrid.ImproveSettings memory improve, address owner)
-        private returns (int256, int256) {
-        (int256 preBase, int256 preQuote) =
-            applyPassive(dir.passive_, pool, curve, improve, owner);
-        (int256 postBase, int256 postQuote) =
-            applyPassive(dir.passivePost_, pool, curve, improve, owner);
-        return (preBase + postBase, preQuote + postQuote);
-    }        
-    
-    function applyPassive (Directives.PassiveDirective memory dir,
-                           PoolSpecs.PoolCursor memory pool,
-                           CurveMath.CurveState memory curve,  
-                           PriceGrid.ImproveSettings memory improve, address owner)
-        private returns (int256, int256) {
-        (int256 ambientBase, int256 ambientQuote) =
-            applyAmbient(dir.ambient_, pool, curve, owner);
-        (int256 concBase, int256 concQuote) =
-            applyConcentrateds(dir.conc_, pool, curve, improve, owner);
-        return (ambientBase + concBase,
-                ambientQuote + concQuote);
     }
 
     function applyAmbient (Directives.AmbientDirective memory dir,
