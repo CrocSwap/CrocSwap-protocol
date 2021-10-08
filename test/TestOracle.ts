@@ -209,11 +209,11 @@ describe('Oracle History', () => {
         
         // Will not cross because it's a one cluster move and it's back to the last price
         expect(await test.testCross(toSqrtPrice(2.5052), toSqrtPrice(2.5))).to.equal(false)
-        expect(await test.testCross(toSqrtPrice(2.4891), toSqrtPrice(2.5))).to.equal(false)
+        expect(await test.testCross(toSqrtPrice(2.4892), toSqrtPrice(2.5))).to.equal(false)
 
         // Will cross because it's a one cluster move and it's not at the last cluster
         expect(await test.testCross(toSqrtPrice(2.5), toSqrtPrice(2.5052))).to.equal(true)
-        expect(await test.testCross(toSqrtPrice(2.5), toSqrtPrice(2.4891))).to.equal(true)
+        expect(await test.testCross(toSqrtPrice(2.5), toSqrtPrice(2.4892))).to.equal(true)
     })
 
     it("cross event negative price", async() => {

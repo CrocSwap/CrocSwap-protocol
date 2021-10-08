@@ -41,7 +41,6 @@ contract OracleHistorian {
         int24 startCluster = clusterTick(startTick);
         int24 endCluster = clusterTick(endTick);
 
-        console.log("Cross-Event", uint24(startCluster), uint24(endCluster));
         if (startCluster == endCluster) {
             return false;
         } else if (endCluster - startCluster > 1 ||
@@ -49,7 +48,6 @@ contract OracleHistorian {
             return true;
         } else {
             int24 lastCluster = clusterTick(hists_[poolKey].lastTick_);
-            console.log("Last cluster", uint24(lastCluster));
             return endCluster != lastCluster;
         }
     }
@@ -90,7 +88,6 @@ contract OracleHistorian {
     function writeIncr (Checkpoint storage slot, Checkpoint storage tail,
                         CurveMath.CurveState memory curve,
                         int24 tick, uint32 nowTime) private {
-        console.log("WriteIncr", tick > 0, tick > 0 ? uint24(tick) : uint24(-tick));
         uint32 truncGrowth = uint32(curve.accum_.ambientGrowth_ >> 32);
         slot.time_ = nowTime;
         slot.ambientGrowth_ = truncGrowth;
