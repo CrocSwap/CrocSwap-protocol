@@ -50,19 +50,23 @@ describe('Encoding', () => {
         
         let hopA = buildHop(buildSettle("DE0", 65000, 10, false),
             { isEnabled: false, useBaseSide: false },
-            { rollExit: true, swapDefer: false},
+            { rollExit: true, swapDefer: false, offsetSurplus: false},
             [poolJ, poolK, poolL])
         let hopB = buildHop(buildSettle("9A8", -50000, 15, false),
             { isEnabled: true, useBaseSide: false },
-            { rollExit: false, swapDefer: false},
+            { rollExit: false, swapDefer: false, offsetSurplus: false},
             [poolM, poolN])
         let hopC = buildHop(buildSettle("7C5", -800000, 5000, true),
             { isEnabled: false, useBaseSide: true },
-            { rollExit: false, swapDefer: false},
+            { rollExit: false, swapDefer: false, offsetSurplus: false},
             [poolQ, poolR])
         let hopD = buildHop(buildSettle("456", 80000, 0, false),
-            { isEnabled: true, useBaseSide: true },
-            { rollExit: false, swapDefer: true},
+            { isEnabled: false, useBaseSide: false },
+            { rollExit: false, swapDefer: true, offsetSurplus: false},
+            [])
+        let hopE = buildHop(buildSettle("456", 80000, 0, false),
+            { isEnabled: false, useBaseSide: false },
+            { rollExit: false, swapDefer: false, offsetSurplus: true},
             [])
         
         return { open: buildSettle("A25", 512, 128, true),
@@ -77,9 +81,9 @@ describe('Encoding', () => {
     }
 
     function buildSettle (token: string, qty: number, 
-        dust: number, useReserves: boolean): SettlementDirective {
+        dust: number, useSurplus: boolean): SettlementDirective {
         return { token: toToken(token), limitQty: BigNumber.from(qty), 
-            dustThresh: BigNumber.from(dust), useReserves: useReserves }
+            dustThresh: BigNumber.from(dust), useSurplus: useSurplus }
     }
 
     function toToken (token: string): string {
@@ -132,7 +136,7 @@ describe('Encoding', () => {
         expect(settle.token_).to.equal(ethers.utils.hexZeroPad(order.open.token, 20))
         expect(settle.limitQty_).to.equal(order.open.limitQty)
         expect(settle.dustThresh_).to.equal(order.open.dustThresh)
-        expect(settle.useReserves_).to.equal(order.open.useReserves)
+        expect(settle.useSurplus_).to.equal(order.open.useSurplus)
     })
 
     it ("hop settlement", async() => {
@@ -142,7 +146,7 @@ describe('Encoding', () => {
         expect(settle.token_).to.equal(ethers.utils.hexZeroPad(cmp.token, 20))
         expect(settle.limitQty_).to.equal(cmp.limitQty)
         expect(settle.dustThresh_).to.equal(cmp.dustThresh)
-        expect(settle.useReserves_).to.equal(cmp.useReserves)
+        expect(settle.useSurplus_).to.equal(cmp.useSurplus)
     })
 
     it ("hop improve", async() => {
@@ -154,6 +158,7 @@ describe('Encoding', () => {
         expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
         expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
         expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        expect(chain.offsetSurplus_).to.equal(cmp.chain.offsetSurplus)
         
         await encoder.testEncodeHop(1, encodeOrderDirective(order))
         improve = (await encoder.priceImprove())
@@ -163,6 +168,7 @@ describe('Encoding', () => {
         expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
         expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
         expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        expect(chain.offsetSurplus_).to.equal(cmp.chain.offsetSurplus)
 
         await encoder.testEncodeHop(2, encodeOrderDirective(order))
         improve = (await encoder.priceImprove())
@@ -172,6 +178,7 @@ describe('Encoding', () => {
         expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
         expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
         expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        expect(chain.offsetSurplus_).to.equal(cmp.chain.offsetSurplus)
 
         await encoder.testEncodeHop(3, encodeOrderDirective(order))
         improve = (await encoder.priceImprove())
@@ -181,6 +188,17 @@ describe('Encoding', () => {
         expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
         expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
         expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        expect(chain.offsetSurplus_).to.equal(cmp.chain.offsetSurplus)
+
+        await encoder.testEncodeHop(4, encodeOrderDirective(order))
+        improve = (await encoder.priceImprove())
+        chain = (await encoder.chaining())
+        cmp = order.hops[4]
+        expect(improve.isEnabled_).to.equal(cmp.improve.isEnabled)
+        expect(improve.useBaseSide_).to.equal(cmp.improve.useBaseSide)
+        expect(chain.rollExit_).to.equal(cmp.chain.rollExit)
+        expect(chain.swapDefer_).to.equal(cmp.chain.swapDefer)
+        expect(chain.offsetSurplus_).to.equal(cmp.chain.offsetSurplus)
     })
 
     it ("pool idx", async() => {

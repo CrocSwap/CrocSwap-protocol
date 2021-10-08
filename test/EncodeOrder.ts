@@ -15,7 +15,7 @@ export interface SettlementDirective {
     token: string
     limitQty: BigNumber,
     dustThresh: BigNumber,
-    useReserves: boolean
+    useSurplus: boolean
 }
 
 export interface ImproveDirective {
@@ -25,7 +25,8 @@ export interface ImproveDirective {
 
 export interface ChainingDirective {
     rollExit: boolean,
-    swapDefer: boolean
+    swapDefer: boolean,
+    offsetSurplus: boolean
 }
 
 export interface HopDirective {
@@ -76,7 +77,7 @@ function encodeSettlement (dir: SettlementDirective): BytesLike {
     let token = encodeToken(dir.token)
     let limit = encodeFullSigned(dir.limitQty)
     let dust = encodeFull(dir.dustThresh)
-    let reserveFlag = encodeWord(dir.useReserves ? 1 : 0)
+    let reserveFlag = encodeWord(dir.useSurplus ? 1 : 0)
     return ethers.utils.concat([token, limit, dust, reserveFlag])
 }
 
@@ -88,8 +89,9 @@ function encodeHop (hop: HopDirective): BytesLike {
 }
 
 function encodeFlags (improve: ImproveDirective, chain: ChainingDirective): BytesLike {
-    let flag = (improve.isEnabled ? 8 : 0) + (improve.useBaseSide ? 4 : 0) +
-        (chain.rollExit ? 2 : 0) + (chain.swapDefer ? 1 : 0)
+    let flag = (improve.isEnabled ? 16 : 0) + (improve.useBaseSide ? 8 : 0) +
+        (chain.rollExit ? 4 : 0) + (chain.swapDefer ? 2 : 0) + 
+        (chain.offsetSurplus ? 1 : 0)
     return encodeJsNum(flag, 1)
 }
 

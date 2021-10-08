@@ -31,10 +31,10 @@ contract TestSettleLayer is SettleLayer {
     }
 
     function testSettle (int256 flow, address token, int256 limitQty,
-                         uint256 dustThresh, bool useReserves) public payable {
+                         uint256 dustThresh, bool useSurplus) public payable {
         Directives.SettlementChannel memory dir = Directives.SettlementChannel
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
-                    useReserves_: useReserves});
+                    useSurplus_: useSurplus});
         RollingSpend memory spend = spend_;
         settleFlat(recv_, flow, dir, spend);
         spend_ = spend;

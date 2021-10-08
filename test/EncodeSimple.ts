@@ -6,13 +6,13 @@ export function singleHop (open: string, close: string, pool: PoolDirective): Or
         open: simpleSettle(open),
         hops: [ { settlement: simpleSettle(close), pools: [pool], 
             improve: { isEnabled: false, useBaseSide: false },
-            chain: { rollExit: false, swapDefer: false}} ]
+            chain: { rollExit: false, swapDefer: false, offsetSurplus: false}} ]
     }
 }
 
 export function simpleSettle (token: string): SettlementDirective {
     return { token: token, limitQty: BigNumber.from("100000000000000000"),
-        dustThresh: BigNumber.from(0), useReserves: false }
+        dustThresh: BigNumber.from(0), useSurplus: false }
 }
 
 export function simpleMint (poolIdx: number, lowerTick: number, upperTick: number, liq: number): PoolDirective  {

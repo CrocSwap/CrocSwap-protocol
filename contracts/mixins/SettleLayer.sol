@@ -24,7 +24,7 @@ contract SettleLayer {
                          RollingSpend memory cumulative) internal {
         require(passesLimit(flow, directive), "K");
         if (moreThanDust(flow, directive)) {
-            pumpFlow(recv, flow, directive.token_, directive.useReserves_,
+            pumpFlow(recv, flow, directive.token_, directive.useSurplus_,
                      cumulative);
         }
     }

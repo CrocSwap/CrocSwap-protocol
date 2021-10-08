@@ -63,7 +63,7 @@ library Directives {
         address token_;
         int256 limitQty_;
         uint256 dustThresh_;
-        bool useReserves_;
+        bool useSurplus_;
     }
 
     struct PriceImproveReq {
@@ -74,6 +74,7 @@ library Directives {
     struct ChainingFlags {
         bool rollExit_;
         bool swapDefer_;
+        bool offsetSurplus_;
     }
 
     struct HopDirective {

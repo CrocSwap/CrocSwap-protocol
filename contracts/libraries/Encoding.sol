@@ -147,15 +147,15 @@ library OrderEncoding {
         address token;
         int128 limitQty;
         uint128 dustThresh;
-        bool useReserves;
+        bool useSurplus;
 
         (token, next) = eatToken(input, offset);
         (limitQty, next) = eatInt128(input, next);
         (dustThresh, next) = eatUInt128(input, next);
-        (useReserves, next) = eatBool(input, next);
+        (useSurplus, next) = eatBool(input, next);
         
         settle = Directives.SettlementChannel({token_: token, limitQty_: limitQty,
-                    dustThresh_: dustThresh, useReserves_: useReserves});
+                    dustThresh_: dustThresh, useSurplus_: useSurplus});
     }
 
     function parseHopFlags (bytes calldata input, uint32 offset)
@@ -165,11 +165,13 @@ library OrderEncoding {
         bool useBase;
         bool rollExit;
         bool swapDefer;
+        bool surp;
 
-        (isEnabled, useBase, rollExit, swapDefer, next) = eatBool4(input, offset);
+        (isEnabled, useBase, rollExit, swapDefer, surp, next) = eatBool5(input, offset);
 
         req = Directives.PriceImproveReq({isEnabled_: isEnabled, useBaseSide_: useBase});
-        chain = Directives.ChainingFlags({rollExit_: rollExit, swapDefer_: swapDefer});
+        chain = Directives.ChainingFlags({rollExit_: rollExit,
+                    swapDefer_: swapDefer, offsetSurplus_: surp});
     }
 
     function eatBool (bytes calldata input, uint32 offset)
@@ -196,6 +198,19 @@ library OrderEncoding {
         onC = ((flag & 0x2) > 0);        
         onD = ((flag & 0x1) > 0);        
     }
+
+    function eatBool5 (bytes calldata input, uint32 offset)
+        internal view returns (bool onA, bool onB, bool onC, bool onD, bool onE,
+                               uint32 next) {
+        uint8 flag;
+        (flag, next) = eatUInt8(input, offset);
+        onA = ((flag & 0x10) > 0);
+        onB = ((flag & 0x8) > 0);        
+        onC = ((flag & 0x4) > 0);        
+        onD = ((flag & 0x2) > 0);
+        onE = ((flag & 0x1) > 0);
+    }
+    
     
     function eatUInt8 (bytes calldata input, uint32 offset)
         internal view returns (uint8 cnt, uint32 next) {
