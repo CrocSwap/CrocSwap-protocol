@@ -131,19 +131,18 @@ library OrderEncoding {
     function parseSwap (bytes calldata input, uint32 offset)
         private pure returns (Directives.SwapDirective memory swap, uint32 next) {
         uint8 liqMask;
-        uint8 dirFlags;
+        bool isBuy;
+        bool inBaseQty;
         uint128 qty;
         uint128 limitPrice;
 
         (liqMask, next) = eatUInt8(input, offset);
-        (dirFlags, next) = eatUInt8(input, next);
+        (isBuy, inBaseQty, next) = eatBool2(input, offset);
         (qty, next) = eatUInt128(input, next);
         (limitPrice, next) = eatUInt128(input, next);
 
-        bool isBuy = (dirFlags & 0x2) > 0;
-        bool inBaseQty_ = (dirFlags & 0x1) > 0;
         swap = Directives.SwapDirective({liqMask_: liqMask, isBuy_: isBuy,
-                    inBaseQty_: inBaseQty_, qty_: qty, limitPrice_: limitPrice});
+                    inBaseQty_: inBaseQty, qty_: qty, limitPrice_: limitPrice});
     }
 
     function parseSettle (bytes calldata input, uint32 offset)
@@ -151,15 +150,15 @@ library OrderEncoding {
         address token;
         int128 limitQty;
         uint128 dustThresh;
-        uint8 reservesFlag;
+        bool useReserves;
 
         (token, next) = eatToken(input, offset);
         (limitQty, next) = eatInt128(input, next);
         (dustThresh, next) = eatUInt128(input, next);
-        (reservesFlag, next) = eatUInt8(input, next);
+        (useReserves, next) = eatBool(input, next);
         
         settle = Directives.SettlementChannel({token_: token, limitQty_: limitQty,
-                    dustThresh_: dustThresh, useReserves_: reservesFlag > 0});
+                    dustThresh_: dustThresh, useReserves_: useReserves});
     }
 
     function parseImprove (bytes calldata input, uint32 offset)
@@ -178,6 +177,24 @@ library OrderEncoding {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         on = (flag > 0);
+    }
+
+    function eatBool2 (bytes calldata input, uint32 offset)
+        internal pure returns (bool onA, bool onB, uint32 next) {
+        uint8 flag;
+        (flag, next) = eatUInt8(input, offset);
+        onA = ((flag & 0x2) > 0);
+        onB = ((flag & 0x1) > 0);        
+    }
+
+    function eatBool4 (bytes calldata input, uint32 offset)
+        internal pure returns (bool onA, bool onB, bool onC, bool onD, uint32 next) {
+        uint8 flag;
+        (flag, next) = eatUInt8(input, offset);
+        onA = ((flag & 0x8) > 0);
+        onB = ((flag & 0x4) > 0);        
+        onC = ((flag & 0x2) > 0);        
+        onD = ((flag & 0x1) > 0);        
     }
     
     function eatUInt8 (bytes calldata input, uint32 offset)
