@@ -17,7 +17,8 @@ import "hardhat/console.sol";
 
 contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     OracleHistorian, ICrocSwapHistRecv {
-    
+
+    using SafeCast for uint256;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
@@ -47,7 +48,10 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
                 
                 verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_, dir);
 
-                Chaining.ExecCntx memory cntx = Chaining.buildCntx(pool, priceImprove);
+                Chaining.RollTarget memory roll = targetRoll(dir.chain_, pairs);
+                Chaining.ExecCntx memory cntx =
+                    Chaining.buildCntx(pool, priceImprove, roll);
+                
                 Chaining.PairFlow memory poolFlow =
                     CrocSwapBooks(booksSidecar_).runPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
@@ -60,6 +64,25 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         }
 
         settleFlat(msg.sender, pairs.closeFlow(), settleChannel, rollSpend);
+    }
+
+    
+    function targetRoll (Directives.ChainingFlags memory flags,
+                         TokenFlow.PairSeq memory pair) view private
+        returns (Chaining.RollTarget memory roll) {
+        if (!flags.rollExit_) {
+            roll.inBaseQty_ = pair.isBaseFront_;
+            roll.rollTarget_ = pair.legFlow_ + pair.frontFlow();
+        } else {
+            roll.inBaseQty_ = !pair.isBaseFront_;
+            roll.rollTarget_ = pair.backFlow();
+        }
+
+        if (flags.offsetSurplus_) {
+            address token = flags.rollExit_ ?
+                pair.backToken() : pair.frontToken();
+            roll.rollTarget_ -= querySurplus(msg.sender, token).toInt256();
+        }
     }
 
     function initPool (address base, address quote, uint24 poolIdx,

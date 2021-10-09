@@ -32,13 +32,26 @@ library TokenFlow {
         }
     }
 
+    function frontFlow (PairSeq memory seq) internal pure returns (int256) {
+        return seq.isBaseFront_ ? seq.flow_.baseFlow_ : seq.flow_.quoteFlow_;
+    }
+    function backFlow (PairSeq memory seq) internal pure returns (int256) {
+        return seq.isBaseFront_ ? seq.flow_.quoteFlow_ : seq.flow_.baseFlow_;
+    }
+    function frontToken (PairSeq memory seq) internal pure returns (address) {
+        return seq.isBaseFront_ ? seq.baseToken_ : seq.quoteToken_;
+    }
+    function backToken (PairSeq memory seq) internal pure returns (address) {
+        return seq.isBaseFront_ ? seq.quoteToken_ : seq.baseToken_;
+    }
+
     function clipFlow (PairSeq memory seq) internal pure returns (int256 clippedFlow) {
-        (int256 frontFlow, int256 backFlow) = seq.isBaseFront_ ?
+        (int256 frontAccum, int256 backAccum) = seq.isBaseFront_ ?
             (seq.flow_.baseFlow_, seq.flow_.quoteFlow_) :
             (seq.flow_.quoteFlow_, seq.flow_.baseFlow_);
         
-        clippedFlow = seq.legFlow_ + frontFlow;
-        seq.legFlow_ = backFlow;
+        clippedFlow = seq.legFlow_ + frontAccum;
+        seq.legFlow_ = backAccum;
         seq.flow_ = Chaining.initFlow();
     }
     
