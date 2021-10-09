@@ -9,7 +9,7 @@ import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, Concent
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { CrocSwapBooks } from '../typechain/CrocSwapBooks';
-import { Signer, ContractFactory, BigNumber } from 'ethers';
+import { Signer, ContractFactory, BigNumber, ContractTransaction } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 
@@ -99,48 +99,58 @@ export class TestPool {
     }
 
 
-    async testMint (lower: number, upper: number, liq: number) {
+    async testMint (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        await (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).trade(inputBytes)
     }
 
-    async testMintOther (lower: number, upper: number, liq: number) {
+    async testMintOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        await (await this.dex).connect(await this.other).trade(inputBytes)
+        return (await this.dex).connect(await this.other).trade(inputBytes)
     }
 
-    async testBurn (lower: number, upper: number, liq: number) {
+    async testBurn (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        await (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).trade(inputBytes)
     }
 
-    async testBurnOther (lower: number, upper: number, liq: number) {
+    async testBurnOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        await (await this.dex).connect(await this.other).trade(inputBytes)
+        return (await this.dex).connect(await this.other).trade(inputBytes)
     }
 
-    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber) {
+    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
+        Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
         let inputBytes = encodeOrderDirective(directive);
-        await (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).trade(inputBytes)
     }
 
-    async testProtocolSetFee (takeRate: number) {
-        await (await this.dex)
+    async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
+        Promise<ContractTransaction> {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
+        let inputBytes = encodeOrderDirective(directive);
+        return (await this.dex).connect(await this.other).trade(inputBytes)
+    }
+
+    async testProtocolSetFee (takeRate: number): Promise<ContractTransaction> {
+        return (await this.dex)
             .connect(await this.auth)
             .setProtocolTake((await this.base).address, 
             (await this.quote).address, POOL_IDX, takeRate)
