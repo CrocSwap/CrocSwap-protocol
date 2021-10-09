@@ -20,14 +20,14 @@ contract TestOracleHistory is OracleHistorian {
                         accum_: CurveMath.CurveFeeAccum({
                             ambientGrowth_: ambientGrowth,
                                     concTokenGrowth_: 0})});
-        addCheckpoint(POOL_KEY, curve, nowTime);
+        addCheckpoint(POOL_KEY, CurveCache.initCache(curve), nowTime);
     }
 
     function testCross (uint128 startPrice, uint128 endPrice) public view
         returns (bool) {
         int24 startTick = startPrice.getTickAtSqrtRatio();
         int24 endTick = endPrice.getTickAtSqrtRatio();
-        return isCrossEvent(POOL_KEY, startTick, endTick);
+        return isOracleEvent(POOL_KEY, startTick, endTick);
     }
 
     function testSetNext (uint64 nextIndex) public {

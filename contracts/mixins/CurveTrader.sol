@@ -53,6 +53,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
         if (initLiq > 0) {
             (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
         }
+        addCheckpoint(pool.hash_, curve);
         commitCurve(pool.hash_, curve.curve_);
     }
 
@@ -248,7 +249,11 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                            uint128 limitPrice) internal {
         int24 midTick = curve.pullPriceTick();
         sweepSwapLiq(curve.curve_, midTick, accum, pool, limitPrice);
+        
         curve.dirtyPrice();
+        if (isOracleEvent(pool.hash_, midTick, curve.pullPriceTick())) {
+            addCheckpoint(pool.hash_, curve);
+        }
     }
 
     function sweepSwapLiq (CurveMath.CurveState memory curve, int24 midTick,

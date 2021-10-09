@@ -1,16 +1,17 @@
-// SPDX-License-Identifier: Unlicensed                                                    
+// SPDX-License-Identifier: Unlicensed
 
 pragma solidity >=0.8.4;
 
 import '../libraries/SafeCast.sol';
 import '../libraries/CurveMath.sol';
-import '../libraries/TickMath.sol';
+import '../libraries/CurveCache.sol';
 
 import "hardhat/console.sol";
 
 contract OracleHistorian {
     using TickMath for uint128;
     using CurveMath for CurveMath.CurveState;
+    using CurveCache for CurveCache.Cache;
 
     struct Checkpoint {
         uint32 time_;
@@ -35,8 +36,8 @@ contract OracleHistorian {
         return hists_[poolKey].series_[seriesIdx];
     }
 
-    function isCrossEvent (bytes32 poolKey, int24 startTick,
-                           int24 endTick) internal view
+    function isOracleEvent (bytes32 poolKey, int24 startTick,
+                            int24 endTick) internal view
         returns (bool) {
         int24 startCluster = clusterTick(startTick);
         int24 endCluster = clusterTick(endTick);
@@ -55,23 +56,23 @@ contract OracleHistorian {
         }
     }
     
-    function addCheckpoint (bytes32 poolKey, CurveMath.CurveState memory curve)
+    function addCheckpoint (bytes32 poolKey, CurveCache.Cache memory curve)
         internal {
         addCheckpoint(poolKey, curve, SafeCast.timeUint32());
     }
 
-    function addCheckpoint (bytes32 poolKey, CurveMath.CurveState memory curve,
+    function addCheckpoint (bytes32 poolKey, CurveCache.Cache memory curve,
                             uint32 nowTime) internal {
         History storage hist = hists_[poolKey];
-        int24 tick = curve.priceRoot_.getTickAtSqrtRatio();
+        int24 tick = curve.pullPriceTick();
         (uint64 writeIndex, uint64 priorIndex, uint64 nextIndex) =
             determineIndex(hist, nowTime);
         
         if (writeIndex == 0) {
-            writeInit(hist.series_[0], curve, nowTime);
+            writeInit(hist.series_[0], curve.curve_, nowTime);
         } else {
             writeIncr(hist.series_[writeIndex],
-                      hist.series_[priorIndex], curve, hist.lastTick_, nowTime);
+                      hist.series_[priorIndex], curve.curve_, hist.lastTick_, nowTime);
         }
 
         hist.nextIndex_ = nextIndex;
@@ -110,6 +111,7 @@ contract OracleHistorian {
         return uint80(lots);
     }
 
+    // Just internal visible for testing purposes
     function safeAccum (int56 sum, uint32 w, int24 tick) internal pure returns (int56) {
         int64 term = int64(uint64(w)) * int64(tick);
         int64 total = int64(sum) + term;
@@ -120,6 +122,7 @@ contract OracleHistorian {
         }
     }
 
+    // Just internal visible for testing purposes
     function determineIndex (History storage hist, uint32 nowTime) view internal
         returns (uint64, uint64, uint64) {
         if (hist.nextIndex_ == 0) {

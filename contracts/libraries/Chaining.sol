@@ -21,4 +21,11 @@ library Chaining {
         bool inBaseQty_;
         int256 remainingFlow_;
     }
+
+    struct PairFlow {
+        int256 baseFlow_;
+        int256 quoteFlow_;
+        uint256 baseProto_;
+        uint256 quoteProto_;
+    }
 }
