@@ -20,10 +20,10 @@ contract ProtocolAccount {
     /* @notice Called at the completion of a swap event, incrementing any protocol
      *         fees accumulated in the swap. */
     function accumProtocolFees (TokenFlow.PairSeq memory accum) internal {
-        if (accum.flow_.baseFlow_ > 0) {
+        if (accum.flow_.baseProto_ > 0) {
             feesAccum_[accum.baseToken_] += accum.flow_.baseProto_;
         }
-        if (accum.flow_.quoteFlow_ > 0) {
+        if (accum.flow_.quoteProto_ > 0) {
             feesAccum_[accum.quoteToken_] += accum.flow_.quoteProto_;
         }
     }

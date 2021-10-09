@@ -8,6 +8,8 @@ import "./PoolSpecs.sol";
 import "./PriceGrid.sol";
 import "./CurveMath.sol";
 
+import "hardhat/console.sol";
+
 /* @title Trade chaining library */
 library Chaining {
 
@@ -34,8 +36,7 @@ library Chaining {
         return PairFlow({baseFlow_: 0, quoteFlow_: 0, baseProto_: 0, quoteProto_: 0});
     }
     
-    function accumSwap (PairFlow memory flow, CurveMath.SwapAccum memory accum)
-        internal pure {
+    function accumSwap (PairFlow memory flow, CurveMath.SwapAccum memory accum) internal {
         accumFlow(flow, accum.paidBase_, accum.paidQuote_);
         if (accum.cntx_.inBaseQty_) {
             flow.quoteProto_ += accum.paidProto_;
