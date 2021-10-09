@@ -70,18 +70,18 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     function targetRoll (Directives.ChainingFlags memory flags,
                          TokenFlow.PairSeq memory pair) view private
         returns (Chaining.RollTarget memory roll) {
-        if (!flags.rollExit_) {
-            roll.inBaseQty_ = pair.isBaseFront_;
-            roll.rollTarget_ = pair.legFlow_ + pair.frontFlow();
-        } else {
+        if (flags.rollExit_) {
             roll.inBaseQty_ = !pair.isBaseFront_;
-            roll.rollTarget_ = pair.backFlow();
+            roll.prePairBal_ = 0;
+        } else {
+            roll.inBaseQty_ = pair.isBaseFront_;
+            roll.prePairBal_ = pair.legFlow_;
         }
 
         if (flags.offsetSurplus_) {
             address token = flags.rollExit_ ?
                 pair.backToken() : pair.frontToken();
-            roll.rollTarget_ -= querySurplus(msg.sender, token).toInt256();
+            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt256();
         }
     }
 

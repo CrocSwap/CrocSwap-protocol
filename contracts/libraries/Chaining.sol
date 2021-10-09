@@ -12,7 +12,9 @@ import "hardhat/console.sol";
 
 /* @title Trade chaining library */
 library Chaining {
-
+    using SafeCast for int256;
+    using SafeCast for uint256;
+    
     struct ExecCntx {
         address owner_;
         address oracle_;
@@ -23,7 +25,7 @@ library Chaining {
 
     struct RollTarget {
         bool inBaseQty_;
-        int256 rollTarget_;
+        int256 prePairBal_;
     }
 
     struct PairFlow {
@@ -43,6 +45,21 @@ library Chaining {
     
     function initFlow() internal pure returns (PairFlow memory) {
         return PairFlow({baseFlow_: 0, quoteFlow_: 0, baseProto_: 0, quoteProto_: 0});
+    }
+
+    function plugSwapGap (RollTarget memory roll, PairFlow memory flow,
+                           bool inBaseQty) internal pure returns
+        (bool isBuy, uint128 qty) {
+        require(inBaseQty == roll.inBaseQty_);
+        int256 dirQty = totalBalance(roll, flow);
+        isBuy = inBaseQty ? (dirQty < 0) : (dirQty > 0);
+        qty = dirQty.toUint256().toUint128();
+    }
+
+    function totalBalance (RollTarget memory roll, PairFlow memory flow)
+        private pure returns (int256) {
+        int256 pairFlow = (roll.inBaseQty_ ? flow.baseFlow_ : flow.quoteFlow_);
+        return roll.prePairBal_ + pairFlow;
     }
     
     function accumSwap (PairFlow memory flow, CurveMath.SwapAccum memory accum)

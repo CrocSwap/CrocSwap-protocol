@@ -36,6 +36,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     using Directives for Directives.ConcentratedDirective;
     using PriceGrid for PriceGrid.ImproveSettings;
     using Chaining for Chaining.PairFlow;
+    using Chaining for Chaining.RollTarget;
     
     function tradeOverPool (Directives.PoolDirective memory dir,
                             Chaining.ExecCntx memory cntx)
@@ -78,6 +79,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
+        if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
+            (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap(flow, dir.inBaseQty_);
+        }
+            
         if (dir.qty_ != 0) {
             CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_, dir.qty_);
             sweepSwapLiq(curve, accum, cntx.pool_, dir.limitPrice_, cntx.oracle_);
