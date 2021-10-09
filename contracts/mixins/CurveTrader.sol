@@ -19,8 +19,7 @@ import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CurveTrader is PositionRegistrar, LiquidityCurve,
-    LevelBook, ProtocolAccount {
+contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
 
     using SafeCast for int256;
     using SafeCast for int128;
