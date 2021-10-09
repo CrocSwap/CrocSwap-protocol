@@ -16,8 +16,8 @@ contract TestProtocolAccount is ProtocolAccount {
                         uint256 baseFees, uint256 quoteFees) public {
         TokenFlow.PairSeq memory pair = TokenFlow.initSeq();
         pair.nextHop(base, quote);
-        pair.baseProto_ = baseFees;
-        pair.quoteProto_ = quoteFees;
+        pair.flow_.baseProto_ = baseFees;
+        pair.flow_.quoteProto_ = quoteFees;
         accumProtocolFees(pair);
     }
 

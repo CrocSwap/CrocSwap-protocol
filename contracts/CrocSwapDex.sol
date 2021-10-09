@@ -20,6 +20,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
+    using Chaining for Chaining.PairFlow;
 
     constructor (address authority) {
         setPoolAuthority(authority);
@@ -46,18 +47,14 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
                 
                 verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_,
                              order.hops_[i].pools_[j]);
-                
-                (int256 baseFlow, int256 quoteFlow,
-                 uint256 baseProto, uint256 quoteProto) =
+
+                Chaining.PairFlow memory poolFlow =
                     CrocSwapBooks(booksSidecar_).runPool
                     (pool, order.hops_[i].pools_[j], priceImprove, msg.sender);
-
-                pairs.accumFlow(baseFlow, quoteFlow, baseProto, quoteProto);
+                pairs.flow_.foldFlow(poolFlow);
             }
 
-            // Make sure to call before clipping the pair.
-            accumProtocolFees(pairs);
-
+            accumProtocolFees(pairs); // Make sure to call before clipping
             int settleFlow = pairs.clipFlow();
             settleFlat(msg.sender, settleFlow, settleChannel, rollSpend);
             settleChannel = order.hops_[i].settle_;

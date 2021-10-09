@@ -10,6 +10,7 @@ import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
 import '../libraries/CurveCache.sol';
 import '../libraries/TickCluster.sol';
+import '../libraries/Chaining.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
@@ -34,16 +35,15 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     using CurveCache for CurveCache.Cache;
     using Directives for Directives.ConcentratedDirective;
     using PriceGrid for PriceGrid.ImproveSettings;
+    using Chaining for Chaining.PairFlow;
     
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir,
                             PriceGrid.ImproveSettings memory improve,
                             address owner, address oracle)
-        internal returns (int256 baseFlow, int256 quoteFlow,
-                          uint256 baseProtoFlow, uint256 quoteProtoFlow) {
+        internal returns (Chaining.PairFlow memory flow) {
         CurveCache.Cache memory curve = CurveCache.initCache(snapCurve(pool.hash_));
-        (baseFlow, quoteFlow, baseProtoFlow, quoteProtoFlow) =
-            applyToCurve(dir, pool, curve, improve, owner, oracle);
+        applyToCurve(flow, dir, pool, curve, improve, owner, oracle);
         commitCurve(pool.hash_, curve.curve_);
     }
 
@@ -62,48 +62,26 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
         commitCurve(pool.hash_, curve.curve_);
     }
 
-    function applyToCurve (Directives.PoolDirective memory dir,
+    function applyToCurve (Chaining.PairFlow memory flow,
+                           Directives.PoolDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
                            CurveCache.Cache memory curve, 
                            PriceGrid.ImproveSettings memory improve,
-                           address owner, address oracle)
-        private returns (int256 base, int256 quote,
-                         uint256 protoBase, uint256 protoQuote) {
-        int256 baseIncr;
-        int256 quoteIncr;
-
-        (base, quote, protoBase, protoQuote) = applySwap(dir.swap_, pool, curve, oracle);
-        
-        (baseIncr, quoteIncr) = applyAmbient(dir.ambient_, pool, curve, owner);
-        base += baseIncr;
-        quote += quoteIncr;
-
-        (baseIncr, quoteIncr) = applyConcentrateds(dir.conc_, pool, curve,
-                                                   improve, owner);
-        base += baseIncr;
-        quote += quoteIncr;
+                           address owner, address oracle) private {
+        applySwap(flow, dir.swap_, pool, curve, oracle);
+        applyAmbient(flow, dir.ambient_, pool, curve, owner);
+        applyConcentrateds(flow, dir.conc_, pool, curve, improve, owner);
     }
 
-    function applySwap (Directives.SwapDirective memory dir,
+    function applySwap (Chaining.PairFlow memory flow,
+                        Directives.SwapDirective memory dir,
                         PoolSpecs.PoolCursor memory pool,
-                        CurveCache.Cache memory curve, address oracle)
-        private returns (int256 flowBase, int256 flowQuote,
-                         uint256 protoBase, uint256 protoQuote) {
+                        CurveCache.Cache memory curve, address oracle) private {
         if (dir.qty_ != 0) {
             CurveMath.SwapAccum memory accum = initSwapAccum(dir, pool, dir.qty_);
             sweepSwapLiq(curve, accum, pool, dir.limitPrice_, oracle);
-            (flowBase, flowQuote) = (accum.paidBase_, accum.paidQuote_);
-            (protoBase, protoQuote) = assignProtoFees(accum);            
+            flow.accumSwap(accum);
         }
-    }
-
-    function assignProtoFees (CurveMath.SwapAccum memory accum) private pure
-        returns (uint256 paidBase, uint256 paidQuote) {
-        if (accum.cntx_.inBaseQty_) {
-            paidQuote = accum.paidProto_;
-        } else {
-            paidBase = accum.paidProto_;
-        }        
     }
 
     /* A swap operation is a potentially long and iterative process that
@@ -122,32 +100,32 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                     paidBase_: 0, paidQuote_: 0, paidProto_: 0});
     }
 
-    function applyAmbient (Directives.AmbientDirective memory dir,
+    function applyAmbient (Chaining.PairFlow memory flow,
+                           Directives.AmbientDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
                            CurveCache.Cache memory curve, address owner)
-        private returns (int256, int256) {
+        private {
+        if (dir.liquidity_ == 0) { return; }
 
-        if (dir.liquidity_ == 0) { return (0, 0); }
-        if (dir.isAdd_) {
-            return mintAmbient(dir.liquidity_, curve, pool, owner);
-        } else {
-            return burnAmbient(dir.liquidity_, curve, pool, owner);
-        }
+        (int256 base, int256 quote) = dir.isAdd_ ?
+            mintAmbient(dir.liquidity_, curve, pool, owner) :
+            burnAmbient(dir.liquidity_, curve, pool, owner);
+        flow.accumFlow(base, quote);
     }
 
-    function applyConcentrateds (Directives.ConcentratedDirective[] memory dirs,
+    function applyConcentrateds (Chaining.PairFlow memory flow,
+                                 Directives.ConcentratedDirective[] memory dirs,
                                  PoolSpecs.PoolCursor memory pool,
                                  CurveCache.Cache memory curve,
                                  PriceGrid.ImproveSettings memory improve, address owner)
-        private returns (int256 baseFlow, int256 quoteFlow) {
+        private {
         for (uint i = 0; i < dirs.length; ++i) {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
                 Directives.RangeOrder memory range = dirs[i].sliceBookend(j);
                 
                 (int256 nextBase, int256 nextQuote) = applyConcentrated
                     (range, pool, curve, improve, owner);
-                baseFlow += nextBase;
-                quoteFlow += nextQuote;
+                flow.accumFlow(nextBase, nextQuote);
             }
         }
     }

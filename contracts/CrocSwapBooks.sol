@@ -6,6 +6,7 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
+import './libraries/Chaining.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -22,8 +23,7 @@ contract CrocSwapBooks is CurveTrader {
                       Directives.PoolDirective memory dir,
                       PriceGrid.ImproveSettings memory improve,
                       address owner)
-        masterOnly public returns (int256 baseFlow, int256 quoteFlow,
-                                   uint256 baseProtoCut, uint256 quoteProtoCut) {
+        masterOnly public returns (Chaining.PairFlow memory pair) {
         return tradeOverPool(pool, dir, improve, owner, msg.sender);
     }
 
