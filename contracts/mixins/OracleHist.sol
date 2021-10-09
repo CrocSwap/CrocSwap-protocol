@@ -5,11 +5,13 @@ pragma solidity >=0.8.4;
 import '../libraries/SafeCast.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
+import '../libraries/TickCluster.sol';
 
 import "hardhat/console.sol";
 
 contract OracleHistorian {
     using TickMath for uint128;
+    using TickCluster for int24;
     using CurveMath for CurveMath.CurveState;
     using CurveCache for CurveCache.Cache;
 
@@ -26,7 +28,7 @@ contract OracleHistorian {
         int24 lastTick_;
         Checkpoint[4294967296] series_;
     }
-
+    
     function queryLength (bytes32 poolKey) public view returns (uint64) {
         return hists_[poolKey].nextIndex_;
     }
@@ -36,28 +38,28 @@ contract OracleHistorian {
         return hists_[poolKey].series_[seriesIdx];
     }
 
-    function isOracleEvent (bytes32 poolKey, int24 startTick,
-                            int24 endTick) internal view
-        returns (bool) {
-        int24 startCluster = clusterTick(startTick);
-        int24 endCluster = clusterTick(endTick);
-
-        uint24 clusterMove = startCluster > endCluster ?
-            uint24(startCluster - endCluster) :
-            uint24(endCluster - startCluster);
-        
-        if (clusterMove == 0) {
-            return false;
-        } else if (clusterMove > 1) {
-            return true;
-        } else {
-            int24 lastCluster = clusterTick(hists_[poolKey].lastTick_);
-            return endCluster != lastCluster;
+    function considerCheckpoint (bytes32 poolKey, int24 startTick, 
+                                 CurveCache.Cache memory curve) internal {
+        if (isOracleEvent(poolKey, startTick, curve.pullPriceTick())) {
+            addCheckpoint(poolKey, curve);
         }
     }
-    
-    function addCheckpoint (bytes32 poolKey, CurveCache.Cache memory curve)
-        internal {
+        
+    function isOracleEvent (bytes32 poolKey, int24 start, int24 end)
+        internal view returns (bool) {
+        uint24 move = start.clusterMove(end);
+        
+        if (move == 0) {
+            return false;
+        } else if (move > 1) {
+            return true;
+        } else {
+            int24 lastCluster = hists_[poolKey].lastTick_.clusterTick();
+            return lastCluster != end.clusterTick();
+        }
+    }
+
+    function addCheckpoint (bytes32 poolKey, CurveCache.Cache memory curve) internal {
         addCheckpoint(poolKey, curve, SafeCast.timeUint32());
     }
 
@@ -147,12 +149,9 @@ contract OracleHistorian {
         bool newBlock = (nowTime > lastTime);
         return newBlock;
     }
-    
-    function clusterTick (int24 tick) private pure returns (int24) {
-        return tick / NEIGHBOR_TICKS;
-    }
 
     mapping(bytes32 => History) private hists_;
+    
     int24 constant private NEIGHBOR_TICKS = 32;
 }
 

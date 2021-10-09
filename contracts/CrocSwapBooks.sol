@@ -24,12 +24,12 @@ contract CrocSwapBooks is CurveTrader {
                       address owner)
         masterOnly public returns (int256 baseFlow, int256 quoteFlow,
                                    uint256 baseProtoCut, uint256 quoteProtoCut) {
-        return tradeOverPool(pool, dir, improve, owner);
+        return tradeOverPool(pool, dir, improve, owner, msg.sender);
     }
 
     function runInit (PoolSpecs.PoolCursor memory pool, uint128 price)
         masterOnly public returns (int256 baseFlow, int256 quoteFlow) {
-        return initCurve(pool, price, initLock_);
+        return initCurve(pool, price, initLock_, msg.sender);
     }
 
     function queryCurve (PoolSpecs.PoolCursor memory pool) public view

@@ -9,21 +9,23 @@ import '../libraries/SwapCurve.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
 import '../libraries/CurveCache.sol';
+import '../libraries/TickCluster.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ProtocolAccount.sol';
-import './OracleHist.sol';
+import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
 contract CurveTrader is PositionRegistrar, LiquidityCurve,
-    LevelBook, ProtocolAccount, OracleHistorian {
+    LevelBook, ProtocolAccount {
 
     using SafeCast for int256;
     using SafeCast for int128;
     using SafeCast for uint256;
     using SafeCast for uint128;
+    using TickCluster for int24;
     using PoolSpecs for PoolSpecs.Pool;
     using SwapCurve for CurveMath.CurveState;
     using SwapCurve for CurveMath.SwapAccum;
@@ -32,41 +34,45 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     using CurveCache for CurveCache.Cache;
     using Directives for Directives.ConcentratedDirective;
     using PriceGrid for PriceGrid.ImproveSettings;
-
+    
     function tradeOverPool (PoolSpecs.PoolCursor memory pool,
                             Directives.PoolDirective memory dir,
                             PriceGrid.ImproveSettings memory improve,
-                            address owner)
+                            address owner, address oracle)
         internal returns (int256 baseFlow, int256 quoteFlow,
                           uint256 baseProtoFlow, uint256 quoteProtoFlow) {
         CurveCache.Cache memory curve = CurveCache.initCache(snapCurve(pool.hash_));
         (baseFlow, quoteFlow, baseProtoFlow, quoteProtoFlow) =
-            applyToCurve(dir, pool, curve, improve, owner);
+            applyToCurve(dir, pool, curve, improve, owner, oracle);
         commitCurve(pool.hash_, curve.curve_);
     }
 
     function initCurve (PoolSpecs.PoolCursor memory pool,
-                        uint128 price, uint128 initLiq)
+                        uint128 price, uint128 initLiq, address oracle)
         internal returns (int256 baseFlow, int256 quoteFlow) {
         CurveCache.Cache memory curve = CurveCache.initCache(snapCurveInit(pool.hash_));
         initPrice(curve, price);
         if (initLiq > 0) {
             (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
         }
-        addCheckpoint(pool.hash_, curve);
+        if (oracle != address(oracle)) {
+            ICrocSwapHistRecv(oracle).checkpointHist(pool.hash_, curve.pullPriceTick(),
+                                                     curve);
+        }
         commitCurve(pool.hash_, curve.curve_);
     }
 
     function applyToCurve (Directives.PoolDirective memory dir,
                            PoolSpecs.PoolCursor memory pool,
                            CurveCache.Cache memory curve, 
-                           PriceGrid.ImproveSettings memory improve, address owner)
+                           PriceGrid.ImproveSettings memory improve,
+                           address owner, address oracle)
         private returns (int256 base, int256 quote,
                          uint256 protoBase, uint256 protoQuote) {
         int256 baseIncr;
         int256 quoteIncr;
 
-        (base, quote, protoBase, protoQuote) = applySwap(dir.swap_, pool, curve);
+        (base, quote, protoBase, protoQuote) = applySwap(dir.swap_, pool, curve, oracle);
         
         (baseIncr, quoteIncr) = applyAmbient(dir.ambient_, pool, curve, owner);
         base += baseIncr;
@@ -80,12 +86,12 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
 
     function applySwap (Directives.SwapDirective memory dir,
                         PoolSpecs.PoolCursor memory pool,
-                        CurveCache.Cache memory curve)
+                        CurveCache.Cache memory curve, address oracle)
         private returns (int256 flowBase, int256 flowQuote,
                          uint256 protoBase, uint256 protoQuote) {
         if (dir.qty_ != 0) {
             CurveMath.SwapAccum memory accum = initSwapAccum(dir, pool, dir.qty_);
-            sweepSwapLiq(curve, accum, pool, dir.limitPrice_);
+            sweepSwapLiq(curve, accum, pool, dir.limitPrice_, oracle);
             (flowBase, flowQuote) = (accum.paidBase_, accum.paidQuote_);
             (protoBase, protoQuote) = assignProtoFees(accum);            
         }
@@ -246,13 +252,13 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     function sweepSwapLiq (CurveCache.Cache memory curve,
                            CurveMath.SwapAccum memory accum,
                            PoolSpecs.PoolCursor memory pool,
-                           uint128 limitPrice) internal {
+                           uint128 limitPrice, address oracle) internal {
         int24 midTick = curve.pullPriceTick();
         sweepSwapLiq(curve.curve_, midTick, accum, pool, limitPrice);
-        
         curve.dirtyPrice();
-        if (isOracleEvent(pool.hash_, midTick, curve.pullPriceTick())) {
-            addCheckpoint(pool.hash_, curve);
+        
+        if (midTick.clusterMove(curve.pullPriceTick()) > 0) {
+            ICrocSwapHistRecv(oracle).checkpointHist(pool.hash_, midTick, curve);
         }
     }
 
@@ -368,7 +374,6 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     function postBumpTick (int24 bumpTick, bool isBuy) private pure returns (int24) {
         return isBuy ? bumpTick : bumpTick - 1; 
     }
-
-
+    
     mapping(bytes32 => PoolSpecs.Pool) private pools_;
 }

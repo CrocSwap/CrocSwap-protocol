@@ -9,11 +9,15 @@ import './libraries/PriceGrid.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
+import './mixins/OracleHist.sol';
+import './interfaces/ICrocSwapHistRecv.sol';
 import './CrocSwapBooks.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
+contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
+    OracleHistorian, ICrocSwapHistRecv {
+    
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
 
@@ -79,6 +83,18 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount {
     function queryLiquidity (address base, address quote, uint24 poolIdx)
         public view returns (uint128) {
         return queryCurve(base, quote, poolIdx).activeLiquidity();
+    }
+
+    
+    function checkpointHist (bytes32 poolKey, int24 startTick,
+                             CurveCache.Cache memory curve) public override {
+        require(msg.sender == booksSidecar_);
+        considerCheckpoint(poolKey, startTick, curve);
+    }
+
+    function initHist (bytes32 poolKey, CurveCache.Cache memory curve) public override {
+        require(msg.sender == booksSidecar_);
+        addCheckpoint(poolKey, curve);
     }
     
     modifier reEntrantLock() {
