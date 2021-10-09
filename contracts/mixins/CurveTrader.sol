@@ -37,14 +37,12 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     using PriceGrid for PriceGrid.ImproveSettings;
     using Chaining for Chaining.PairFlow;
     
-    function tradeOverPool (PoolSpecs.PoolCursor memory pool,
-                            Directives.PoolDirective memory dir,
-                            PriceGrid.ImproveSettings memory improve,
-                            address owner, address oracle)
+    function tradeOverPool (Directives.PoolDirective memory dir,
+                            Chaining.ExecCntx memory cntx)
         internal returns (Chaining.PairFlow memory flow) {
-        CurveCache.Cache memory curve = CurveCache.initCache(snapCurve(pool.hash_));
-        applyToCurve(flow, dir, pool, curve, improve, owner, oracle);
-        commitCurve(pool.hash_, curve.curve_);
+        CurveCache.Cache memory curve = CurveCache.initCache(snapCurve(cntx.pool_.hash_));
+        applyToCurve(flow, dir, curve, cntx);
+        commitCurve(cntx.pool_.hash_, curve.curve_);
     }
 
     function initCurve (PoolSpecs.PoolCursor memory pool,
@@ -64,22 +62,20 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
 
     function applyToCurve (Chaining.PairFlow memory flow,
                            Directives.PoolDirective memory dir,
-                           PoolSpecs.PoolCursor memory pool,
-                           CurveCache.Cache memory curve, 
-                           PriceGrid.ImproveSettings memory improve,
-                           address owner, address oracle) private {
-        applySwap(flow, dir.swap_, pool, curve, oracle);
-        applyAmbient(flow, dir.ambient_, pool, curve, owner);
-        applyConcentrateds(flow, dir.conc_, pool, curve, improve, owner);
+                           CurveCache.Cache memory curve,
+                           Chaining.ExecCntx memory cntx) private {
+        applySwap(flow, dir.swap_, curve, cntx);
+        applyAmbient(flow, dir.ambient_, curve, cntx);
+        applyConcentrateds(flow, dir.conc_, curve, cntx);
     }
 
     function applySwap (Chaining.PairFlow memory flow,
                         Directives.SwapDirective memory dir,
-                        PoolSpecs.PoolCursor memory pool,
-                        CurveCache.Cache memory curve, address oracle) private {
+                        CurveCache.Cache memory curve,
+                        Chaining.ExecCntx memory cntx) private {
         if (dir.qty_ != 0) {
-            CurveMath.SwapAccum memory accum = initSwapAccum(dir, pool, dir.qty_);
-            sweepSwapLiq(curve, accum, pool, dir.limitPrice_, oracle);
+            CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_, dir.qty_);
+            sweepSwapLiq(curve, accum, cntx.pool_, dir.limitPrice_, cntx.oracle_);
             flow.accumSwap(accum);
         }
     }
@@ -102,55 +98,51 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
 
     function applyAmbient (Chaining.PairFlow memory flow,
                            Directives.AmbientDirective memory dir,
-                           PoolSpecs.PoolCursor memory pool,
-                           CurveCache.Cache memory curve, address owner)
-        private {
+                           CurveCache.Cache memory curve,
+                           Chaining.ExecCntx memory cntx) private {
         if (dir.liquidity_ == 0) { return; }
 
         (int256 base, int256 quote) = dir.isAdd_ ?
-            mintAmbient(dir.liquidity_, curve, pool, owner) :
-            burnAmbient(dir.liquidity_, curve, pool, owner);
+            mintAmbient(dir.liquidity_, curve, cntx) :
+            burnAmbient(dir.liquidity_, curve, cntx);
         flow.accumFlow(base, quote);
     }
 
     function applyConcentrateds (Chaining.PairFlow memory flow,
                                  Directives.ConcentratedDirective[] memory dirs,
-                                 PoolSpecs.PoolCursor memory pool,
                                  CurveCache.Cache memory curve,
-                                 PriceGrid.ImproveSettings memory improve, address owner)
-        private {
+                                 Chaining.ExecCntx memory cntx) private {
         for (uint i = 0; i < dirs.length; ++i) {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
                 Directives.RangeOrder memory range = dirs[i].sliceBookend(j);
                 
                 (int256 nextBase, int256 nextQuote) = applyConcentrated
-                    (range, pool, curve, improve, owner);
+                    (range, curve, cntx);
                 flow.accumFlow(nextBase, nextQuote);
             }
         }
     }
 
     function applyConcentrated (Directives.RangeOrder memory range,
-                                PoolSpecs.PoolCursor memory pool,
                                 CurveCache.Cache memory curve,
-                                PriceGrid.ImproveSettings memory improve, address owner)
+                                Chaining.ExecCntx memory cntx)
         private returns (int256, int256) {
-        improve.verifyFit(range, pool.head_.tickSize_, curve.pullPriceTick());
+        cntx.improve_.verifyFit(range, cntx.pool_.head_.tickSize_,
+                                curve.pullPriceTick());
 
         if (range.liquidity_ == 0) { return (0, 0); }
         if (range.isAdd_) {
-            return mintConcentrated(range.lowerTick_, range.upperTick_,
-                                    range.liquidity_, curve, pool, owner);
+            return mintConcentrated(range, curve, cntx);
         } else {
-            return burnConcentrated(range.lowerTick_, range.upperTick_,
-                                    range.liquidity_, curve, pool, owner);
+            return burnConcentrated(range, curve, cntx);
         }
     }
 
     function mintAmbient (uint128 liqAdded, CurveCache.Cache memory curve,
-                          PoolSpecs.PoolCursor memory pool, address owner)
+                          Chaining.ExecCntx memory cntx)
         private returns (int256, int256) {
-        mintPosLiq(owner, pool.hash_, liqAdded, curve.curve_.accum_.ambientGrowth_);
+        mintPosLiq(cntx.owner_, cntx.pool_.hash_, liqAdded,
+                   curve.curve_.accum_.ambientGrowth_);
         (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
@@ -162,37 +154,40 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
     }
 
     function burnAmbient (uint128 liqBurned, CurveCache.Cache memory curve,
-                          PoolSpecs.PoolCursor memory pool, address owner)
+                          Chaining.ExecCntx memory cntx)
         private returns (int256, int256) {
-        burnPosLiq(owner, pool.hash_, liqBurned, curve.curve_.accum_.ambientGrowth_);
+        burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
+                   curve.curve_.accum_.ambientGrowth_);
         (uint256 base, uint256 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }
     
-    function mintConcentrated (int24 lowerTick, int24 upperTick,
-                               uint128 liq, CurveCache.Cache memory curve,
-                               PoolSpecs.PoolCursor memory pool, address owner)
+    function mintConcentrated (Directives.RangeOrder memory r,
+                               CurveCache.Cache memory curve,
+                               Chaining.ExecCntx memory cntx)
         private returns (int256, int256) {
-        uint64 feeMileage = addBookLiq(pool.hash_, curve.pullPriceTick(),
-                                       lowerTick, upperTick, liq,
+        uint64 feeMileage = addBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
+                                       r.lowerTick_, r.upperTick_, r.liquidity_,
                                        curve.curve_.accum_.concTokenGrowth_);
-        mintPosLiq(owner, pool.hash_, lowerTick, upperTick, liq, feeMileage);
-        (uint256 base, uint256 quote) = liquidityReceivable(curve, liq,
-                                                            lowerTick, upperTick);
+        mintPosLiq(cntx.owner_, cntx.pool_.hash_, r.lowerTick_, r.upperTick_,
+                   r.liquidity_, feeMileage);
+        (uint256 base, uint256 quote) = liquidityReceivable
+            (curve, r.liquidity_, r.lowerTick_, r.upperTick_);
         return signMintFlow(base, quote);
     }
 
-    function burnConcentrated (int24 lowerTick, int24 upperTick,
-                               uint128 liq,  CurveCache.Cache memory curve,
-                               PoolSpecs.PoolCursor memory pool, address owner)
+    function burnConcentrated (Directives.RangeOrder memory r,
+                               CurveCache.Cache memory curve,
+                               Chaining.ExecCntx memory cntx)
         private returns (int256, int256) {
-        uint64 feeMileage = removeBookLiq(pool.hash_, curve.pullPriceTick(),
-                                          lowerTick, upperTick,
-                                          liq, curve.curve_.accum_.concTokenGrowth_);
-        uint64 rewards = burnPosLiq(owner, pool.hash_, lowerTick, upperTick,
-                                    liq, feeMileage); 
-        (uint256 base, uint256 quote) = liquidityPayable(curve, liq, rewards,
-                                                         lowerTick, upperTick);
+        uint64 feeMileage = removeBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
+                                          r.lowerTick_, r.upperTick_, r.liquidity_,
+                                          curve.curve_.accum_.concTokenGrowth_);
+        uint64 rewards = burnPosLiq(cntx.owner_, cntx.pool_.hash_,
+                                    r.lowerTick_, r.upperTick_,
+                                    r.liquidity_, feeMileage); 
+        (uint256 base, uint256 quote) = liquidityPayable(curve, r.liquidity_, rewards,
+                                                         r.lowerTick_, r.upperTick_);
         return signBurnFlow(base, quote);
     }
 

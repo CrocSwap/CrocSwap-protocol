@@ -41,16 +41,15 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
                                   pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
+                Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
                 PoolSpecs.PoolCursor memory pool =
-                    queryPool(pairs.baseToken_, pairs.quoteToken_,
-                              order.hops_[i].pools_[j].poolIdx_);
+                    queryPool(pairs.baseToken_, pairs.quoteToken_, dir.poolIdx_);
                 
-                verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_,
-                             order.hops_[i].pools_[j]);
+                verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_, dir);
 
+                Chaining.ExecCntx memory cntx = Chaining.buildCntx(pool, priceImprove);
                 Chaining.PairFlow memory poolFlow =
-                    CrocSwapBooks(booksSidecar_).runPool
-                    (pool, order.hops_[i].pools_[j], priceImprove, msg.sender);
+                    CrocSwapBooks(booksSidecar_).runPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
             }
 

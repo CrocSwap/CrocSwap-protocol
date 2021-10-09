@@ -19,12 +19,10 @@ contract CrocSwapBooks is CurveTrader {
         initLock_ = 1000000;
     }
 
-    function runPool (PoolSpecs.PoolCursor memory pool,
-                      Directives.PoolDirective memory dir,
-                      PriceGrid.ImproveSettings memory improve,
-                      address owner)
+    function runPool (Directives.PoolDirective memory dir,
+                      Chaining.ExecCntx memory cntx)
         masterOnly public returns (Chaining.PairFlow memory pair) {
-        return tradeOverPool(pool, dir, improve, owner, msg.sender);
+        return tradeOverPool(dir, cntx);
     }
 
     function runInit (PoolSpecs.PoolCursor memory pool, uint128 price)

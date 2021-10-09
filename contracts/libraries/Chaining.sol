@@ -13,16 +13,17 @@ import "hardhat/console.sol";
 /* @title Trade chaining library */
 library Chaining {
 
-    struct ExecutionContext {
+    struct ExecCntx {
         address owner_;
-        PoolSpecs.Pool pool_;
+        address oracle_;
+        PoolSpecs.PoolCursor pool_;
         PriceGrid.ImproveSettings improve_;
-        RollOverTarget roll_;
+        RollTarget roll_;
     }
 
-    struct RollOverTarget {
+    struct RollTarget {
         bool inBaseQty_;
-        int256 rollFlowFlow_;
+        int256 rollTarget_;
     }
 
     struct PairFlow {
@@ -32,6 +33,14 @@ library Chaining {
         uint256 quoteProto_;
     }
 
+    function buildCntx (PoolSpecs.PoolCursor memory pool,
+                        PriceGrid.ImproveSettings memory improve)
+        internal view returns (ExecCntx memory) {
+        RollTarget memory roll = RollTarget({inBaseQty_: false, rollTarget_: 0});
+        return ExecCntx({owner_: msg.sender, oracle_: address(this),
+                    pool_: pool, improve_: improve, roll_: roll});
+    }
+    
     function initFlow() internal pure returns (PairFlow memory) {
         return PairFlow({baseFlow_: 0, quoteFlow_: 0, baseProto_: 0, quoteProto_: 0});
     }
