@@ -36,7 +36,8 @@ library Chaining {
     function buildCntx (PoolSpecs.PoolCursor memory pool,
                         PriceGrid.ImproveSettings memory improve)
         internal view returns (ExecCntx memory) {
-        RollTarget memory roll = RollTarget({inBaseQty_: false, rollTarget_: 0});
+        RollTarget memory roll = RollTarget({inBaseQty_: false,
+                    rollTarget_: 0});
         return ExecCntx({owner_: msg.sender, oracle_: address(this),
                     pool_: pool, improve_: improve, roll_: roll});
     }

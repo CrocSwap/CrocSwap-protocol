@@ -64,9 +64,14 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve,
                            Directives.PoolDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        applySwap(flow, dir.swap_, curve, cntx);
+        if (!dir.chain_.swapDefer_) {
+            applySwap(flow, dir.swap_, curve, cntx);
+        }
         applyAmbient(flow, dir.ambient_, curve, cntx);
         applyConcentrateds(flow, dir.conc_, curve, cntx);
+        if (dir.chain_.swapDefer_) {
+            applySwap(flow, dir.swap_, curve, cntx);
+        }
     }
 
     function applySwap (Chaining.PairFlow memory flow,

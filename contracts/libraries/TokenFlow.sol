@@ -19,7 +19,6 @@ library TokenFlow {
         return PairSeq({baseToken_: address(0), quoteToken_: address(0),
                     isBaseFront_: false, legFlow_: 0, flow_: Chaining.initFlow()});
     }
-
     
     function nextHop (PairSeq memory seq, address tokenFront, address tokenBack)
         pure internal {
