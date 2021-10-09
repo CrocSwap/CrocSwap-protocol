@@ -25,7 +25,7 @@ describe('Pool Gas Benchmarks', () => {
        baseToken = await test.base
        quoteToken = await test.quote
 
-       await test.initPool(feeRate, 0, 1, 1.5)
+       await test.initPool(feeRate, 0, 1, 1.0)
     })
 
     async function gasUsed (tx: Promise<ContractTransaction>): Promise<BigNumber> {
