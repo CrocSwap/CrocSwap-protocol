@@ -46,11 +46,18 @@ library Directives {
         ConcentratedDirective[] conc_;
     }
     
+    struct ChainingFlags {
+        bool rollExit_;
+        bool swapDefer_;
+        bool offsetSurplus_;
+    }
+
     struct PoolDirective {
         uint24 poolIdx_;
         AmbientDirective ambient_;
         ConcentratedDirective[] conc_;
         SwapDirective swap_;
+        ChainingFlags chain_;
     }
 
     struct RolloverDirective {
@@ -71,17 +78,10 @@ library Directives {
         bool useBaseSide_;
     }
 
-    struct ChainingFlags {
-        bool rollExit_;
-        bool swapDefer_;
-        bool offsetSurplus_;
-    }
-
     struct HopDirective {
         PoolDirective[] pools_;
         SettlementChannel settle_;
         PriceImproveReq improve_;
-        ChainingFlags chain_;
     }
 
     struct OrderDirective {

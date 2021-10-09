@@ -5,8 +5,7 @@ export function singleHop (open: string, close: string, pool: PoolDirective): Or
     return {
         open: simpleSettle(open),
         hops: [ { settlement: simpleSettle(close), pools: [pool], 
-            improve: { isEnabled: false, useBaseSide: false },
-            chain: { rollExit: false, swapDefer: false, offsetSurplus: false}} ]
+            improve: { isEnabled: false, useBaseSide: false }}]
     }
 }
 
@@ -31,7 +30,8 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
             inBaseQty: false,
             qty: BigNumber.from(0),
             limitPrice: BigNumber.from(0)
-        }
+        },
+        chain: { rollExit: false, swapDefer: false, offsetSurplus: false}
     }
 }
 
@@ -50,6 +50,7 @@ export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean,
            inBaseQty: inBaseQty,
            qty: BigNumber.from(qty),
            limitPrice: BigNumber.from(limitPrice)
-       }
+       },
+       chain: { rollExit: false, swapDefer: false, offsetSurplus: false}
    }
 }

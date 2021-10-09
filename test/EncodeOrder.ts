@@ -33,13 +33,13 @@ export interface HopDirective {
     pools: PoolDirective[]
     settlement: SettlementDirective
     improve: ImproveDirective
-    chain: ChainingDirective
 }
 
 export interface PoolDirective {
     poolIdx: number
     passive: PassiveDirective,
-    swap: SwapDirective,
+    swap: SwapDirective
+    chain: ChainingDirective
 }
 
 export interface SwapDirective {
@@ -83,13 +83,17 @@ function encodeSettlement (dir: SettlementDirective): BytesLike {
 function encodeHop (hop: HopDirective): BytesLike {
     let pools = listEncoding(hop.pools, encodePool)
     let settle = encodeSettlement(hop.settlement)
-    let improve = encodeFlags(hop.improve, hop.chain)
+    let improve = encodeImprove(hop.improve)
     return ethers.utils.concat([pools, settle, improve])
 }
 
-function encodeFlags (improve: ImproveDirective, chain: ChainingDirective): BytesLike {
-    let flag = (improve.isEnabled ? 16 : 0) + (improve.useBaseSide ? 8 : 0) +
-        (chain.rollExit ? 4 : 0) + (chain.swapDefer ? 2 : 0) + 
+function encodeImprove (improve: ImproveDirective): BytesLike {
+    let flag = (improve.isEnabled ? 2 : 0) + (improve.useBaseSide ? 1 : 0)
+    return encodeJsNum(flag, 1)
+}
+
+function encodeChain (chain: ChainingDirective): BytesLike {
+    let flag = (chain.rollExit ? 4 : 0) + (chain.swapDefer ? 2 : 0) + 
         (chain.offsetSurplus ? 1 : 0)
     return encodeJsNum(flag, 1)
 }
@@ -98,7 +102,8 @@ function encodePool (pool: PoolDirective): BytesLike {
     let poolIdx = encodeJsNum(pool.poolIdx, 3)
     let passive = encodePassive(pool.passive)
     let swap = encodeSwap(pool.swap)
-    return ethers.utils.concat([poolIdx, passive, swap])
+    let chain = encodeChain(pool.chain)
+    return ethers.utils.concat([poolIdx, passive, swap, chain])
 }
 
 function encodeSwap (swap: SwapDirective): BytesLike {

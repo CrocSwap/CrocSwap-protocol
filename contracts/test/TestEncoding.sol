@@ -21,7 +21,6 @@ contract TestEncoding {
         Directives.OrderDirective memory directive = OrderEncoding.decodeOrder(input);
         settleHop = directive.hops_[idx].settle_;
         priceImprove = directive.hops_[idx].improve_;
-        chaining = directive.hops_[idx].chain_;
     }
 
     function testEncodePool (uint8 pairPos, uint8 poolPos,
@@ -30,6 +29,7 @@ contract TestEncoding {
         poolIdx = dir.hops_[pairPos].pools_[poolPos].poolIdx_;
         swap = dir.hops_[pairPos].pools_[poolPos].swap_;
         ambientOpen = dir.hops_[pairPos].pools_[poolPos].ambient_;
+        chaining = dir.hops_[pairPos].pools_[poolPos].chain_;
     }
 
     function testEncodePassive (uint8 pairPos, uint8 poolPos, uint8 concPos,
