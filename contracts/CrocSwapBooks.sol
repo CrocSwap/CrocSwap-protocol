@@ -8,15 +8,13 @@ import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
 import './libraries/Chaining.sol';
 import './mixins/CurveTrader.sol';
-import './mixins/SettleLayer.sol';
-import './mixins/PoolRegistry.sol';
+import './mixins/StorageLayout.sol';
 
 contract CrocSwapBooks is CurveTrader {
 
     constructor (address authority) {
         authority_ = authority;
         master_ = msg.sender;
-        initLock_ = 1000000;
     }
 
     function runPool (Directives.PoolDirective memory dir,
@@ -27,29 +25,11 @@ contract CrocSwapBooks is CurveTrader {
 
     function runInit (PoolSpecs.PoolCursor memory pool, uint128 price)
         masterOnly public returns (int128 baseFlow, int128 quoteFlow) {
-        return initCurve(pool, price, initLock_, msg.sender);
+        return initCurve(pool, price, 0, msg.sender);
     }
 
     function queryCurve (PoolSpecs.PoolCursor memory pool) public view
         returns (CurveMath.CurveState memory) {
         return snapCurve(pool.hash_);
     }
-
-    function setInitLock (uint128 initLock) authorityOnly public {
-        initLock_ = initLock;
-    }
-
-    modifier masterOnly() {
-        require(msg.sender == master_);
-        _;
-    }
-
-    modifier authorityOnly() {
-        require(msg.sender == authority_);
-        _;
-    }
-
-    address private immutable master_;
-    address private authority_;
-    uint128 private initLock_;
 }

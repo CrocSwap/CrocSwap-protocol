@@ -70,9 +70,9 @@ export class TestPool {
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
         price: number) {
-        await (await this.sidecar)
+        /*await (await this.sidecar)
             .connect(await this.auth)
-            .setInitLock(0)
+            .setInitLock(0)*/
         await (await this.dex)
             .connect(await this.auth)
             .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
@@ -86,9 +86,9 @@ export class TestPool {
 
     async initPermitPool (feeRate: number, protoTake: number, tickSize: number,
         price: number) {
-        await (await this.sidecar)
+        /*await (await this.sidecar)
             .connect(await this.auth)
-            .setInitLock(0)
+            .setInitLock(0)*/
         await (await this.dex)
             .connect(await this.auth)
             .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, 

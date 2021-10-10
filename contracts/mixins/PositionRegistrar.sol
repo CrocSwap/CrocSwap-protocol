@@ -6,13 +6,14 @@ import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/CompoundMath.sol';
+import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
-contract PositionRegistrar {
+contract PositionRegistrar is StorageLayout {
     using LowGasSafeMath for uint64;
     using SafeCast for uint256;
     using CompoundMath for uint128;
@@ -29,19 +30,6 @@ contract PositionRegistrar {
      * Of these 1-3 constitute the unique key. If a user adds a new position with the
      * same owner and the same range, it can be represented by incrementing 4 and 
      * updating 5. */
-    struct Position {
-        uint128 liquidity_;
-        uint64 feeMileage_;
-        uint32 timestamp_;
-    }
-
-    struct AmbientPosition {
-        uint128 seeds_;
-        uint32 timestamp_;
-    }
-
-    mapping(bytes32 => Position) private positions_;
-    mapping(bytes32 => AmbientPosition) private ambPositions_;
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
     function encodePosKey (address owner, bytes32 poolIdx)
@@ -60,7 +48,7 @@ contract PositionRegistrar {
      *         exists the result will have zero liquidity. */
     function lookupPosition (address owner, bytes32 poolIdx, int24 lowerTick,
                              int24 upperTick)
-        internal view returns (Position storage) {
+        internal view returns (RangePosition storage) {
         return positions_[encodePosKey(owner, poolIdx, lowerTick, upperTick)];
     }
 
@@ -93,7 +81,7 @@ contract PositionRegistrar {
     function burnPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 burnLiq, uint64 feeMileage)
         internal returns (uint64) {
-        Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         return decrementLiq(pos, burnLiq, feeMileage);
     }
 
@@ -113,7 +101,7 @@ contract PositionRegistrar {
         }
     }
 
-    function decrementLiq (Position storage pos,
+    function decrementLiq (RangePosition storage pos,
                            uint128 burnLiq, uint64 feeMileage) internal returns
         (uint64 rewards) {
         uint128 liq = pos.liquidity_;
@@ -156,7 +144,7 @@ contract PositionRegistrar {
      *                   position will be checkpointed with this value. */
     function mintPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 liqAdd, uint64 feeMileage) internal {
-        Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         incrementPosLiq(pos, liqAdd, feeMileage);
     }
 
@@ -168,7 +156,7 @@ contract PositionRegistrar {
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }
 
-    function incrementPosLiq (Position storage pos, uint128 liqAdd,
+    function incrementPosLiq (RangePosition storage pos, uint128 liqAdd,
                               uint64 feeMileage) private {
         uint128 liq = pos.liquidity_;
         uint64 oldMileage;
@@ -219,6 +207,7 @@ contract PositionRegistrar {
         return uint64(uint256(mileage) * uint256(weight) / uint256(total));
     }
 
+    
     /* @notice Changes the owner of an existing position without altering its properties
      *         in any other way. This has no impact from an aggregate liquidity and fee
      *         accumulation standpoint, and can otherwise be ignored downstream.
@@ -231,8 +220,9 @@ contract PositionRegistrar {
      *                  does *not* change during the ownership process. */
     function changePosOwner (address owner, address receiver, bytes32 poolIdx, 
                              int24 lowerTick, int24 upperTick) internal {
-        Position storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
-        Position storage newPos = lookupPosition(receiver, poolIdx, lowerTick, upperTick);
+        RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        RangePosition storage newPos = lookupPosition
+            (receiver, poolIdx, lowerTick, upperTick);
 
         // For now we only allow transfers to positions with uninitialized liquidity.
         // Otherwise the fee mileage on the existing liquidity will be set incorrectly.

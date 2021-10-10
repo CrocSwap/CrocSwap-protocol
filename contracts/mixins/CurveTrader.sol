@@ -357,6 +357,4 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function postBumpTick (int24 bumpTick, bool isBuy) private pure returns (int24) {
         return isBuy ? bumpTick : bumpTick - 1; 
     }
-    
-    mapping(bytes32 => PoolSpecs.Pool) private pools_;
 }

@@ -5,13 +5,15 @@ pragma experimental ABIEncoderV2;
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
+import '../libraries/TickCensus.sol';
 
 contract StorageLayout {
 
     // Generic general-purpose storage slots
     bool internal reEntrantLocked_;
     address internal authority_;
-    address internal booksSidecar_;
+    address internal sidecar_;
+    address internal master_;
 
     modifier reEntrantLock() {
         require(reEntrantLocked_ == false);
@@ -26,18 +28,69 @@ contract StorageLayout {
         _;
         reEntrantLocked_ = false;        
     }
-    
-    mapping(bytes32 => uint128) internal surplusCollateral_;
 
+    modifier masterOnly() {
+        require(msg.sender == master_);
+        _;
+    }
+
+    
+    /**************************************************************/
+    // LevelBook
+    /**************************************************************/
+    struct BookLevel {
+        uint96 bidLots_;
+        uint96 askLots_;
+        uint64 feeOdometer_;
+    }
+    mapping(bytes32 => BookLevel) internal levels_;
+    TickCensusLib.TickCensus internal ticks_;
+    /**************************************************************/
+    
+
+    /**************************************************************/
     // PoolRegistry
     mapping(uint24 => PoolSpecs.Pool) internal templates_;
     mapping(bytes32 => PoolSpecs.Pool) internal pools_;
     mapping(address => PriceGrid.ImproveSettings) internal improves_;
+    /**************************************************************/
 
+    
+    /**************************************************************/
     // ProtocolAccount
+    /**************************************************************/
     mapping(address => uint256) internal feesAccum_;
+    /**************************************************************/
 
-    // OracleHistorian
+
+    /**************************************************************/
+    // PositionRegistrar
+    /**************************************************************/
+    struct RangePosition {
+        uint128 liquidity_;
+        uint64 feeMileage_;
+        uint32 timestamp_;
+    }
+
+    struct AmbientPosition {
+        uint128 seeds_;
+        uint32 timestamp_;
+    }
+    mapping(bytes32 => RangePosition) internal positions_;
+    mapping(bytes32 => AmbientPosition) internal ambPositions_;
+    /**************************************************************/
+
+    
+    /**************************************************************/
+    // LiquidityCurve
+    /**************************************************************/
+    mapping(bytes32 => CurveMath.CurveState) internal curves_;
+    /**************************************************************/
+
+    
+    /**************************************************************/
+    // OracleHistorian    
+    /**************************************************************/
     struct Checkpoint {
         uint32 time_;
         uint32 ambientGrowth_;
@@ -53,6 +106,13 @@ contract StorageLayout {
     }
 
     mapping(bytes32 => History) internal hists_;
+    /**************************************************************/
 
+    
+    /**************************************************************/
+    // SettleLayer
+    /**************************************************************/
+    mapping(bytes32 => uint128) internal surplusCollateral_;
+    /**************************************************************/
 }
 

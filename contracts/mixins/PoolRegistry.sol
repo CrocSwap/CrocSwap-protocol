@@ -26,7 +26,7 @@ contract PoolRegistry is StorageLayout {
     
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
-                              address permitOracle) public authOnly {
+                              address permitOracle) public protocolOnly {
         PoolSpecs.Header memory head = PoolSpecs.Header({feeRate_: feeRate,
                     protocolTake_: protocolTake, tickSize_: tickSize,
                     priceOracle_: 0, extFlags_: formExtFlags(permitOracle)});
@@ -41,13 +41,13 @@ contract PoolRegistry is StorageLayout {
     }
     
     function setProtocolTake (address base, address quote, uint24 poolIdx,
-                              uint8 protocolTake) authOnly public {
+                              uint8 protocolTake) protocolOnly public {
         selectPool(base, quote, poolIdx).head_.protocolTake_ = protocolTake;        
     }
 
     function setPriceImprove (address token, uint128 unitTickCollateral,
                               uint16 awayTickTol, int8[] calldata rangeMults)
-        authOnly public {
+        protocolOnly public {
         improves_[token] = PriceGrid.formatSettings(true, unitTickCollateral,
                                                     awayTickTol, rangeMults);
     }
@@ -103,14 +103,5 @@ contract PoolRegistry is StorageLayout {
     function isPoolInit (PoolSpecs.PoolCursor memory pool)
         private pure returns (bool) {
         return pool.head_.tickSize_ > 0;
-    }
-
-    function setPoolAuthority (address authority) internal {
-        authority_ = authority;
-    }
-
-    modifier authOnly() {
-        require(msg.sender == authority_);
-        _;
     }
 }

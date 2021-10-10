@@ -24,9 +24,8 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     using Chaining for Chaining.PairFlow;
 
     constructor (address authority) {
-        setPoolAuthority(authority);
         setProtoAcctAuthority(authority);
-        booksSidecar_ = address(new CrocSwapBooks(authority));
+        sidecar_ = address(new CrocSwapBooks(authority));
     }
     
     function trade (bytes calldata input) reEntrantLock public {
@@ -54,7 +53,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
                 verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
                 
                 Chaining.PairFlow memory poolFlow =
-                    CrocSwapBooks(booksSidecar_).runPool(dir, cntx);
+                    CrocSwapBooks(sidecar_).runPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
             }
 
@@ -90,7 +89,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int128 baseFlow, int128 quoteFlow) = CrocSwapBooks(booksSidecar_).
+        (int128 baseFlow, int128 quoteFlow) = CrocSwapBooks(sidecar_).
             runInit(pool, price);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
@@ -98,7 +97,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     function queryCurve (address base, address quote, uint24 poolIdx)
         public view returns (CurveMath.CurveState memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        return CrocSwapBooks(booksSidecar_).queryCurve(pool);
+        return CrocSwapBooks(sidecar_).queryCurve(pool);
     }
 
     function queryLiquidity (address base, address quote, uint24 poolIdx)
@@ -109,16 +108,16 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     
     function checkpointHist (bytes32 poolKey, int24 startTick,
                              CurveCache.Cache memory curve) public override {
-        require(msg.sender == booksSidecar_);
+        require(msg.sender == sidecar_);
         considerCheckpoint(poolKey, startTick, curve);
     }
 
     function initHist (bytes32 poolKey, CurveCache.Cache memory curve) public override {
-        require(msg.sender == booksSidecar_);
+        require(msg.sender == sidecar_);
         addCheckpoint(poolKey, curve);
     }
 
     function getBooksSidecar() public view returns (address) {
-        return booksSidecar_;
+        return sidecar_;
     }    
 }

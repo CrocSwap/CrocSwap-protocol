@@ -11,6 +11,7 @@ import '../libraries/LowGasSafeMath.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
+import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
@@ -19,15 +20,13 @@ import "hardhat/console.sol";
  *         for the pool. Applies any adjustment to the curve as needed, either from
  *         new or removed positions or pre-determined liquidity bumps that occur
  *         when crossing tick boundaries. */
-contract LiquidityCurve {
+contract LiquidityCurve is StorageLayout {
     using SafeCast for uint128;
     using SafeCast for uint192;
     using SafeCast for uint144;
     using CurveMath for uint128;
     using CurveMath for CurveMath.CurveState;
     using CurveCache for CurveCache.Cache;
-    
-    mapping(bytes32 => CurveMath.CurveState) private curves_;
 
     /* @notice Copies the current state of the curve in EVM storage to a memory clone.
      * @dev    Use for light-weight gas ergonomics when iterarively operating on the 

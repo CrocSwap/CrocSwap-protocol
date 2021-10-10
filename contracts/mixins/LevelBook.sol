@@ -5,11 +5,12 @@ pragma experimental ABIEncoderV2;
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import '../libraries/TickCensus.sol';
+import './StorageLayout.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
-contract LevelBook {
+contract LevelBook is StorageLayout {
     using SafeCast for uint128;
     using LiquidityMath for uint128;
     using LiquidityMath for uint96;
@@ -27,15 +28,6 @@ contract LevelBook {
      *       cumulative fee rewards on any arbitrary lower-upper tick range. This is
      *       generically represented as a per-liquidity unit 128-bit fixed point 
      *       cumulative growth rate. */
-    struct BookLevel {
-        uint96 bidLots_;
-        uint96 askLots_;
-        uint64 feeOdometer_;
-    }
-
-    mapping(bytes32 => BookLevel) private levels_;
-    TickCensusLib.TickCensus ticks_;
-
 
     /* @notice Called when the curve price moves through the tick boundary. Performs
      *         the necessary accumulator checkpointing and deriving the liquidity bump.
