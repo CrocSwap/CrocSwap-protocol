@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
-import './FullMath.sol';
 import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
@@ -285,10 +284,10 @@ library CurveMath {
      *   Equivalent to the amount of tokens that would be held for an equivalent 
      *   classical constant- product AMM without concentrated liquidity.  */
     function reserveAtPrice (uint128 liq, uint128 price, bool inBaseQty)
-        internal pure returns (uint256) {
+        internal pure returns (uint192) {
         return inBaseQty ?
-            FullMath.mulDiv(liq, price, FixedPoint.Q64) :
-            FullMath.mulDiv(liq, FixedPoint.Q64, price);
+            FixedPoint.mulQ64(liq, price) :
+            FixedPoint.divQ64(liq, price);
     }
 
     /* @dev The fixed point arithmetic results in output that's a close approximation
@@ -301,10 +300,11 @@ library CurveMath {
         uint256 initReserve = reserveAtPrice(liq, price, inBaseQty);
         
         uint256 endReserve = (isBuy == inBaseQty) ?
-            initReserve.add(denomFlow) : initReserve.sub(denomFlow);
-        if (endReserve == 0) { return type(uint128).max; }
+            initReserve + denomFlow :
+            initReserve - denomFlow;
+        if (endReserve == 0) { return type(uint256).max; }
         
-        uint256 endInvert = FullMath.mulDiv(liq, liq, endReserve);
+        uint256 endInvert = uint256(liq) * uint256(liq) / endReserve;
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
     }
@@ -336,48 +336,45 @@ library CurveMath {
      *   should be multiplied by that factor. */
     function priceToTokenPrecision (uint128 liq, uint128 price,
                                     bool isRoundUp) internal pure returns (uint256) {
-        uint256 MULT_OVERHEAD = 4;
-        uint256 shift = deriveTokenPrecision(MULT_OVERHEAD * uint256(liq),
-                                             price, isRoundUp);
+        uint128 liqCons = liq + 1; // Round up to be conservative
+        uint256 shift = deriveTokenPrecision(liqCons, price, isRoundUp);
         return shift + 1; // Round up by 1 wei to be conservative
     }
 
     /* @notice Derives the amount of tokens it would take buffer the curve by one price
      *   precision unit. */
-    function deriveTokenPrecision (uint256 liqWeight, uint128 price,
+    function deriveTokenPrecision (uint128 liq, uint128 price,
                                    bool inBaseToken) private pure returns (uint256) {
         // To provide more base token collateral than price precision rounding:
         //     delta(B) >= L * delta(P)
-        //     delta(P) <= 2^-96  (96 bit precision rounding)
-        //     delta(B) >= L * 2^-96
+        //     delta(P) <= 2^-64  (64 bit precision rounding)
+        //     delta(B) >= L * 2^-64
         //  (where L is liquidity, B is base token reserves, P is price)
         if (inBaseToken) {
-            return liqWeight / FixedPoint.Q64;
+            return liq >> 64;
         } else {
             // Proivde quote token collateral to buffer price precision roudning:
             //    delta(Q) >= L * delta(1/P)
-            //    delta(P) <= 2^-96  (96 bit precision rounding)
-            //          P  >= 2^-96  (minimum precision)
-            //    delta(Q) >= L * (1/(P-2^-96) - 1/P)
-            //             >= L * 2^-96/(P^2 - P * 2^-96)
-            //             >= L * 2^-96/(P - 2^-96)^2        (upper bound to above)
+            //    delta(P) <= 2^-64  (64 bit precision rounding)
+            //          P  >= 2^-64  (minimum precision)
+            //    delta(Q) >= L * (1/(P-2^-64) - 1/P)
+            //             >= L * 2^-64/(P^2 - P * 2^-64)
+            //             >= L * 2^-64/(P - 2^-64)^2        (upper bound to above)
             if (price <= FixedPoint.Q64) {
                 // The fixed point representation of Price in bits is
-                //    Pb = P * 2^96
+                //    Pb = P * 2^64
                 // Therefore
-                //    delta(Q) >= L * 2^-96/(P/2^96)^2
-                //             >= L * 2^96/Pb^2
+                //    delta(Q) >= L * 2^-64/(P/2^64)^2
+                //             >= L * 2^64/Pb^2
                 //
-                return FullMath.mulDiv(liqWeight, FixedPoint.Q64,
-                                       // Price^2 fits in 256 bits since price < 96 bits
-                                       uint256(price - 1)*uint256(price - 1));
+                return FixedPoint.divSqQ64(liq, price-1);
             } else {
                 // If price is greater than 1, Can reduce to this (potentially loose,
                 // but still economically small) upper bound:
                 //           P >= 1
                 //    delta(Q) >= L * 2^-96/P^2
                 //             >= L * 2^-96
-                return liqWeight / FixedPoint.Q64;
+                return liq >> 64;
             }
         }
     }
