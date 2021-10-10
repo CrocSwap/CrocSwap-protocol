@@ -22,14 +22,18 @@ library CompoundMath {
      * @param x  The value of x in (1+x). Represented as a 128-bit fixed-point
      * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
      *            fixed point. */
-    function approxSqrtCompound (uint64 x) internal pure returns (uint64) {
+    function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
         // but the angel's share becomes unreasonble. 
-        require(x < FixedPoint.Q48, "C");
-        
-        uint256 linear = x/2;
-        uint256 ONE = FixedPoint.Q48;
-        uint256 quad = FullMath.mulDiv(x, x, ONE) / 8;
+        require(x64 < FixedPoint.Q48, "C");
+
+        uint256 x = uint256(x64);
+        // Shift by 48, to bring x^2 back in fixed point precision
+        uint256 xSq = (x * x) >> 48;
+        uint256 linear = x >> 1; // Linear Taylor series term is x/2
+        uint256 quad = xSq >> 3; // Quadratic Tayler series term ix x^2/8;
+
+        // This will always fit in 64 bits because result is smaller than original x
         return uint64(linear - quad);
     }
 
@@ -44,7 +48,9 @@ library CompoundMath {
     function compoundStack (uint64 x, uint64 y) internal
         pure returns (uint64) {
         uint256 ONE = FixedPoint.Q48;
-        uint256 z = FullMath.mulDiv(ONE.add(x), ONE.add(y), ONE).sub(ONE);
+        uint256 num = (ONE + x) * (ONE + y);
+        uint256 term = num >> 48;  // Divide by 48-bit ONE
+        uint256 z = term - ONE;
         if (z >= type(uint64).max) { return type(uint64).max; }
         return uint64(z);
     }
@@ -62,12 +68,15 @@ library CompoundMath {
         pure returns (uint256) {
         uint256 ONE = FixedPoint.Q48;
         uint256 multFactor = ONE + deflator;
-        uint256 z = FullMath.mulDiv(uint256(val), ONE, multFactor);        
+        uint256 num = uint256(val) << 48; // multiply by 48-bit ONE
+        uint256 z = num / multFactor;
         return uint64(z); // Will always fit in 64-bits because shrink can only decrease
     }
     
     /* @notice Computes the compound growth rate from based off an inflated value
      *         end value and a starting seed value.
+     * @dev    Based on this function's use, calulated growth rate will always be 
+     *         capped at 100%
      * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
      *           fixed-point. 
      * @param y The compounded growth rate to shrink by as in (1+y). Represted as 
@@ -76,8 +85,13 @@ library CompoundMath {
      *          Represented as 128-bit fixed-point. */
     function compoundDivide (uint256 inflated, uint256 seed) internal
         pure returns (uint64) {
+        // Otherwise arithmetic doesn't safely fit in 256 -bit
+        require(inflated < type(uint208).max, "C");
+        
         uint256 ONE = FixedPoint.Q48;
-        uint256 z = FullMath.mulDiv(inflated, ONE, seed).sub(ONE);
+        uint256 num = uint256(inflated) << 48;
+        uint256 z = (num / seed) - ONE;
+
         if (z >= ONE) { return uint64(ONE); }
         return uint64(z);
     }
@@ -97,10 +111,16 @@ library CompoundMath {
         pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
         uint256 multFactor = ONE + growth;
-        uint256 z = shiftUp ?
-            FullMath.mulDiv(uint256(price), multFactor, ONE) + 1 :
-            FullMath.mulDiv(uint256(price), ONE, multFactor);
-        return z.toUint128();
+        
+        if (shiftUp) {
+            uint256 num = uint256(price) * multFactor;
+            uint256 z = num >> 48; // De-scale by the 48-bit growth precision
+            return (z+1).toUint128(); // Round in the price shift
+        } else {
+            uint256 num = uint256(price) << 48;
+            // No need to safe cast, since this will be smaller than original price
+            return uint128(num / multFactor); 
+        }
     }
 
     
@@ -113,10 +133,11 @@ library CompoundMath {
     function inflateLiqSeed (uint128 seed, uint64 growth)
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
-        uint256 inflated = FullMath.mulDiv(seed, ONE.add(growth), ONE);
-        return inflated > type(uint128).max ?
-            type(uint128).max :
-            inflated.toUint128();
+        uint256 num = seed * (ONE + growth);
+        uint256 inflated = num >> 48; // De-scale by the 48-bit growth precision;
+        
+        if (inflated > type(uint128).max) { return type(uint128).max; }
+        return uint128(inflated);
     }
 
     /* @notice Deflates a starting value by a cumulative growth rate.
@@ -128,7 +149,10 @@ library CompoundMath {
     function deflateLiqSeed (uint128 liq, uint64 growth)
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
-        uint256 deflated = FullMath.mulDiv(liq, ONE, ONE + growth);
-        return deflated.toUint128();
+        uint256 num = liq << 48;
+        uint256 deflated = num / (ONE + growth);
+        
+        // No need to safe cast-- will allways be smaller than starting
+        return uint128(deflated); 
     }
 }
