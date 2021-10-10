@@ -198,19 +198,24 @@ contract PositionRegistrar {
      *   because mileage only increases through time. However this is a non-consequential
      *   failure. burnPosLiq() just treats it as a zero reward situation, and the staker
      *   loses an economically non-meaningful amount of rewards on the burn. */
-    function blendMileage (uint64 mileageX, uint128 liqX, uint64 mileageY, uint liqY)
+    function blendMileage (uint64 mileageX, uint128 liqX, uint64 mileageY, uint128 liqY)
         private pure returns (uint64) {
         if (liqY == 0) { return mileageX; }
         if (liqX == 0) { return mileageY; }
         if (mileageX == mileageY) { return mileageX; }
-        uint64 termX = FullMath.mulDiv(mileageX, liqX, liqX + liqY).toUint64();
-        uint64 termY = FullMath.mulDiv(mileageY, liqY, liqX + liqY).toUint64();
+        uint64 termX = calcBlend(mileageX, liqX, liqX + liqY);
+        uint64 termY = calcBlend(mileageY, liqY, liqX + liqY);
 
         // With mileage we want to be conservative on the upside. Under-estimating
         // mileage means overpaying rewards. So, round up the fractional weights.
         termX = termX + 1;
         termY = termY + 1;
         return termX + termY;
+    }
+
+    function calcBlend (uint64 mileage, uint128 weight, uint128 total)
+        private pure returns (uint64) {
+        return (uint256(mileage) * uint256(weight) / uint256(total)).toUInt64();
     }
 
     /* @notice Changes the owner of an existing position without altering its properties
