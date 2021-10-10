@@ -16,7 +16,7 @@ library PriceGrid {
 
     function verifyFit (ImproveSettings memory set,
                         Directives.RangeOrder memory range,
-                        uint16 gridSize, int24 priceTick) internal pure {
+                        uint16 gridSize, int24 priceTick) internal view {
         if (range.isAdd_) {
             if (!isOnGrid(range.lowerTick_, range.upperTick_, gridSize)) {
                 uint128 thresh = improveThresh(set, gridSize, priceTick,
@@ -192,7 +192,7 @@ library PriceGrid {
         if (inBase) {
             uint128 priceX = tick.getSqrtRatioAtTick();
             uint128 priceY = (tick + int24(wingSize)).getSqrtRatioAtTick();
-            return uint128(FixedPoint.divQ64(collateral, priceY - priceX));
+            return FixedPoint.divQ64(collateral, priceY - priceX).toUint128();
         } else {
             return convertToLiq(collateral, -tick, wingSize, true);
         }
