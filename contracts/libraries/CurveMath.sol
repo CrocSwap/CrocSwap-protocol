@@ -217,53 +217,78 @@ library CurveMath {
      *   wei below the true real value. Caller should account for this upstream. */
     function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint128) {
-        uint128 priceDelta = limitPrice > price ?
-            limitPrice - price : price - limitPrice;
-        
-        /* The formula calculated is
-         *    F = L * d / (P*P')
-         *   (where F is the flow to the limit price, where L is liquidity, d is delta, 
-         *    P is price and P' is limit price)
-         *
-         * Calculating this requires two stacked mulDiv. To meet the function' contract
-         * we need to compute the result with tight fixed point boundaries at or below
-         * 2 wei to conform to the function's contract.
-         * 
-         * The fixed point calculation of flow is
-         *    F = mulDiv(mulDiv(...)) = FR - FF
-         *  (where F is the fixed point result of the formula, FR is the true real valued
-         *   result with inifnite precision, FF is the loss of precision fractional round
-         *   down, mulDiv(...) is a fixed point mulDiv call of the form X*Y/Z)
-         *
-         * The individual fixed point terms are
-         *    T1 = mulDiv(X1, Y1, Z1) = T1R - T1F
-         *    T2 = mulDiv(T1, Y2, Z2) = T2R - T2F
-         *  (where T1 and T2 are the fixed point results from the first and second term,
-         *   T1R and T2R are the real valued results from an infinite precision mulDiv,
-         *   T1F and T2F are the fractional round downs, X1/Y1/Z1/Y2/Z2 are the arbitrary
-         *   input terms in the fixed point calculation)
-         *
-         * Therefore the total loss of precision is
-         *    FF = T2F + T1F * T2R/T1
-         *
-         * To guarantee a 2 wei precision loss boundary:
-         *    FF <= 2
-         *    T2F + T1F * T2R/T1 <= 2
-         *    T1F * T2R/T1 <=  1      (since T2F as a round-down is always < 1)
-         *    T2R/T1 <= 1             (since T1F as a round-down is always < 1)
-         *    Y2/Z1 <= 1   
-         *
-         * Therefore the order that we calculate mulDiv for the original formula
-         * matters. Depending on the relative sizes of the inputs, we want to arrange
-         * the order of multiply/divides to assure the second mulDiv bounds the precision
-         * loss from the first mulDiv() */
-        if (limitPrice > priceDelta) {
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q64, price);
-            return FullMath.mulDiv(partTerm, priceDelta, limitPrice).toUint128();
+        // For purposes of downstream calculations, we make sure that limit price is
+        // larger. End result is symmetrical anyway
+        if (limitPrice > price) {
+            return calcQuoteDelta(liq, limitPrice, price);
         } else {
-            // Implies priceDelta < price
-            uint256 partTerm = FullMath.mulDiv(liq, FixedPoint.Q64, limitPrice);
-            return FullMath.mulDiv(partTerm, priceDelta, price).toUint128();
+            return calcQuoteDelta(liq, price, limitPrice);
+        }
+    }
+
+    /* The formula calculated is
+     *    F = L * d / (P*P')
+     *   (where F is the flow to the limit price, where L is liquidity, d is delta, 
+     *    P is price and P' is limit price)
+     *
+     * Calculating this requires two stacked mulDiv. To meet the function' contract
+     * we need to compute the result with tight fixed point boundaries at or below
+     * 2 wei to conform to the function's contract.
+     * 
+     * The fixed point calculation of flow is
+     *    F = mulDiv(mulDiv(...)) = FR - FF
+     *  (where F is the fixed point result of the formula, FR is the true real valued
+     *   result with inifnite precision, FF is the loss of precision fractional round
+     *   down, mulDiv(...) is a fixed point mulDiv call of the form X*Y/Z)
+     *
+     * The individual fixed point terms are
+     *    T1 = mulDiv(X1, Y1, Z1) = T1R - T1F
+     *    T2 = mulDiv(T1, Y2, Z2) = T2R - T2F
+     *  (where T1 and T2 are the fixed point results from the first and second term,
+     *   T1R and T2R are the real valued results from an infinite precision mulDiv,
+     *   T1F and T2F are the fractional round downs, X1/Y1/Z1/Y2/Z2 are the arbitrary
+     *   input terms in the fixed point calculation)
+     *
+     * Therefore the total loss of precision is
+     *    FF = T2F + T1F * T2R/T1
+     *
+     * To guarantee a 2 wei precision loss boundary:
+     *    FF <= 2
+     *    T2F + T1F * T2R/T1 <= 2
+     *    T1F * T2R/T1 <=  1      (since T2F as a round-down is always < 1)
+     *    T2R/T1 <= 1             (since T1F as a round-down is always < 1)
+     *    Y2/Z1 <= 1 
+     *    Z1 >= Y2 */
+    function calcQuoteDelta (uint128 liq, uint128 priceBig, uint128 priceSmall)
+        internal pure returns (uint128) {
+        uint128 priceDelta = priceBig - priceSmall;
+
+        /* For prices above one unit
+         *     T1 = mulDiv(L, d, P')
+         *     T2 = mulDiv(T1, Q64, P)
+         *
+         * By definition P >= Q64, therefore satisfies Z1>Y2 condition for numrical
+         * stability. */
+        if (priceBig >= FixedPoint.Q64) {
+            // By definition the larger price is always bigger than the delta, therefore
+            // this term is always guaranteed to be smaller L and fit in 128-bit
+            // precision.
+            uint256 termOne = uint256(liq) * uint256(priceDelta) / uint256(priceBig);
+            uint256 termTwo = FixedPoint.divQ64(uint128(termOne), priceSmall);
+            return termTwo.toUint128();
+        } else {
+            /* Prices below one unit:
+             *     T1 = mulDiv(L, Q64, P')
+             *     T2 = mulDiv(T1, d, P)
+             *
+             * By definition Q64>P, therefore Z1>Y2 condition holds for numerical 
+             * stability. */
+            uint192 termOne = FixedPoint.divQ64(liq, priceBig);
+
+            // All price terms, including delta are at most 64-bits. Therefore this
+            // calculation fits safely in 256-bits.
+            uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceSmall);
+            return termTwo.toUint128();
         }
     }
 
