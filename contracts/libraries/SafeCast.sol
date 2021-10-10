@@ -51,7 +51,8 @@ library SafeCast {
     /// @param y The uint128 to be casted
     /// @return z The casted integer, now type int128
     function toInt128Sign(uint128 y) internal pure returns (int128 z) {
-        require((z = int128(y)) == z);
+        require(y < 2**127);
+        return int128(y);
     }
 
     /// @notice Cast a uint256 to a int256, revert on overflow
