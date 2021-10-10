@@ -44,7 +44,7 @@ describe('Pool', () => {
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(756*1024 - 336 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(755*1024 - 334 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
@@ -332,7 +332,7 @@ describe('Pool', () => {
         await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
         let limitFlow = -5584421
-        let counterFlow = 4109879
+        let counterFlow = 4109877
         let liqGrowth = 44287
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -357,7 +357,7 @@ describe('Pool', () => {
         await test.testBurn(3000, 5000, 10000)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385904)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-644294)
-        expect((await quoteToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderQuote)).to.equal(385905)
+        expect((await quoteToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderQuote)).to.equal(385904)
         expect((await baseToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderBase)).to.equal(644294)
         expect(await test.snapQuoteFlow()).to.equal(-385905)
         expect(await test.snapBaseFlow()).to.equal(-644294)
@@ -374,7 +374,7 @@ describe('Pool', () => {
 
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385902)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-644293)
-        expect(await test.snapQuoteFlow()).to.equal(-96476)
+        expect(await test.snapQuoteFlow()).to.equal(-96475)
         expect(await test.snapBaseFlow()).to.equal(-161073)
      })
 
