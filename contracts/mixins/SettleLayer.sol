@@ -5,12 +5,12 @@ pragma experimental ABIEncoderV2;
 import '../libraries/Directives.sol';
 import '../libraries/TransferHelper.sol';
 import '../libraries/TokenFlow.sol';
+import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
-contract SettleLayer {
+contract SettleLayer is StorageLayout {
     using TokenFlow for address;
-
     
     function settleFlat (address recv, int128 flow,
                          Directives.SettlementChannel memory dir,
@@ -147,7 +147,5 @@ contract SettleLayer {
         pure returns (bytes32) {
         return keccak256(abi.encode(owner, token));
     }
-
-    mapping(bytes32 => uint128) private surplusCollateral_;    
 }
 

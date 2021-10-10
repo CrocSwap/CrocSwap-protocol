@@ -6,10 +6,11 @@ import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
 import '../interfaces/ICrocSwapPermitOracle.sol';
+import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
-contract PoolRegistry {
+contract PoolRegistry is StorageLayout {
 
     using PoolSpecs for PoolSpecs.Pool;
 
@@ -112,9 +113,4 @@ contract PoolRegistry {
         require(msg.sender == authority_);
         _;
     }
-
-    mapping(uint24 => PoolSpecs.Pool) private templates_;
-    mapping(bytes32 => PoolSpecs.Pool) private pools_;
-    mapping(address => PriceGrid.ImproveSettings) private improves_;
-    address private authority_;
 }

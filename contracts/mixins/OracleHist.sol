@@ -6,29 +6,16 @@ import '../libraries/SafeCast.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
 import '../libraries/TickCluster.sol';
+import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
-contract OracleHistorian {
+contract OracleHistorian is StorageLayout {
     using TickMath for uint128;
     using TickCluster for int24;
     using CurveMath for CurveMath.CurveState;
     using CurveCache for CurveCache.Cache;
 
-    struct Checkpoint {
-        uint32 time_;
-        uint32 ambientGrowth_;
-        int56 twapPriceSum_;
-        int56 vwapPriceSum_;
-        uint80 liqLots_;
-    }
-
-    struct History {
-        uint64 nextIndex_;
-        int24 lastTick_;
-        Checkpoint[4294967296] series_;
-    }
-    
     function queryLength (bytes32 poolKey) public view returns (uint64) {
         return hists_[poolKey].nextIndex_;
     }
@@ -149,8 +136,6 @@ contract OracleHistorian {
         bool newBlock = (nowTime > lastTime);
         return newBlock;
     }
-
-    mapping(bytes32 => History) private hists_;
     
     int24 constant private NEIGHBOR_TICKS = 32;
 }

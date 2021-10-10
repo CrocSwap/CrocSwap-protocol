@@ -117,19 +117,8 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         require(msg.sender == booksSidecar_);
         addCheckpoint(poolKey, curve);
     }
-    
-    modifier reEntrantLock() {
-        require(reEntrantLocked_ == false, "A");
-        reEntrantLocked_ = true;
-        _;
-        reEntrantLocked_ = false;
-    }
 
     function getBooksSidecar() public view returns (address) {
         return booksSidecar_;
-    }
-    
-    bool private reEntrantLocked_;
-    address private booksSidecar_;
-    
+    }    
 }
