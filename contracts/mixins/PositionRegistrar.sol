@@ -2,7 +2,6 @@
 
 pragma solidity >=0.8.4;
 
-import '../libraries/FullMath.sol';
 import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/LowGasSafeMath.sol';
