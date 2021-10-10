@@ -11,22 +11,17 @@ import "hardhat/console.sol";
 contract SettleLayer {
     using TokenFlow for address;
 
-    struct RollingSpend {
-        bool spentMsgVal_;
-    }
-
-    function initSettleRoll() internal pure returns (RollingSpend memory) {
-        return RollingSpend({spentMsgVal_: false});
-    }
     
     function settleFlat (address recv, int256 flow,
-                         Directives.SettlementChannel memory directive,
-                         RollingSpend memory cumulative) internal {
-        require(passesLimit(flow, directive), "K");
-        if (moreThanDust(flow, directive)) {
-            pumpFlow(recv, flow, directive.token_, directive.useSurplus_,
-                     cumulative);
+                         Directives.SettlementChannel memory dir,
+                         bool hasSpentEth)
+        internal returns (bool) {
+        require(passesLimit(flow, dir.limitQty_), "K");
+        if (moreThanDust(flow, dir.dustThresh_)) {
+            hasSpentEth = pumpFlow(recv, flow, dir.token_, dir.useSurplus_,
+                                   hasSpentEth);
         }
+        return hasSpentEth;
     }
 
     function settleInitFlow (address recv, address base, int256 baseFlow,
@@ -36,9 +31,9 @@ contract SettleLayer {
     }
         
     function pumpFlow (address recv, int256 flow, address token, bool useReserves,
-                       RollingSpend memory cumulative) private {
+                       bool hasSpentEth) private returns (bool) {
         transactFlow(recv, flow, token, useReserves);
-        markCumulative(cumulative, token, flow);
+        return markCumulative(hasSpentEth, token, flow);
     }
 
     function querySurplus (address user, address token) public view returns (uint256) {
@@ -46,12 +41,13 @@ contract SettleLayer {
         return surplusCollateral_[key];
     }
 
-    function markCumulative (RollingSpend memory cumulative,
-                             address token, int256 flow) private pure {
+    function markCumulative (bool hasSpentEth, address token,
+                             int256 flow) private pure returns (bool) {
         if (token.isEtherNative() && isDebit(flow)) {
-            require(!cumulative.spentMsgVal_, "DS");
-            cumulative.spentMsgVal_ = true;
+            require(!hasSpentEth, "DS");
+            return true;
         }
+        return hasSpentEth;
     }
 
     function isDebit (int256 flow) private pure returns (bool) {
@@ -133,17 +129,17 @@ contract SettleLayer {
         }
     }
 
-    function passesLimit (int256 flow, Directives.SettlementChannel memory dir)
+    function passesLimit (int256 flow, int256 limitQty)
         private pure returns (bool) {
-        return flow <= dir.limitQty_;
+        return flow <= limitQty;
     }
 
-    function moreThanDust (int256 flow, Directives.SettlementChannel memory dir)
+    function moreThanDust (int256 flow, uint256 dustThresh)
         private pure returns (bool) {
         if (isDebit(flow)) {
             return true;
         } else {
-            return uint256(-flow) > dir.dustThresh_;
+            return uint256(-flow) > dustThresh;
         }
     }
 

@@ -42,10 +42,6 @@ library Chaining {
         return ExecCntx({owner_: msg.sender, oracle_: address(this),
                     pool_: pool, improve_: improve, roll_: roll});
     }
-    
-    function initFlow() internal pure returns (PairFlow memory) {
-        return PairFlow({baseFlow_: 0, quoteFlow_: 0, baseProto_: 0, quoteProto_: 0});
-    }
 
     function plugSwapGap (RollTarget memory roll, PairFlow memory flow,
                            bool inBaseQty) internal pure returns

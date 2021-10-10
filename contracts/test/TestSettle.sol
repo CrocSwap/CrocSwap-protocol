@@ -6,7 +6,7 @@ import "../mixins/SettleLayer.sol";
 contract TestSettleLayer is SettleLayer {
 
     address private recv_;
-    RollingSpend private spend_;
+    bool public hasSpentEth;
     
     constructor (address recv) {
         recv_ = recv;
@@ -35,9 +35,7 @@ contract TestSettleLayer is SettleLayer {
         Directives.SettlementChannel memory dir = Directives.SettlementChannel
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
                     useSurplus_: useSurplus});
-        RollingSpend memory spend = spend_;
-        settleFlat(recv_, flow, dir, spend);
-        spend_ = spend;
+        hasSpentEth = settleFlat(recv_, flow, dir, hasSpentEth);
     }
 
     function getMyBalance() public view returns (uint256) {
@@ -48,7 +46,4 @@ contract TestSettleLayer is SettleLayer {
         return tgt.balance;
     }
 
-    function hasSpentEth() public view returns (bool) {
-        return spend_.spentMsgVal_;
-    }
 }

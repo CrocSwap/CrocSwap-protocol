@@ -32,8 +32,8 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     function trade (bytes calldata input) reEntrantLock public {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
-        RollingSpend memory rollSpend = initSettleRoll();
-        TokenFlow.PairSeq memory pairs = TokenFlow.initSeq();
+        TokenFlow.PairSeq memory pairs;
+        bool hasSpentTxSend = false;
         
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
@@ -59,11 +59,12 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
 
             accumProtocolFees(pairs); // Make sure to call before clipping
             int settleFlow = pairs.clipFlow();
-            settleFlat(msg.sender, settleFlow, settleChannel, rollSpend);
+            hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
+                                        hasSpentTxSend);
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, rollSpend);
+        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);
     }
 
     
