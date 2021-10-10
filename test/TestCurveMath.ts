@@ -199,7 +199,7 @@ describe('CurveMath', () => {
       expect(resultOne.qtyLeft).to.equal(0);
       expect(resultOne.rollPrice).to.equal(maxSqrtPrice());
       expect(resultOne.paidBase).to.gt(infFloor);
-      expect(resultOne.paidQuote).to.equal(-6665 + COLLATERAL_BUFFER);
+      expect(resultOne.paidQuote).to.equal(-6666 + COLLATERAL_BUFFER);
 
       expect(resultTwo.qtyLeft).to.equal(0);
       expect(resultTwo.rollPrice).to.equal(minSqrtPrice());
