@@ -44,7 +44,7 @@ describe('Pool', () => {
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(755*1024 - 334 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 334 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
@@ -359,7 +359,7 @@ describe('Pool', () => {
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-644294)
         expect((await quoteToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderQuote)).to.equal(385904)
         expect((await baseToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderBase)).to.equal(644294)
-        expect(await test.snapQuoteFlow()).to.equal(-385905)
+        expect(await test.snapQuoteFlow()).to.equal(-385904)
         expect(await test.snapBaseFlow()).to.equal(-644294)
      })
 
