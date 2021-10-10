@@ -49,6 +49,23 @@ library CompoundMath {
         return uint64(z);
     }
 
+    /* @notice Computes the result from backing out a compounded growth value from
+     *         an existing value. The inverse of compoundGrow().
+     * @dev    Rounds down from the real value.
+     * @param price The fixed price representing the starting value that we want
+     *              to back out a pre-growth seed from.
+     * @param growth The compounded growth rate to back out, as in (1+g). Represented
+     *                as 128-bit fixed-point.
+     * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
+     *          integer. */
+    function compoundShrink (uint64 val, uint64 deflator) internal
+        pure returns (uint256) {
+        uint256 ONE = FixedPoint.Q48;
+        uint256 multFactor = ONE + deflator;
+        uint256 z = FullMath.mulDiv(uint256(val), ONE, multFactor);        
+        return uint64(z); // Will always fit in 64-bits because shrink can only decrease
+    }
+    
     /* @notice Computes the compound growth rate from based off an inflated value
      *         end value and a starting seed value.
      * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
@@ -67,11 +84,13 @@ library CompoundMath {
 
     /* @notice Computes the result from applying a compound growth rate to a fixed
      *         quantity.
-     * @dev    Rounds down from the real value.
+     * @dev    Always rounds in the direction of @shiftUp
      * @param price The fixed price to start with, growth to be applied on top.
      *              Represented as an unsigned integer.
      * @param growth The compounded growth rate to apply, as in (1+g). Represented
      *                as 128-bit fixed-point.
+     * @param shiftUp If true compounds the price up by the growth rate. If false,
+     *                compounds down.
      * @returns The post-growth price as in price*(1+g). Rounded up to next unsigned
      *          price representation. */
     function compoundPrice (uint128 price, uint64 growth, bool shiftUp) internal
@@ -84,22 +103,6 @@ library CompoundMath {
         return z.toUint128();
     }
 
-
-    /* @notice Computes the result from backing out a compounded growth value from
-     *         an existing value. The inverse of compoundGrow().
-     * @dev    Rounds down from the real value.
-     * @param price The fixed price representing the starting value that we want
-     *              to back out a pre-growth seed from.
-     * @param growth The compounded growth rate to back out, as in (1+g). Represented
-     *                as 128-bit fixed-point.
-     * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
-     *          integer. */
-    function compoundDeflate (uint64 val, uint64 deflator) internal
-        pure returns (uint256) {
-        uint256 ONE = FixedPoint.Q48;
-        uint256 multFactor = ONE + deflator;
-        return FullMath.mulDiv(uint256(val), ONE, multFactor);
-    }
     
     /* @notice Inflates a starting value by a cumulative growth rate.
      * @dev    Rounds down from the real value.
@@ -125,7 +128,7 @@ library CompoundMath {
     function deflateLiqSeed (uint128 liq, uint64 growth)
         internal pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
-        uint256 deflated = FullMath.mulDiv(liq, ONE, ONE.sub(growth));
+        uint256 deflated = FullMath.mulDiv(liq, ONE, ONE + growth);
         return deflated.toUint128();
     }
 }

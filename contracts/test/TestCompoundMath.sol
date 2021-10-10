@@ -3,6 +3,8 @@ pragma solidity >=0.5.0;
     
 import "../libraries/CompoundMath.sol";
 
+import "hardhat/console.sol";
+
 contract TestCompoundMath {
     using CompoundMath for uint256;
     using CompoundMath for uint160;
@@ -21,6 +23,10 @@ contract TestCompoundMath {
         return x.compoundDivide(y);
     }
 
+    function testShrink (uint64 x, uint64 y) public pure returns (uint256) {
+        return x.compoundShrink(y);
+    }
+
     function testPrice (uint128 price, uint64 growth, bool up)
         public pure returns (uint256) {
         return price.compoundPrice(growth, up);
@@ -28,5 +34,9 @@ contract TestCompoundMath {
 
     function testInflate (uint128 x, uint64 y) public pure returns (uint128) {
         return x.inflateLiqSeed(y);
+    }
+
+    function testDeflate (uint128 x, uint64 y) public pure returns (uint128) {
+        return x.deflateLiqSeed(y);
     }
 }

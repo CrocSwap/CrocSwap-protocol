@@ -171,7 +171,7 @@ library CurveAssimilate {
         // Note that there's a minor difference from using the post-inflated cumulative
         // ambient growth (G) calculated in the previous step. This rounds the rewards
         // growth down, which increases numerical over-collateralization.
-        uint256 concInflator = inflator.compoundDeflate(curve.accum_.ambientGrowth_);
+        uint256 concInflator = inflator.compoundShrink(curve.accum_.ambientGrowth_);
         uint256 ambientInject = FullMath.mulDiv
             (concInflator, curve.liq_.concentrated_, FixedPoint.Q48);
         uint64 concRewards = adjustConcRewards(concInflator, ambientInject);
