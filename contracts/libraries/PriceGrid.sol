@@ -3,7 +3,6 @@
 pragma solidity >=0.8.4;
 
 import './TickMath.sol';
-import './FullMath.sol';
 import './FixedPoint.sol';
 import './SafeCast.sol';
 import './CurveMath.sol';
@@ -193,8 +192,7 @@ library PriceGrid {
         if (inBase) {
             uint128 priceX = tick.getSqrtRatioAtTick();
             uint128 priceY = (tick + int24(wingSize)).getSqrtRatioAtTick();
-            return FullMath.mulDiv(collateral, FixedPoint.Q64,
-                                   priceY - priceX).toUint128();
+            return uint128(FixedPoint.divQ64(collateral, priceY - priceX));
         } else {
             return convertToLiq(collateral, -tick, wingSize, true);
         }
