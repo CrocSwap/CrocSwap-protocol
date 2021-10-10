@@ -30,9 +30,9 @@ export function fromSqrtPrice (val: BigNumber) {
 }
 
 export function maxSqrtPrice(): BigNumber {
-    return BigNumber.from("1461446703485210103287273052203988822378723970342").sub(1)
+    return BigNumber.from("21267430153580247136652501917186561138").sub(1)
 }
 
 export function minSqrtPrice(): BigNumber {
-    return BigNumber.from("4295128739")
+    return BigNumber.from("65538")
 }
