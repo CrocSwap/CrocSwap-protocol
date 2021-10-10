@@ -62,8 +62,8 @@ library Directives {
 
     struct SettlementChannel {
         address token_;
-        int256 limitQty_;
-        uint256 dustThresh_;
+        int128 limitQty_;
+        uint128 dustThresh_;
         bool useSurplus_;
     }
 

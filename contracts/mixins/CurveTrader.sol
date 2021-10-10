@@ -47,7 +47,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
 
     function initCurve (PoolSpecs.PoolCursor memory pool,
                         uint128 price, uint128 initLiq, address oracle)
-        internal returns (int256 baseFlow, int256 quoteFlow) {
+        internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveCache.Cache memory curve = CurveCache.initCache(snapCurveInit(pool.hash_));
         initPrice(curve, price);
         if (initLiq > 0) {
@@ -96,7 +96,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
      * these structures in memory. Then only commit them back to EVM storage
      * when the operation is finalized. */
     function initSwapAccum (Directives.SwapDirective memory dir,
-                            PoolSpecs.PoolCursor memory pool, uint256 swapQty)
+                            PoolSpecs.PoolCursor memory pool, uint128 swapQty)
         private pure returns (CurveMath.SwapAccum memory accum) {
         CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
             ({isBuy_: dir.isBuy_, inBaseQty_: dir.inBaseQty_,
@@ -112,7 +112,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                            Chaining.ExecCntx memory cntx) private {
         if (dir.liquidity_ == 0) { return; }
 
-        (int256 base, int256 quote) = dir.isAdd_ ?
+        (int128 base, int128 quote) = dir.isAdd_ ?
             mintAmbient(dir.liquidity_, curve, cntx) :
             burnAmbient(dir.liquidity_, curve, cntx);
         flow.accumFlow(base, quote);
@@ -126,7 +126,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
                 Directives.RangeOrder memory range = dirs[i].sliceBookend(j);
                 
-                (int256 nextBase, int256 nextQuote) = applyConcentrated
+                (int128 nextBase, int128 nextQuote) = applyConcentrated
                     (range, curve, cntx);
                 flow.accumFlow(nextBase, nextQuote);
             }
@@ -136,7 +136,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function applyConcentrated (Directives.RangeOrder memory range,
                                 CurveCache.Cache memory curve,
                                 Chaining.ExecCntx memory cntx)
-        private returns (int256, int256) {
+        private returns (int128, int128) {
         cntx.improve_.verifyFit(range, cntx.pool_.head_.tickSize_,
                                 curve.pullPriceTick());
 
@@ -150,38 +150,38 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
 
     function mintAmbient (uint128 liqAdded, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
-        private returns (int256, int256) {
+        private returns (int128, int128) {
         mintPosLiq(cntx.owner_, cntx.pool_.hash_, liqAdded,
                    curve.curve_.accum_.ambientGrowth_);
-        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
+        (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
 
     function lockAmbient (uint128 liqAdded, CurveCache.Cache memory curve)
-        private pure returns (int256, int256) {
-        (uint256 base, uint256 quote) = liquidityReceivable(curve, liqAdded);
+        private pure returns (int128, int128) {
+        (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);        
     }
 
     function burnAmbient (uint128 liqBurned, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
-        private returns (int256, int256) {
+        private returns (int128, int128) {
         burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
                    curve.curve_.accum_.ambientGrowth_);
-        (uint256 base, uint256 quote) = liquidityPayable(curve, liqBurned);
+        (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }
     
     function mintConcentrated (Directives.RangeOrder memory r,
                                CurveCache.Cache memory curve,
                                Chaining.ExecCntx memory cntx)
-        private returns (int256, int256) {
+        private returns (int128, int128) {
         uint64 feeMileage = addBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
                                        r.lowerTick_, r.upperTick_, r.liquidity_,
                                        curve.curve_.accum_.concTokenGrowth_);
         mintPosLiq(cntx.owner_, cntx.pool_.hash_, r.lowerTick_, r.upperTick_,
                    r.liquidity_, feeMileage);
-        (uint256 base, uint256 quote) = liquidityReceivable
+        (uint128 base, uint128 quote) = liquidityReceivable
             (curve, r.liquidity_, r.lowerTick_, r.upperTick_);
         return signMintFlow(base, quote);
     }
@@ -189,26 +189,26 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function burnConcentrated (Directives.RangeOrder memory r,
                                CurveCache.Cache memory curve,
                                Chaining.ExecCntx memory cntx)
-        private returns (int256, int256) {
+        private returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
                                           r.lowerTick_, r.upperTick_, r.liquidity_,
                                           curve.curve_.accum_.concTokenGrowth_);
         uint64 rewards = burnPosLiq(cntx.owner_, cntx.pool_.hash_,
                                     r.lowerTick_, r.upperTick_,
                                     r.liquidity_, feeMileage); 
-        (uint256 base, uint256 quote) = liquidityPayable(curve, r.liquidity_, rewards,
+        (uint128 base, uint128 quote) = liquidityPayable(curve, r.liquidity_, rewards,
                                                          r.lowerTick_, r.upperTick_);
         return signBurnFlow(base, quote);
     }
 
-    function signMintFlow (uint256 base, uint256 quote) private pure
-        returns (int256, int256) {
-        return (base.toInt256(), quote.toInt256());
+    function signMintFlow (uint128 base, uint128 quote) private pure
+        returns (int128, int128) {
+        return (base.toInt128Sign(), quote.toInt128Sign());
     }
 
-    function signBurnFlow (uint256 base, uint256 quote) private pure
-        returns (int256, int256){
-        return (-(base.toInt256()), -(quote.toInt256()));
+    function signBurnFlow (uint128 base, uint128 quote) private pure
+        returns (int128, int128){
+        return (-(base.toInt128Sign()), -(quote.toInt128Sign()));
     }
 
     /* @notice Executes the pending swap through the order book, adjusting the
@@ -346,7 +346,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function bumpLiquidity (int24 bumpTick, bool isBuy, 
                             CurveMath.CurveState memory curve,
                             PoolSpecs.PoolCursor memory pool) private {
-        int256 liqDelta = crossLevel(pool.hash_, bumpTick, isBuy,
+        int128 liqDelta = crossLevel(pool.hash_, bumpTick, isBuy,
                                      curve.accum_.concTokenGrowth_);
         curve.liq_.concentrated_ = LiquidityMath.addDelta
             (curve.liq_.concentrated_, liqDelta.toInt128());

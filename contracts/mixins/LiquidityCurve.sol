@@ -21,11 +21,9 @@ import "hardhat/console.sol";
  *         new or removed positions or pre-determined liquidity bumps that occur
  *         when crossing tick boundaries. */
 contract LiquidityCurve {
-    using LowGasSafeMath for uint256;
-    using LowGasSafeMath for int256;
-    using SafeCast for uint256;
     using SafeCast for uint128;
-    using SafeCast for int256;
+    using SafeCast for uint192;
+    using SafeCast for uint144;
     using CurveMath for uint128;
     using CurveMath for CurveMath.CurveState;
     using CurveCache for CurveCache.Cache;
@@ -76,8 +74,8 @@ contract LiquidityCurve {
      *                 following the addition of this liquidity. */
     function liquidityReceivable (CurveCache.Cache memory curve, uint128 liquidity,
                                   int24 lowerTick, int24 upperTick)
-        internal pure returns (uint256, uint256) {
-        (uint256 base, uint256 quote, bool inRange) =
+        internal pure returns (uint128, uint128) {
+        (uint128 base, uint128 quote, bool inRange) =
             liquidityFlows(curve, liquidity, lowerTick, upperTick);
         bumpConcentrated(curve, liquidity, inRange);
         return chargeConservative(base, quote, inRange);
@@ -93,8 +91,8 @@ contract LiquidityCurve {
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) */
     function liquidityReceivable (CurveCache.Cache memory curve, uint128 seeds) 
-        internal pure returns (uint256, uint256) {
-        (uint256 base, uint256 quote) = liquidityFlows(curve, seeds);
+        internal pure returns (uint128, uint128) {
+        (uint128 base, uint128 quote) = liquidityFlows(curve, seeds);
         bumpAmbient(curve, seeds);
         return chargeConservative(base, quote, true);
     }
@@ -128,17 +126,17 @@ contract LiquidityCurve {
      *                collateral stability. */
     function liquidityPayable (CurveCache.Cache memory curve, uint128 liquidity,
                                uint64 rewardRate, int24 lowerTick, int24 upperTick)
-        internal pure returns (uint256 base, uint256 quote) {
+        internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityPayable(curve, liquidity, lowerTick, upperTick);
 
         if (rewardRate > 0) {
             // Round down reward sees on payout, in contrast to rounding them up on
             // incremental accumulation (see CurveAssimilate.sol). This mathematicaly
             // guarantees that we never try to burn more tokens than exist on the curve.
-            uint256 rewards = FullMath.mulDiv(liquidity, rewardRate, FixedPoint.Q48);
+            uint128 rewards = FixedPoint.mulQ48(liquidity, rewardRate).toUint128By144();
             
             if (rewards > 0) {
-                (uint256 baseRewards, uint256 quoteRewards) =
+                (uint128 baseRewards, uint128 quoteRewards) =
                     liquidityPayable(curve, rewards.toUint128());
                 base += baseRewards;
                 quote += quoteRewards;
@@ -150,11 +148,11 @@ contract LiquidityCurve {
      *         rewards are zero. */
     function liquidityPayable (CurveCache.Cache memory curve, uint128 liquidity,
                                int24 lowerTick, int24 upperTick)
-        internal pure returns (uint256 base, uint256 quote) {
+        internal pure returns (uint128 base, uint128 quote) {
         bool inRange;
         (base, quote, inRange) = liquidityFlows(curve, liquidity,
                                                 lowerTick, upperTick);
-        bumpConcentrated(curve, -(liquidity.toInt256()), inRange);
+        bumpConcentrated(curve, -(liquidity.toInt128Sign()), inRange);
     }
 
     /* @notice Same as above liquidityPayable() but used for non-range based ambient
@@ -172,34 +170,31 @@ contract LiquidityCurve {
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
     function liquidityPayable (CurveCache.Cache memory curve, uint128 seeds)
-        internal pure returns (uint256 base, uint256 quote) {
+        internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityFlows(curve, seeds);
-        bumpAmbient(curve, -(seeds.toInt256()));
+        bumpAmbient(curve, -(seeds.toInt128Sign()));
     }
 
     function bumpAmbient (CurveCache.Cache memory curve, uint128 seedDelta)
         private pure {
-        bumpAmbient(curve, int256(uint256(seedDelta)));
+        bumpAmbient(curve, seedDelta.toInt128Sign());
     }
 
-    function bumpAmbient (CurveCache.Cache memory curve, int256 seedDelta)
-        private pure {
-        curve.curve_.liq_.ambientSeed_ = LiquidityMath.addDelta
-            (curve.curve_.liq_.ambientSeed_, seedDelta.toInt128());
+    function bumpAmbient (CurveCache.Cache memory curve, int128 seedDelta) private pure {
+        curve.curve_.liq_.ambientSeed_ =
+            LiquidityMath.addDelta(curve.curve_.liq_.ambientSeed_, seedDelta);
     }
 
     function bumpConcentrated (CurveCache.Cache memory curve,
                                uint128 liqDelta, bool inRange) private pure {
-        bumpConcentrated(curve, int256(uint256(liqDelta)), inRange);
+        bumpConcentrated(curve, int128(uint128(liqDelta)), inRange);
     }
     
     function bumpConcentrated (CurveCache.Cache memory curve,
-                               int256 liqDelta, bool inRange) private pure {
+                               int128 liqDelta, bool inRange) private pure {
         if (inRange) {
-            uint128 prevLiq = curve.curve_.liq_.concentrated_;
-            uint128 nextLiq = LiquidityMath.addDelta
-                (prevLiq, liqDelta.toInt128());
-            curve.curve_.liq_.concentrated_ = nextLiq;
+            curve.curve_.liq_.concentrated_ =
+                LiquidityMath.addDelta(curve.curve_.liq_.concentrated_, liqDelta);
         }
     }
     
@@ -209,7 +204,7 @@ contract LiquidityCurve {
      *   to round up for collateral safety. */
     function liquidityFlows (CurveCache.Cache memory curve, uint128 liquidity,
                              int24 bidTick, int24 askTick)
-        private pure returns (uint256 baseDebit, uint256 quoteDebit, bool inRange) {
+        private pure returns (uint128 baseDebit, uint128 quoteDebit, bool inRange) {
         int24 priceTick = curve.pullPriceTick();
         (uint128 bidPrice, uint128 askPrice) =
             translateTickRange(bidTick, askTick);
@@ -230,11 +225,11 @@ contract LiquidityCurve {
      *   when pool is receiving, caller must make sure to round up for collateral 
      *   safety. */
     function liquidityFlows (CurveCache.Cache memory curve, uint128 seeds)
-        private pure returns (uint256 baseDebit, uint256 quoteDebit) {
+        private pure returns (uint128 baseDebit, uint128 quoteDebit) {
         uint128 liq = CompoundMath.inflateLiqSeed
             (seeds, curve.curve_.accum_.ambientGrowth_);
-        baseDebit = FullMath.mulDiv(liq, curve.curve_.priceRoot_, FixedPoint.Q64);
-        quoteDebit = (uint256(liq) << 64) / curve.curve_.priceRoot_;
+        baseDebit = FixedPoint.mulQ64(liq, curve.curve_.priceRoot_).toUint128By192();
+        quoteDebit = FixedPoint.divQ64(liq, curve.curve_.priceRoot_).toUint128By192();
     }
 
     /* @notice Called exactly once at the initializing of the pool. Initializes the
@@ -261,10 +256,10 @@ contract LiquidityCurve {
     // Need to support at least 2 wei of precision round down when calculating quote
     // token reserve deltas. (See CurveMath's deltaPriceQuote() function.) 4 gives us a
     // safe cushion and is economically meaningless.
-    uint256 constant TOKEN_ROUND = 4;
+    uint8 constant TOKEN_ROUND = 4;
     
-    function chargeConservative (uint256 liqBase, uint256 liqQuote, bool inRange)
-        private pure returns (uint256, uint256) {
+    function chargeConservative (uint128 liqBase, uint128 liqQuote, bool inRange)
+        private pure returns (uint128, uint128) {
         return ((liqBase > 0 || inRange) ? liqBase + TOKEN_ROUND : 0,
                 (liqQuote > 0 || inRange) ? liqQuote + TOKEN_ROUND : 0);
     }

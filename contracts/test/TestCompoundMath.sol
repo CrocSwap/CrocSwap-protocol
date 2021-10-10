@@ -19,7 +19,7 @@ contract TestCompoundMath {
         return x.compoundStack(y);
     }
 
-    function testDivide (uint256 x, uint256 y) public pure returns (uint64) {
+    function testDivide (uint128 x, uint128 y) public pure returns (uint64) {
         return x.compoundDivide(y);
     }
 

@@ -65,7 +65,7 @@ library CompoundMath {
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */
     function compoundShrink (uint64 val, uint64 deflator) internal
-        pure returns (uint256) {
+        pure returns (uint64) {
         uint256 ONE = FixedPoint.Q48;
         uint256 multFactor = ONE + deflator;
         uint256 num = uint256(val) << 48; // multiply by 48-bit ONE
@@ -83,7 +83,7 @@ library CompoundMath {
      *           128-bit fixed-point.
      * @returns The cumulative compounded growth rate as in (1+z) = (1+x)/(1+y).
      *          Represented as 128-bit fixed-point. */
-    function compoundDivide (uint256 inflated, uint256 seed) internal
+    function compoundDivide (uint128 inflated, uint128 seed) internal
         pure returns (uint64) {
         // Otherwise arithmetic doesn't safely fit in 256 -bit
         require(inflated < type(uint208).max, "C");

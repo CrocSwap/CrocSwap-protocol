@@ -12,8 +12,8 @@ import "hardhat/console.sol";
 
 /* @title Trade chaining library */
 library Chaining {
-    using SafeCast for int256;
-    using SafeCast for uint256;
+    using SafeCast for int128;
+    using SafeCast for uint128;
     
     struct ExecCntx {
         address owner_;
@@ -25,28 +25,28 @@ library Chaining {
 
     struct RollTarget {
         bool inBaseQty_;
-        int256 prePairBal_;
+        int128 prePairBal_;
     }
 
     struct PairFlow {
-        int256 baseFlow_;
-        int256 quoteFlow_;
-        uint256 baseProto_;
-        uint256 quoteProto_;
+        int128 baseFlow_;
+        int128 quoteFlow_;
+        uint128 baseProto_;
+        uint128 quoteProto_;
     }
 
     function plugSwapGap (RollTarget memory roll, PairFlow memory flow,
                            bool inBaseQty) internal pure returns
         (bool isBuy, uint128 qty) {
         require(inBaseQty == roll.inBaseQty_);
-        int256 dirQty = totalBalance(roll, flow);
+        int128 dirQty = totalBalance(roll, flow);
         isBuy = inBaseQty ? (dirQty < 0) : (dirQty > 0);
-        qty = dirQty.toUint256().toUint128();
+        qty = dirQty > 0 ? uint128(dirQty) : uint128(-dirQty);
     }
 
     function totalBalance (RollTarget memory roll, PairFlow memory flow)
-        private pure returns (int256) {
-        int256 pairFlow = (roll.inBaseQty_ ? flow.baseFlow_ : flow.quoteFlow_);
+        private pure returns (int128) {
+        int128 pairFlow = (roll.inBaseQty_ ? flow.baseFlow_ : flow.quoteFlow_);
         return roll.prePairBal_ + pairFlow;
     }
     
@@ -60,7 +60,7 @@ library Chaining {
         }
     }
 
-    function accumFlow (PairFlow memory flow, int256 base, int256 quote)
+    function accumFlow (PairFlow memory flow, int128 base, int128 quote)
         internal pure {
         flow.baseFlow_ += base;
         flow.quoteFlow_ += quote;

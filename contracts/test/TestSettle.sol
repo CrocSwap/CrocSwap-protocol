@@ -12,26 +12,26 @@ contract TestSettleLayer is SettleLayer {
         recv_ = recv;
     }
     
-    function testSettleFlow (int256 flow, address token) public payable {
-        testSettle(flow, token, type(int256).max, 0, false);
+    function testSettleFlow (int128 flow, address token) public payable {
+        testSettle(flow, token, type(int128).max, 0, false);
     }
 
-    function testSettleLimit (int256 flow, address token, int256 limitQty)
+    function testSettleLimit (int128 flow, address token, int128 limitQty)
         public payable {
         testSettle(flow, token, limitQty, 0, false);
     }
 
-    function testSettleDust (int256 flow, address token, uint256 dustThresh)
+    function testSettleDust (int128 flow, address token, uint128 dustThresh)
         public payable {
-        testSettle(flow, token, type(int256).max, dustThresh, false);  
+        testSettle(flow, token, type(int128).max, dustThresh, false);  
     }
 
-    function testSettleReserves (int256 flow, address token) public payable {
-        testSettle(flow, token, type(int256).max, 0, true);
+    function testSettleReserves (int128 flow, address token) public payable {
+        testSettle(flow, token, type(int128).max, 0, true);
     }
 
-    function testSettle (int256 flow, address token, int256 limitQty,
-                         uint256 dustThresh, bool useSurplus) public payable {
+    function testSettle (int128 flow, address token, int128 limitQty,
+                         uint128 dustThresh, bool useSurplus) public payable {
         Directives.SettlementChannel memory dir = Directives.SettlementChannel
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
                     useSurplus_: useSurplus});

@@ -58,9 +58,9 @@ contract LevelBook {
      * @return liqDelta - The net change in concentrated liquidity that should be applied
      *                    to the AMM curve following this level cross. */
     function crossLevel (bytes32 poolIdx, int24 tick, bool isBuy, uint64 feeGlobal)
-        internal returns (int256 liqDelta) {
+        internal returns (int128 liqDelta) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
-        int256 crossDelta = LiquidityMath.netLotsOnLiquidity
+        int128 crossDelta = LiquidityMath.netLotsOnLiquidity
             (lvl.bidLots_, lvl.askLots_);
         
         liqDelta = isBuy ? crossDelta : -crossDelta;

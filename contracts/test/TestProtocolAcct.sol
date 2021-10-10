@@ -13,7 +13,7 @@ contract TestProtocolAccount is ProtocolAccount {
     }
     
     function testAccum (address base, address quote,
-                        uint256 baseFees, uint256 quoteFees) public {
+                        uint128 baseFees, uint128 quoteFees) public {
         TokenFlow.PairSeq memory pair;
         pair.nextHop(base, quote);
         pair.flow_.baseProto_ = baseFees;

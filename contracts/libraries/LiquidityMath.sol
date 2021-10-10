@@ -2,7 +2,6 @@
 pragma solidity >=0.5.0;
 
 import './SafeCast.sol';
-import './FullMath.sol';
 import './TickMath.sol';
 
 /// @title Math library for liquidity
@@ -73,11 +72,11 @@ library LiquidityMath {
     }
 
     function netLotsOnLiquidity (uint96 incrLots, uint96 decrLots) internal pure
-        returns (int256) {
+        returns (int128) {
         return lotToNetLiq(incrLots) - lotToNetLiq(decrLots);
     }
 
-    function lotToNetLiq (uint96 lots) internal pure returns (int256) {
-        return int256(uint256(lots) << LOT_SIZE_BITS);
+    function lotToNetLiq (uint96 lots) internal pure returns (int128) {
+        return int128(uint128(lots) << LOT_SIZE_BITS);
     }
 }

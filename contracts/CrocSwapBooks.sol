@@ -26,7 +26,7 @@ contract CrocSwapBooks is CurveTrader {
     }
 
     function runInit (PoolSpecs.PoolCursor memory pool, uint128 price)
-        masterOnly public returns (int256 baseFlow, int256 quoteFlow) {
+        masterOnly public returns (int128 baseFlow, int128 quoteFlow) {
         return initCurve(pool, price, initLock_, msg.sender);
     }
 

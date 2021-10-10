@@ -18,7 +18,7 @@ import "hardhat/console.sol";
 contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     OracleHistorian, ICrocSwapHistRecv {
 
-    using SafeCast for uint256;
+    using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
@@ -59,7 +59,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
             }
 
             accumProtocolFees(pairs); // Make sure to call before clipping
-            int settleFlow = pairs.clipFlow();
+            int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
             settleChannel = order.hops_[i].settle_;
@@ -83,14 +83,14 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         if (flags.offsetSurplus_) {
             address token = flags.rollExit_ ?
                 pair.backToken() : pair.frontToken();
-            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt256();
+            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt128Sign();
         }
     }
 
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int256 baseFlow, int256 quoteFlow) = CrocSwapBooks(booksSidecar_).
+        (int128 baseFlow, int128 quoteFlow) = CrocSwapBooks(booksSidecar_).
             runInit(pool, price);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }

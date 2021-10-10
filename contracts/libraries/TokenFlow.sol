@@ -11,7 +11,7 @@ library TokenFlow {
         address baseToken_;
         address quoteToken_;
         bool isBaseFront_;
-        int256 legFlow_;
+        int128 legFlow_;
         Chaining.PairFlow flow_;
     }
 
@@ -27,10 +27,10 @@ library TokenFlow {
         }
     }
 
-    function frontFlow (PairSeq memory seq) internal pure returns (int256) {
+    function frontFlow (PairSeq memory seq) internal pure returns (int128) {
         return seq.isBaseFront_ ? seq.flow_.baseFlow_ : seq.flow_.quoteFlow_;
     }
-    function backFlow (PairSeq memory seq) internal pure returns (int256) {
+    function backFlow (PairSeq memory seq) internal pure returns (int128) {
         return seq.isBaseFront_ ? seq.flow_.quoteFlow_ : seq.flow_.baseFlow_;
     }
     function frontToken (PairSeq memory seq) internal pure returns (address) {
@@ -40,8 +40,8 @@ library TokenFlow {
         return seq.isBaseFront_ ? seq.quoteToken_ : seq.baseToken_;
     }
 
-    function clipFlow (PairSeq memory seq) internal pure returns (int256 clippedFlow) {
-        (int256 frontAccum, int256 backAccum) = seq.isBaseFront_ ?
+    function clipFlow (PairSeq memory seq) internal pure returns (int128 clippedFlow) {
+        (int128 frontAccum, int128 backAccum) = seq.isBaseFront_ ?
             (seq.flow_.baseFlow_, seq.flow_.quoteFlow_) :
             (seq.flow_.quoteFlow_, seq.flow_.baseFlow_);
         
@@ -54,7 +54,7 @@ library TokenFlow {
         seq.flow_.quoteProto_ = 0;
     }
     
-    function closeFlow (PairSeq memory seq) internal pure returns (int256) {
+    function closeFlow (PairSeq memory seq) internal pure returns (int128) {
         return seq.legFlow_;
     }
 

@@ -12,7 +12,7 @@ contract SettleLayer {
     using TokenFlow for address;
 
     
-    function settleFlat (address recv, int256 flow,
+    function settleFlat (address recv, int128 flow,
                          Directives.SettlementChannel memory dir,
                          bool hasSpentEth)
         internal returns (bool) {
@@ -24,25 +24,25 @@ contract SettleLayer {
         return hasSpentEth;
     }
 
-    function settleInitFlow (address recv, address base, int256 baseFlow,
-                             address quote, int256 quoteFlow) internal {
+    function settleInitFlow (address recv, address base, int128 baseFlow,
+                             address quote, int128 quoteFlow) internal {
         transactFlow(recv, baseFlow, base, false);
         transactFlow(recv, quoteFlow, quote, false);
     }
         
-    function pumpFlow (address recv, int256 flow, address token, bool useReserves,
+    function pumpFlow (address recv, int128 flow, address token, bool useReserves,
                        bool hasSpentEth) private returns (bool) {
         transactFlow(recv, flow, token, useReserves);
         return markCumulative(hasSpentEth, token, flow);
     }
 
-    function querySurplus (address user, address token) public view returns (uint256) {
+    function querySurplus (address user, address token) public view returns (uint128) {
         bytes32 key = encodeSurplusKey(user, token);
         return surplusCollateral_[key];
     }
 
     function markCumulative (bool hasSpentEth, address token,
-                             int256 flow) private pure returns (bool) {
+                             int128 flow) private pure returns (bool) {
         if (token.isEtherNative() && isDebit(flow)) {
             require(!hasSpentEth, "DS");
             return true;
@@ -50,23 +50,23 @@ contract SettleLayer {
         return hasSpentEth;
     }
 
-    function isDebit (int256 flow) private pure returns (bool) {
+    function isDebit (int128 flow) private pure returns (bool) {
         return flow > 0;
     }
 
-    function transactFlow (address recv, int256 flow, address token, bool useReserves)
+    function transactFlow (address recv, int128 flow, address token, bool useReserves)
         private {
         if (isDebit(flow)) {
-            debitUser(recv, uint256(flow), token, useReserves);
+            debitUser(recv, uint128(flow), token, useReserves);
         } else {
-            creditUser(recv, uint256(-flow), token, useReserves);            
+            creditUser(recv, uint128(-flow), token, useReserves);            
         }   
         
     }
     
-    function debitUser (address recv, uint256 value, address token,
+    function debitUser (address recv, uint128 value, address token,
                         bool useReserves) private {
-        uint256 debit = value;
+        uint128 debit = value;
         if (useReserves) {
             debit = debitSurplus(recv, value, token);
         }
@@ -75,7 +75,7 @@ contract SettleLayer {
         }
     }
 
-    function creditUser (address recv, uint256 value, address token,
+    function creditUser (address recv, uint128 value, address token,
                          bool useReserves) private {
         if (useReserves) {
             creditSurplus(recv, value, token);
@@ -84,7 +84,7 @@ contract SettleLayer {
         }
     }
 
-    function creditTransfer (address recv, uint256 value, address token) private {
+    function creditTransfer (address recv, uint128 value, address token) private {
         if (token.isEtherNative()) {
             TransferHelper.safeEtherSend(recv, value);
         } else {
@@ -92,7 +92,7 @@ contract SettleLayer {
         }
     }
 
-    function debitTransfer (address recv, uint256 value, address token) private {
+    function debitTransfer (address recv, uint128 value, address token) private {
         // markCumulative() makes sure that the user can't double spend msg.value
         // on multiple Ether debits.
         if (token.isEtherNative()) {
@@ -102,7 +102,7 @@ contract SettleLayer {
         }
     }
 
-    function collectToken (address recv, uint256 value, address token) private {
+    function collectToken (address recv, uint128 value, address token) private {
         uint256 openBal = IERC20Minimal(token).balanceOf(address(this));
         TransferHelper.safeTransferFrom(token, recv, address(this), value);
         uint256 postBal = IERC20Minimal(token).balanceOf(address(this));
@@ -110,16 +110,16 @@ contract SettleLayer {
                 postBal - openBal >= value, "TD");
     }
 
-    function creditSurplus (address recv, uint256 value, address token) private {
+    function creditSurplus (address recv, uint128 value, address token) private {
         bytes32 key = encodeSurplusKey(recv, token);
         surplusCollateral_[key] += value;
     }
 
 
-    function debitSurplus (address recv, uint256 value, address token) private
-        returns (uint256 remainder) {
+    function debitSurplus (address recv, uint128 value, address token) private
+        returns (uint128 remainder) {
         bytes32 key = encodeSurplusKey(recv, token);
-        uint256 balance = surplusCollateral_[key];
+        uint128 balance = surplusCollateral_[key];
 
         if (balance > value) {
             surplusCollateral_[key] -= value;
@@ -129,17 +129,17 @@ contract SettleLayer {
         }
     }
 
-    function passesLimit (int256 flow, int256 limitQty)
+    function passesLimit (int128 flow, int128 limitQty)
         private pure returns (bool) {
         return flow <= limitQty;
     }
 
-    function moreThanDust (int256 flow, uint256 dustThresh)
+    function moreThanDust (int128 flow, uint128 dustThresh)
         private pure returns (bool) {
         if (isDebit(flow)) {
             return true;
         } else {
-            return uint256(-flow) > dustThresh;
+            return uint128(-flow) > dustThresh;
         }
     }
 
@@ -148,8 +148,6 @@ contract SettleLayer {
         return keccak256(abi.encode(owner, token));
     }
 
-    
-    mapping(bytes32 => uint256) private surplusCollateral_;
-    
+    mapping(bytes32 => uint128) private surplusCollateral_;    
 }
 

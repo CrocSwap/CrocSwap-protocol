@@ -3,7 +3,6 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import './FullMath.sol';
 import './TickMath.sol';
 import './LiquidityMath.sol';
 import './SafeCast.sol';
@@ -19,9 +18,9 @@ import "hardhat/console.sol";
  *         a locally stable liquidty curve within the bounds of the stable range
  *         and in a way that accumulates fees onto the curve's liquidity. */
 library SwapCurve {
-    using LowGasSafeMath for uint256;
-    using LowGasSafeMath for int256;
-    using SafeCast for uint256;
+    using LowGasSafeMath for uint128;
+    using LowGasSafeMath for int128;
+    using SafeCast for uint128;
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
@@ -82,15 +81,15 @@ library SwapCurve {
     function vigOverFlow (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory swap,
                           uint128 limitPrice)
-        internal pure returns (uint256 liqFee, uint256 protoFee) {
-        uint256 flow = curve.calcLimitCounter(swap, limitPrice);
+        internal pure returns (uint128 liqFee, uint128 protoFee) {
+        uint128 flow = curve.calcLimitCounter(swap, limitPrice);
         (liqFee, protoFee) = vigOverFlow(flow, swap);
     }
 
     function swapOverCurve (CurveMath.CurveState memory curve,
                             CurveMath.SwapAccum memory accum,
                             uint128 limitPrice) pure private {
-        uint256 realFlows = curve.calcLimitFlows(accum, limitPrice);
+        uint128 realFlows = curve.calcLimitFlows(accum, limitPrice);
         bool hitsLimit = realFlows < accum.qtyLeft_;
 
         if (hitsLimit) {
@@ -179,7 +178,7 @@ library SwapCurve {
     function bookExchFees (CurveMath.CurveState memory curve,
                            CurveMath.SwapAccum memory accum,
                            uint128 limitPrice) pure private {
-        (uint256 liqFees, uint256 exchFees) = vigOverFlow(curve, accum, limitPrice);
+        (uint128 liqFees, uint128 exchFees) = vigOverFlow(curve, accum, limitPrice);
         assignFees(liqFees, exchFees, accum);
         
         /* We can guarantee that the price shift associated with the liquidity
@@ -191,27 +190,30 @@ library SwapCurve {
         curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
     }
 
-    function assignFees (uint256 liqFees, uint256 exchFees,
+    function assignFees (uint128 liqFees, uint128 exchFees,
                          CurveMath.SwapAccum memory accum) pure private {
-        uint256 totalFees = liqFees + exchFees;
+        uint128 totalFees = liqFees + exchFees;
         if (accum.cntx_.inBaseQty_) {
-            accum.paidQuote_ = accum.paidQuote_.add(totalFees.toInt256());
+            accum.paidQuote_ += totalFees.toInt128Sign();
         } else {
-            accum.paidBase_ = accum.paidBase_.add(totalFees.toInt256());
+            accum.paidBase_ += totalFees.toInt128Sign();
         }
-        accum.paidProto_ = accum.paidProto_.add(exchFees);
+        accum.paidProto_ += exchFees;
     }
 
-    function vigOverFlow (uint256 flow, uint24 feeRate, uint8 protoProp)
-        private pure returns (uint256 liqFee, uint256 protoFee) {
-        uint128 FEE_BP_MULT = 100 * 100 * 100;
-        uint256 totalFee = FullMath.mulDiv(flow, feeRate, FEE_BP_MULT);
+    function vigOverFlow (uint128 flow, uint24 feeRate, uint8 protoProp)
+        private pure returns (uint128 liqFee, uint128 protoFee) {
+        // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
+        // because fees will neveer be larger than the underlying flow.
+        uint24 FEE_BP_MULT = 100 * 100 * 100;
+        uint128 totalFee = uint128((uint256(flow) * feeRate) / FEE_BP_MULT);
+        
         protoFee = protoProp == 0 ? 0 : totalFee / protoProp;
         liqFee = totalFee - protoFee;
     }
 
-    function vigOverFlow (uint256 flow, CurveMath.SwapAccum memory swap)
-        private pure returns (uint256, uint256) {
+    function vigOverFlow (uint128 flow, CurveMath.SwapAccum memory swap)
+        private pure returns (uint128, uint128) {
         return vigOverFlow(flow, swap.cntx_.feeRate_, swap.cntx_.protoCut_);
     }
 }
