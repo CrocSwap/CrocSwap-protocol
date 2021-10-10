@@ -15,11 +15,6 @@ library TokenFlow {
         Chaining.PairFlow flow_;
     }
 
-    function initSeq() pure internal returns (PairSeq memory) {
-        return PairSeq({baseToken_: address(0), quoteToken_: address(0),
-                    isBaseFront_: false, legFlow_: 0, flow_: Chaining.initFlow()});
-    }
-    
     function nextHop (PairSeq memory seq, address tokenFront, address tokenBack)
         pure internal {
         seq.isBaseFront_ = tokenFront < tokenBack;
@@ -52,7 +47,11 @@ library TokenFlow {
         
         clippedFlow = seq.legFlow_ + frontAccum;
         seq.legFlow_ = backAccum;
-        seq.flow_ = Chaining.initFlow();
+        
+        seq.flow_.baseFlow_ = 0;
+        seq.flow_.quoteFlow_ = 0;
+        seq.flow_.baseProto_ = 0;
+        seq.flow_.quoteProto_ = 0;
     }
     
     function closeFlow (PairSeq memory seq) internal pure returns (int256) {

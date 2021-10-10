@@ -60,12 +60,6 @@ library Directives {
         ChainingFlags chain_;
     }
 
-    struct RolloverDirective {
-        uint24 poolIdx_;
-        uint8 liqMask_;
-        uint128 limitPrice_;
-    }
-
     struct SettlementChannel {
         address token_;
         int256 limitQty_;

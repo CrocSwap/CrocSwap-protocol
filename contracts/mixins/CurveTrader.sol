@@ -79,7 +79,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
         if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
-            (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap(flow, dir.inBaseQty_);
+           (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap
+               (flow, dir.inBaseQty_);
         }
             
         if (dir.qty_ != 0) {

@@ -33,24 +33,25 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
+        
+        Chaining.ExecCntx memory cntx;
+        cntx.oracle_ = address(this);
+        cntx.owner_ = msg.sender;
+        
         bool hasSpentTxSend = false;
         
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-            PriceGrid.ImproveSettings memory priceImprove =
-                queryPriceImprove(order.hops_[i].improve_,
-                                  pairs.baseToken_, pairs.quoteToken_);
+            cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
+                                              pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
                 Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
-                PoolSpecs.PoolCursor memory pool =
-                    queryPool(pairs.baseToken_, pairs.quoteToken_, dir.poolIdx_);
+                cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
+                                       dir.poolIdx_);
+                targetRoll(cntx.roll_, dir.chain_, pairs);
                 
-                verifyPermit(pool, pairs.baseToken_, pairs.quoteToken_, dir);
-
-                Chaining.RollTarget memory roll = targetRoll(dir.chain_, pairs);
-                Chaining.ExecCntx memory cntx =
-                    Chaining.buildCntx(pool, priceImprove, roll);
+                verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
                 
                 Chaining.PairFlow memory poolFlow =
                     CrocSwapBooks(booksSidecar_).runPool(dir, cntx);
@@ -68,9 +69,9 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     }
 
     
-    function targetRoll (Directives.ChainingFlags memory flags,
-                         TokenFlow.PairSeq memory pair) view private
-        returns (Chaining.RollTarget memory roll) {
+    function targetRoll (Chaining.RollTarget memory roll,
+                         Directives.ChainingFlags memory flags,
+                         TokenFlow.PairSeq memory pair) view private {
         if (flags.rollExit_) {
             roll.inBaseQty_ = !pair.isBaseFront_;
             roll.prePairBal_ = 0;

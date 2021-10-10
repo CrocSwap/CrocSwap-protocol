@@ -35,14 +35,6 @@ library Chaining {
         uint256 quoteProto_;
     }
 
-    function buildCntx (PoolSpecs.PoolCursor memory pool,
-                        PriceGrid.ImproveSettings memory improve,
-                        RollTarget memory roll)
-        internal view returns (ExecCntx memory) {
-        return ExecCntx({owner_: msg.sender, oracle_: address(this),
-                    pool_: pool, improve_: improve, roll_: roll});
-    }
-
     function plugSwapGap (RollTarget memory roll, PairFlow memory flow,
                            bool inBaseQty) internal pure returns
         (bool isBuy, uint128 qty) {
