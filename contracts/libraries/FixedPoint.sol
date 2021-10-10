@@ -8,4 +8,6 @@ library FixedPoint {
     uint256 internal constant Q96 = 0x1000000000000000000000000;
     uint256 internal constant Q64 = 0x10000000000000000;
     uint256 internal constant Q48 = 0x1000000000000;
+
+    
 }

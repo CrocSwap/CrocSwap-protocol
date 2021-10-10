@@ -304,7 +304,7 @@ library CurveMath {
             initReserve.add(denomFlow) : initReserve.sub(denomFlow);
         if (endReserve == 0) { return type(uint128).max; }
         
-        uint256 endInvert = FullMath.mulDivTrapZero(liq, liq, endReserve);
+        uint256 endInvert = FullMath.mulDiv(liq, liq, endReserve);
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
     }

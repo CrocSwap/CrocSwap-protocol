@@ -234,7 +234,9 @@ library CurveRoll {
      * the base token. The max loss of precision is 1 unit of fixed-point price. */
     function calcBaseFlowPrice (uint256 price, uint128 liq, uint256 flow, bool isBuy)
         private pure returns (uint256) {
-        uint256 priceDelta = FullMath.mulDivTrapZero(flow, FixedPoint.Q64, liq);
+        if (liq == 0) { return type(uint256).max; }
+        
+        uint256 priceDelta = FullMath.mulDiv(flow, FixedPoint.Q64, liq);
         if (isBuy) {
             return price.add(priceDelta);
         } else {
