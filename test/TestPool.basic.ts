@@ -44,7 +44,7 @@ describe('Pool', () => {
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 334 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 325 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
