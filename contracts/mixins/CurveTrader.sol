@@ -349,7 +349,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         int128 liqDelta = crossLevel(pool.hash_, bumpTick, isBuy,
                                      curve.accum_.concTokenGrowth_);
         curve.liq_.concentrated_ = LiquidityMath.addDelta
-            (curve.liq_.concentrated_, liqDelta.toInt128());
+            (curve.liq_.concentrated_, liqDelta);
     }
     
     // When selling down, the next tick leg actually occurs *below* the bump tick

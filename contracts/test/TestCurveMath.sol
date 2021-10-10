@@ -142,7 +142,7 @@ contract TestCurveMath {
     function testRollInf (uint128 liq, uint128 price, bool isBuy, bool inBase)
         public pure returns (uint128 rollPrice, uint128 qtyLeft,
                              int128 paidBase, int128 paidQuote) {
-        uint128 flow = (isBuy == inBase) ? type(uint128).max :
+        uint128 flow = (isBuy == inBase) ? uint128(type(int128).max) :
             SafeCast.toUint128(inBase ?
                     FullMath.mulDiv(liq, price, FixedPoint.Q96) :
                     FullMath.mulDiv(liq, FixedPoint.Q96, price));
