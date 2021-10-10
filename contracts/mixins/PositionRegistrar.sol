@@ -215,7 +215,9 @@ contract PositionRegistrar {
 
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
         private pure returns (uint64) {
-        return (uint256(mileage) * uint256(weight) / uint256(total)).toUInt64();
+        // Can safely cast, because result will always be smaller than origina since
+        // weight is less than total.
+        return uint64(uint256(mileage) * uint256(weight) / uint256(total));
     }
 
     /* @notice Changes the owner of an existing position without altering its properties
