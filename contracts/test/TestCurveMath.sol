@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.7.0;
-    
+
+import "../libraries/FullMath.sol";
 import "../libraries/CurveMath.sol";
 import "../libraries/CurveAssimilate.sol";
 import "../libraries/CurveRoll.sol";

@@ -3,7 +3,6 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import '../libraries/FullMath.sol';
 import '../libraries/TickMath.sol';
 import '../libraries/FixedPoint.sol';
 import '../libraries/LiquidityMath.sol';

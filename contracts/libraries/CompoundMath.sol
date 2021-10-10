@@ -2,7 +2,6 @@
 pragma solidity >=0.8.4;
 
 import "./FixedPoint.sol";
-import "./FullMath.sol";
 import "./LowGasSafeMath.sol";
 import "./TickMath.sol";
 import "./SafeCast.sol";

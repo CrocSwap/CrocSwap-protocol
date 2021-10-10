@@ -25,12 +25,6 @@ library FixedPoint {
         return uint128((uint256(x) * uint256(y)) >> 48);
     }
 
-    function mulDivDivQ64 (uint128 x, uint128 n, uint128 d1, uint128 d2)
-        internal pure returns (uint192) {
-        uint192 partTerm = (uint192(x) << 64) / d1;
-        return partTerm * n / d2;
-    }
-
     function recipQ64 (uint128 x) internal pure returns (uint128) {
         return uint128(FixedPoint.Q128 / x);
     }
