@@ -164,7 +164,7 @@ library CurveRoll {
         }
     }
 
-    /* @notice Given a fixed swap flow on a constant product AMM curve, calculates
+    /* @notice Given a fixed swap flow on a cosntant product AMM curve, calculates
      *   the final price and counterflow. This function assumes that the AMM curve is
      *   constant product stable through the impact range. It's the caller's 
      *   responsibility to check that we're not passing liquidity bump tick boundaries.
@@ -239,7 +239,10 @@ library CurveRoll {
         private pure returns (uint128) {
         if (liq == 0) { return type(uint128).max; }
         
-        uint128 priceDelta = uint256(FixedPoint.divQ64(flow, liq)).toUint128();
+        uint192 deltaCalc = FixedPoint.divQ64(flow, liq);
+        if (deltaCalc > type(uint128).max) { return type(uint128).max; }
+        uint128 priceDelta = uint128(deltaCalc);
+        
         if (isBuy) {
             return price + priceDelta;
         } else {
