@@ -73,7 +73,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
                 pairs.flow_.foldFlow(poolFlow);
             }
 
-            //accumProtocolFees(pairs); // Make sure to call before clipping
+            accumProtocolFees(pairs); // Make sure to call before clipping
             int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
