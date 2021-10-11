@@ -19,7 +19,7 @@ contract TestCurveMath {
     }
 
     function testVig (uint128 liq, uint128 swapQty, uint24 feeRate, uint8 protoCut,
-                      bool isBuy, bool inBase, uint128 curvePrice, uint128 limitPrice)
+                      bool, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
         return SwapCurve.vigOverSwap(curve, swapQty, feeRate, protoCut, inBase,
@@ -126,7 +126,6 @@ contract TestCurveMath {
                        bool isBuy, bool inBase)
         public pure returns (uint128 rollPrice, uint128 qtyLeft,
                              int128 paidBase, int128 paidQuote) {
-        CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
         (paidBase, paidQuote, qtyLeft) = CurveRoll.rollFlow
             (curve, flow, inBase, isBuy, flow);
