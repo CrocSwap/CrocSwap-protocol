@@ -27,13 +27,13 @@ contract PoolRegistry is StorageLayout {
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
                               address permitOracle) public protocolOnly {
-        PoolSpecs.Header memory head = PoolSpecs.Header({feeRate_: feeRate,
-                    protocolTake_: protocolTake, tickSize_: tickSize,
-                    priceOracle_: 0, extFlags_: formExtFlags(permitOracle)});
-        PoolSpecs.Extended memory ext =
-            PoolSpecs.Extended({permitOracle_: permitOracle});
-        PoolSpecs.Pool memory pool = PoolSpecs.Pool({head_: head, ext_: ext});
-        templates_[poolIdx] = pool;
+        PoolSpecs.Pool storage templ = templates_[poolIdx];
+        templ.head_.feeRate_ = feeRate;
+        templ.head_.protocolTake_ = protocolTake;
+        templ.head_.tickSize_ = tickSize;
+        templ.head_.priceOracle_ = 0;
+        templ.head_.extFlags_ = formExtFlags(permitOracle);
+        templ.ext_.permitOracle_ = permitOracle;
     }
 
     function formExtFlags (address permitOracle) private pure returns (uint8) {
