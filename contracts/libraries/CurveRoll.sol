@@ -24,7 +24,6 @@ library CurveRoll {
     using CompoundMath for uint256;
     using SafeCast for uint256;
     using CurveMath for CurveMath.CurveState;
-    using CurveMath for CurveMath.SwapFrame;
     using CurveMath for uint128;
 
     /* @notice Applies a given swap flow onto a constant product AMM curve and adjusts
@@ -49,8 +48,10 @@ library CurveRoll {
      *   incremented based on the swapped flow and its relevant impact. */
     function rollFlow (CurveMath.CurveState memory curve, uint128 flow,
                        CurveMath.SwapAccum memory swap) internal pure {        
-        (uint128 counterFlow, uint128 nextPrice) = deriveImpact(curve, flow, swap.cntx_);
-        (int128 paidFlow, int128 paidCounter) = signFlow(flow, counterFlow, swap.cntx_);
+        (uint128 counterFlow, uint128 nextPrice) = deriveImpact
+            (curve, flow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
+        (int128 paidFlow, int128 paidCounter) = signFlow
+            (flow, counterFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
         setCurvePos(curve, swap, nextPrice, paidFlow, paidCounter);
     }
 
@@ -73,8 +74,10 @@ library CurveRoll {
      *   incremented based on the swapped flow and its relevant impact. */
     function rollPrice (CurveMath.CurveState memory curve, uint128 price,
                         CurveMath.SwapAccum memory swap) internal pure {
-        (uint128 flow, uint128 counterFlow) = deriveDemand(curve, price, swap);
-        (int128 paidFlow, int128 paidCounter) = signFixed(flow, counterFlow, swap.cntx_);
+        (uint128 flow, uint128 counterFlow) = deriveDemand(curve, price,
+                                                           swap.cntx_.inBaseQty_);
+        (int128 paidFlow, int128 paidCounter) = signFixed
+            (flow, counterFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
         setCurvePos(curve, swap, price, paidFlow, paidCounter);
     }
 
@@ -151,12 +154,12 @@ library CurveRoll {
      *         (see CurveMath.sol). The results should not be used directly without 
      *         buffering the counterflow in the direction of collateral support. */
     function deriveDemand (CurveMath.CurveState memory curve, uint128 price,
-                           CurveMath.SwapAccum memory swap) private pure
+                           bool inBaseQty) private pure
         returns (uint128 flow, uint128 counterFlow) {
         uint128 liq = curve.activeLiquidity();
         uint128 baseFlow = liq.deltaBase(curve.priceRoot_, price);
         uint128 quoteFlow = liq.deltaQuote(curve.priceRoot_, price);
-        if (swap.cntx_.inBaseQty_) {
+        if (inBaseQty) {
             (flow, counterFlow) = (baseFlow, quoteFlow);
         } else {
             (flow, counterFlow) = (quoteFlow, baseFlow);
@@ -187,16 +190,16 @@ library CurveRoll {
      *                     processed. Note that this value is *not* written into the 
      *                     curve struct. */
     function deriveImpact (CurveMath.CurveState memory curve, uint128 flow,
-                           CurveMath.SwapFrame memory cntx) internal pure
+                           bool inBaseQty, bool isBuy) internal pure
         returns (uint128 counterFlow, uint128 nextPrice) {
         uint128 liq = curve.activeLiquidity();
-        nextPrice = deriveFlowPrice(curve.priceRoot_, liq, flow, cntx);
+        nextPrice = deriveFlowPrice(curve.priceRoot_, liq, flow, inBaseQty, isBuy);
 
         /* We calculate the counterflow exactly off the computed price. Ultimately safe
          * collateralization only cares about the price, not the contravening flow.
          * Therefore we always compute based on the final, rounded price, not from the
          * original fixed flow. */
-        counterFlow = !cntx.inBaseQty_ ?
+        counterFlow = !inBaseQty ?
             liq.deltaBase(curve.priceRoot_, nextPrice) :
             liq.deltaQuote(curve.priceRoot_, nextPrice);
     }
@@ -215,11 +218,11 @@ library CurveRoll {
      *   flow is computed using the exact price returned by this function, and not 
      *   independently. */
     function deriveFlowPrice (uint128 price, uint128 liq,
-                              uint128 flow, CurveMath.SwapFrame memory cntx)
+                              uint128 flow, bool inBaseQty, bool isBuy)
         private pure returns (uint128) {
-        uint128 curvePrice = cntx.inBaseQty_ ?
-            calcBaseFlowPrice(price, liq, flow, cntx.isBuy_) :
-            calcQuoteFlowPrice(price, liq, flow, cntx.isBuy_);
+        uint128 curvePrice = inBaseQty ?
+            calcBaseFlowPrice(price, liq, flow, isBuy) :
+            calcQuoteFlowPrice(price, liq, flow, isBuy);
 
         if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO - 1;}
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
@@ -282,9 +285,9 @@ library CurveRoll {
      *   sign implies the flow is being received by the pool, negative that it's being 
      *   received by the user. */
     function signFlow (uint128 flowMagn, uint128 counterMagn,
-                       CurveMath.SwapFrame memory cntx)
+                       bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {
-        (flow, counter) = signMagn(flowMagn, counterMagn, cntx);
+        (flow, counter) = signMagn(flowMagn, counterMagn, inBaseQty, isBuy);
         // Conservatively round directional counterflow in the direction of the pool's
         // collateral. Don't round swap flow because that's a fixed target. 
         counter = counter + ROUND_PRECISION_WEI;
@@ -292,9 +295,9 @@ library CurveRoll {
 
     /* @notice Same as signFixed, but used for the flow from a price target swap leg. */
     function signFixed (uint128 flowMagn, uint128 counterMagn,
-                        CurveMath.SwapFrame memory cntx)
+                        bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {
-        (flow, counter) = signMagn(flowMagn, counterMagn, cntx);
+        (flow, counter) = signMagn(flowMagn, counterMagn, inBaseQty, isBuy);
         // In a price target, bothsides of the flow are floating, and have to be rounded
         // in pool's favor to conservatively accomodate the price precision.
         flow = flow + ROUND_PRECISION_WEI;
@@ -302,10 +305,10 @@ library CurveRoll {
     }
     
     function signMagn (uint128 flowMagn, uint128 counterMagn,
-                       CurveMath.SwapFrame memory cntx)
+                       bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {
         
-        if (cntx.inBaseQty_ == cntx.isBuy_) {
+        if (inBaseQty == isBuy) {
             (flow, counter) = (flowMagn.toInt128Sign(), -counterMagn.toInt128Sign());
         } else {
             (flow, counter) = (-flowMagn.toInt128Sign(), counterMagn.toInt128Sign());

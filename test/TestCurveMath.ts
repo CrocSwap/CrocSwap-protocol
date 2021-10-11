@@ -359,21 +359,4 @@ describe('CurveMath', () => {
       expect(impact[1]).eq(minSqrtPrice());
    })
 
-   it("is flow input", async() => {
-      // Buying with a fixed payment
-      let result = await curve.testIsFlowInput(true, true);
-      expect(result).eq(true);
-
-      // Buying for a fixed receivable
-      result = await curve.testIsFlowInput(true, false);
-      expect(result).eq(false);
-
-      // Selling for a fixed receivable
-      result = await curve.testIsFlowInput(false, true);
-      expect(result).eq(false);
-
-      // Selling with a fixed payment
-      result = await curve.testIsFlowInput(false, false);
-      expect(result).eq(true);
-   })
 })

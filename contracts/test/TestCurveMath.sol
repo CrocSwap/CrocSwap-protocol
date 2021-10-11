@@ -162,8 +162,7 @@ contract TestCurveMath {
                                bool isBuy, bool inBase)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
-        CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
-        return CurveRoll.deriveImpact(curve, flow, swap.cntx_);
+        return CurveRoll.deriveImpact(curve, flow, inBase, isBuy);
     }
     
     function buildSwapFrame (bool isBuy, bool inBase)
