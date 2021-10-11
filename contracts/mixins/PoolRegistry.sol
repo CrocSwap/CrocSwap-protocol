@@ -40,12 +40,12 @@ contract PoolRegistry is StorageLayout {
         return (permitOracle != address(0)) ? 1 : 0;
     }
     
-    /*function setProtocolTake (address base, address quote, uint24 poolIdx,
+    function setProtocolTake (address base, address quote, uint24 poolIdx,
                               uint8 protocolTake) protocolOnly public {
         selectPool(base, quote, poolIdx).head_.protocolTake_ = protocolTake;        
     }
 
-    function setPriceImprove (address token, uint128 unitTickCollateral,
+    /*function setPriceImprove (address token, uint128 unitTickCollateral,
                               uint16 awayTickTol, int8[] calldata rangeMults)
         protocolOnly public {
         improves_[token] = PriceGrid.formatSettings(true, unitTickCollateral,
