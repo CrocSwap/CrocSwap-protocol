@@ -34,7 +34,7 @@ library Chaining {
     }
 
     function plugSwapGap (RollTarget memory roll, PairFlow memory flow,
-                           bool inBaseQty) internal pure returns
+                          bool inBaseQty) internal pure returns
         (bool isBuy, uint128 qty) {
         require(inBaseQty == roll.inBaseQty_);
         int128 dirQty = totalBalance(roll, flow);

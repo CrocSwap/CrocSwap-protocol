@@ -9,14 +9,15 @@ import './libraries/PriceGrid.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
-import './mixins/Sequencer.sol';
+import './mixins/MarketSequencer.sol';
 import './mixins/StorageLayout.sol';
 import './mixins/ProtocolAccount.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapColdPath is Sequencer, PoolRegistry, SettleLayer, ProtocolAccount {
+contract CrocSwapColdPath is MarketSequencer, PoolRegistry,
+    SettleLayer, ProtocolAccount {
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;

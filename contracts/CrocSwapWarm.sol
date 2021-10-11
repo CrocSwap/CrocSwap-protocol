@@ -6,18 +6,19 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
-import './mixins/Sequencer.sol';
+import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
-import './mixins/Sequencer.sol';
 import './mixins/ProtocolAccount.sol';
 import './mixins/StorageLayout.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapWarmPath is Sequencer, PoolRegistry, SettleLayer, ProtocolAccount {
+contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
+    SettleLayer, ProtocolAccount {
+    
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
@@ -44,18 +45,17 @@ contract CrocSwapWarmPath is Sequencer, PoolRegistry, SettleLayer, ProtocolAccou
 
                 //targetRoll(cntx.roll_, dir.chain_, pairs);
                 verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
-                //Chaining.PairFlow memory poolFlow = callTradePool(dir, cntx);
                 Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
             }
 
-            accumProtocolFees(pairs); // Make sure to call before clipping              
+            /*accumProtocolFees(pairs); // Make sure to call before clipping              
             int128 settleFlow = pairs.clipFlow();                                       
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
-                                        settleChannel = order.hops_[i].settle_;
+                                        settleChannel = order.hops_[i].settle_;*/
         }
 
-        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
+        //settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
     }
 }

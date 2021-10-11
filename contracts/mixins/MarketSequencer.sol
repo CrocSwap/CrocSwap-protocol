@@ -21,7 +21,7 @@ import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract Sequencer is TradeMatcher {
+contract MarketSequencer is TradeMatcher {
 
     using SafeCast for int256;
     using SafeCast for int128;
@@ -75,8 +75,8 @@ contract Sequencer is TradeMatcher {
         if (!dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
-        applyAmbient(flow, dir.ambient_, curve, cntx);
-        applyConcentrateds(flow, dir.conc_, curve, cntx);
+        //applyAmbient(flow, dir.ambient_, curve, cntx);
+        //applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
@@ -135,10 +135,10 @@ contract Sequencer is TradeMatcher {
         if (liq == 0) { return (0, 0); }
         if (isAdd) {
             return mintRange(curve.curve_, curve.pullPriceTick(),
-                             lowTick, highTick, liq, cntx.pool_.hash_);
+              lowTick, highTick, liq, cntx.pool_.hash_);
         } else {
             return burnRange(curve.curve_, curve.pullPriceTick(),
-                             lowTick, highTick, liq, cntx.pool_.hash_);
+              lowTick, highTick, liq, cntx.pool_.hash_);
         }
     }
 }

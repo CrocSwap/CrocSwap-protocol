@@ -27,37 +27,106 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
-    function callTradePool (Directives.PoolDirective memory dir,
-                            Chaining.ExecCntx memory cntx)
-        internal returns (Chaining.PairFlow memory flow) {
+    
+    function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
+                              bytes32 poolHash) internal
+        returns (int128 basePaid, int128 quotePaid) {
         (bool success, bytes memory output) = microPath_.delegatecall
             (abi.encodeWithSignature
-             ("callTradePool(bytes)", abi.encode(dir, cntx)));
+             ("mintAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
+              curve.curve_.priceRoot_, 
+              curve.curve_.liq_.ambientSeed_,
+              curve.curve_.liq_.concentrated_,
+              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              liq, poolHash));
         require(success);
         
-        flow = abi.decode(output, (Chaining.PairFlow));     
+        (basePaid, quotePaid,
+         curve.curve_.liq_.concentrated_) = 
+            abi.decode(output, (int128, int128, uint128));
+    }
+
+    function callBurnAmbient (CurveCache.Cache memory curve, uint128 liq,
+                              bytes32 poolHash) internal
+        returns (int128 basePaid, int128 quotePaid) {
+        (bool success, bytes memory output) = microPath_.delegatecall
+            (abi.encodeWithSignature
+             ("burnAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
+              curve.curve_.priceRoot_, 
+              curve.curve_.liq_.ambientSeed_,
+              curve.curve_.liq_.concentrated_,
+              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              liq, poolHash));
+        require(success);
+        
+        (basePaid, quotePaid,
+         curve.curve_.liq_.concentrated_) = 
+            abi.decode(output, (int128, int128, uint128));
     }
     
-    /*function delegateBurnRange (CurveCache.Cache memory curve,
-                                int24 bidTick, int24 askTick, uint128 liq,
-                                bytes32 poolHash) internal
+
+    function callMintRange (CurveCache.Cache memory curve,
+                            int24 bidTick, int24 askTick, uint128 liq,
+                            bytes32 poolHash) internal
+        returns (int128 basePaid, int128 quotePaid) {
+        (bool success, bytes memory output) = microPath_.delegatecall
+            (abi.encodeWithSignature
+             ("mintRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
+              curve.curve_.priceRoot_, curve.pullPriceTick(),
+              curve.curve_.liq_.ambientSeed_,
+              curve.curve_.liq_.concentrated_,
+              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              bidTick, askTick, liq, poolHash));
+        require(success);
+        
+        (basePaid, quotePaid,
+         curve.curve_.liq_.ambientSeed_,
+         curve.curve_.liq_.concentrated_) = 
+            abi.decode(output, (int128, int128, uint128, uint128));
+    }
+
+    function callBurnRange (CurveCache.Cache memory curve,
+                            int24 bidTick, int24 askTick, uint128 liq,
+                            bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
         
         (bool success, bytes memory output) = microPath_.delegatecall
             (abi.encodeWithSignature
              ("burnRange(uint128,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
-              curve.curve_.priceRoot_, curve.curve_.liq_.ambientSeed_,
-              curve.curve_.liq_.concentrated_,
+              curve.curve_.priceRoot_, curve.pullPriceTick(),
+              curve.curve_.liq_.ambientSeed_, curve.curve_.liq_.concentrated_,
               curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
               bidTick, askTick, liq, poolHash));
-        require(success, 'DL');
+        require(success);
         
-        int24 priceTick;
-        (basePaid, quotePaid, curve.curve_.liq_.ambientSeed_,
-         curve.curve_.liq_.concentrated_, priceTick) = 
-            abi.decode(output, (int128, int128, uint128, uint128, int24));
+        (basePaid, quotePaid,
+         curve.curve_.liq_.ambientSeed_,
+         curve.curve_.liq_.concentrated_) = 
+            abi.decode(output, (int128, int128, uint128, uint128));
+    }
+
+    
+    function callSwap (CurveCache.Cache memory curve,
+                       Directives.SwapDirective memory swap,
+                       PoolSpecs.PoolCursor memory pool) internal {
         
-        curve.plugTick(priceTick);
-        }*/
+        (bool success, bytes memory output) = microPath_.delegatecall
+            (abi.encodeWithSignature
+             ("sweepSwap(tuple,int24,tuple,tuple)",
+              curve.curve_, curve.pullPriceTick(), pool));
+        require(success);
+
+        int128 baseFlow;
+        int128 quoteFlow;
+        uint128 baseProto;
+        uint128 quoteProto;
+        
+        (baseFlow, quoteFlow, baseProto, quoteProto,
+         curve.curve_.priceRoot_, curve.curve_.liq_.ambientSeed_,
+         curve.curve_.accum_.ambientGrowth_,
+         curve.curve_.accum_.concTokenGrowth_) = 
+            abi.decode(output, (int128, int128, uint128, uint128,
+                                uint128, uint128, uint64, uint64));
+    }
 
 }
