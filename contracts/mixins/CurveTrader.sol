@@ -252,6 +252,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             // exhaust the bitmap.
             (int24 bumpTick, bool spillsOver) = pinTickMap
                 (pool.hash_, swap.isBuy_, midTick);
+            return;
             curve.swapToLimit(accum, swap, pool.head_, bumpTick);
             
             // The swap can be in one of three states at this point: 1) qty exhausted,
