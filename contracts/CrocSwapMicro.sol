@@ -7,47 +7,34 @@ import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
 import './libraries/Chaining.sol';
-import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
-import './mixins/CurveTrader.sol';
+import './mixins/Sequencer.sol';
 import './mixins/StorageLayout.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapMicroPath is CurveTrader {
-    using CurveCache for CurveCache.Cache;
+contract CrocSwapMicroPath is Sequencer {
 
-    function burnRange (uint128 price, uint128 seed, uint128 conc,
+    function burnRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,
                         int24 lowTick, int24 highTick, uint128 liq, bytes32 poolHash)
         public returns (int128 baseFlow, int128 quoteFlow,
-                        uint128 seedOut, uint128 concOut, int24 priceTick) {
-        CurveCache.Cache memory curve;
-        curve.curve_.priceRoot_ = price;
-        curve.curve_.liq_.ambientSeed_ = seed;
-        curve.curve_.liq_.concentrated_ = conc;
-        curve.curve_.accum_.ambientGrowth_ = seedGrowth;
-        curve.curve_.accum_.concTokenGrowth_ = concGrowth;
+                        uint128 seedOut, uint128 concOut) {
+        CurveMath.CurveState memory curve;
+        curve.priceRoot_ = price;
+        curve.liq_.ambientSeed_ = seed;
+        curve.liq_.concentrated_ = conc;
+        curve.accum_.ambientGrowth_ = seedGrowth;
+        curve.accum_.concTokenGrowth_ = concGrowth;
         
-        (baseFlow, quoteFlow) = burnConcentrated(curve, lowTick, highTick,
-                                                 liq, poolHash);
+        (baseFlow, quoteFlow) = burnRange(curve, priceTick,
+                                          lowTick, highTick, liq, poolHash);
 
-        concOut = curve.curve_.liq_.concentrated_;
-        seedOut = curve.curve_.liq_.ambientSeed_;
-        priceTick = curve.pullPriceTick();
-    }
-
-
-    function callTradePool (bytes calldata input)
-        public returns (Chaining.PairFlow memory flow) {
-        Directives.PoolDirective memory dir;
-        Chaining.ExecCntx memory cntx;
-        
-        (dir, cntx) = abi.decode(input, (Directives.PoolDirective, Chaining.ExecCntx));
-        flow = tradeOverPool(dir, cntx);
+        concOut = curve.liq_.concentrated_;
+        seedOut = curve.liq_.ambientSeed_;
     }
 }
 

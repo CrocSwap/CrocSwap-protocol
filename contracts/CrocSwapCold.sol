@@ -6,18 +6,17 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
-import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
-import './mixins/CurveTrader.sol';
+import './mixins/Sequencer.sol';
 import './mixins/StorageLayout.sol';
 import './mixins/ProtocolAccount.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapColdPath is CurveTrader, PoolRegistry, SettleLayer, ProtocolAccount {
+contract CrocSwapColdPath is Sequencer, PoolRegistry, SettleLayer, ProtocolAccount {
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;

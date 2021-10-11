@@ -26,7 +26,6 @@ contract LiquidityCurve is StorageLayout {
     using SafeCast for uint144;
     using CurveMath for uint128;
     using CurveMath for CurveMath.CurveState;
-    using CurveCache for CurveCache.Cache;
 
     /* @notice Copies the current state of the curve in EVM storage to a memory clone.
      * @dev    Use for light-weight gas ergonomics when iterarively operating on the 
@@ -70,11 +69,11 @@ contract LiquidityCurve is StorageLayout {
      *                following the addition of this liquidity.
      * @return quote - The amount of quote token collateral that must be collected 
      *                 following the addition of this liquidity. */
-    function liquidityReceivable (CurveCache.Cache memory curve, uint128 liquidity,
+    function liquidityReceivable (CurveMath.CurveState memory curve, uint128 liquidity,
                                   int24 lowerTick, int24 upperTick)
         internal pure returns (uint128, uint128) {
         (uint128 base, uint128 quote, bool inRange) =
-            liquidityFlows(curve, liquidity, lowerTick, upperTick);
+            liquidityFlows(curve.priceRoot_, liquidity, lowerTick, upperTick);
         bumpConcentrated(curve, liquidity, inRange);
         return chargeConservative(base, quote, inRange);
     }
@@ -122,7 +121,7 @@ contract LiquidityCurve is StorageLayout {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (CurveCache.Cache memory curve, uint128 liquidity,
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 liquidity,
                                uint64 rewardRate, int24 lowerTick, int24 upperTick)
         internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityPayable(curve, liquidity, lowerTick, upperTick);
@@ -135,7 +134,7 @@ contract LiquidityCurve is StorageLayout {
             
             if (rewards > 0) {
                 (uint128 baseRewards, uint128 quoteRewards) =
-                    liquidityPayable(curve.curve_, rewards.toUint128());
+                    liquidityPayable(curve, rewards);
                 base += baseRewards;
                 quote += quoteRewards;
             }
@@ -144,11 +143,11 @@ contract LiquidityCurve is StorageLayout {
 
     /* @notice The same as the above liquidityPayable() but called when accumulated 
      *         rewards are zero. */
-    function liquidityPayable (CurveCache.Cache memory curve, uint128 liquidity,
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 liquidity,
                                int24 lowerTick, int24 upperTick)
         internal pure returns (uint128 base, uint128 quote) {
         bool inRange;
-        (base, quote, inRange) = liquidityFlows(curve, liquidity,
+        (base, quote, inRange) = liquidityFlows(curve.priceRoot_, liquidity,
                                                 lowerTick, upperTick);
         bumpConcentrated(curve, -(liquidity.toInt128Sign()), inRange);
     }
@@ -184,16 +183,16 @@ contract LiquidityCurve is StorageLayout {
             LiquidityMath.addDelta(curve.liq_.ambientSeed_, seedDelta);
     }
 
-    function bumpConcentrated (CurveCache.Cache memory curve,
+    function bumpConcentrated (CurveMath.CurveState memory curve,
                                uint128 liqDelta, bool inRange) private pure {
         bumpConcentrated(curve, int128(uint128(liqDelta)), inRange);
     }
     
-    function bumpConcentrated (CurveCache.Cache memory curve,
+    function bumpConcentrated (CurveMath.CurveState memory curve,
                                int128 liqDelta, bool inRange) private pure {
         if (inRange) {
-            curve.curve_.liq_.concentrated_ =
-                LiquidityMath.addDelta(curve.curve_.liq_.concentrated_, liqDelta);
+            curve.liq_.concentrated_ =
+                LiquidityMath.addDelta(curve.liq_.concentrated_, liqDelta);
         }
     }
     
@@ -201,20 +200,19 @@ contract LiquidityCurve is StorageLayout {
     /* @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
      *   flows. Safe to pay this flow, but when pool is receiving caller must make sure
      *   to round up for collateral safety. */
-    function liquidityFlows (CurveCache.Cache memory curve, uint128 liquidity,
+    function liquidityFlows (uint128 price, uint128 liquidity,
                              int24 bidTick, int24 askTick)
         private pure returns (uint128 baseDebit, uint128 quoteDebit, bool inRange) {
-        int24 priceTick = curve.pullPriceTick();
         (uint128 bidPrice, uint128 askPrice) =
             translateTickRange(bidTick, askTick);
 
-        if (priceTick < bidTick) {
+        if (price < bidPrice) {
             quoteDebit = liquidity.deltaQuote(bidPrice, askPrice);
-        } else if (priceTick >= askTick) {
+        } else if (price >= askPrice) {
             baseDebit = liquidity.deltaBase(bidPrice, askPrice);
         } else {
-            quoteDebit = liquidity.deltaQuote(curve.curve_.priceRoot_, askPrice);
-            baseDebit = liquidity.deltaBase(bidPrice, curve.curve_.priceRoot_);
+            quoteDebit = liquidity.deltaQuote(price, askPrice);
+            baseDebit = liquidity.deltaBase(bidPrice, price);
             inRange = true;
         }
     }
