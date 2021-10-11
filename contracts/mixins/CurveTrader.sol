@@ -14,12 +14,13 @@ import '../libraries/Chaining.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
-import './ProtocolAccount.sol';
+import './ColdInjector.sol';
 import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
+contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook,
+    ColdPathInjector {
 
     using SafeCast for int256;
     using SafeCast for int128;
@@ -41,8 +42,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function tradeOverPool (Directives.PoolDirective memory dir,
                             Chaining.ExecCntx memory cntx)
         internal returns (Chaining.PairFlow memory flow) {
-        CurveCache.Cache memory curve = CurveCache.initCache
-            (snapCurve(cntx.pool_.hash_));
+        CurveCache.Cache memory curve;
+        curve.curve_ = snapCurve(cntx.pool_.hash_);
         applyToCurve(flow, dir, curve, cntx);
         commitCurve(cntx.pool_.hash_, curve.curve_);
     }
@@ -51,8 +52,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                            PoolSpecs.PoolCursor memory pool)
         internal returns (Chaining.PairFlow memory flow) {
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);
-        sweepSwapLiq(flow, curve, curve.priceRoot_.getTickAtSqrtRatio(),
-                     dir, pool);
+        sweepSwapLiq(flow, curve, curve.priceRoot_.getTickAtSqrtRatio(), dir, pool);
         commitCurve(pool.hash_, curve);
     }
 
@@ -90,10 +90,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                (flow, dir.inBaseQty_);
                }*/
             
-        if (dir.qty_ != 0) {
+        /*if (dir.qty_ != 0) {
             sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, cntx.pool_);
             curve.dirtyPrice();
-        }
+            }*/
     }
 
     /* A swap operation is a potentially long and iterative process that
@@ -131,7 +131,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
                 (int24 lowTick, int24 highTick, bool isAdd, uint128 liquidity) =
                     dirs[i].sliceBookend(j);
-                
+
                 (int128 nextBase, int128 nextQuote) = applyConcentrated
                     (curve, cntx, lowTick, highTick, isAdd, liquidity);
                 flow.accumFlow(nextBase, nextQuote);
@@ -150,7 +150,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (isAdd) {
             return mintConcentrated(curve, lowTick, highTick, liq, cntx.pool_.hash_);
         } else {
-            return burnConcentrated(curve, lowTick, highTick, liq, cntx.pool_.hash_);
+            return delegateBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
+            //return burnConcentrated(curve, lowTick, highTick, liq, cntx.pool_.hash_);
         }
     }
 
@@ -193,12 +194,12 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function burnConcentrated (CurveCache.Cache memory curve,
                                int24 lowTick, int24 highTick, uint128 liquidity,
                                bytes32 poolHash)
-        private returns (int128, int128) {
+        internal returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(poolHash, curve.pullPriceTick(),
                                           lowTick, highTick, liquidity,
                                           curve.curve_.accum_.concTokenGrowth_);
         uint64 rewards = burnPosLiq(msg.sender, poolHash, lowTick, highTick,
-                                    liquidity, feeMileage); 
+                                    liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liquidity, rewards,
                                                          lowTick, highTick);
         return signBurnFlow(base, quote);

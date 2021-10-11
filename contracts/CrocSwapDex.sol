@@ -15,11 +15,11 @@ import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 import './CrocSwapCold.sol';
 import './CrocSwapWarm.sol';
+import './CrocSwapMicro.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
-    ColdPathInjector {
+contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -30,6 +30,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
         authority_ = authority;
         coldPath_ = address(new CrocSwapColdPath());
         warmPath_ = address(new CrocSwapWarmPath());
+        microPath_ = address(new CrocSwapMicroPath());
     }
 
     function swap (address base, address quote,

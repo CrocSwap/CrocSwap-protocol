@@ -11,6 +11,7 @@ import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
 import './mixins/CurveTrader.sol';
+import './mixins/ProtocolAccount.sol';
 import './mixins/StorageLayout.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 

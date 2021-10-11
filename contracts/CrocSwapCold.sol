@@ -12,6 +12,7 @@ import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/StorageLayout.sol';
+import './mixins/ProtocolAccount.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";

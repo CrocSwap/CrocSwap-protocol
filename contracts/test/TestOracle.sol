@@ -13,14 +13,14 @@ contract TestOracleHistory is OracleHistorian {
     
     function testCheckpoint (uint128 price, uint64 ambientGrowth,
                              uint128 liqSeeds, uint32 nowTime) public {
-        CurveMath.CurveState memory curve =
-            CurveMath.CurveState({priceRoot_: price,
-                        liq_: CurveMath.CurveLiquidity({ambientSeed_: liqSeeds,
-                                    concentrated_: 0}),
-                        accum_: CurveMath.CurveFeeAccum({
-                            ambientGrowth_: ambientGrowth,
-                                    concTokenGrowth_: 0})});
-        addCheckpoint(POOL_KEY, CurveCache.initCache(curve), nowTime);
+        CurveCache.Cache memory cache;
+        cache.curve_ = CurveMath.CurveState({priceRoot_: price,
+                    liq_: CurveMath.CurveLiquidity({ambientSeed_: liqSeeds,
+                                concentrated_: 0}),
+                    accum_: CurveMath.CurveFeeAccum({
+                        ambientGrowth_: ambientGrowth,
+                                concTokenGrowth_: 0})});
+        addCheckpoint(POOL_KEY, cache, nowTime);
     }
 
     function testCross (uint128 startPrice, uint128 endPrice) public view

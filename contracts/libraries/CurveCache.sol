@@ -13,25 +13,24 @@ library CurveCache {
 
     struct Cache {
         CurveMath.CurveState curve_;
-        bool isTickDirty_;
+        bool isTickClean_;
         int24 unsafePriceTick_;
-    }
-
-    function initCache (CurveMath.CurveState memory curve) internal pure
-        returns (Cache memory cache) {
-        cache = Cache({curve_: curve, isTickDirty_: true,
-                    unsafePriceTick_: 0 });
     }
     
     function pullPriceTick (Cache memory cache) internal pure returns (int24) {
-        if (cache.isTickDirty_) {
+        if (!cache.isTickClean_) {
             cache.unsafePriceTick_ = cache.curve_.priceRoot_.getTickAtSqrtRatio();
-            cache.isTickDirty_ = false;
+            cache.isTickClean_ = true;
         }
         return cache.unsafePriceTick_;
     }
 
     function dirtyPrice (Cache memory cache) internal pure {
-        cache.isTickDirty_ = true;
+        cache.isTickClean_ = false;
+    }
+
+    function plugTick (Cache memory cache, int24 tick) internal pure {
+        cache.isTickClean_ = true;
+        cache.unsafePriceTick_ = tick;
     }
 }
