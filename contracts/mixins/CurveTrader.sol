@@ -74,7 +74,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (!dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
-        //applyAmbient(flow, dir.ambient_, curve, cntx);
+        applyAmbient(flow, dir.ambient_, curve, cntx);
         applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
@@ -91,9 +91,9 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                }*/
             
         if (dir.qty_ != 0) {
-            CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_, dir.qty_);
+            CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_);
             sweepSwapLiq(curve.curve_, curve.pullPriceTick(),
-                         accum, cntx.pool_, dir.limitPrice_);
+              accum, cntx.pool_, dir.limitPrice_);
             curve.dirtyPrice();
             flow.accumSwap(accum);
         }
@@ -105,7 +105,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
      * these structures in memory. Then only commit them back to EVM storage
      * when the operation is finalized. */
     function initSwapAccum (Directives.SwapDirective memory dir,
-                            PoolSpecs.PoolCursor memory pool, uint128 swapQty)
+                            PoolSpecs.PoolCursor memory pool)
         private pure returns (CurveMath.SwapAccum memory accum) {
         accum.cntx_.isBuy_ = dir.isBuy_;
         accum.cntx_.inBaseQty_ = dir.inBaseQty_;
@@ -174,10 +174,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function burnAmbient (uint128 liqBurned, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
         private returns (int128, int128) {
-        burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
+        /*burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
                    curve.curve_.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
-        return signBurnFlow(base, quote);
+        return signBurnFlow(base, quote);*/
     }
     
     function mintConcentrated (Directives.RangeOrder memory r,
