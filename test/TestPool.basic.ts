@@ -154,29 +154,9 @@ describe('Pool', () => {
 
     it("swap wrong direction", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        let startQuote = await quoteToken.balanceOf((await test.dex).address)
-        let startBase = await baseToken.balanceOf((await test.dex).address)
-        
         await test.snapStart()
-        await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.55))
-        expect(await test.snapBaseFlow()).to.equal(0)
-        expect(await test.snapQuoteFlow()).to.equal(0)
-
-        expect(await test.liquidity()).to.equal(1000000*1024)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(0)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(0)
-
-
-        await test.testSwap(true, false, 5000, toSqrtPrice(1.4))
-        expect(await test.snapBaseFlow()).to.equal(0)
-        expect(await test.snapQuoteFlow()).to.equal(0)
-
-        expect(await test.liquidity()).to.equal(1000000*1024)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(0)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(0)
-
-        expect((await test.price())).to.gte(toSqrtPrice(1.49999999))
-        expect((await test.price())).to.lte(toSqrtPrice(1.50))
+        await expect((test.testSwap(false, true, 10000*1024, toSqrtPrice(1.55)))).to.be.reverted
+        await expect((test.testSwap(true, false, 5000, toSqrtPrice(1.4)))).to.be.reverted
     })
 
     it("swap buy quote output", async() => {

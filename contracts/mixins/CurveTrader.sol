@@ -242,6 +242,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                            CurveMath.CurveState memory curve, int24 midTick,
                            Directives.SwapDirective memory swap,
                            PoolSpecs.PoolCursor memory pool) internal {
+        require(swap.isBuy_ == (curve.priceRoot_ < swap.limitPrice_), "SD");
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
@@ -252,7 +253,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             // exhaust the bitmap.
             (int24 bumpTick, bool spillsOver) = pinTickMap
                 (pool.hash_, swap.isBuy_, midTick);
-            curve.swapToLimit(accum, swap, pool.head_, bumpTick);
+            curve.swapToLimit(accum, swap, pool.head_, bumpTick);            
             
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean

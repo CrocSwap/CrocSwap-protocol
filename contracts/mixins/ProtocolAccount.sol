@@ -19,11 +19,16 @@ contract ProtocolAccount is StorageLayout  {
     /* @notice Called at the completion of a swap event, incrementing any protocol
      *         fees accumulated in the swap. */
     function accumProtocolFees (TokenFlow.PairSeq memory accum) internal {
-        if (accum.flow_.baseProto_ > 0) {
-            feesAccum_[accum.baseToken_] += accum.flow_.baseProto_;
+        accumProtocolFees(accum.flow_, accum.baseToken_, accum.quoteToken_);
+    }
+
+    function accumProtocolFees (Chaining.PairFlow memory accum,
+                                address base, address quote) internal {
+        if (accum.baseProto_ > 0) {
+            feesAccum_[base] += accum.baseProto_;
         }
-        if (accum.flow_.quoteProto_ > 0) {
-            feesAccum_[accum.quoteToken_] += accum.flow_.quoteProto_;
+        if (accum.quoteProto_ > 0) {
+            feesAccum_[quote] += accum.quoteProto_;
         }
     }
 

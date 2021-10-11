@@ -134,7 +134,6 @@ library SwapCurve {
             curve.priceRoot_ < limitPrice :
             curve.priceRoot_ > limitPrice;
         bool hasNone = qtyLeft == 0;
-        require(insideLimit, "RFI");
         require(insideLimit && hasNone, "RF");
     }
 
