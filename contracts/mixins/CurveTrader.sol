@@ -40,23 +40,21 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function tradeOverPool (Directives.PoolDirective memory dir,
                             Chaining.ExecCntx memory cntx)
         internal returns (Chaining.PairFlow memory flow) {
-        CurveCache.Cache memory curve = CurveCache.initCache(snapCurve(cntx.pool_.hash_));
+        CurveCache.Cache memory curve = CurveCache.initCache
+            (snapCurve(cntx.pool_.hash_));
         applyToCurve(flow, dir, curve, cntx);
         commitCurve(cntx.pool_.hash_, curve.curve_);
     }
 
     function initCurve (PoolSpecs.PoolCursor memory pool,
-                        uint128 price, uint128 initLiq, address oracle)
+                        uint128 price, uint128 initLiq)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        CurveCache.Cache memory curve = CurveCache.initCache(snapCurveInit(pool.hash_));
+        CurveCache.Cache memory curve = CurveCache.initCache
+            (snapCurveInit(pool.hash_));
         initPrice(curve, price);
-        if (initLiq > 0) {
+        /*if (initLiq > 0) {
             (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
-        }
-        if (oracle != address(oracle)) {
-            ICrocSwapHistRecv(oracle).checkpointHist(pool.hash_, curve.pullPriceTick(),
-                                                     curve);
-        }
+            }*/
         commitCurve(pool.hash_, curve.curve_);
     }
 
@@ -67,7 +65,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (!dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
-        applyAmbient(flow, dir.ambient_, curve, cntx);
+        //applyAmbient(flow, dir.ambient_, curve, cntx);
         applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
@@ -78,14 +76,16 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
-        if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
+        /*if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
            (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap
                (flow, dir.inBaseQty_);
-        }
+               }*/
             
         if (dir.qty_ != 0) {
             CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_, dir.qty_);
-            sweepSwapLiq(curve, accum, cntx.pool_, dir.limitPrice_, cntx.oracle_);
+            sweepSwapLiq(curve.curve_, curve.pullPriceTick(),
+                         accum, cntx.pool_, dir.limitPrice_);
+            curve.dirtyPrice();
             flow.accumSwap(accum);
         }
     }
@@ -98,12 +98,11 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function initSwapAccum (Directives.SwapDirective memory dir,
                             PoolSpecs.PoolCursor memory pool, uint128 swapQty)
         private pure returns (CurveMath.SwapAccum memory accum) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
-            ({isBuy_: dir.isBuy_, inBaseQty_: dir.inBaseQty_,
-                    feeRate_: pool.head_.feeRate_, protoCut_: pool.head_.protocolTake_});
-        accum = CurveMath.SwapAccum
-            ({qtyLeft_: swapQty, cntx_: cntx,
-                    paidBase_: 0, paidQuote_: 0, paidProto_: 0});
+        accum.cntx_.isBuy_ = dir.isBuy_;
+        accum.cntx_.inBaseQty_ = dir.inBaseQty_;
+        accum.cntx_.feeRate_ = pool.head_.feeRate_;
+        accum.cntx_.protoCut_ = pool.head_.protocolTake_;
+        accum.qtyLeft_ = dir.qty_;
     }
 
     function applyAmbient (Chaining.PairFlow memory flow,
@@ -137,14 +136,14 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                                 CurveCache.Cache memory curve,
                                 Chaining.ExecCntx memory cntx)
         private returns (int128, int128) {
-        cntx.improve_.verifyFit(range, cntx.pool_.head_.tickSize_,
-                                curve.pullPriceTick());
+        /*cntx.improve_.verifyFit(range, cntx.pool_.head_.tickSize_,
+          curve.pullPriceTick());*/
 
         if (range.liquidity_ == 0) { return (0, 0); }
         if (range.isAdd_) {
             return mintConcentrated(range, curve, cntx);
         } else {
-            return burnConcentrated(range, curve, cntx);
+            //return burnConcentrated(range, curve, cntx);
         }
     }
 
@@ -232,19 +231,6 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
      *     of the final price of the *curve*. NOT the realized VWAP price of the swap.
      *     The swap will only ever execute up the maximum size which would keep the curve
      *     price within this bound, even if the specified quantity is higher. */
-    function sweepSwapLiq (CurveCache.Cache memory curve,
-                           CurveMath.SwapAccum memory accum,
-                           PoolSpecs.PoolCursor memory pool,
-                           uint128 limitPrice, address oracle) internal {
-        int24 midTick = curve.pullPriceTick();
-        sweepSwapLiq(curve.curve_, midTick, accum, pool, limitPrice);
-        curve.dirtyPrice();
-        
-        if (midTick.clusterMove(curve.pullPriceTick()) > 0) {
-            ICrocSwapHistRecv(oracle).checkpointHist(pool.hash_, midTick, curve);
-        }
-    }
-
     function sweepSwapLiq (CurveMath.CurveState memory curve, int24 midTick,
                            CurveMath.SwapAccum memory accum,
                            PoolSpecs.PoolCursor memory pool,
@@ -258,7 +244,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             // seeking a bump outside the bump, because we're not sure if the swap will
             // exhaust the bitmap. 
             (int24 bumpTick, bool spillsOver) = pinTickMap(pool.hash_, isBuy, midTick);
-            curve.swapToLimit(accum, bumpTick, limitPrice);
+            curve.swapToLimit(accum, bumpTick, limitPrice);            
 
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
@@ -305,15 +291,11 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function hasSwapLeft (CurveMath.CurveState memory curve,
                           CurveMath.SwapAccum memory accum,
                           uint128 limitPrice) private pure returns (bool) {
-        return accum.qtyLeft_ > 0 &&
-            inLimitPrice(curve.priceRoot_, limitPrice, accum.cntx_.isBuy_);
+        bool inLimit = accum.cntx_.isBuy_ ?
+            curve.priceRoot_ < limitPrice :
+            curve.priceRoot_ > limitPrice;
+        return accum.qtyLeft_ > 0 && inLimit;
     }
-    
-    function inLimitPrice (uint128 price, uint128 limitPrice, bool isBuy)
-        private pure returns (bool) {
-        return isBuy ? price < limitPrice : price > limitPrice;
-    }
-
 
     /* @notice Performs all the necessary book keeping related to crossing an extant 
      *         level bump on the curve. 
@@ -340,7 +322,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
         bumpLiquidity(bumpTick, isBuy, curve, pool);
         curve.shaveAtBump(accum);
-        return postBumpTick(bumpTick, isBuy);
+
+        // When selling down, the next tick leg actually occurs *below* the bump tick
+        // because the bump barrier is the first price on a tick. 
+        return isBuy ? bumpTick : bumpTick - 1; 
     }
 
     function bumpLiquidity (int24 bumpTick, bool isBuy, 
@@ -350,11 +335,5 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                                      curve.accum_.concTokenGrowth_);
         curve.liq_.concentrated_ = LiquidityMath.addDelta
             (curve.liq_.concentrated_, liqDelta);
-    }
-    
-    // When selling down, the next tick leg actually occurs *below* the bump tick
-    // because the bump barrier is the first price on a tick. 
-    function postBumpTick (int24 bumpTick, bool isBuy) private pure returns (int24) {
-        return isBuy ? bumpTick : bumpTick - 1; 
-    }
+    }    
 }

@@ -10,13 +10,13 @@ import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
+import './mixins/CurveTrader.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 import './CrocSwapBooks.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
-    OracleHistorian, ICrocSwapHistRecv {
+contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -24,8 +24,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     using Chaining for Chaining.PairFlow;
 
     constructor (address authority) {
-        setProtoAcctAuthority(authority);
-        sidecar_ = address(new CrocSwapBooks(authority));
+        authority_ = authority;
     }
     
     function trade (bytes calldata input) reEntrantLock public {
@@ -34,7 +33,6 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         TokenFlow.PairSeq memory pairs;
         
         Chaining.ExecCntx memory cntx;
-        cntx.oracle_ = address(this);
         cntx.owner_ = msg.sender;
         
         bool hasSpentTxSend = false;
@@ -48,20 +46,19 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
                 Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
                 cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
                                        dir.poolIdx_);
-                targetRoll(cntx.roll_, dir.chain_, pairs);
                 
-                verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
+                //targetRoll(cntx.roll_, dir.chain_, pairs);
+                //verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
                 
-                Chaining.PairFlow memory poolFlow =
-                    CrocSwapBooks(sidecar_).runPool(dir, cntx);
+                Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
             }
 
-            accumProtocolFees(pairs); // Make sure to call before clipping
+            //accumProtocolFees(pairs); // Make sure to call before clipping
             int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
-            settleChannel = order.hops_[i].settle_;
+                                        settleChannel = order.hops_[i].settle_;
         }
 
         settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);
@@ -89,12 +86,11 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int128 baseFlow, int128 quoteFlow) = CrocSwapBooks(sidecar_).
-            runInit(pool, price);
+        (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, 0);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
 
-    function queryCurve (address base, address quote, uint24 poolIdx)
+    /*function queryCurve (address base, address quote, uint24 poolIdx)
         public view returns (CurveMath.CurveState memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         return CrocSwapBooks(sidecar_).queryCurve(pool);
@@ -105,19 +101,7 @@ contract CrocSwapDex is SettleLayer, PoolRegistry, ProtocolAccount,
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
-    
-    function checkpointHist (bytes32 poolKey, int24 startTick,
-                             CurveCache.Cache memory curve) public override {
-        require(msg.sender == sidecar_);
-        considerCheckpoint(poolKey, startTick, curve);
-    }
-
-    function initHist (bytes32 poolKey, CurveCache.Cache memory curve) public override {
-        require(msg.sender == sidecar_);
-        addCheckpoint(poolKey, curve);
-    }
-
     function getBooksSidecar() public view returns (address) {
         return sidecar_;
-    }    
+        }   */
 }

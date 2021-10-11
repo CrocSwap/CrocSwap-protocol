@@ -20,7 +20,6 @@ const POOL_IDX = 85365
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
-    sidecar: Promise<CrocSwapBooks>
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
@@ -51,9 +50,9 @@ export class TestPool {
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
 
         factory = ethers.getContractFactory("CrocSwapBooks")
-        this.sidecar = factory.then(f => this.dex.then(d => 
+        /*this.sidecar = factory.then(f => this.dex.then(d => 
                 d.getBooksSidecar()).then(a =>
-                f.attach(a))) as Promise<CrocSwapBooks>
+                f.attach(a))) as Promise<CrocSwapBooks>*/
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
