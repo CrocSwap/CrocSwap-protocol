@@ -26,6 +26,23 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount 
     constructor (address authority) {
         authority_ = authority;
     }
+
+    function swap (address base, address quote,
+                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                   uint128 limitPrice) reEntrantLock public {
+        Directives.SwapDirective memory dir;
+        dir.isBuy_ = isBuy;
+        dir.inBaseQty_ = inBaseQty;
+        dir.qty_ = qty;
+        dir.limitPrice_ = limitPrice;
+
+        Chaining.ExecCntx memory cntx;
+        cntx.pool_ = queryPool(base, quote, poolIdx);
+        swapOverPool(dir, cntx);
+
+        // WARNING: No Settlement in place
+    }
+
     
     function trade (bytes calldata input) reEntrantLock public {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);

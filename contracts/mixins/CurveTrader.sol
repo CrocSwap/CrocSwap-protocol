@@ -46,6 +46,15 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         commitCurve(cntx.pool_.hash_, curve.curve_);
     }
 
+    function swapOverPool (Directives.SwapDirective memory dir,
+                           Chaining.ExecCntx memory cntx)
+        internal returns (Chaining.PairFlow memory flow) {
+        CurveCache.Cache memory curve = CurveCache.initCache
+            (snapCurve(cntx.pool_.hash_));
+        applySwap(flow, dir, curve, cntx);
+        commitCurve(cntx.pool_.hash_, curve.curve_);
+    }
+
     function initCurve (PoolSpecs.PoolCursor memory pool,
                         uint128 price, uint128 initLiq)
         internal returns (int128 baseFlow, int128 quoteFlow) {
