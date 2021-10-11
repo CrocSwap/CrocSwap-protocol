@@ -50,13 +50,13 @@ library Chaining {
         return roll.prePairBal_ + pairFlow;
     }
     
-    function accumSwap (PairFlow memory flow, CurveMath.SwapAccum memory accum)
-        internal pure {
-        accumFlow(flow, accum.paidBase_, accum.paidQuote_);
-        if (accum.cntx_.inBaseQty_) {
-            flow.quoteProto_ += accum.paidProto_;
+    function accumSwap (PairFlow memory flow, bool inBaseQty,
+                        int128 base, int128 quote, uint128 proto) internal pure {
+        accumFlow(flow, base, quote);
+        if (inBaseQty) {
+            flow.quoteProto_ += proto;
         } else {
-            flow.baseProto_ += accum.paidProto_;
+            flow.baseProto_ += proto;
         }
     }
 

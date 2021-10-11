@@ -10,6 +10,9 @@ import './LowGasSafeMath.sol';
 import './CurveMath.sol';
 import './CurveAssimilate.sol';
 import './CurveRoll.sol';
+import './PoolSpecs.sol';
+import './Directives.sol';
+import './Chaining.sol';
 
 import "hardhat/console.sol";
 
@@ -24,6 +27,7 @@ library SwapCurve {
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
+    using Chaining for Chaining.PairFlow;
 
     /* @notice Applies the swap on to the liquidity curve, either fully exhausting
      *   the swap or reaching the concentrated liquidity bounds or the user-specified
@@ -52,17 +56,23 @@ library SwapCurve {
      *    the realized swap price will never be worse than this limitPrice. If 
      *    limitPrice is inside the starting curvePrice 0 quantity will execute. */
     function swapToLimit (CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory accum,
-                          int24 bumpTick, uint128 swapLimit) pure internal {
-        uint128 limitPrice = determineLimit(bumpTick, swapLimit, accum.cntx_.isBuy_);
-        bookExchFees(curve, accum, limitPrice);
+                          Chaining.PairFlow memory accum,
+                          Directives.SwapDirective memory swap,
+                          PoolSpecs.Header memory pool, int24 bumpTick) pure internal {
+        uint128 limitPrice = determineLimit(bumpTick, swap.limitPrice_, swap.isBuy_);
+
+        (int128 paidBase, int128 paidQuote, uint128 paidProto) =
+            bookExchFees(curve, swap.qty_, pool, swap.inBaseQty_, limitPrice);
+        accum.accumSwap(swap.inBaseQty_, paidBase, paidQuote, paidProto);
         
         // limitPrice is still valid even though curve has move from ingesting liquidity
         // fees in bookExchFees(). That's because the collected fees are mathematically
         // capped at a fraction of the flow necessary to reach limitPrice. See
         // bookExchFees() comments. (This is also why we book fees before swapping, so we
         // don't run into the limitPrice when trying to ingest fees.)
-        swapOverCurve(curve, accum, limitPrice);
+        (paidBase, paidQuote, swap.qty_) = swapOverCurve
+            (curve, swap.inBaseQty_, swap.isBuy_, swap.qty_, limitPrice);
+        accum.accumSwap(swap.inBaseQty_, paidBase, paidQuote, 0);
     }
 
     /* @notice Calculates the exchange fee given a swap directive and limitPrice. Note 
@@ -78,36 +88,31 @@ library SwapCurve {
      * @return liqFee The total fee accumulated to liquidity providers in the pool (in 
      *                the opposite side tokens of the swap denomination).
      * @return protoFee The total fee accumulated to the CrocSwap protocol. */
-    function vigOverFlow (CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory swap,
-                          uint128 limitPrice)
+    function vigOverSwap (CurveMath.CurveState memory curve, uint128 swapQty,
+                          uint24 feeRate, uint8 protoTake,
+                          bool inBaseQty, uint128 limitPrice)
         internal pure returns (uint128 liqFee, uint128 protoFee) {
-        uint128 flow = curve.calcLimitCounter(swap.qtyLeft_, swap.cntx_.inBaseQty_,
-                                              limitPrice);
-        (liqFee, protoFee) = vigOverFlow(flow, swap);
+        uint128 flow = curve.calcLimitCounter(swapQty, inBaseQty, limitPrice);
+        (liqFee, protoFee) = vigOverFlow(flow, feeRate, protoTake);
     }
 
     function swapOverCurve (CurveMath.CurveState memory curve,
-                            CurveMath.SwapAccum memory swap,
-                            uint128 limitPrice) pure private {
-        uint128 realFlows = curve.calcLimitFlows(swap.qtyLeft_, swap.cntx_.inBaseQty_,
-                                                 limitPrice);
-        bool hitsLimit = realFlows < swap.qtyLeft_;
+                            bool inBaseQty, bool isBuy, uint128 swapQty,
+                            uint128 limitPrice) pure private
+        returns (int128 paidBase, int128 paidQuote, uint128 qtyLeft) {
+        uint128 realFlows = curve.calcLimitFlows(swapQty, inBaseQty, limitPrice);
+        bool hitsLimit = realFlows < swapQty;
 
-        (int128 paidBase, int128 paidQuote, uint128 swapLeft) = (0, 0, 0);
         if (hitsLimit) {
-            (paidBase, paidQuote, swapLeft) = curve.rollPrice
-                (limitPrice, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_, swap.qtyLeft_);
-            assertPriceEndStable(curve, swapLeft, limitPrice);
+            (paidBase, paidQuote, qtyLeft) = curve.rollPrice
+                (limitPrice, inBaseQty, isBuy, swapQty);
+            assertPriceEndStable(curve, qtyLeft, limitPrice);
+
         } else {
-            (paidBase, paidQuote, swapLeft) = curve.rollFlow
-                (realFlows, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_, swap.qtyLeft_);
-            assertFlowEndStable(curve, swapLeft, swap.cntx_.isBuy_, limitPrice);
+            (paidBase, paidQuote, qtyLeft) = curve.rollFlow
+                (realFlows, inBaseQty, isBuy, swapQty);
+            assertFlowEndStable(curve, qtyLeft, isBuy, limitPrice);
         }
-        
-        swap.paidBase_ += paidBase;
-        swap.paidQuote_ += paidQuote;
-        swap.qtyLeft_ = swapLeft;
     }
 
     /* In rare corner cases, swap can result in a corrupt end state. This occurs
@@ -185,29 +190,33 @@ library SwapCurve {
      *   matter, and either over or undershooting is fine from a collateral stability 
      *   perspective. */
     function bookExchFees (CurveMath.CurveState memory curve,
-                           CurveMath.SwapAccum memory accum,
-                           uint128 limitPrice) pure private {
-        (uint128 liqFees, uint128 exchFees) = vigOverFlow(curve, accum, limitPrice);
-        assignFees(liqFees, exchFees, accum);
-        
+                           uint128 swapQty, PoolSpecs.Header memory pool,
+                           bool inBaseQty, uint128 limitPrice) pure private
+        returns (int128, int128, uint128) {
+        (uint128 liqFees, uint128 exchFees) = vigOverSwap
+            (curve, swapQty, pool.feeRate_, pool.protocolTake_, inBaseQty, limitPrice);
+                
         /* We can guarantee that the price shift associated with the liquidity
          * assimilation is safe. The limit price boundary is by definition within the
          * tick price boundary of the locally stable AMM curve (see determineLimit()
          * function). The liquidity assimilation flow is mathematically capped within 
          * the limit price flow, because liquidity fees are a small fraction of swap
          * flows. */
-        curve.assimilateLiq(liqFees, accum.cntx_.inBaseQty_);
+        curve.assimilateLiq(liqFees, inBaseQty);
+
+        return assignFees(liqFees, exchFees, inBaseQty);
     }
 
-    function assignFees (uint128 liqFees, uint128 exchFees,
-                         CurveMath.SwapAccum memory accum) pure private {
+    function assignFees (uint128 liqFees, uint128 exchFees, bool inBaseQty)
+        pure private returns (int128 paidBase, int128 paidQuote,
+                              uint128 paidProto) {
         uint128 totalFees = liqFees + exchFees;
-        if (accum.cntx_.inBaseQty_) {
-            accum.paidQuote_ += totalFees.toInt128Sign();
+        if (inBaseQty) {
+            paidQuote = totalFees.toInt128Sign();
         } else {
-            accum.paidBase_ += totalFees.toInt128Sign();
+            paidBase = totalFees.toInt128Sign();
         }
-        accum.paidProto_ += exchFees;
+        paidProto = exchFees;
     }
 
     function vigOverFlow (uint128 flow, uint24 feeRate, uint8 protoProp)
@@ -219,10 +228,5 @@ library SwapCurve {
         
         protoFee = protoProp == 0 ? 0 : totalFee / protoProp;
         liqFee = totalFee - protoFee;
-    }
-
-    function vigOverFlow (uint128 flow, CurveMath.SwapAccum memory swap)
-        private pure returns (uint128, uint128) {
-        return vigOverFlow(flow, swap.cntx_.feeRate_, swap.cntx_.protoCut_);
     }
 }

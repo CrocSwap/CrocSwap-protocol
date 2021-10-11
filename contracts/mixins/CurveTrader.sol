@@ -74,7 +74,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (!dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
-        applyAmbient(flow, dir.ambient_, curve, cntx);
+        //applyAmbient(flow, dir.ambient_, curve, cntx);
         applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
@@ -91,11 +91,9 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                }*/
             
         if (dir.qty_ != 0) {
-            CurveMath.SwapAccum memory accum = initSwapAccum(dir, cntx.pool_);
-            sweepSwapLiq(curve.curve_, curve.pullPriceTick(),
-              accum, cntx.pool_, dir.limitPrice_);
+            sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(),
+                         dir, cntx.pool_);
             curve.dirtyPrice();
-            flow.accumSwap(accum);
         }
     }
 
@@ -174,10 +172,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function burnAmbient (uint128 liqBurned, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
         private returns (int128, int128) {
-        /*burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
+        burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
                    curve.curve_.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
-        return signBurnFlow(base, quote);*/
+        return signBurnFlow(base, quote);
     }
     
     function mintConcentrated (Directives.RangeOrder memory r,
@@ -240,26 +238,26 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
      *     of the final price of the *curve*. NOT the realized VWAP price of the swap.
      *     The swap will only ever execute up the maximum size which would keep the curve
      *     price within this bound, even if the specified quantity is higher. */
-    function sweepSwapLiq (CurveMath.CurveState memory curve, int24 midTick,
-                           CurveMath.SwapAccum memory accum,
-                           PoolSpecs.PoolCursor memory pool,
-                           uint128 limitPrice) internal {
-        bool isBuy = accum.cntx_.isBuy_;
+    function sweepSwapLiq (Chaining.PairFlow memory accum,
+                           CurveMath.CurveState memory curve, int24 midTick,
+                           Directives.SwapDirective memory swap,
+                           PoolSpecs.PoolCursor memory pool) internal {
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
-        while (hasSwapLeft(curve, accum, limitPrice)) {
+        while (hasSwapLeft(curve, swap)) {
             // Swap to furthest point we can based on the local bitmap. Don't bother
             // seeking a bump outside the bump, because we're not sure if the swap will
-            // exhaust the bitmap. 
-            (int24 bumpTick, bool spillsOver) = pinTickMap(pool.hash_, isBuy, midTick);
-            curve.swapToLimit(accum, bumpTick, limitPrice);            
-
+            // exhaust the bitmap.
+            (int24 bumpTick, bool spillsOver) = pinTickMap
+                (pool.hash_, swap.isBuy_, midTick);
+            curve.swapToLimit(accum, swap, pool.head_, bumpTick);
+            
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
             // the swap is complete. The latter means that we have adust AMM liquidity,
             // and find the next liquidity bump.
-            bool atBump = hasSwapLeft(curve, accum, limitPrice);
+            bool atBump = hasSwapLeft(curve, swap);
             
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
@@ -272,8 +270,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                 // we should query the global bitmap, find the next level bitmap, and
                 // keep swapping on the constant-product curve until we hit point.
                 if (spillsOver) {
-                    (int24 liqTick, bool tightSpill) = seekTickSpill(pool.hash_,
-                                                                     bumpTick, isBuy);
+                    (int24 liqTick, bool tightSpill) = seekTickSpill
+                        (pool.hash_, bumpTick, swap.isBuy_);
                     bumpTick = liqTick;
                     
                     // In some corner cases the local bitmap border also happens to
@@ -281,8 +279,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                     // we keep swapping since we still have some distance on the curve
                     // to cover.
                     if (!tightSpill) {
-                        curve.swapToLimit(accum, bumpTick, limitPrice);
-                        atBump = hasSwapLeft(curve, accum, limitPrice);
+                        curve.swapToLimit(accum, swap, pool.head_, bumpTick);
+                        atBump = hasSwapLeft(curve, swap);
                     }
                 }
                 
@@ -291,19 +289,19 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                 // we calculating it since we already know it), then begin the swap
                 // loop again.
                 if (atBump) {
-                    midTick = knockInTick(bumpTick, isBuy, curve, accum, pool);
+                    midTick = knockInTick(accum, bumpTick, curve, swap, pool);
                 }
             }
         }
     }
 
     function hasSwapLeft (CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory accum,
-                          uint128 limitPrice) private pure returns (bool) {
-        bool inLimit = accum.cntx_.isBuy_ ?
-            curve.priceRoot_ < limitPrice :
-            curve.priceRoot_ > limitPrice;
-        return accum.qtyLeft_ > 0 && inLimit;
+                          Directives.SwapDirective memory swap)
+        private pure returns (bool) {
+        bool inLimit = swap.isBuy_ ?
+            curve.priceRoot_ < swap.limitPrice_ :
+            curve.priceRoot_ > swap.limitPrice_;
+        return inLimit && (swap.qty_ > 0);
     }
 
     /* @notice Performs all the necessary book keeping related to crossing an extant 
@@ -324,17 +322,22 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
      *               bump.
      * @return The tick index that the curve and its price are living in after the call
      *         completes. */
-    function knockInTick (int24 bumpTick, bool isBuy,
+    function knockInTick (Chaining.PairFlow memory accum, int24 bumpTick,
                           CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory accum,
-                          PoolSpecs.PoolCursor memory pool) private returns (int24) {
+                          Directives.SwapDirective memory swap,
+                          PoolSpecs.PoolCursor memory pool) private
+        returns (int24) {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
-        bumpLiquidity(bumpTick, isBuy, curve, pool);
-        curve.shaveAtBump(accum);
+        bumpLiquidity(bumpTick, swap.isBuy_, curve, pool);
+
+        (int128 paidBase, int128 paidQuote, uint128 burnSwap) =
+            curve.shaveAtBump(swap.inBaseQty_, swap.isBuy_, swap.qty_);
+        accum.accumFlow(paidBase, paidQuote);
+        swap.qty_ -= burnSwap;
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick. 
-        return isBuy ? bumpTick : bumpTick - 1; 
+        return swap.isBuy_ ? bumpTick : bumpTick - 1; 
     }
 
     function bumpLiquidity (int24 bumpTick, bool isBuy, 

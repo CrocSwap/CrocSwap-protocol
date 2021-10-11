@@ -91,46 +91,41 @@ library CurveRoll {
      *   an economically meaningless amount of quote token wei to bring the price down
      *   by exactly one unit of precision into the next tick. */
     function shaveAtBump (CurveMath.CurveState memory curve,
-                          CurveMath.SwapAccum memory accum) pure internal {
+                          bool inBaseQty, bool isBuy, uint128 swapLeft)
+        pure internal returns (int128, int128, uint128) {
         uint128 burnDown = CurveMath.priceToTokenPrecision
-            (curve.activeLiquidity(), curve.priceRoot_, accum.cntx_.isBuy_);
-        if (accum.cntx_.isBuy_) {
-            setShaveUp(curve, accum, burnDown);
+            (curve.activeLiquidity(), curve.priceRoot_, isBuy);
+        require(swapLeft > burnDown, "BD");
+        
+        if (isBuy) {
+            return setShaveUp(curve, inBaseQty, burnDown);
         } else {
-            setShaveDown(curve, accum, burnDown);
+            return setShaveDown(curve, inBaseQty, burnDown);
         }
     }
 
-    function setShaveDown (CurveMath.CurveState memory curve, 
-                           CurveMath.SwapAccum memory swap,
-                           uint128 burnDown) private pure {
-        if (!swap.cntx_.inBaseQty_) {
-            require(swap.qtyLeft_ > burnDown, "BD");
-            swap.qtyLeft_ = swap.qtyLeft_ - burnDown;
-        }
-        swap.paidQuote_ += burnDown.toInt128Sign();
+    function setShaveDown (CurveMath.CurveState memory curve, bool inBaseQty,
+                           uint128 burnDown) private pure
+        returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
         if (curve.priceRoot_ > TickMath.MIN_SQRT_RATIO) {
             curve.priceRoot_ -= 1;
         }
+        return (0, burnDown.toInt128Sign(), !inBaseQty ? burnDown : 0);
     }
 
-    function setShaveUp (CurveMath.CurveState memory curve, 
-                           CurveMath.SwapAccum memory swap,
-                           uint128 burnDown) private pure {
-        if (swap.cntx_.inBaseQty_) {
-            require(swap.qtyLeft_ > burnDown, "BD");
-            swap.qtyLeft_ -= burnDown;
-        }
-        swap.paidBase_ += burnDown.toInt128Sign();
+    function setShaveUp (CurveMath.CurveState memory curve, bool inBaseQty,
+                         uint128 burnDown) private pure
+        returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
         if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO - 1) {
             curve.priceRoot_ += 1;
         }
+        return (burnDown.toInt128Sign(), 0, inBaseQty ? burnDown : 0);
     }
 
     function setCurvePos (CurveMath.CurveState memory curve,
                           bool inBaseQty, bool isBuy, uint128 swapQty,
-                          uint128 price, int128 paidFlow, int128 paidCounter) private pure
-        returns (int128 paidBase, int128 paidQuote, uint128 qtyLeft) {
+                          uint128 price, int128 paidFlow, int128 paidCounter)
+        private pure returns (int128 paidBase, int128 paidQuote, uint128 qtyLeft) {
         uint128 spent = flowToSpent(paidFlow, inBaseQty, isBuy);
         
         if (spent >= swapQty) {
