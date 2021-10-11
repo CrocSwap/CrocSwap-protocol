@@ -12,11 +12,12 @@ import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
 import './mixins/CurveTrader.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
-import './CrocSwapBooks.sol';
+import './CrocSwapColdPath.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount {
+contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
+    ColdPathCaller {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -25,6 +26,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount 
 
     constructor (address authority) {
         authority_ = authority;
+        coldPath_ = address(new CrocSwapColdPath());
     }
 
     function swap (address base, address quote,
@@ -101,10 +103,8 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount 
     }
 
     function initPool (address base, address quote, uint24 poolIdx,
-                       uint128 price) public {
-        PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
-        (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, 0);
-        settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
+                       uint128 price) reEntrantLock public {
+        callInitPool(base, quote, poolIdx, price);
     }
 
     /*function queryCurve (address base, address quote, uint24 poolIdx)

@@ -14,6 +14,7 @@ contract StorageLayout {
     address internal authority_;
     address internal sidecar_;
     address internal master_;
+    address internal coldPath_;
 
     modifier reEntrantLock() {
         require(reEntrantLocked_ == false);

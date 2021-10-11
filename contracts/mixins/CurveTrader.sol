@@ -61,9 +61,9 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         CurveCache.Cache memory curve = CurveCache.initCache
             (snapCurveInit(pool.hash_));
         initPrice(curve, price);
-        /*if (initLiq > 0) {
+        if (initLiq > 0) {
             (baseFlow, quoteFlow) = lockAmbient(initLiq, curve);
-            }*/
+        }
         commitCurve(pool.hash_, curve.curve_);
     }
 
