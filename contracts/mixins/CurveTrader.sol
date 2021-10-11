@@ -150,7 +150,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         if (range.isAdd_) {
             return mintConcentrated(range, curve, cntx);
         } else {
-            //return burnConcentrated(range, curve, cntx);
+            return burnConcentrated(range, curve, cntx);
         }
     }
 
