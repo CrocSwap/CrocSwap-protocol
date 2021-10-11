@@ -245,7 +245,8 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
-        while (hasSwapLeft(curve, swap)) {
+        bool doMore = true;
+        while (doMore) {
             // Swap to furthest point we can based on the local bitmap. Don't bother
             // seeking a bump outside the bump, because we're not sure if the swap will
             // exhaust the bitmap.
@@ -257,13 +258,13 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
             // the swap is complete. The latter means that we have adust AMM liquidity,
             // and find the next liquidity bump.
-            bool atBump = hasSwapLeft(curve, swap);
+            doMore = hasSwapLeft(curve, swap);
             
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
             // the swap is complete. The latter means that we have adust AMM liquidity,
             // and find the next liquidity bump.
-            if (atBump) {
+            if (doMore) {
 
                 // The spills over variable indicates that we reaced the end of the
                 // local bitmap, rather than actually hitting a level bump. Therefore
@@ -280,7 +281,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                     // to cover.
                     if (!tightSpill) {
                         curve.swapToLimit(accum, swap, pool.head_, bumpTick);
-                        atBump = hasSwapLeft(curve, swap);
+                        doMore = hasSwapLeft(curve, swap);
                     }
                 }
                 
@@ -288,7 +289,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                 // the locally tracked tick of the curve price (rather than wastefully
                 // we calculating it since we already know it), then begin the swap
                 // loop again.
-                if (atBump) {
+                if (doMore) {
                     midTick = knockInTick(accum, bumpTick, curve, swap, pool);
                 }
             }
