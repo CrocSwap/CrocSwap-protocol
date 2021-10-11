@@ -13,7 +13,6 @@ import './mixins/OracleHist.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/StorageLayout.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
-import './CrocSwapBooks.sol';
 
 import "hardhat/console.sol";
 

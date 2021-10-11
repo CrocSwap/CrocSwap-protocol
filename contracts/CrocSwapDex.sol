@@ -40,7 +40,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
 
         Chaining.ExecCntx memory cntx;
         cntx.pool_ = queryPool(base, quote, poolIdx);
-        swapOverPool(dir, cntx);
+        //swapOverPool(dir, cntx);
 
         // WARNING: No Settlement in place
     }
@@ -69,8 +69,8 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
                 //targetRoll(cntx.roll_, dir.chain_, pairs);
                 //verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
                 
-                Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
-                pairs.flow_.foldFlow(poolFlow);
+                /*Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
+                  pairs.flow_.foldFlow(poolFlow);*/
             }
 
             //accumProtocolFees(pairs); // Make sure to call before clipping
