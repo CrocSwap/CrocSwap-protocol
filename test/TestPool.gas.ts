@@ -40,7 +40,7 @@ describe('Pool Gas Benchmarks', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    /*it("mint in virgin pool", async() => {
+    it("mint in virgin pool", async() => {
         await expectGas(test.testMint(-100, 100, 100), 339000)
     })
 
@@ -137,7 +137,7 @@ describe('Pool Gas Benchmarks', () => {
         await test.testMint(-100, 100, 10000)
         await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 155000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
-    })*/
+    })
 
     it("swap small", async() => {
         await test.testMint(-100, 100, 10000)
@@ -146,7 +146,7 @@ describe('Pool Gas Benchmarks', () => {
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
-    /*it("swap tick w/o cross", async() => {
+    it("swap tick w/o cross", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.0005))
         await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.005)), 121000)
@@ -214,20 +214,19 @@ describe('Pool Gas Benchmarks', () => {
         await test.testMint(-200, 280, 1000)
         await test.testMint(-200, 300, 1000)
         await test.testMint(-500, 500, 1000)
-        await test.testSwapOther(false, true, 1000, toSqrtPrice(1.1))
+        await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 455000)
         expect(await test.liquidity()).to.be.lt(1010*1024)
         expect(await test.liquidity()).to.be.gt(1000*1024)
     })
 
-
     it("swap cross many bitmap", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testMint(-10000, 100000, 10000)
-        await test.testSwapOther(false, true, 1000, toSqrtPrice(1.1))
+        await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 253000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
-    })*/
+    })
 })
