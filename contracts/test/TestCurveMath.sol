@@ -22,9 +22,8 @@ contract TestCurveMath {
                       bool isBuy, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame(isBuy, inBase, feeRate, protoCut);
-        CurveMath.SwapAccum memory swap = CurveMath.SwapAccum(swapQty, 0, 0, 0, cntx);
-        return SwapCurve.vigOverFlow(curve, swap, limitPrice);
+        return SwapCurve.vigOverSwap(curve, swapQty, feeRate, protoCut, inBase,
+                                     limitPrice);
     }
 
     function testVigMin (uint128 liq, uint24 feeRate, uint8 protoCut,
@@ -129,9 +128,9 @@ contract TestCurveMath {
                              int128 paidBase, int128 paidQuote) {
         CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveRoll.rollFlow(curve, flow, swap);
-        (rollPrice, qtyLeft, paidBase, paidQuote) =
-            (curve.priceRoot_, swap.qtyLeft_, swap.paidBase_, swap.paidQuote_);
+        (paidBase, paidQuote, qtyLeft) = CurveRoll.rollFlow
+            (curve, flow, inBase, isBuy, flow);
+        rollPrice = curve.priceRoot_;
     }
 
     function testRollInf (uint128 liq, uint128 price, bool isBuy, bool inBase)
