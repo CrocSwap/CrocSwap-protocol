@@ -4,6 +4,8 @@ pragma solidity >=0.8.4;
 
 import './StorageLayout.sol';
 import '../libraries/CurveCache.sol';
+import '../libraries/Chaining.sol';
+import '../libraries/Directives.sol';
 
 import "hardhat/console.sol";
 
@@ -25,7 +27,18 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
-    function delegateBurnRange (CurveCache.Cache memory curve,
+    function callTradePool (Directives.PoolDirective memory dir,
+                            Chaining.ExecCntx memory cntx)
+        internal returns (Chaining.PairFlow memory flow) {
+        (bool success, bytes memory output) = microPath_.delegatecall
+            (abi.encodeWithSignature
+             ("callTradePool(bytes)", abi.encode(dir, cntx)));
+        require(success);
+        
+        flow = abi.decode(output, (Chaining.PairFlow));     
+    }
+    
+    /*function delegateBurnRange (CurveCache.Cache memory curve,
                                 int24 bidTick, int24 askTick, uint128 liq,
                                 bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
@@ -45,6 +58,6 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (int128, int128, uint128, uint128, int24));
         
         curve.plugTick(priceTick);
-    }
+        }*/
 
 }

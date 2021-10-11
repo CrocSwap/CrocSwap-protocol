@@ -40,7 +40,7 @@ describe('Pool Gas Benchmarks', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    it("mint in virgin pool", async() => {
+    /*it("mint in virgin pool", async() => {
         await expectGas(test.testMint(-100, 100, 100), 339000)
     })
 
@@ -83,14 +83,14 @@ describe('Pool Gas Benchmarks', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await expectGas(test.testBurn(-100, 100, 50), 108000)
-    })
+    })*/
 
     it("burn full", async() => {
         await test.testMint(-100, 100, 100)
         await expectGas(test.testBurn(-100, 100, 100), 78000)
     })
 
-    it("burn full level left", async() => {
+    /*it("burn full level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await expectGas(test.testBurn(-100, 100, 100), 93000)
@@ -176,7 +176,6 @@ describe('Pool Gas Benchmarks', () => {
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 253000)
-        console.log(fromSqrtPrice(await test.price()))
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(1000000*1024)
     })
@@ -188,7 +187,6 @@ describe('Pool Gas Benchmarks', () => {
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 253000)
-        console.log(fromSqrtPrice(await test.price()))
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(1000000*1024)
     })
@@ -200,7 +198,6 @@ describe('Pool Gas Benchmarks', () => {
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 253000)
-        console.log(fromSqrtPrice(await test.price()))
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(1000000*1024)
     })
@@ -228,5 +225,5 @@ describe('Pool Gas Benchmarks', () => {
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 253000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
-    })
+    })*/
 })

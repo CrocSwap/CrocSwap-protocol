@@ -6,6 +6,7 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
+import './libraries/Chaining.sol';
 import './mixins/CurveTrader.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -39,5 +40,14 @@ contract CrocSwapMicroPath is CurveTrader {
         priceTick = curve.pullPriceTick();
     }
 
+
+    function callTradePool (bytes calldata input)
+        public returns (Chaining.PairFlow memory flow) {
+        Directives.PoolDirective memory dir;
+        Chaining.ExecCntx memory cntx;
+        
+        (dir, cntx) = abi.decode(input, (Directives.PoolDirective, Chaining.ExecCntx));
+        flow = tradeOverPool(dir, cntx);
+    }
 }
 
