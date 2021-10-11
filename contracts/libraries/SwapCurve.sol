@@ -94,13 +94,20 @@ library SwapCurve {
                                                  limitPrice);
         bool hitsLimit = realFlows < swap.qtyLeft_;
 
+        (int128 paidBase, int128 paidQuote, uint128 swapLeft) = (0, 0, 0);
         if (hitsLimit) {
-            curve.rollPrice(limitPrice, swap);
-            assertPriceEndStable(curve, swap, limitPrice);
+            (paidBase, paidQuote, swapLeft) = curve.rollPrice
+                (limitPrice, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_, swap.qtyLeft_);
+            assertPriceEndStable(curve, swapLeft, limitPrice);
         } else {
-            curve.rollFlow(realFlows, swap);
-            assertFlowEndStable(curve, swap, limitPrice);
+            (paidBase, paidQuote, swapLeft) = curve.rollFlow
+                (realFlows, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_, swap.qtyLeft_);
+            assertFlowEndStable(curve, swapLeft, swap.cntx_.isBuy_, limitPrice);
         }
+        
+        swap.paidBase_ += paidBase;
+        swap.paidQuote_ += paidQuote;
+        swap.qtyLeft_ = swapLeft;
     }
 
     /* In rare corner cases, swap can result in a corrupt end state. This occurs
@@ -116,12 +123,13 @@ library SwapCurve {
      * In both cases the condition is so astronomically rare that we just crash the 
      * transaction. */
     function assertFlowEndStable (CurveMath.CurveState memory curve,
-                                  CurveMath.SwapAccum memory swap,
+                                  uint128 qtyLeft, bool isBuy,
                                   uint128 limitPrice) pure private {
-        bool insideLimit = swap.cntx_.isBuy_ ?
+        bool insideLimit = isBuy ?
             curve.priceRoot_ < limitPrice :
             curve.priceRoot_ > limitPrice;
-        bool hasNone = swap.qtyLeft_ == 0;
+        bool hasNone = qtyLeft == 0;
+        require(insideLimit, "RFI");
         require(insideLimit && hasNone, "RF");
     }
 
@@ -134,10 +142,9 @@ library SwapCurve {
      * that's required by reacking the tick bump limit. Again this is so astronomically 
      * rare for non-pathological curves that we just crash the transaction. */
     function assertPriceEndStable (CurveMath.CurveState memory curve,
-                                   CurveMath.SwapAccum memory swap,
-                                   uint128 limitPrice) pure private {
+                                   uint128 qtyLeft, uint128 limitPrice) pure private {
         bool atLimit = curve.priceRoot_ == limitPrice;
-        bool hasRemaining = swap.qtyLeft_ > 0;
+        bool hasRemaining = qtyLeft > 0;
         require(atLimit && hasRemaining, "RP");
     }
 

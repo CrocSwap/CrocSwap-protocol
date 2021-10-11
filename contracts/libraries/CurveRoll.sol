@@ -47,12 +47,14 @@ library CurveRoll {
      * @param swap - The in-progress swap object. The accumulator fields will be 
      *   incremented based on the swapped flow and its relevant impact. */
     function rollFlow (CurveMath.CurveState memory curve, uint128 flow,
-                       CurveMath.SwapAccum memory swap) internal pure {        
+                       bool inBaseQty, bool isBuy, uint128 swapQty)
+        internal pure returns (int128, int128, uint128) {
         (uint128 counterFlow, uint128 nextPrice) = deriveImpact
-            (curve, flow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
+            (curve, flow, inBaseQty, isBuy);
         (int128 paidFlow, int128 paidCounter) = signFlow
-            (flow, counterFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
-        setCurvePos(curve, swap, nextPrice, paidFlow, paidCounter);
+            (flow, counterFlow, inBaseQty, isBuy);
+        return setCurvePos(curve, inBaseQty, isBuy, swapQty,
+                           nextPrice, paidFlow, paidCounter);
     }
 
     /* @notice Moves a curve to a pre-determined price target, and adjusts the swap flows
@@ -73,12 +75,13 @@ library CurveRoll {
      * @param swap - The in-progress swap object. The accumulator fields will be 
      *   incremented based on the swapped flow and its relevant impact. */
     function rollPrice (CurveMath.CurveState memory curve, uint128 price,
-                        CurveMath.SwapAccum memory swap) internal pure {
-        (uint128 flow, uint128 counterFlow) = deriveDemand(curve, price,
-                                                           swap.cntx_.inBaseQty_);
+                        bool inBaseQty, bool isBuy, uint128 swapQty)
+        internal pure returns (int128, int128, uint128)  {
+        (uint128 flow, uint128 counterFlow) = deriveDemand(curve, price, inBaseQty);
         (int128 paidFlow, int128 paidCounter) = signFixed
-            (flow, counterFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
-        setCurvePos(curve, swap, price, paidFlow, paidCounter);
+            (flow, counterFlow, inBaseQty, isBuy);
+        return setCurvePos(curve, inBaseQty, isBuy, swapQty, price,
+                           paidFlow, paidCounter);
     }
 
     /* @notice Called when a curve has reached its lower bump barrier. Because the 
@@ -124,19 +127,20 @@ library CurveRoll {
         }
     }
 
-    function setCurvePos (CurveMath.CurveState memory curve, 
-                          CurveMath.SwapAccum memory swap, uint128 price,
-                          int128 paidFlow, int128 paidCounter) private pure {
-        uint128 spent = flowToSpent(paidFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
+    function setCurvePos (CurveMath.CurveState memory curve,
+                          bool inBaseQty, bool isBuy, uint128 swapQty,
+                          uint128 price, int128 paidFlow, int128 paidCounter) private pure
+        returns (int128 paidBase, int128 paidQuote, uint128 qtyLeft) {
+        uint128 spent = flowToSpent(paidFlow, inBaseQty, isBuy);
         
-        if (spent >= swap.qtyLeft_) {
-            swap.qtyLeft_ = 0;
+        if (spent >= swapQty) {
+            qtyLeft = 0;
         } else {
-            swap.qtyLeft_ -= spent;
+            qtyLeft = swapQty - spent;
         }
 
-        swap.paidBase_ += (swap.cntx_.inBaseQty_ ? paidFlow : paidCounter);
-        swap.paidQuote_ += (swap.cntx_.inBaseQty_ ? paidCounter : paidFlow); 
+        paidBase = (inBaseQty ? paidFlow : paidCounter);
+        paidQuote = (inBaseQty ? paidCounter : paidFlow); 
         curve.priceRoot_ = price;
     }
 
