@@ -26,9 +26,8 @@ contract CrocSwapWarmPath is CurveTrader, PoolRegistry, SettleLayer, ProtocolAcc
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
-        
+        Directives.PoolDirective memory dir;
         Chaining.ExecCntx memory cntx;
-        cntx.owner_ = msg.sender;
 
         bool hasSpentTxSend = false;
 
@@ -38,7 +37,7 @@ contract CrocSwapWarmPath is CurveTrader, PoolRegistry, SettleLayer, ProtocolAcc
                                               pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
-                Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
+                dir = order.hops_[i].pools_[j];
                 cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
                                        dir.poolIdx_);
 

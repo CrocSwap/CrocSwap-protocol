@@ -16,7 +16,6 @@ library Chaining {
     using SafeCast for uint128;
     
     struct ExecCntx {
-        address owner_;
         PoolSpecs.PoolCursor pool_;
         PriceGrid.ImproveSettings improve_;
         RollTarget roll_;

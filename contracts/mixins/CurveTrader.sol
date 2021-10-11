@@ -157,7 +157,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function mintAmbient (uint128 liqAdded, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
         private returns (int128, int128) {
-        mintPosLiq(cntx.owner_, cntx.pool_.hash_, liqAdded,
+        mintPosLiq(msg.sender, cntx.pool_.hash_, liqAdded,
                    curve.curve_.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
@@ -172,7 +172,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function burnAmbient (uint128 liqBurned, CurveCache.Cache memory curve,
                           Chaining.ExecCntx memory cntx)
         private returns (int128, int128) {
-        burnPosLiq(cntx.owner_, cntx.pool_.hash_, liqBurned,
+        burnPosLiq(msg.sender, cntx.pool_.hash_, liqBurned,
                    curve.curve_.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
@@ -185,7 +185,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         uint64 feeMileage = addBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
                                        r.lowerTick_, r.upperTick_, r.liquidity_,
                                        curve.curve_.accum_.concTokenGrowth_);
-        mintPosLiq(cntx.owner_, cntx.pool_.hash_, r.lowerTick_, r.upperTick_,
+        mintPosLiq(msg.sender, cntx.pool_.hash_, r.lowerTick_, r.upperTick_,
                    r.liquidity_, feeMileage);
         (uint128 base, uint128 quote) = liquidityReceivable
             (curve, r.liquidity_, r.lowerTick_, r.upperTick_);
@@ -199,7 +199,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
         uint64 feeMileage = removeBookLiq(cntx.pool_.hash_, curve.pullPriceTick(),
                                           r.lowerTick_, r.upperTick_, r.liquidity_,
                                           curve.curve_.accum_.concTokenGrowth_);
-        uint64 rewards = burnPosLiq(cntx.owner_, cntx.pool_.hash_,
+        uint64 rewards = burnPosLiq(msg.sender, cntx.pool_.hash_,
                                     r.lowerTick_, r.upperTick_,
                                     r.liquidity_, feeMileage); 
         (uint128 base, uint128 quote) = liquidityPayable(curve, r.liquidity_, rewards,
