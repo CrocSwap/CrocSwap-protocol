@@ -16,7 +16,12 @@ import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapColdPath is CurveTrader, PoolRegistry, SettleLayer {
+contract CrocSwapColdPath is CurveTrader, PoolRegistry, SettleLayer, ProtocolAccount {
+    using SafeCast for uint128;
+    using TokenFlow for TokenFlow.PairSeq;
+    using CurveMath for CurveMath.CurveState;
+    using Chaining for Chaining.PairFlow;
+
 
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) public {
@@ -24,17 +29,6 @@ contract CrocSwapColdPath is CurveTrader, PoolRegistry, SettleLayer {
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, 0);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
+
 }
 
-
-contract ColdPathCaller is StorageLayout {
-    function callInitPool (address base, address quote, uint24 poolIdx,  
-                           uint128 price) internal {
-        (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature("initPool(address,address,uint24,uint128)",
-                                    base, quote, poolIdx, price));
-        require(success, 'PI');
-    }
-
-    
-}

@@ -8,11 +8,24 @@ import "hardhat-contract-sizer"
 
 module.exports = {
     solidity: {
-      version: "0.8.4",
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 100
+      compilers: [{
+        version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000000
+          }
+        }
+      }],
+      overrides: {
+        "contracts/CrocSwapWarm.sol": {
+          version: "0.8.4",
+          settings: {
+            optimizer: {
+              enabled: true,
+              runs: 100
+            }
+          } 
         }
       }
     },

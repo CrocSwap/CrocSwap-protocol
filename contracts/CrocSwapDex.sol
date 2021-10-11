@@ -11,13 +11,15 @@ import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/OracleHist.sol';
 import './mixins/CurveTrader.sol';
+import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
-import './CrocSwapColdPath.sol';
+import './CrocSwapCold.sol';
+import './CrocSwapWarm.sol';
 
 import "hardhat/console.sol";
 
 contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
-    ColdPathCaller {
+    ColdPathInjector {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -27,6 +29,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
     constructor (address authority) {
         authority_ = authority;
         coldPath_ = address(new CrocSwapColdPath());
+        warmPath_ = address(new CrocSwapWarmPath());
     }
 
     function swap (address base, address quote,
@@ -52,7 +55,9 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
 
     
     function trade (bytes calldata input) reEntrantLock public {
-        Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
+        callTradePath(input);
+
+        /*Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
         
@@ -79,13 +84,13 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
             }
 
             //accumProtocolFees(pairs); // Make sure to call before clipping
-            int128 settleFlow = pairs.clipFlow();
+            /*int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
                                         settleChannel = order.hops_[i].settle_;
         }
 
-        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);
+    //settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);*/
     }
 
     
