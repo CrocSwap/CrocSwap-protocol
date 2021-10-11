@@ -124,7 +124,7 @@ library CurveRoll {
     function setCurvePos (CurveMath.CurveState memory curve, 
                           CurveMath.SwapAccum memory swap, uint128 price,
                           int128 paidFlow, int128 paidCounter) private pure {
-        uint128 spent = flowToSpent(paidFlow, swap.cntx_);
+        uint128 spent = flowToSpent(paidFlow, swap.cntx_.inBaseQty_, swap.cntx_.isBuy_);
         
         if (spent >= swap.qtyLeft_) {
             swap.qtyLeft_ = 0;
@@ -138,9 +138,9 @@ library CurveRoll {
     }
 
     /* @notice Convert a signed paid flow to a decrement to apply to swap qty left. */
-    function flowToSpent (int128 paidFlow, CurveMath.SwapFrame memory cntx)
+    function flowToSpent (int128 paidFlow, bool inBaseQty, bool isBuy)
         private pure returns (uint128) {
-        int128 spent = cntx.isFlowInput() ? paidFlow : -paidFlow;
+        int128 spent = (inBaseQty == isBuy) ? paidFlow : -paidFlow;
         if (spent < 0) { return 0; }
         return uint128(spent);
     }
@@ -305,7 +305,7 @@ library CurveRoll {
                        CurveMath.SwapFrame memory cntx)
         private pure returns (int128 flow, int128 counter) {
         
-        if (cntx.isFlowInput()) {
+        if (cntx.inBaseQty_ == cntx.isBuy_) {
             (flow, counter) = (flowMagn.toInt128Sign(), -counterMagn.toInt128Sign());
         } else {
             (flow, counter) = (-flowMagn.toInt128Sign(), counterMagn.toInt128Sign());

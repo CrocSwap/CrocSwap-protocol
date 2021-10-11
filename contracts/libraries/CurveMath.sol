@@ -149,12 +149,12 @@ library CurveMath {
      *   below. In the case of zero flows this could be substantially over. This 
      *   function should not be used in any context with strict directional boundness 
      *   requirements. */
-    function calcLimitCounter (CurveState memory curve, SwapAccum memory swap,
+    function calcLimitCounter (CurveState memory curve, uint128 swapQty, bool inBaseQty,
                                uint128 limitPrice) internal pure returns (uint128) {
         bool isBuy = limitPrice > curve.priceRoot_;
-        uint128 denomFlow = calcLimitFlows(curve, swap, limitPrice);
+        uint128 denomFlow = calcLimitFlows(curve, swapQty, inBaseQty, limitPrice);
         return invertFlow(activeLiquidity(curve), curve.priceRoot_,
-                          denomFlow, isBuy, swap.cntx_.inBaseQty_);
+                          denomFlow, isBuy, inBaseQty);
     }
 
     /* @notice Calculates the total quantity of tokens that can be swapped on the AMM
@@ -182,10 +182,11 @@ library CurveMath {
      *           Denominated on the token side based fro swap.cntx_.inBaseQty_. Will
      *           always return unsigned magnitude regardless of the direction. User
      *           can easily determine based on swap context. */
-    function calcLimitFlows (CurveState memory curve, SwapAccum memory swap,
-                             uint128 limitPrice) internal pure returns (uint128) {
-        uint128 limitFlow = calcLimitFlows(curve, swap.cntx_.inBaseQty_, limitPrice);
-        return limitFlow > swap.qtyLeft_ ? swap.qtyLeft_ : limitFlow;
+    function calcLimitFlows (CurveState memory curve, uint128 swapQty,
+                             bool inBaseQty, uint128 limitPrice)
+        internal pure returns (uint128) {
+        uint128 limitFlow = calcLimitFlows(curve, inBaseQty, limitPrice);
+        return limitFlow > swapQty ? swapQty : limitFlow;
     }
     
     function calcLimitFlows (CurveState memory curve, bool inBaseQty,
@@ -332,13 +333,6 @@ library CurveMath {
         uint128 endInvert = uint128(liq) * uint128(liq) / endReserve;
         return endInvert > invertReserve ?
             endInvert - invertReserve : invertReserve - endInvert;
-    }
-
-    /* @notice Returns true if the swap quantity is denominated by the input token-- the
-     *   side being paid to the pool. I.e. base token if user is sending base and 
-     *   receiving quote token. */
-    function isFlowInput (CurveMath.SwapFrame memory cntx) internal pure returns (bool) {
-        return cntx.inBaseQty_ == cntx.isBuy_;
     }
 
     /* @notice Computes the amount of token over-collateralization needed to buffer any 

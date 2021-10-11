@@ -22,7 +22,6 @@ library CurveAssimilate {
     using SafeCast for uint256;
     using FixedPoint for uint128;
     using CurveMath for CurveMath.CurveLiquidity;
-    using CurveMath for CurveMath.SwapAccum;
 
     /* @notice Converts token-based fees into ambient liquidity on the curve,
      *         adjusting the price accordingly.

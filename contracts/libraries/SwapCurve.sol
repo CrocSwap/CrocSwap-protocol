@@ -82,22 +82,24 @@ library SwapCurve {
                           CurveMath.SwapAccum memory swap,
                           uint128 limitPrice)
         internal pure returns (uint128 liqFee, uint128 protoFee) {
-        uint128 flow = curve.calcLimitCounter(swap, limitPrice);
+        uint128 flow = curve.calcLimitCounter(swap.qtyLeft_, swap.cntx_.inBaseQty_,
+                                              limitPrice);
         (liqFee, protoFee) = vigOverFlow(flow, swap);
     }
 
     function swapOverCurve (CurveMath.CurveState memory curve,
-                            CurveMath.SwapAccum memory accum,
+                            CurveMath.SwapAccum memory swap,
                             uint128 limitPrice) pure private {
-        uint128 realFlows = curve.calcLimitFlows(accum, limitPrice);
-        bool hitsLimit = realFlows < accum.qtyLeft_;
+        uint128 realFlows = curve.calcLimitFlows(swap.qtyLeft_, swap.cntx_.inBaseQty_,
+                                                 limitPrice);
+        bool hitsLimit = realFlows < swap.qtyLeft_;
 
         if (hitsLimit) {
-            curve.rollPrice(limitPrice, accum);
-            assertPriceEndStable(curve, accum, limitPrice);
+            curve.rollPrice(limitPrice, swap);
+            assertPriceEndStable(curve, swap, limitPrice);
         } else {
-            curve.rollFlow(realFlows, accum);
-            assertFlowEndStable(curve, accum, limitPrice);
+            curve.rollFlow(realFlows, swap);
+            assertFlowEndStable(curve, swap, limitPrice);
         }
     }
 

@@ -48,29 +48,25 @@ contract TestCurveMath {
     function testLimitBase (uint128 price, uint128 limitPrice, uint128 liq)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(1000000, true, true);
-        return CurveMath.calcLimitFlows(curve, swap, limitPrice);
+        return CurveMath.calcLimitFlows(curve, 1000000, true, limitPrice);
     }
 
     function testLimitQuote (uint128 price, uint128 limitPrice, uint128 liq)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(1000000, true, false);
-        return CurveMath.calcLimitFlows(curve, swap, limitPrice);
+        return CurveMath.calcLimitFlows(curve, 1000000, false, limitPrice);
     }
 
     function testCounterBase (uint128 price, uint128 limitPrice, uint128 liq)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(1000000, true, true);        
-        return CurveMath.calcLimitCounter(curve, swap, limitPrice);
+        return CurveMath.calcLimitCounter(curve, 1000000, true, limitPrice);
     }
 
     function testCounterQuote (uint128 price, uint128 limitPrice, uint128 liq)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(1000000, true, false); 
-        return CurveMath.calcLimitCounter(curve, swap, limitPrice);
+        return CurveMath.calcLimitCounter(curve, 1000000, false, limitPrice);
     }
 
     function testLimitBaseMax (uint128 price, uint128 liq)
@@ -117,16 +113,14 @@ contract TestCurveMath {
                                uint128 swapQty)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(swapQty, true, true);
-        return CurveMath.calcLimitFlows(curve, swap, limitPrice);
+        return CurveMath.calcLimitFlows(curve, swapQty, true, limitPrice);
     }
 
     function testCounterQtyLeft (uint128 price, uint128 limitPrice, uint128 liq,
                                  uint128 swapQty)
         public pure returns (uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, price);
-        CurveMath.SwapAccum memory swap = buildSwap(swapQty, true, true);
-        return CurveMath.calcLimitCounter(curve, swap, limitPrice);
+        return CurveMath.calcLimitCounter(curve, swapQty, true, limitPrice);
     }
 
     function testRoll (uint128 flow, uint128 price, uint128 liq,
@@ -170,12 +164,6 @@ contract TestCurveMath {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
         CurveMath.SwapAccum memory swap = buildSwap(flow, isBuy, inBase);
         return CurveRoll.deriveImpact(curve, flow, swap.cntx_);
-    }
-    
-    function testIsFlowInput(bool isBuy, bool inBase)
-        public pure returns (bool) {
-        CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
-        return cntx.isFlowInput();
     }
     
     function buildSwapFrame (bool isBuy, bool inBase)
