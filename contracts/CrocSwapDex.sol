@@ -51,6 +51,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
 
         settle.token_ = quote;
         settleFlat(msg.sender, flow.quoteFlow_, settle, false);
+        accumProtocolFees(flow, base, quote); // Make sure to call before clipping
     }
 
     
