@@ -90,10 +90,10 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                (flow, dir.inBaseQty_);
                }*/
             
-        /*if (dir.qty_ != 0) {
+        if (dir.qty_ != 0) {
             sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, cntx.pool_);
             curve.dirtyPrice();
-            }*/
+        }
     }
 
     /* A swap operation is a potentially long and iterative process that
@@ -157,8 +157,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash)
         private returns (int128, int128) {
-        mintPosLiq(msg.sender, poolHash, liqAdded,
-                   curve.accum_.ambientGrowth_);
+        mintPosLiq(msg.sender, poolHash, liqAdded, curve.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
