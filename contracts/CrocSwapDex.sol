@@ -107,10 +107,10 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
         callInitPool(base, quote, poolIdx, price);
     }
 
-    /*function queryCurve (address base, address quote, uint24 poolIdx)
+    function queryCurve (address base, address quote, uint24 poolIdx)
         public view returns (CurveMath.CurveState memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        return CrocSwapBooks(sidecar_).queryCurve(pool);
+        return curves_[pool.hash_];
     }
 
     function queryLiquidity (address base, address quote, uint24 poolIdx)
@@ -118,7 +118,4 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
-    function getBooksSidecar() public view returns (address) {
-        return sidecar_;
-        }   */
 }
