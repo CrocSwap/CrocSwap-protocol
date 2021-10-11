@@ -8,7 +8,6 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { CrocSwapBooks } from '../typechain/CrocSwapBooks';
 import { Signer, ContractFactory, BigNumber, ContractTransaction } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
@@ -48,11 +47,6 @@ export class TestPool {
         factory = ethers.getContractFactory("CrocSwapDex")
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
-
-        factory = ethers.getContractFactory("CrocSwapBooks")
-        /*this.sidecar = factory.then(f => this.dex.then(d => 
-                d.getBooksSidecar()).then(a =>
-                f.attach(a))) as Promise<CrocSwapBooks>*/
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
@@ -136,7 +130,9 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)
+        //return (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).swap((await this.base).address,
+            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
     }
 
     async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
@@ -145,7 +141,10 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)
+        //return (await this.dex).connect(await this.other).trade(inputBytes)
+        return (await this.dex).connect(await this.other).swap((await this.base).address,
+            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
+
     }
 
     async testProtocolSetFee (takeRate: number): Promise<ContractTransaction> {

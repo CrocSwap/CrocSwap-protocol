@@ -17,7 +17,6 @@ library Chaining {
     
     struct ExecCntx {
         address owner_;
-        address oracle_;
         PoolSpecs.PoolCursor pool_;
         PriceGrid.ImproveSettings improve_;
         RollTarget roll_;

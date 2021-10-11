@@ -26,6 +26,7 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     using SafeCast for uint256;
     using SafeCast for uint128;
     using TickCluster for int24;
+    using TickMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using SwapCurve for CurveMath.CurveState;
     using SwapCurve for CurveMath.SwapAccum;
@@ -47,12 +48,12 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
     }
 
     function swapOverPool (Directives.SwapDirective memory dir,
-                           Chaining.ExecCntx memory cntx)
+                           PoolSpecs.PoolCursor memory pool)
         internal returns (Chaining.PairFlow memory flow) {
-        CurveCache.Cache memory curve = CurveCache.initCache
-            (snapCurve(cntx.pool_.hash_));
-        applySwap(flow, dir, curve, cntx);
-        commitCurve(cntx.pool_.hash_, curve.curve_);
+        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        sweepSwapLiq(flow, curve, curve.priceRoot_.getTickAtSqrtRatio(),
+                     dir, pool);
+        commitCurve(pool.hash_, curve);
     }
 
     function initCurve (PoolSpecs.PoolCursor memory pool,
@@ -72,27 +73,26 @@ contract CurveTrader is PositionRegistrar, LiquidityCurve, LevelBook {
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
         if (!dir.chain_.swapDefer_) {
-            applySwap(flow, dir.swap_, curve, cntx);
+            applySwap(flow, dir.swap_, curve, cntx.pool_);
         }
         //applyAmbient(flow, dir.ambient_, curve, cntx);
         applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
-            applySwap(flow, dir.swap_, curve, cntx);
+            applySwap(flow, dir.swap_, curve, cntx.pool_);
         }
     }
 
     function applySwap (Chaining.PairFlow memory flow,
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
-                        Chaining.ExecCntx memory cntx) private {
+                        PoolSpecs.PoolCursor memory pool) private {
         /*if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
            (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap
                (flow, dir.inBaseQty_);
                }*/
             
         if (dir.qty_ != 0) {
-            sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(),
-                         dir, cntx.pool_);
+            sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, pool);
             curve.dirtyPrice();
         }
     }

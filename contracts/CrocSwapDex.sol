@@ -38,11 +38,16 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
         dir.qty_ = qty;
         dir.limitPrice_ = limitPrice;
 
-        Chaining.ExecCntx memory cntx;
-        cntx.pool_ = queryPool(base, quote, poolIdx);
-        swapOverPool(dir, cntx);
+        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        Chaining.PairFlow memory flow = swapOverPool(dir, pool);
 
-        // WARNING: No Settlement in place
+        Directives.SettlementChannel memory settle;
+        settle.limitQty_ = type(int128).max;
+        settle.token_ = base;
+        settleFlat(msg.sender, flow.baseFlow_, settle, false);
+
+        settle.token_ = quote;
+        settleFlat(msg.sender, flow.quoteFlow_, settle, false);
     }
 
     
@@ -73,7 +78,7 @@ contract CrocSwapDex is CurveTrader, SettleLayer, PoolRegistry, ProtocolAccount,
                 pairs.flow_.foldFlow(poolFlow);
             }
 
-            accumProtocolFees(pairs); // Make sure to call before clipping
+            //accumProtocolFees(pairs); // Make sure to call before clipping
             int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
