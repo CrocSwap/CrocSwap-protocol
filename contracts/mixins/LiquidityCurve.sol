@@ -88,7 +88,7 @@ contract LiquidityCurve is StorageLayout {
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) */
-    function liquidityReceivable (CurveCache.Cache memory curve, uint128 seeds) 
+    function liquidityReceivable (CurveMath.CurveState memory curve, uint128 seeds) 
         internal pure returns (uint128, uint128) {
         (uint128 base, uint128 quote) = liquidityFlows(curve, seeds);
         bumpAmbient(curve, seeds);
@@ -135,7 +135,7 @@ contract LiquidityCurve is StorageLayout {
             
             if (rewards > 0) {
                 (uint128 baseRewards, uint128 quoteRewards) =
-                    liquidityPayable(curve, rewards.toUint128());
+                    liquidityPayable(curve.curve_, rewards.toUint128());
                 base += baseRewards;
                 quote += quoteRewards;
             }
@@ -167,20 +167,21 @@ contract LiquidityCurve is StorageLayout {
      * @return quote - The amount of base token collateral that can be paid out following
      *                the removal of the liquidity. Always rounded down to favor 
      *                collateral stability. */
-    function liquidityPayable (CurveCache.Cache memory curve, uint128 seeds)
+    function liquidityPayable (CurveMath.CurveState memory curve, uint128 seeds)
         internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityFlows(curve, seeds);
         bumpAmbient(curve, -(seeds.toInt128Sign()));
     }
 
-    function bumpAmbient (CurveCache.Cache memory curve, uint128 seedDelta)
+    function bumpAmbient (CurveMath.CurveState memory curve, uint128 seedDelta)
         private pure {
         bumpAmbient(curve, seedDelta.toInt128Sign());
     }
 
-    function bumpAmbient (CurveCache.Cache memory curve, int128 seedDelta) private pure {
-        curve.curve_.liq_.ambientSeed_ =
-            LiquidityMath.addDelta(curve.curve_.liq_.ambientSeed_, seedDelta);
+    function bumpAmbient (CurveMath.CurveState memory curve, int128 seedDelta)
+        private pure {
+        curve.liq_.ambientSeed_ =
+            LiquidityMath.addDelta(curve.liq_.ambientSeed_, seedDelta);
     }
 
     function bumpConcentrated (CurveCache.Cache memory curve,
@@ -222,12 +223,12 @@ contract LiquidityCurve is StorageLayout {
      *   divisions, max precision loss is under 2 wei. Safe to pay this flow, but when
      *   when pool is receiving, caller must make sure to round up for collateral 
      *   safety. */
-    function liquidityFlows (CurveCache.Cache memory curve, uint128 seeds)
+    function liquidityFlows (CurveMath.CurveState memory curve, uint128 seeds)
         private pure returns (uint128 baseDebit, uint128 quoteDebit) {
         uint128 liq = CompoundMath.inflateLiqSeed
-            (seeds, curve.curve_.accum_.ambientGrowth_);
-        baseDebit = FixedPoint.mulQ64(liq, curve.curve_.priceRoot_).toUint128By192();
-        quoteDebit = FixedPoint.divQ64(liq, curve.curve_.priceRoot_).toUint128By192();
+            (seeds, curve.accum_.ambientGrowth_);
+        baseDebit = FixedPoint.mulQ64(liq, curve.priceRoot_).toUint128By192();
+        quoteDebit = FixedPoint.divQ64(liq, curve.priceRoot_).toUint128By192();
     }
 
     /* @notice Called exactly once at the initializing of the pool. Initializes the
@@ -236,10 +237,10 @@ contract LiquidityCurve is StorageLayout {
      *
      * @param poolIdx   The index of the pool applied to
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
-    function initPrice (CurveCache.Cache memory curve, uint128 priceRoot)
+    function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
         internal pure {
-        require(curve.curve_.priceRoot_ == 0, "N");
-        curve.curve_.priceRoot_ = priceRoot;
+        require(curve.priceRoot_ == 0, "N");
+        curve.priceRoot_ = priceRoot;
     }
 
     function translateTickRange (int24 lowerTick, int24 upperTick)

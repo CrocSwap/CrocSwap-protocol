@@ -29,13 +29,6 @@ library Directives {
         uint128 liquidity_;
     }
 
-    struct RangeOrder {
-        bool isAdd_;
-        int24 lowerTick_;
-        int24 upperTick_;
-        uint128 liquidity_;
-    }
-
     struct AmbientDirective {
         bool isAdd_;
         uint128 liquidity_;
@@ -84,13 +77,12 @@ library Directives {
     }
 
     function sliceBookend (ConcentratedDirective memory dir, uint idx)
-        internal pure returns (RangeOrder memory) {
+        internal pure returns (int24 lowTick, int24 highTick,
+                               bool isAdd, uint128 liq) {
         ConcenBookend memory bend = dir.bookends_[idx];
-        (int24 lowerTick, int24 upperTick) =
+        (lowTick, highTick) =
             pinLowerUpper(dir.openTick_, bend.closeTick_);
-        
-        return RangeOrder({lowerTick_: lowerTick, upperTick_: upperTick,
-                    isAdd_: bend.isAdd_, liquidity_: bend.liquidity_}); 
+        (isAdd, liq) = (bend.isAdd_, bend.liquidity_);
     }
 
     function pinLowerUpper (int24 openTick, int24 closeTick)

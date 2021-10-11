@@ -15,14 +15,14 @@ library PriceGrid {
     using SafeCast for uint256;
     using SafeCast for uint192;
 
-    function verifyFit (ImproveSettings memory set,
-                        Directives.RangeOrder memory range,
+    function verifyFit (ImproveSettings memory set, int24 lowTick, int24 highTick,
+                        bool isAdd, uint128 liquidity,
                         uint16 gridSize, int24 priceTick) internal pure {
-        if (range.isAdd_) {
-            if (!isOnGrid(range.lowerTick_, range.upperTick_, gridSize)) {
+        if (isAdd) {
+            if (!isOnGrid(lowTick, highTick, gridSize)) {
                 uint128 thresh = improveThresh(set, gridSize, priceTick,
-                                               range.lowerTick_, range.upperTick_);
-                require(range.liquidity_ >= thresh, "D");
+                                               lowTick, highTick);
+                require(liquidity >= thresh, "D");
             }
         }
     }

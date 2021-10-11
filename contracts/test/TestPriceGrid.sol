@@ -42,9 +42,7 @@ contract TestPriceGrid {
                          bool isAdd, uint128 liq) public pure {
         return PriceGrid.verifyFit(
             PriceGrid.formatSettings(inBase, unit, awayTicks, mults),
-            Directives.RangeOrder({lowerTick_: bidTick,
-                        upperTick_: askTick, isAdd_: isAdd,
-                        liquidity_: liq}),
+            bidTick, askTick, isAdd, liq,
             tickSize, priceTick);
     }
                             
