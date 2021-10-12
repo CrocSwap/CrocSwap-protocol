@@ -48,12 +48,6 @@ contract ProtocolAccount is StorageLayout  {
         
         }*/
 
-    /* @notice Retrieves the balance of the protocol unclaimed fees currently resting
-     *         in the pool. */
-    function protoFeeAccum (address token) public view returns (uint256) {
-        return feesAccum_[token];
-    }
-
     function setProtoAcctAuthority (address authority) internal {
         authority_ = authority;
     }
