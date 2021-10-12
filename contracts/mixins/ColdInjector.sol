@@ -117,7 +117,7 @@ contract ColdPathInjector is StorageLayout {
                        PoolSpecs.PoolCursor memory pool) internal {
         (bool success, bytes memory output) = microPath_.delegatecall
             (abi.encodeWithSignature
-             ("sweepSwap(tuple,int24,tuple,tuple)",
+             ("sweepSwap((uint128,(uint128,uint128),(uint64,uint64)),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,uint8),(address),bytes32))",
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 
