@@ -75,8 +75,8 @@ contract MarketSequencer is TradeMatcher {
         if (!dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
-        //applyAmbient(flow, dir.ambient_, curve, cntx);
-        //applyConcentrateds(flow, dir.conc_, curve, cntx);
+        applyAmbient(flow, dir.ambient_, curve, cntx);
+        applyConcentrateds(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
@@ -92,8 +92,10 @@ contract MarketSequencer is TradeMatcher {
         }
             
         if (dir.qty_ != 0) {
-            sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, cntx.pool_);
-            curve.dirtyPrice();
+            //sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, cntx.pool_);
+            //curve.dirtyPrice();
+            callSwap(flow, curve, dir, cntx.pool_);
+            
         }
     }
 
@@ -103,9 +105,14 @@ contract MarketSequencer is TradeMatcher {
                            Chaining.ExecCntx memory cntx) private {
         if (dir.liquidity_ == 0) { return; }
 
-        (int128 base, int128 quote) = dir.isAdd_ ?
+        /*(int128 base, int128 quote) = dir.isAdd_ ?
             mintAmbient(curve.curve_, dir.liquidity_, cntx.pool_.hash_) :
-            burnAmbient(curve.curve_, dir.liquidity_, cntx.pool_.hash_);
+            burnAmbient(curve.curve_, dir.liquidity_, cntx.pool_.hash_);*/
+        
+        (int128 base, int128 quote) = dir.isAdd_ ?
+            callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
+            callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
+        
         flow.accumFlow(base, quote);
     }
 
@@ -134,11 +141,14 @@ contract MarketSequencer is TradeMatcher {
 
         if (liq == 0) { return (0, 0); }
         if (isAdd) {
-            return mintRange(curve.curve_, curve.pullPriceTick(),
-              lowTick, highTick, liq, cntx.pool_.hash_);
+            /*return mintRange(curve.curve_, curve.pullPriceTick(),
+              lowTick, highTick, liq, cntx.pool_.hash_);*/
+            //callMintAmbient(curve, liq, cntx.pool_.hash_);
+            return callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
         } else {
-            return burnRange(curve.curve_, curve.pullPriceTick(),
-              lowTick, highTick, liq, cntx.pool_.hash_);
+            /*return burnRange(curve.curve_, curve.pullPriceTick(),
+              lowTick, highTick, liq, cntx.pool_.hash_);*/
+            return callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
         }
     }
 }

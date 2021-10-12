@@ -49,13 +49,13 @@ contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
                 pairs.flow_.foldFlow(poolFlow);
             }
 
-            /*accumProtocolFees(pairs); // Make sure to call before clipping              
+            accumProtocolFees(pairs); // Make sure to call before clipping              
             int128 settleFlow = pairs.clipFlow();                                       
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
-                                        settleChannel = order.hops_[i].settle_;*/
+                                        settleChannel = order.hops_[i].settle_;
         }
 
-        //settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
+        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
     }
 }

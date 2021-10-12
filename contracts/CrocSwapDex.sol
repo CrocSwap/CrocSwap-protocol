@@ -19,7 +19,7 @@ import './CrocSwapMicro.sol';
 
 import "hardhat/console.sol";
 
-/*contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount {
+contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -31,6 +31,7 @@ import "hardhat/console.sol";
         coldPath_ = address(new CrocSwapColdPath());
         warmPath_ = address(new CrocSwapWarmPath());
         microPath_ = address(new CrocSwapMicroPath());
+
     }
 
     function swap (address base, address quote,
@@ -53,6 +54,11 @@ import "hardhat/console.sol";
         settle.token_ = quote;
         settleFlat(msg.sender, flow.quoteFlow_, settle, false);
         accumProtocolFees(flow, base, quote); // Make sure to call before clipping
+    }
+
+    
+    function trade (bytes calldata input) reEntrantLock public {
+        callTradePath(input);
     }
 
     
@@ -90,4 +96,4 @@ import "hardhat/console.sol";
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
-    }*/
+}
