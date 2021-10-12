@@ -44,12 +44,11 @@ contract PoolRegistry is StorageLayout {
         pool.tickSize_ = tickSize;
     }
 
-    /*function setPriceImprove (address token, uint128 unitTickCollateral,
-                              uint16 awayTickTol, int8[] calldata rangeMults)
-        protocolOnly internal {
-        improves_[token] = PriceGrid.formatSettings(true, unitTickCollateral,
-                                                    awayTickTol, rangeMults);
-                                                    }*/
+    function setPriceImprove (address token, uint128 unitTickCollateral,
+                              uint16 awayTickTol) internal {
+        improves_[token].unitCollateral_ = unitTickCollateral;
+        improves_[token].awayTicks_ = awayTickTol;
+    }
 
     function registerPool (address base, address quote, uint24 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory) {

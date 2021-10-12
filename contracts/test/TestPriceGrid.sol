@@ -11,7 +11,7 @@ contract TestPriceGrid {
                          int24 priceTick, int24 bidTick, int24 askTick)
         public pure returns (uint128) {
         return PriceGrid.improveThresh
-            (PriceGrid.formatSettings(inBase, unit, awayTicks, mults),
+            (PriceGrid.ImproveSettings(inBase, unit, awayTicks),
              tickSize, priceTick, bidTick, askTick);
     }
 
@@ -41,7 +41,7 @@ contract TestPriceGrid {
                          int24 priceTick, int24 bidTick, int24 askTick,
                          bool isAdd, uint128 liq) public pure {
         return PriceGrid.verifyFit(
-            PriceGrid.formatSettings(inBase, unit, awayTicks, mults),
+            PriceGrid.ImproveSettings(inBase, unit, awayTicks),
             bidTick, askTick, isAdd, liq,
             tickSize, priceTick);
     }

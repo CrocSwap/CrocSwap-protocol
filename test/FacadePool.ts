@@ -75,7 +75,8 @@ export class TestPool {
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
-        
+        await this.testPegPriceImprove(1024*1024*1024*1024, 50)
+
         this.baseSnap = this.traderBalance(this.base)
         this.quoteSnap = this.traderBalance(this.quote)
         return gasTx
@@ -152,6 +153,12 @@ export class TestPool {
             .connect(await this.auth)
             .revisePool((await this.base).address, 
             (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize)
+    }
+
+    async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
+        return (await this.dex)
+            .connect(await this.auth)
+            .pegPriceImprove((await this.base).address, collateral, awayTick)
     }
 
     async snapBaseOwed(): Promise<BigNumber> {

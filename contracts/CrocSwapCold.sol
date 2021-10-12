@@ -42,5 +42,9 @@ contract CrocSwapColdPath is MarketSequencer, PoolRegistry,
         setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize);
     }
 
+    function pegPriceImprove (address token, uint128 unitTickCollateral,
+                              uint16 awayTickTol) public {
+        setPriceImprove(token, unitTickCollateral, awayTickTol);
+    }
 }
 

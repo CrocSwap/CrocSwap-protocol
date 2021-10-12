@@ -31,6 +31,14 @@ contract ColdPathInjector is StorageLayout {
                                     permitOracle));
         require(success);
     }
+
+    function callPegPriceImprove (address token, uint128 collateral, uint16 away)
+        internal {
+        (bool success, ) = coldPath_.delegatecall(
+            abi.encodeWithSignature("pegPriceImprove(address,uint128,uint16)",
+                                    token, collateral, away));
+        require(success);
+    }
     
     function callRevisePool (address base, address quote, uint24 poolIdx,
                              uint24 feeRate, uint8 protocolTake, uint16 tickSize)

@@ -62,14 +62,15 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     }
 
 
-    function initPool (address base, address quote, uint24 poolIdx,
-                       uint128 price) reEntrantLock public {
+    function initPool (address base, address quote, uint24 poolIdx, uint128 price)
+        reEntrantLock public {
         callInitPool(base, quote, poolIdx, price);
     }
 
     function setTemplate (uint24 poolIdx, uint24 feeRate,
                           uint8 protocolTake, uint16 tickSize,
-                          address permitOracle) protocolOnly public {
+                          address permitOracle)
+        protocolOnly public {
         callSetTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
     }
 
@@ -79,4 +80,9 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         callRevisePool(base, quote, poolIdx, feeRate, protocolTake, tickSize);
     }
 
+    function pegPriceImprove (address token, uint128 unitTickCollateral,
+                              uint16 awayTickTol)
+        protocolOnly public {
+        callPegPriceImprove(token, unitTickCollateral, awayTickTol);
+    }
 }

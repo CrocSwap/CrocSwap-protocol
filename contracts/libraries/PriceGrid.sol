@@ -15,6 +15,12 @@ library PriceGrid {
     using SafeCast for uint256;
     using SafeCast for uint192;
 
+    struct ImproveSettings {
+        bool inBase_;
+        uint128 unitCollateral_;
+        uint16 awayTicks_;
+    }
+
     function verifyFit (ImproveSettings memory set, int24 lowTick, int24 highTick,
                         bool isAdd, uint128 liquidity,
                         uint16 gridSize, int24 priceTick) internal pure {
@@ -33,69 +39,7 @@ library PriceGrid {
         return lowerTick % tickNorm == 0 &&
             upperTick % tickNorm == 0;
     }
-
-    struct ImproveSettings {
-        bool inBase_;
-        uint128 unitCollateral_;
-        uint16 awayTicks_;
-        int8 mult1_;
-        int8 mult2_;
-        int8 mult4_;
-        int8 mult6_;
-        int8 mult8_;
-        int8 mult12_;
-        int8 mult16_;
-        int8 mult24_;
-        int8 mult32_;
-        int8 mult40_;
-        int8 mult48_;
-        int8 mult64_;
-        int8 mult96_;
-    }
-
-    function emptySettings() internal pure returns (ImproveSettings memory) {
-        return ImproveSettings({
-            inBase_: false,
-                    unitCollateral_: 0,
-                    awayTicks_: 0,
-                    mult1_: 0,
-                    mult2_: 0,
-                    mult4_: 0,
-                    mult6_: 0,
-                    mult8_: 0,
-                    mult12_: 0,
-                    mult16_: 0,
-                    mult24_: 0,
-                    mult32_: 0,
-                    mult40_: 0,
-                    mult48_: 0,
-                    mult64_: 0,
-                    mult96_: 0});
-    }
-    
-    function formatSettings (bool inBase, uint128 unitCollateral,
-                             uint16 awayTicks, int8[] calldata mults)
-        internal pure returns (ImproveSettings memory) {
-        require(mults.length == 13);
-        return ImproveSettings({
-            inBase_: inBase,
-                    unitCollateral_: unitCollateral,
-                    awayTicks_: awayTicks,
-                    mult1_: mults[0],
-                    mult2_: mults[1],
-                    mult4_: mults[2],
-                    mult6_: mults[3],
-                    mult8_: mults[4],
-                    mult12_: mults[5],
-                    mult16_: mults[6],
-                    mult24_: mults[7],
-                    mult32_: mults[8],
-                    mult40_: mults[9],
-                    mult48_: mults[10],
-                    mult64_: mults[11],
-                    mult96_: mults[12]});
-    }
-    
+        
     function improveThresh (ImproveSettings memory set,
                             uint16 tickSize, int24 priceTick,
                             int24 bidTick, int24 askTick)
@@ -133,7 +77,7 @@ library PriceGrid {
                          int24 refTick)
         private pure returns (uint128) {
         if (wingSize == 0) { return 0; }
-        uint128 collateral = scaleCollateral(set, wingSize);
+        uint128 collateral = set.unitCollateral_;
         return convertToLiq(collateral, refTick, wingSize, set.inBase_);
     }
 
@@ -196,62 +140,6 @@ library PriceGrid {
             return uint256(FixedPoint.divQ64(collateral, priceY - priceX)).toUint128();
         } else {
             return convertToLiq(collateral, -tick, wingSize, true);
-        }
-    }
-
-    function scaleCollateral (ImproveSettings memory set, uint24 wingSize)
-        private pure returns (uint128) {
-        uint128 working = set.unitCollateral_;
-        
-        if (wingSize <= 1) { return working; }
-        working = scaleByMult(working, set.mult1_);
-
-        if (wingSize <= 2) { return working; }
-        working = scaleByMult(working, set.mult2_);
-
-        if (wingSize <= 4) { return working; }
-        working = scaleByMult(working, set.mult4_);
-
-        if (wingSize <= 6) { return working; }
-        working = scaleByMult(working, set.mult6_);
-
-        if (wingSize <= 8) { return working; }
-        working = scaleByMult(working, set.mult8_);
-
-        if (wingSize <= 12) { return working; }
-        working = scaleByMult(working, set.mult12_);
-
-        if (wingSize <= 16) { return working; }
-        working = scaleByMult(working, set.mult16_);
-
-        if (wingSize <= 24) { return working; }
-        working = scaleByMult(working, set.mult24_);
-
-        if (wingSize <= 32) { return working; }
-        working = scaleByMult(working, set.mult32_);
-
-        if (wingSize <= 40) { return working; }
-        working = scaleByMult(working, set.mult40_);
-
-        if (wingSize <= 48) { return working; }
-        working = scaleByMult(working, set.mult48_);
-
-        if (wingSize <= 64) { return working; }
-        working = scaleByMult(working, set.mult64_);
-
-        if (wingSize <= 96) { return working; }
-        working = scaleByMult(working, set.mult96_);
-
-        return working;
-    }
-
-    function scaleByMult (uint128 working, int8 mult) private pure returns (uint128) {
-        if (working == type(uint128).max || mult == 0) {
-            return type(uint128).max;
-        } else if (mult < 0) {
-            return working / uint128(uint8(-mult));
-        } else {
-            return working * uint128(uint8(mult));
         }
     }
 
