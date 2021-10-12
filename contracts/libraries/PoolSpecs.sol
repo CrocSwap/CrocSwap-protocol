@@ -6,26 +6,16 @@ pragma experimental ABIEncoderV2;
 /* @title Pool specification library */
 library PoolSpecs {
 
-    struct Header {
+    struct Pool {
         uint24 feeRate_;
         uint8 protocolTake_;
         uint16 tickSize_;
         uint8 priceOracle_;
-        uint8 extFlags_;
-    }
-
-    struct Extended {
         address permitOracle_;
-    }
-    
-    struct Pool {
-        Header head_;
-        Extended ext_;
     }
 
     struct PoolCursor {
-        Header head_;
-        Extended ext_;
+        Pool head_;
         bytes32 hash_;
     }
 
@@ -34,10 +24,8 @@ library PoolSpecs {
                         address tokenX, address tokenY, uint256 poolIdx)
         internal view returns (PoolCursor memory specs) {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
-        Header memory header = pools[key].head_;
-        Extended memory ext = needsExt(header) ?
-            pools[key].ext_ : emptyExt();
-        return PoolCursor ({head_: header, ext_: ext, hash_: key});
+        Pool memory pool = pools[key];
+        return PoolCursor ({head_: pool, hash_: key});
     }
 
     function selectPool (mapping(bytes32 => Pool) storage pools,
@@ -63,11 +51,4 @@ library PoolSpecs {
         return keccak256(abi.encode(tokenX, tokenY, poolIdx));
     }
 
-    function needsExt (Header memory header) private pure returns (bool) {
-        return header.extFlags_ != 0;
-    }
-
-    function emptyExt() private pure returns (Extended memory specs) {
-        return Extended({permitOracle_: address(0)});
-    }
 }

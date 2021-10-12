@@ -43,7 +43,7 @@ contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
                 cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
                                        dir.poolIdx_);
 
-                //targetRoll(cntx.roll_, dir.chain_, pairs);
+                targetRoll(cntx.roll_, dir.chain_, pairs);
                 verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
                 Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
@@ -57,5 +57,24 @@ contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
         }
 
         settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
+    }
+
+        
+    function targetRoll (Chaining.RollTarget memory roll,
+                         Directives.ChainingFlags memory flags,
+                         TokenFlow.PairSeq memory pair) view private {
+        if (flags.rollExit_) {
+            roll.inBaseQty_ = !pair.isBaseFront_;
+            roll.prePairBal_ = 0;
+        } else {
+            roll.inBaseQty_ = pair.isBaseFront_;
+            roll.prePairBal_ = pair.legFlow_;
+        }
+
+        if (flags.offsetSurplus_) {
+            address token = flags.rollExit_ ?
+                pair.backToken() : pair.frontToken();
+            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt128Sign();
+        }
     }
 }

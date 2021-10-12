@@ -61,24 +61,6 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         callTradePath(input);
     }
 
-    
-    function targetRoll (Chaining.RollTarget memory roll,
-                         Directives.ChainingFlags memory flags,
-                         TokenFlow.PairSeq memory pair) view private {
-        if (flags.rollExit_) {
-            roll.inBaseQty_ = !pair.isBaseFront_;
-            roll.prePairBal_ = 0;
-        } else {
-            roll.inBaseQty_ = pair.isBaseFront_;
-            roll.prePairBal_ = pair.legFlow_;
-        }
-
-        if (flags.offsetSurplus_) {
-            address token = flags.rollExit_ ?
-                pair.backToken() : pair.frontToken();
-            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt128Sign();
-        }
-    }
 
     function initPool (address base, address quote, uint24 poolIdx,
                        uint128 price) reEntrantLock public {

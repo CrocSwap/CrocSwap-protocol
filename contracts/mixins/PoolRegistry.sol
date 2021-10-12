@@ -17,8 +17,8 @@ contract PoolRegistry is StorageLayout {
     function verifyPermit (PoolSpecs.PoolCursor memory pool,
                            address base, address quote,
                            Directives.PoolDirective memory dir) view internal {
-        if (pool.ext_.permitOracle_ != address(0)) {
-            bool approved = ICrocSwapPermitOracle(pool.ext_.permitOracle_)
+        if (pool.head_.permitOracle_ != address(0)) {
+            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
                 .isApprovedForCrocPool(msg.sender, base, quote, dir);
             require(approved, "Z");
         }
@@ -28,25 +28,20 @@ contract PoolRegistry is StorageLayout {
                               uint8 protocolTake, uint16 tickSize,
                               address permitOracle) internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
-        templ.head_.feeRate_ = feeRate;
-        templ.head_.protocolTake_ = protocolTake;
-        templ.head_.tickSize_ = tickSize;
-        templ.head_.priceOracle_ = 0;
-        templ.head_.extFlags_ = formExtFlags(permitOracle);
-        templ.ext_.permitOracle_ = permitOracle;
+        templ.feeRate_ = feeRate;
+        templ.protocolTake_ = protocolTake;
+        templ.tickSize_ = tickSize;
+        templ.priceOracle_ = 0;
+        templ.permitOracle_ = permitOracle;
     }
 
-    function formExtFlags (address permitOracle) private pure returns (uint8) {
-        return (permitOracle != address(0)) ? 1 : 0;
-    }
-    
     function setPoolSpecs (address base, address quote, uint24 poolIdx,
                            uint24 feeRate, uint8 protocolTake,
                            uint16 tickSize) internal {
         PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
-        pool.head_.feeRate_ = feeRate;
-        pool.head_.protocolTake_ = protocolTake;
-        pool.head_.tickSize_ = tickSize;
+        pool.feeRate_ = feeRate;
+        pool.protocolTake_ = protocolTake;
+        pool.tickSize_ = tickSize;
     }
 
     /*function setPriceImprove (address token, uint128 unitTickCollateral,
@@ -58,7 +53,6 @@ contract PoolRegistry is StorageLayout {
 
     function registerPool (address base, address quote, uint24 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory) {
-        
         PoolSpecs.Pool memory template = queryTemplate(base, quote, poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         return queryPool(base, quote, poolIdx);
@@ -94,7 +88,7 @@ contract PoolRegistry is StorageLayout {
 
     function isPoolInit (PoolSpecs.Pool memory pool)
         private pure returns (bool) {
-        return pool.head_.tickSize_ > 0;
+        return pool.tickSize_ > 0;
     }
 
     function isPoolInit (PoolSpecs.PoolCursor memory pool)

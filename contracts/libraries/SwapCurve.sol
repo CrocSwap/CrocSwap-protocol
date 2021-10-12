@@ -58,7 +58,7 @@ library SwapCurve {
     function swapToLimit (CurveMath.CurveState memory curve,
                           Chaining.PairFlow memory accum,
                           Directives.SwapDirective memory swap,
-                          PoolSpecs.Header memory pool, int24 bumpTick) pure internal {
+                          PoolSpecs.Pool memory pool, int24 bumpTick) pure internal {
         uint128 limitPrice = determineLimit(bumpTick, swap.limitPrice_, swap.isBuy_);
 
         (int128 paidBase, int128 paidQuote, uint128 paidProto) =
@@ -189,7 +189,7 @@ library SwapCurve {
      *   matter, and either over or undershooting is fine from a collateral stability 
      *   perspective. */
     function bookExchFees (CurveMath.CurveState memory curve,
-                           uint128 swapQty, PoolSpecs.Header memory pool,
+                           uint128 swapQty, PoolSpecs.Pool memory pool,
                            bool inBaseQty, uint128 limitPrice) pure private
         returns (int128, int128, uint128) {
         (uint128 liqFees, uint128 exchFees) = vigOverSwap

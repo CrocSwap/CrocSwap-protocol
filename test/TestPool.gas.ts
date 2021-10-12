@@ -46,7 +46,7 @@ describe('Pool Gas Benchmarks', () => {
         await expectGas(initTx, 339000)
     })
 
-    /*it("mint in virgin pool", async() => {
+    it("mint in virgin pool", async() => {
         await expectGas(test.testMint(-100, 100, 100), 339000)
     })
 
@@ -231,5 +231,5 @@ describe('Pool Gas Benchmarks', () => {
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 253000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
-    })*/
+    })
 })
