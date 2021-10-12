@@ -98,18 +98,19 @@ contract CrocSwapMicroPath is MarketSequencer {
     }
 
 
-    function sweepSwap (CurveMath.CurveState calldata curve, int24 midTick,
-                        Directives.SwapDirective calldata swap,
-                        PoolSpecs.PoolCursor calldata pool)
+    function sweepSwap (CurveMath.CurveState memory curve, int24 midTick,
+                        Directives.SwapDirective memory swap,
+                        PoolSpecs.PoolCursor memory pool)
         public returns (Chaining.PairFlow memory accum,
-                        uint128 priceOut, uint128 seedOut,
-                        uint64 ambientOut, uint64 concOut) {
+                        uint128 priceOut, uint128 seedOut, uint128 concOut,
+                        uint64 ambientOut, uint64 concGrowthOut) {
         sweepSwapLiq(accum, curve, midTick, swap, pool);
         
         priceOut = curve.priceRoot_;
         seedOut = curve.liq_.ambientSeed_;
+        concOut = curve.liq_.concentrated_;
         ambientOut = curve.accum_.ambientGrowth_;
-        concOut = curve.accum_.concTokenGrowth_;
+        concGrowthOut = curve.accum_.concTokenGrowth_;
     }
 }
 

@@ -46,7 +46,7 @@ contract StorageLayout {
         uint96 askLots_;
         uint64 feeOdometer_;
     }
-    mapping(bytes32 => BookLevel) internal levels_;
+    mapping(bytes32 => BookLevel) public levels_;
     TickCensusLib.TickCensus internal ticks_;
     /**************************************************************/
     
@@ -79,15 +79,15 @@ contract StorageLayout {
         uint128 seeds_;
         uint32 timestamp_;
     }
-    mapping(bytes32 => RangePosition) internal positions_;
-    mapping(bytes32 => AmbientPosition) internal ambPositions_;
+    mapping(bytes32 => RangePosition) public positions_;
+    mapping(bytes32 => AmbientPosition) public ambPositions_;
     /**************************************************************/
 
     
     /**************************************************************/
     // LiquidityCurve
     /**************************************************************/
-    mapping(bytes32 => CurveMath.CurveState) internal curves_;
+    mapping(bytes32 => CurveMath.CurveState) public curves_;
     /**************************************************************/
 
     
@@ -115,7 +115,7 @@ contract StorageLayout {
     /**************************************************************/
     // SettleLayer
     /**************************************************************/
-    mapping(bytes32 => uint128) internal surplusCollateral_;
+    mapping(bytes32 => uint128) public surplusCollateral_;
     /**************************************************************/
 }
 

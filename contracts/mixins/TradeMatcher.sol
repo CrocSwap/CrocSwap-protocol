@@ -128,7 +128,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
             // exhaust the bitmap.
             (int24 bumpTick, bool spillsOver) = pinTickMap
                 (pool.hash_, swap.isBuy_, midTick);
-            curve.swapToLimit(accum, swap, pool.head_, bumpTick);            
+            curve.swapToLimit(accum, swap, pool.head_, bumpTick);
+            
             
             // The swap can be in one of three states at this point: 1) qty exhausted,
             // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean

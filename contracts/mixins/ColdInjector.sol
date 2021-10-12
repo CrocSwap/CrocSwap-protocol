@@ -124,9 +124,11 @@ contract ColdPathInjector is StorageLayout {
         Chaining.PairFlow memory swapFlow;
         (swapFlow, curve.curve_.priceRoot_,
          curve.curve_.liq_.ambientSeed_,
+         curve.curve_.liq_.concentrated_,
          curve.curve_.accum_.ambientGrowth_,
          curve.curve_.accum_.concTokenGrowth_) = 
-            abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint64, uint64));
+            abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint128,
+                                uint64, uint64));
 
         flow.foldFlow(swapFlow);
     }
