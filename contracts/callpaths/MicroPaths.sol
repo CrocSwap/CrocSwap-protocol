@@ -2,21 +2,20 @@
 
 pragma solidity >=0.8.4;
 
-import './libraries/Directives.sol';
-import './libraries/Encoding.sol';
-import './libraries/TokenFlow.sol';
-import './libraries/PriceGrid.sol';
-import './libraries/Chaining.sol';
-import './mixins/SettleLayer.sol';
-import './mixins/PoolRegistry.sol';
-import './mixins/OracleHist.sol';
-import './mixins/MarketSequencer.sol';
-import './mixins/StorageLayout.sol';
-import './interfaces/ICrocSwapHistRecv.sol';
+import '../libraries/Directives.sol';
+import '../libraries/Encoding.sol';
+import '../libraries/TokenFlow.sol';
+import '../libraries/PriceGrid.sol';
+import '../libraries/Chaining.sol';
+import '../mixins/SettleLayer.sol';
+import '../mixins/PoolRegistry.sol';
+import '../mixins/OracleHist.sol';
+import '../mixins/MarketSequencer.sol';
+import '../mixins/StorageLayout.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapMicroPath is MarketSequencer {
+contract MicroPaths is MarketSequencer {
 
     function burnRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,

@@ -13,9 +13,10 @@ import './mixins/OracleHist.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
-import './CrocSwapCold.sol';
-import './CrocSwapLong.sol';
-import './CrocSwapMicro.sol';
+import './callpaths/ColdPath.sol';
+import './callpaths/WarmPath.sol';
+import './callpaths/LongPath.sol';
+import './callpaths/MicroPaths.sol';
 
 import "hardhat/console.sol";
 
@@ -28,9 +29,10 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
 
     constructor (address authority) {
         authority_ = authority;
-        coldPath_ = address(new CrocSwapColdPath());
-        longPath_ = address(new CrocSwapLongPath());
-        microPath_ = address(new CrocSwapMicroPath());
+        coldPath_ = address(new ColdPath());
+        warmPath_ = address(new WarmPath());
+        longPath_ = address(new LongPath());
+        microPath_ = address(new MicroPaths());
     }
 
     function swap (address base, address quote,
@@ -55,10 +57,27 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         accumProtocolFees(flow, base, quote); // Make sure to call before clipping
     }
 
-    
     function trade (bytes calldata input) reEntrantLock public {
         callTradePath(input);
     }
+
+    function mint (address base, address quote,
+                   uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) public {
+        callMintPath(base, quote, poolIdx, bidTick, askTick, liq);
+    }
+
+    /*function burn (address base, address quote,
+                   uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) public {
+        callBurnPath(base, quote, poolIdx, bidTick, askTick, liq);
+    }
+
+    function mint (address base, address quote, uint24 poolIdx, uint128 liq) public {
+        callMintPath(base, quote, poolIdx, liq);
+    }
+
+    function burn (address base, address quote, uint24 poolIdx, uint128 liq) public {
+        callBurnPath(base, quote, poolIdx, liq);
+        }*/
 
 
     function initPool (address base, address quote, uint24 poolIdx, uint128 price)

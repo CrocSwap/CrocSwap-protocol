@@ -58,6 +58,39 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    function callMintPath (address base, address quote, uint24 poolIdx, int24 bidTick,
+                           int24 askTick, uint128 liq) internal {
+        (bool success, ) = longPath_.delegatecall(
+            abi.encodeWithSignature("mint(address,address,uint24,int24,int24,uint128)",
+                                    base, quote, poolIdx, bidTick, askTick, liq));
+        require(success);
+    }
+
+    function callBurnPath (address base, address quote, uint24 poolIdx, int24 bidTick,
+                           int24 askTick, uint128 liq) internal {
+        (bool success, ) = longPath_.delegatecall(
+            abi.encodeWithSignature("burn(address,address,uint24,int24,int24,uint128)",
+                                    base, quote, poolIdx, bidTick, askTick, liq));
+        require(success);
+    }
+
+    function callMintPath (address base, address quote, uint24 poolIdx,
+                           uint128 liq) internal {
+        (bool success, ) = longPath_.delegatecall(
+            abi.encodeWithSignature("mint(address,address,uint24,uint128)",
+                                    base, quote, poolIdx, liq));
+        require(success);
+    }
+
+    function callBurnPath (address base, address quote, uint24 poolIdx,
+                           uint128 liq) internal {
+        (bool success, ) = longPath_.delegatecall(
+            abi.encodeWithSignature("burn(address,address,uint24,uint128)",
+                                    base, quote, poolIdx, liq));
+        require(success);
+    }
+
+
     
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal

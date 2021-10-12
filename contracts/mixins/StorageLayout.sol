@@ -12,6 +12,7 @@ contract StorageLayout {
     bool public reEntrantLocked_;
     address internal authority_;
     address internal coldPath_;
+    address internal warmPath_;
     address internal longPath_;
     address internal microPath_;
 

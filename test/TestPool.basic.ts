@@ -309,7 +309,7 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
 
         await test.snapStart()
-        await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
+        let x = await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
         let limitFlow = -5584421
         let counterFlow = 4109877

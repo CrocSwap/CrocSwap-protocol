@@ -2,22 +2,21 @@
 
 pragma solidity >=0.8.4;
 
-import './libraries/Directives.sol';
-import './libraries/Encoding.sol';
-import './libraries/TokenFlow.sol';
-import './libraries/PriceGrid.sol';
-import './mixins/MarketSequencer.sol';
-import './mixins/SettleLayer.sol';
-import './mixins/PoolRegistry.sol';
-import './mixins/OracleHist.sol';
-import './mixins/ProtocolAccount.sol';
-import './mixins/StorageLayout.sol';
-import './interfaces/ICrocSwapHistRecv.sol';
+import '../libraries/Directives.sol';
+import '../libraries/Encoding.sol';
+import '../libraries/TokenFlow.sol';
+import '../libraries/PriceGrid.sol';
+import '../mixins/MarketSequencer.sol';
+import '../mixins/SettleLayer.sol';
+import '../mixins/PoolRegistry.sol';
+import '../mixins/OracleHist.sol';
+import '../mixins/ProtocolAccount.sol';
+import '../mixins/StorageLayout.sol';
+import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapLongPath is MarketSequencer, PoolRegistry,
-    SettleLayer, ProtocolAccount {
+contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount {
     
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;

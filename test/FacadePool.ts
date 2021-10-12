@@ -98,7 +98,9 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)
+        //return (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).mint((await this.base).address,
+            (await this.quote).address, POOL_IDX, lower, upper, liq)
     }
 
     async testMintOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
@@ -106,7 +108,9 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)
+        //return (await this.dex).connect(await this.other).trade(inputBytes)
+        return (await this.dex).connect(await this.other).mint((await this.base).address,
+            (await this.quote).address, POOL_IDX, lower, upper, liq)
     }
 
     async testBurn (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
