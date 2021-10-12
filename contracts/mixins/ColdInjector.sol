@@ -17,8 +17,9 @@ contract ColdPathInjector is StorageLayout {
     function callInitPool (address base, address quote, uint24 poolIdx,  
                            uint128 price) internal {
         (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature("initPool(address,address,uint24,uint128)",
-                                    base, quote, poolIdx, price));
+            abi.encodeWithSignature
+            ("initPool(address,address,uint24,uint128)",
+             base, quote, poolIdx, price));
         require(success);
     }
 
@@ -26,17 +27,18 @@ contract ColdPathInjector is StorageLayout {
                               uint8 protocolTake, uint16 tickSize,
                               address permitOracle) internal {
         (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature("setTemplate(uint24,uint24,uint8,uint16,address)",
-                                    poolIdx, feeRate, protocolTake, tickSize,
-                                    permitOracle));
+            abi.encodeWithSignature
+            ("setTemplate(uint24,uint24,uint8,uint16,address)",
+             poolIdx, feeRate, protocolTake, tickSize, permitOracle));
         require(success);
     }
 
     function callPegPriceImprove (address token, uint128 collateral, uint16 away)
         internal {
         (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature("pegPriceImprove(address,uint128,uint16)",
-                                    token, collateral, away));
+            abi.encodeWithSignature
+            ("pegPriceImprove(address,uint128,uint16)",
+             token, collateral, away));
         require(success);
     }
     
@@ -44,8 +46,9 @@ contract ColdPathInjector is StorageLayout {
                              uint24 feeRate, uint8 protocolTake, uint16 tickSize)
         internal {
         (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature("revisePool(address,address,uint24,uint24,uint8,uint16)",
-                                    base, quote, poolIdx, feeRate, protocolTake, tickSize));
+            abi.encodeWithSignature
+            ("revisePool(address,address,uint24,uint24,uint8,uint16)",
+             base, quote, poolIdx, feeRate, protocolTake, tickSize));
         require(success);
     }
 
@@ -144,7 +147,7 @@ contract ColdPathInjector is StorageLayout {
                        PoolSpecs.PoolCursor memory pool) internal {
         (bool success, bytes memory output) = microPath_.delegatecall
             (abi.encodeWithSignature
-             ("sweepSwap((uint128,(uint128,uint128),(uint64,uint64)),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,uint8),(address),bytes32))",
+             ("sweepSwap((uint128,(uint128,uint128),(uint64,uint64)),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 
