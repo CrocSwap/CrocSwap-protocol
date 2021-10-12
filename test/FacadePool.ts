@@ -11,6 +11,7 @@ import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { Signer, ContractFactory, BigNumber, ContractTransaction } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
+import { QueryHelper } from '../typechain/QueryHelper';
 
 chai.use(solidity);
 
@@ -19,6 +20,7 @@ const POOL_IDX = 85365
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
+    query: Promise<QueryHelper>
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
@@ -47,6 +49,10 @@ export class TestPool {
         factory = ethers.getContractFactory("CrocSwapDex")
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+
+        factory = ethers.getContractFactory("QueryHelper")
+        this.query = factory.then(f => this.dex.then(
+            d => f.deploy(d.address))) as Promise<QueryHelper>
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
@@ -65,7 +71,7 @@ export class TestPool {
         price: number): Promise<ContractTransaction> {
         await (await this.dex)
             .connect(await this.auth)
-            .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
+            .setTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
@@ -79,7 +85,7 @@ export class TestPool {
         price: number) {
         await (await this.dex)
             .connect(await this.auth)
-            .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, 
+            .setTemplate(POOL_IDX, feeRate, protoTake, tickSize, 
                 (await this.permit).address)
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
@@ -141,11 +147,11 @@ export class TestPool {
 
     }
 
-    async testProtocolSetFee (takeRate: number): Promise<ContractTransaction> {
+    async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .setProtocolTake((await this.base).address, 
-            (await this.quote).address, POOL_IDX, takeRate)
+            .revisePool((await this.base).address, 
+            (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize)
     }
 
     async snapBaseOwed(): Promise<BigNumber> {
@@ -174,12 +180,12 @@ export class TestPool {
     }
 
     async liquidity(): Promise<BigNumber> {
-        return await (await this.dex).queryLiquidity
+        return await (await this.query).queryLiquidity
             ((await this.base).address, (await this.quote).address, POOL_IDX)
     }
 
     async price(): Promise<BigNumber> {
-        return (await (await this.dex).queryCurve
+        return (await (await this.query).queryCurve
             ((await this.base).address, (await this.quote).address, POOL_IDX))
             .priceRoot_
     }

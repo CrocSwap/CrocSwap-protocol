@@ -26,7 +26,7 @@ contract PoolRegistry is StorageLayout {
     
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
-                              address permitOracle) public protocolOnly {
+                              address permitOracle) internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
         templ.head_.feeRate_ = feeRate;
         templ.head_.protocolTake_ = protocolTake;
@@ -40,14 +40,18 @@ contract PoolRegistry is StorageLayout {
         return (permitOracle != address(0)) ? 1 : 0;
     }
     
-    function setProtocolTake (address base, address quote, uint24 poolIdx,
-                              uint8 protocolTake) protocolOnly public {
-        selectPool(base, quote, poolIdx).head_.protocolTake_ = protocolTake;        
+    function setPoolSpecs (address base, address quote, uint24 poolIdx,
+                           uint24 feeRate, uint8 protocolTake,
+                           uint16 tickSize) internal {
+        PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
+        pool.head_.feeRate_ = feeRate;
+        pool.head_.protocolTake_ = protocolTake;
+        pool.head_.tickSize_ = tickSize;
     }
 
     /*function setPriceImprove (address token, uint128 unitTickCollateral,
                               uint16 awayTickTol, int8[] calldata rangeMults)
-        protocolOnly public {
+        protocolOnly internal {
         improves_[token] = PriceGrid.formatSettings(true, unitTickCollateral,
                                                     awayTickTol, rangeMults);
                                                     }*/
@@ -60,22 +64,14 @@ contract PoolRegistry is StorageLayout {
         return queryPool(base, quote, poolIdx);
     }
 
-    function queryPriceImprove (Directives.PriceImproveReq memory req,
-                                address baseToken, address quoteToken)
-        internal view returns (PriceGrid.ImproveSettings memory) {
-        if (!req.isEnabled_) {
-            return PriceGrid.emptySettings();
-        } else if (req.useBaseSide_) {
-            return queryPriceImprove(baseToken, true);
-        } else {
-            return queryPriceImprove(quoteToken, false);
+    function queryPriceImprove (PriceGrid.ImproveSettings memory dest,
+                                Directives.PriceImproveReq memory req,
+                                address base, address quote) view internal {
+        if (req.isEnabled_) {
+            address token = req.useBaseSide_ ? base : quote;
+            dest = improves_[token];
+            dest.inBase_ = req.useBaseSide_;
         }
-    }
-    
-    function queryPriceImprove (address token, bool onBaseSide)
-        internal view returns (PriceGrid.ImproveSettings memory settings) {
-        settings = improves_[token];
-        settings.inBase_ = onBaseSide;
     }
 
     function queryPool (address base, address quote, uint24 poolIdx)

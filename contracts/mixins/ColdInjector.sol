@@ -22,6 +22,25 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    function callSetTemplate (uint24 poolIdx, uint24 feeRate,
+                              uint8 protocolTake, uint16 tickSize,
+                              address permitOracle) internal {
+        (bool success, ) = coldPath_.delegatecall(
+            abi.encodeWithSignature("setTemplate(uint24,uint24,uint8,uint16,address)",
+                                    poolIdx, feeRate, protocolTake, tickSize,
+                                    permitOracle));
+        require(success);
+    }
+    
+    function callRevisePool (address base, address quote, uint24 poolIdx,
+                             uint24 feeRate, uint8 protocolTake, uint16 tickSize)
+        internal {
+        (bool success, ) = coldPath_.delegatecall(
+            abi.encodeWithSignature("revisePool(address,address,uint24,uint24,uint8,uint16)",
+                                    base, quote, poolIdx, feeRate, protocolTake, tickSize));
+        require(success);
+    }
+
     function callTradePath (bytes calldata input) internal {
         (bool success, ) = warmPath_.delegatecall(
             abi.encodeWithSignature("trade(bytes)", input));

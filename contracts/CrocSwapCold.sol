@@ -31,5 +31,16 @@ contract CrocSwapColdPath is MarketSequencer, PoolRegistry,
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
 
+    function setTemplate (uint24 poolIdx, uint24 feeRate,
+                          uint8 protocolTake, uint16 tickSize,
+                          address permitOracle) public {
+        setPoolTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
+    }
+
+    function revisePool (address base, address quote, uint24 poolIdx,
+                         uint24 feeRate, uint8 protocolTake, uint16 tickSize) public {
+        setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize);
+    }
+
 }
 

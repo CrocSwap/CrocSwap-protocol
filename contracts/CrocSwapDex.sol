@@ -85,15 +85,16 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         callInitPool(base, quote, poolIdx, price);
     }
 
-    function queryCurve (address base, address quote, uint24 poolIdx)
-        public view returns (CurveMath.CurveState memory) {
-        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        return curves_[pool.hash_];
+    function setTemplate (uint24 poolIdx, uint24 feeRate,
+                          uint8 protocolTake, uint16 tickSize,
+                          address permitOracle) protocolOnly public {
+        callSetTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
     }
 
-    function queryLiquidity (address base, address quote, uint24 poolIdx)
-        public view returns (uint128) {
-        return queryCurve(base, quote, poolIdx).activeLiquidity();
+    function revisePool (address base, address quote, uint24 poolIdx,
+                         uint24 feeRate, uint8 protocolTake, uint16 tickSize)
+        protocolOnly public {
+        callRevisePool(base, quote, poolIdx, feeRate, protocolTake, tickSize);
     }
 
 }

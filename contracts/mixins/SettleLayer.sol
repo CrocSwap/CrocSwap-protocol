@@ -36,7 +36,7 @@ contract SettleLayer is StorageLayout {
         return markCumulative(hasSpentEth, token, flow);
     }
 
-    function querySurplus (address user, address token) public view returns (uint128) {
+    function querySurplus (address user, address token) internal view returns (uint128) {
         bytes32 key = encodeSurplusKey(user, token);
         return surplusCollateral_[key];
     }

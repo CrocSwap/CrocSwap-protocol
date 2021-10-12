@@ -11,8 +11,6 @@ contract StorageLayout {
     // Generic general-purpose storage slots
     bool public reEntrantLocked_;
     address internal authority_;
-    address internal sidecar_;
-    address internal master_;
     address internal coldPath_;
     address internal warmPath_;
     address internal microPath_;
@@ -29,11 +27,6 @@ contract StorageLayout {
         reEntrantLocked_ = true;
         _;
         reEntrantLocked_ = false;        
-    }
-
-    modifier masterOnly() {
-        require(msg.sender == master_);
-        _;
     }
 
     

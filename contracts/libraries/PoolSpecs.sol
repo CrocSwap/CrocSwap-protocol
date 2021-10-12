@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: Unlicenxsed
 
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
@@ -58,7 +58,7 @@ library PoolSpecs {
     }
 
     function encodeKey (address tokenX, address tokenY, uint256 poolIdx)
-        private pure returns (bytes32) {
+        internal pure returns (bytes32) {
         require(tokenX < tokenY);
         return keccak256(abi.encode(tokenX, tokenY, poolIdx));
     }

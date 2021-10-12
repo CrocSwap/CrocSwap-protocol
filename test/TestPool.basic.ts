@@ -83,7 +83,7 @@ describe('Pool', () => {
     
     it("swap protocol fee", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        await test.testProtocolSetFee(6)
+        await test.testRevisePool(feeRate, 6, 1)
 
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
@@ -104,8 +104,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10000)
 
-        expect(await (await test.dex).protoFeeAccum((await test.quote).address)).to.equal(24)
-        expect(await (await test.dex).protoFeeAccum((await test.base).address)).to.equal(0)
+        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(24)
+        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(0)
     })
 
     it("swap sell", async() => {
@@ -132,7 +132,7 @@ describe('Pool', () => {
 
     it("swap sell protocol fee", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        await test.testProtocolSetFee(6)
+        await test.testRevisePool(feeRate, 6, 1)
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
@@ -148,8 +148,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-10000*1024)
 
-        expect(await (await test.dex).protoFeeAccum((await test.quote).address)).to.equal(25*1024 + 210)
-        expect(await (await test.dex).protoFeeAccum((await test.base).address)).to.equal(0)
+        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(25*1024 + 210)
+        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(0)
     })
 
     it("swap wrong direction", async() => {
@@ -205,7 +205,7 @@ describe('Pool', () => {
 
     it("swap buy quote proto fee", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        await test.testProtocolSetFee(6)
+        await test.testRevisePool(feeRate, 6, 1)
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
@@ -303,7 +303,7 @@ describe('Pool', () => {
         await test.testMint(-5000, 8000, 40000); 
         await test.testMint(3800, 4300, 30000); 
         await test.testMint(3400, 4800, 20000); 
-        await test.testProtocolSetFee(6)
+        await test.testRevisePool(feeRate, 6, 1)
 
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
@@ -322,8 +322,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(limitFlow)
 
-        expect(await (await test.dex).protoFeeAccum((await test.quote).address)).to.equal(0)
-        expect(await (await test.dex).protoFeeAccum((await test.base).address)).to.equal(21211)
+        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(0)
+        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(21211)
     })
 
     it("burn payout full", async() => {

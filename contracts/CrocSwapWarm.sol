@@ -35,8 +35,8 @@ contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
 
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-            cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
-                                              pairs.baseToken_, pairs.quoteToken_);
+            queryPriceImprove(cntx.improve_, order.hops_[i].improve_,
+                              pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
                 dir = order.hops_[i].pools_[j];
