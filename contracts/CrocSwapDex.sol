@@ -35,6 +35,15 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         microPath_ = address(new MicroPaths());
     }
 
+    /*constructor (address authority, address coldPath, address warmPath,
+                 address longPath, address microPath) {
+        authority_ = authority;
+        coldPath_ = coldPath;
+        warmPath_ = warmPath;
+        longPath_ = longPath;
+        microPath = microPath_;
+        }*/
+    
     function swap (address base, address quote,
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                    uint128 limitPrice) reEntrantLock public {
@@ -61,38 +70,32 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         callTradePath(input);
     }
 
-    function mint (address base, address quote,
-                   uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) public {
-        callMintPath(base, quote, poolIdx, bidTick, askTick, liq);
+    function tradeWarm (bytes calldata input) reEntrantLock public {
+        callWarmPath(input);
     }
-
-    /*function burn (address base, address quote,
-                   uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) public {
-        callBurnPath(base, quote, poolIdx, bidTick, askTick, liq);
-    }
-
-    function mint (address base, address quote, uint24 poolIdx, uint128 liq) public {
-        callMintPath(base, quote, poolIdx, liq);
-    }
-
-    function burn (address base, address quote, uint24 poolIdx, uint128 liq) public {
-        callBurnPath(base, quote, poolIdx, liq);
-        }*/
-
 
     function initPool (address base, address quote, uint24 poolIdx, uint128 price)
         reEntrantLock public {
         callInitPool(base, quote, poolIdx, price);
     }
 
-    function setTemplate (uint24 poolIdx, uint24 feeRate,
+    function collect (address recv, uint128 value, address token)
+        reEntrantLock public {
+        callCollectSurplus(recv, value, token);
+    }
+
+    function protocolCmd (bytes calldata input) protocolOnly public {
+        callProtocolCmd(input);
+    }
+    
+    /*function setTemplate (uint24 poolIdx, uint24 feeRate,
                           uint8 protocolTake, uint16 tickSize,
                           address permitOracle)
         protocolOnly public {
         callSetTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
-    }
+        }*/
 
-    function revisePool (address base, address quote, uint24 poolIdx,
+    /*function revisePool (address base, address quote, uint24 poolIdx,
                          uint24 feeRate, uint8 protocolTake, uint16 tickSize)
         protocolOnly public {
         callRevisePool(base, quote, poolIdx, feeRate, protocolTake, tickSize);
@@ -102,5 +105,9 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
                               uint16 awayTickTol)
         protocolOnly public {
         callPegPriceImprove(token, unitTickCollateral, awayTickTol);
-    }
+        }*/
+
+    /*function setAuthority (address authority) protocolOnly public {
+        authority_ = authority;
+        }*/
 }

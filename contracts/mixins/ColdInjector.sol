@@ -23,32 +23,16 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
-    function callSetTemplate (uint24 poolIdx, uint24 feeRate,
-                              uint8 protocolTake, uint16 tickSize,
-                              address permitOracle) internal {
+    function callProtocolCmd (bytes calldata input) internal {
         (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature
-            ("setTemplate(uint24,uint24,uint8,uint16,address)",
-             poolIdx, feeRate, protocolTake, tickSize, permitOracle));
-        require(success);
-    }
-
-    function callPegPriceImprove (address token, uint128 collateral, uint16 away)
-        internal {
-        (bool success, ) = coldPath_.delegatecall(
-            abi.encodeWithSignature
-            ("pegPriceImprove(address,uint128,uint16)",
-             token, collateral, away));
+            abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
     }
     
-    function callRevisePool (address base, address quote, uint24 poolIdx,
-                             uint24 feeRate, uint8 protocolTake, uint16 tickSize)
-        internal {
+    function callCollectSurplus (address recv, uint128 value, address token) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature
-            ("revisePool(address,address,uint24,uint24,uint8,uint16)",
-             base, quote, poolIdx, feeRate, protocolTake, tickSize));
+            ("collectSurplus(address,uint128,address)", recv, value, token));
         require(success);
     }
 
@@ -58,38 +42,11 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
-    function callMintPath (address base, address quote, uint24 poolIdx, int24 bidTick,
-                           int24 askTick, uint128 liq) internal {
-        (bool success, ) = longPath_.delegatecall(
-            abi.encodeWithSignature("mint(address,address,uint24,int24,int24,uint128)",
-                                    base, quote, poolIdx, bidTick, askTick, liq));
+    function callWarmPath (bytes calldata input) internal {
+        (bool success, ) = warmPath_.delegatecall(
+            abi.encodeWithSignature("tradeWarm(bytes)", input));
         require(success);
     }
-
-    function callBurnPath (address base, address quote, uint24 poolIdx, int24 bidTick,
-                           int24 askTick, uint128 liq) internal {
-        (bool success, ) = longPath_.delegatecall(
-            abi.encodeWithSignature("burn(address,address,uint24,int24,int24,uint128)",
-                                    base, quote, poolIdx, bidTick, askTick, liq));
-        require(success);
-    }
-
-    function callMintPath (address base, address quote, uint24 poolIdx,
-                           uint128 liq) internal {
-        (bool success, ) = longPath_.delegatecall(
-            abi.encodeWithSignature("mint(address,address,uint24,uint128)",
-                                    base, quote, poolIdx, liq));
-        require(success);
-    }
-
-    function callBurnPath (address base, address quote, uint24 poolIdx,
-                           uint128 liq) internal {
-        (bool success, ) = longPath_.delegatecall(
-            abi.encodeWithSignature("burn(address,address,uint24,uint128)",
-                                    base, quote, poolIdx, liq));
-        require(success);
-    }
-
 
     
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,

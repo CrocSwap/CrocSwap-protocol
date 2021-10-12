@@ -35,7 +35,8 @@ contract ProtocolAccount is StorageLayout  {
     /* @notice Pays out the earned, but unclaimed protocol fees in the pool.
      * @param receipient - The receiver of the protocol fees.
      * @param token - The token address of the quote token. */
-    /*function disburseProtocol (address recipient, address token) protocolOnly public {
+    function disburseProtocolFees (address recipient,
+                                   address token) protocolOnly internal {
         uint256 collected = feesAccum_[token];
         feesAccum_[token] = 0;
         if (collected > 0) {
@@ -44,11 +45,6 @@ contract ProtocolAccount is StorageLayout  {
             } else {
                 TransferHelper.safeTransfer(token, recipient, collected);
             }
-        }
-        
-        }*/
-
-    function setProtoAcctAuthority (address authority) internal {
-        authority_ = authority;
+        }  
     }
 }

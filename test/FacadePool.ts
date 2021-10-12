@@ -8,7 +8,7 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { Signer, ContractFactory, BigNumber, ContractTransaction } from 'ethers';
+import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
@@ -49,6 +49,12 @@ export class TestPool {
         factory = ethers.getContractFactory("CrocSwapDex")
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+        
+        factory.then(async f => this.auth.then(async a => {
+                let addr = await (a.getAddress());
+                console.log((f.getDeployTransaction(addr).data as string).length)
+        }))
+
 
         factory = ethers.getContractFactory("QueryHelper")
         this.query = factory.then(f => this.dex.then(
@@ -71,7 +77,9 @@ export class TestPool {
         price: number): Promise<ContractTransaction> {
         await (await this.dex)
             .connect(await this.auth)
-            .setTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
+            .protocolCmd(this.encodeProtocolCmd(
+                66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, feeRate, protoTake, 
+                tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
@@ -86,47 +94,80 @@ export class TestPool {
         price: number) {
         await (await this.dex)
             .connect(await this.auth)
-            .setTemplate(POOL_IDX, feeRate, protoTake, tickSize, 
-                (await this.permit).address)
+            .protocolCmd(this.encodeProtocolCmd(
+                66, (await this.permit).address, ZERO_ADDR, POOL_IDX, feeRate, protoTake, tickSize, 0))
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
+    }
+
+    encodeProtocolCmd (code: number, token: string, sidecar: string, poolIdx: number, 
+        feeRate: number, protoTake: number, ticks: number, value: number): BytesLike {
+        let abiCoder = new ethers.utils.AbiCoder()
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "uint24", "uint8", "uint16", "uint128" ], 
+            [ code, token, sidecar, poolIdx, feeRate, protoTake, ticks, value ]);
+    }
+
+    async encodeMintPath (lower: number, upper: number, liq: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 1
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq  ]);
+    }
+
+    async encodeBurnPath (lower: number, upper: number, liq: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 2
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq  ]);
     }
 
     async testMint (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
-        let inputBytes = encodeOrderDirective(directive);
+        //let inputBytes = encodeOrderDirective(directive);
         //return (await this.dex).connect(await this.trader).trade(inputBytes)
-        return (await this.dex).connect(await this.trader).mint((await this.base).address,
-            (await this.quote).address, POOL_IDX, lower, upper, liq)
+
+        let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
+        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
     }
 
     async testMintOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
-        let inputBytes = encodeOrderDirective(directive);
+        //let inputBytes = encodeOrderDirective(directive);
         //return (await this.dex).connect(await this.other).trade(inputBytes)
-        return (await this.dex).connect(await this.other).mint((await this.base).address,
-            (await this.quote).address, POOL_IDX, lower, upper, liq)
+        let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
+        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
     }
 
     async testBurn (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
-        let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)
+        /*let inputBytes = encodeOrderDirective(directive);
+        return (await this.dex).connect(await this.trader).trade(inputBytes)*/
+        let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
+        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
     }
 
     async testBurnOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
-        let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)
+        /*let inputBytes = encodeOrderDirective(directive);
+        return (await this.dex).connect(await this.other).trade(inputBytes)*/
+        let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
+        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
     }
 
     async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
@@ -155,14 +196,15 @@ export class TestPool {
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .revisePool((await this.base).address, 
-            (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize)
+            .protocolCmd(this.encodeProtocolCmd(68, (await this.base).address, 
+                (await this.quote).address, POOL_IDX, feeRate, protoTake, 1, 0))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .pegPriceImprove((await this.base).address, collateral, awayTick)
+            .protocolCmd(this.encodeProtocolCmd(69, (await this.base).address, ZERO_ADDR,
+                POOL_IDX, 0, 0, awayTick, collateral))
     }
 
     async snapBaseOwed(): Promise<BigNumber> {

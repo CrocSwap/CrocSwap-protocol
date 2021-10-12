@@ -9,7 +9,7 @@ contract TestProtocolAccount is ProtocolAccount {
     using TokenFlow for TokenFlow.PairSeq;
         
     constructor (address auth) {
-        setProtoAcctAuthority(auth);
+        authority_ = auth;
     }
     
     function testAccum (address base, address quote,

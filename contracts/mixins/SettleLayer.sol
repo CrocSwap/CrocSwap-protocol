@@ -41,6 +41,17 @@ contract SettleLayer is StorageLayout {
         return surplusCollateral_[key];
     }
 
+    function disburseSurplus (address recv, uint128 value, address token) internal {
+        bytes32 key = encodeSurplusKey(msg.sender, token);
+        uint128 balance = surplusCollateral_[key];
+
+        if (value == 0) { value = balance; }
+        require(balance > 0 && value < balance, "SC");
+
+        creditTransfer(recv, value, token);
+        surplusCollateral_[key] -= value;
+    }
+
     function markCumulative (bool hasSpentEth, address token,
                              int128 flow) private pure returns (bool) {
         if (token.isEtherNative() && isDebit(flow)) {
