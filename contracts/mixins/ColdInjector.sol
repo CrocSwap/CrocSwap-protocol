@@ -50,7 +50,7 @@ contract ColdPathInjector is StorageLayout {
     }
 
     function callTradePath (bytes calldata input) internal {
-        (bool success, ) = warmPath_.delegatecall(
+        (bool success, ) = longPath_.delegatecall(
             abi.encodeWithSignature("trade(bytes)", input));
         require(success);
     }

@@ -14,7 +14,7 @@ import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
 import './CrocSwapCold.sol';
-import './CrocSwapWarm.sol';
+import './CrocSwapLong.sol';
 import './CrocSwapMicro.sol';
 
 import "hardhat/console.sol";
@@ -29,9 +29,8 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     constructor (address authority) {
         authority_ = authority;
         coldPath_ = address(new CrocSwapColdPath());
-        warmPath_ = address(new CrocSwapWarmPath());
+        longPath_ = address(new CrocSwapLongPath());
         microPath_ = address(new CrocSwapMicroPath());
-
     }
 
     function swap (address base, address quote,

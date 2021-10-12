@@ -16,7 +16,7 @@ import './interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
-contract CrocSwapWarmPath is MarketSequencer, PoolRegistry,
+contract CrocSwapLongPath is MarketSequencer, PoolRegistry,
     SettleLayer, ProtocolAccount {
     
     using SafeCast for uint128;
