@@ -62,26 +62,21 @@ export class TestPool {
     }
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
-        price: number) {
-        /*await (await this.sidecar)
-            .connect(await this.auth)
-            .setInitLock(0)*/
+        price: number): Promise<ContractTransaction> {
         await (await this.dex)
             .connect(await this.auth)
             .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, ZERO_ADDR)
-        await (await this.dex)
+        let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
         
         this.baseSnap = this.traderBalance(this.base)
         this.quoteSnap = this.traderBalance(this.quote)
+        return gasTx
     }
 
     async initPermitPool (feeRate: number, protoTake: number, tickSize: number,
         price: number) {
-        /*await (await this.sidecar)
-            .connect(await this.auth)
-            .setInitLock(0)*/
         await (await this.dex)
             .connect(await this.auth)
             .setPoolTemplate(POOL_IDX, feeRate, protoTake, tickSize, 
@@ -90,7 +85,6 @@ export class TestPool {
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))
     }
-
 
     async testMint (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         await this.snapStart()
@@ -130,9 +124,9 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)
-        /*return (await this.dex).connect(await this.trader).swap((await this.base).address,
-            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)*/
+        //return (await this.dex).connect(await this.trader).trade(inputBytes)
+        return (await this.dex).connect(await this.trader).swap((await this.base).address,
+            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
     }
 
     async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
@@ -141,9 +135,9 @@ export class TestPool {
         let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)
-        /*return (await this.dex).connect(await this.other).swap((await this.base).address,
-            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)*/
+        //return (await this.dex).connect(await this.other).trade(inputBytes)
+        return (await this.dex).connect(await this.other).swap((await this.base).address,
+            (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
 
     }
 

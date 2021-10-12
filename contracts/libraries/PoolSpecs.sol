@@ -49,9 +49,12 @@ library PoolSpecs {
 
     function writePool (mapping(bytes32 => Pool) storage pools,
                         address tokenX, address tokenY, uint256 poolIdx,
-                        Pool memory val) internal {
+                        Pool memory val)
+        internal returns (Pool memory prev) {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
+        prev = pools[key];
         pools[key] = val;
+        return prev;
     }
 
     function encodeKey (address tokenX, address tokenY, uint256 poolIdx)

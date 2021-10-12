@@ -17,6 +17,7 @@ describe('Pool Gas Benchmarks', () => {
     let test: TestPool
     let baseToken: MockERC20
     let quoteToken: MockERC20
+    let initTx: Promise<ContractTransaction>
     const feeRate = 225 * 100
 
     beforeEach("deploy",  async () => {
@@ -25,7 +26,8 @@ describe('Pool Gas Benchmarks', () => {
        baseToken = await test.base
        quoteToken = await test.quote
 
-       await test.initPool(feeRate, 0, 1, 1.0)
+       initTx = test.initPool(feeRate, 0, 1, 1.0)
+       await initTx
     })
 
     async function gasUsed (tx: Promise<ContractTransaction>): Promise<BigNumber> {
@@ -40,7 +42,11 @@ describe('Pool Gas Benchmarks', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    it("mint in virgin pool", async() => {
+    it("create pool", async() => {
+        await expectGas(initTx, 339000)
+    })
+
+    /*it("mint in virgin pool", async() => {
         await expectGas(test.testMint(-100, 100, 100), 339000)
     })
 
@@ -83,7 +89,7 @@ describe('Pool Gas Benchmarks', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await expectGas(test.testBurn(-100, 100, 50), 108000)
-    })s
+    })
 
     it("burn full", async() => {
         await test.testMint(-100, 100, 100)
@@ -225,5 +231,5 @@ describe('Pool Gas Benchmarks', () => {
 
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 253000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
-    })
+    })*/
 })

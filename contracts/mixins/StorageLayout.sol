@@ -10,7 +10,7 @@ import '../libraries/TickCensus.sol';
 contract StorageLayout {
 
     // Generic general-purpose storage slots
-    bool internal reEntrantLocked_;
+    bool public reEntrantLocked_;
     address internal authority_;
     address internal sidecar_;
     address internal master_;
@@ -53,8 +53,8 @@ contract StorageLayout {
 
     /**************************************************************/
     // PoolRegistry
-    mapping(uint24 => PoolSpecs.Pool) internal templates_;
-    mapping(bytes32 => PoolSpecs.Pool) internal pools_;
+    mapping(uint24 => PoolSpecs.Pool) public templates_;
+    mapping(bytes32 => PoolSpecs.Pool) public pools_;
     mapping(address => PriceGrid.ImproveSettings) internal improves_;
     /**************************************************************/
 
@@ -62,7 +62,7 @@ contract StorageLayout {
     /**************************************************************/
     // ProtocolAccount
     /**************************************************************/
-    mapping(address => uint256) internal feesAccum_;
+    mapping(address => uint256) public feesAccum_;
     /**************************************************************/
 
 
