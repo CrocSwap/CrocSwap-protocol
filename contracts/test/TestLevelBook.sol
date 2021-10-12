@@ -42,7 +42,7 @@ contract TestLevelBook is LevelBook {
     }
 
     function hasTickBump (uint256 poolIdx, int24 tick) public view returns (bool) {
-        return hasTick(bytes32(poolIdx), tick);
+        return hasTickBookmark(bytes32(poolIdx), tick);
     }
 
 }

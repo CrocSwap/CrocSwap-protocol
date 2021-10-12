@@ -126,7 +126,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
             // Swap to furthest point we can based on the local bitmap. Don't bother
             // seeking a bump outside the bump, because we're not sure if the swap will
             // exhaust the bitmap.
-            (int24 bumpTick, bool spillsOver) = pinTickMap
+            (int24 bumpTick, bool spillsOver) = pinBitmap
                 (pool.hash_, swap.isBuy_, midTick);
             curve.swapToLimit(accum, swap, pool.head_, bumpTick);
             
@@ -148,8 +148,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                 // we should query the global bitmap, find the next level bitmap, and
                 // keep swapping on the constant-product curve until we hit point.
                 if (spillsOver) {
-                    (int24 liqTick, bool tightSpill) = seekTickSpill
-                        (pool.hash_, bumpTick, swap.isBuy_);
+                    int24 liqTick = seekMezzSpill(pool.hash_, bumpTick, swap.isBuy_);
+                    bool tightSpill = (bumpTick == liqTick);
                     bumpTick = liqTick;
                     
                     // In some corner cases the local bitmap border also happens to

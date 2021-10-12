@@ -139,7 +139,8 @@ describe('TickCensus', () => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
       let tick = tickRoot + 4
       let bitmap = 4 + 16 + 2048 + 8192;
-      let result = await census.testPinBuy(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinBuy(tick);
       expect(result[1]).to.equal(false);
       expect(result[0]).to.equal(tickRoot + 11);
    })
@@ -148,7 +149,8 @@ describe('TickCensus', () => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
       let tick = tickRoot + 7
       let bitmap = 8 + 16 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(false);
       expect(result[0]).to.equal(tickRoot + 4);
    })
@@ -157,7 +159,8 @@ describe('TickCensus', () => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
       let tick = tickRoot + 4
       let bitmap = 8 + 16 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(false);
       expect(result[0]).to.equal(tickRoot + 4);
    })
@@ -166,7 +169,8 @@ describe('TickCensus', () => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
       let tick = tickRoot + 2
       let bitmap = 8 + 16 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(true);
       expect(result[0]).to.equal(tickRoot);
    })
@@ -175,7 +179,8 @@ describe('TickCensus', () => {
       let tickRoot = -120 * 256 * 256 + 12 * 256
       let tick = tickRoot + 2
       let bitmap = 1 + 8 + 16 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(false);
       expect(result[0]).to.equal(tickRoot);
    })
@@ -183,7 +188,8 @@ describe('TickCensus', () => {
    it("pin buy spill", async() => {
       let tick = -120 * 256 * 256 + 12 * 256 + 4
       let bitmap = 4 + 16;
-      let result = await census.testPinBuy(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinBuy(tick);
       expect(result[1]).to.equal(true);
       expect(result[0]).to.equal(-120 * 256 * 256 + 13 * 256);
    })
@@ -191,7 +197,8 @@ describe('TickCensus', () => {
    it("pin sell spill", async() => {
       let tick = -120 * 256 * 256 + 12 * 256 + 4
       let bitmap = 32 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(true);
       expect(result[0]).to.equal(-120 * 256 * 256 + 12 * 256);
    })
@@ -199,7 +206,8 @@ describe('TickCensus', () => {
    it("pin buy zero point", async() => {
       let tick = 127 * 256 * 256 + 255 * 256 + 4
       let bitmap = 4 + 16;
-      let result = await census.testPinBuy(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinBuy(tick);
       expect(result[1]).to.equal(true);
       expect(result[0]).to.equal(TICK_MAX);
    })
@@ -207,7 +215,8 @@ describe('TickCensus', () => {
    it("pin sell zero point", async() => {
       let tick = -128 * 256 * 256 + 0 * 256 + 3
       let bitmap = 16 + 2048 + 8192;
-      let result = await census.testPinSell(tick, bitmap);
+      await census.setTermBitmap(tick, bitmap)
+      let result = await census.testPinSell(tick);
       expect(result[1]).to.equal(true);
       expect(result[0]).to.equal(TICK_MIN);
    })

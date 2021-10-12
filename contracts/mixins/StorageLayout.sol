@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
-import '../libraries/TickCensus.sol';
 
 contract StorageLayout {
 
@@ -47,7 +46,14 @@ contract StorageLayout {
         uint64 feeOdometer_;
     }
     mapping(bytes32 => BookLevel) public levels_;
-    TickCensusLib.TickCensus internal ticks_;
+    /**************************************************************/
+
+    
+    /**************************************************************/
+    // TickCensus
+    /**************************************************************/
+    mapping(bytes32 => uint256) public mezzanine_;
+    mapping(bytes32 => uint256) public terminus_;
     /**************************************************************/
     
 
