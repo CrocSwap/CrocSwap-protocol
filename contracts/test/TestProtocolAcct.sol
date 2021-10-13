@@ -26,4 +26,13 @@ contract TestProtocolAccount is ProtocolAccount {
     function etherBalance (address x) public view returns (uint256) {
         return x.balance;
     }
+
+    function protoFeeAccum (address token) public view returns (uint128) {
+        return feesAccum_[token];
+    }
+
+    function disburseProtocol (address recv, address token)
+        public protocolOnly {
+        disburseProtocolFees(recv, token);
+    }
 }

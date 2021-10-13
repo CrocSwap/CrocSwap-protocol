@@ -42,14 +42,14 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(85000, tokenX.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(INIT_BAL-85000);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL+85000);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
     })
 
     it("credit", async() => {
         await test.connect(sender).testSettleFlow(-5000, tokenX.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(5000);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL-5000);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
     })
 
     it("debit shortfall", async() => {
@@ -66,7 +66,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(0, tokenX.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(0);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
     })
 
     it("debit ether", async() => {
@@ -74,7 +74,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(25000, ZERO_ADDR, overrides)
         expect((await test.getMyBalance())).to.equal(25000)
         expect((await test.getBalance(RECV_ADDR))).to.equal(0)
-        expect((await test.querySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
     it("credit ether", async() => {
@@ -85,7 +85,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(-1024, ZERO_ADDR)
         expect((await test.getMyBalance())).to.equal(75000-1024)
         expect((await test.getBalance(RECV_ADDR))).to.equal(1024)
-        expect((await test.querySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
     it("debit ether shortfall", async() => {
@@ -106,8 +106,8 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleReserves(-18000, tokenY.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(0);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(7500)
-        expect((await test.querySurplus(RECV_ADDR, tokenY.address))).to.eq(18000)        
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(7500)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenY.address))).to.eq(18000)        
     })
 
     it("debit surplus", async() => {
@@ -115,14 +115,14 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleReserves(2800, tokenX.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(0);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(2200)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(2200)
 
         // Test a partial coverage from surplus
         await tokenX.deposit(RECV_ADDR, 10000)
         await test.connect(sender).testSettleReserves(4000, tokenX.address)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(10000-1800);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL + 1800);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
 
         // No reserves and no debit should fail
         expect(test.connect(sender).testSettleReserves(1000, tokenY.address)).to.be.reverted
@@ -133,7 +133,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleLimit(-5000, tokenX.address, -5000)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(5000);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL-5000);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)   
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)   
     })
 
     it("limit qty debit", async() => {
@@ -142,7 +142,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleLimit(5000, tokenX.address, 5000)
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(INIT_BAL - 5000);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL + 5000);
-        expect((await test.querySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
+        expect((await test.testQuerySurplus(RECV_ADDR, tokenX.address))).to.eq(0)
     })
 
     // Make sure we're comparing signed and not magnitudes

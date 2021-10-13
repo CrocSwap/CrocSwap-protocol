@@ -11,6 +11,11 @@ contract TestSettleLayer is SettleLayer {
     constructor (address recv) {
         recv_ = recv;
     }
+
+    function testQuerySurplus (address recv, address token) public
+        view returns (uint128) {
+        return super.querySurplus(recv, token);
+    }
     
     function testSettleFlow (int128 flow, address token) public payable {
         testSettle(flow, token, type(int128).max, 0, false);
