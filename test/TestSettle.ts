@@ -1,12 +1,10 @@
 import { TestSettleLayer } from '../typechain/TestSettleLayer'
-import { MockFactory } from '../typechain/MockFactory'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { CrocSwapPool } from '../typechain/CrocSwapPool';
 import { Signer, BigNumber, Overrides, PayableOverrides } from 'ethers';
 import { ZERO_ADDR } from './FixedPoint';
 

@@ -183,9 +183,24 @@ describe('LiquidityCurve', () => {
       await curve.fixAccum(1, toFixedGrowth(0.75), toFixedGrowth(2.5));
      
       await curve.testLiqRecTicks(1, 3000, 0, 1000);
-      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.baseFlow()).to.equal(4); // Since price is actually in range, we pay the knock-in buffer
       expect(await curve.quoteFlow()).to.equal(150);
       expect((await curve.pullTotalLiq(1)).toNumber()).to.eq(23500);
+
+      await curve.testLiqPayTicks(1, 3000, 0, 1000);
+      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.quoteFlow()).to.equal(146);
+      expect((await curve.pullTotalLiq(1)).toNumber()).to.eq(20500);
+   })
+
+   it("liquidity on lower bump wei", async () => {
+      await curve.fixCurve(1, toSqrtPrice(1.0).sub(1), 6000, 10000);
+      await curve.fixAccum(1, toFixedGrowth(0.75), toFixedGrowth(2.5));
+     
+      await curve.testLiqRecTicks(1, 3000, 0, 1000);
+      expect(await curve.baseFlow()).to.equal(0);
+      expect(await curve.quoteFlow()).to.equal(150);
+      expect((await curve.pullTotalLiq(1)).toNumber()).to.eq(20500);
 
       await curve.testLiqPayTicks(1, 3000, 0, 1000);
       expect(await curve.baseFlow()).to.equal(0);
@@ -201,6 +216,21 @@ describe('LiquidityCurve', () => {
       expect(await curve.baseFlow()).to.equal(150);
       expect(await curve.quoteFlow()).to.equal(0);
       expect((await curve.pullTotalLiq(2)).toNumber()).to.lte(20500);
+
+      await curve.testLiqPayTicks(2, 3000, -1000, 0);
+      expect(await curve.baseFlow()).to.equal(146);
+      expect(await curve.quoteFlow()).to.equal(0);
+      expect((await curve.pullTotalLiq(2)).toNumber()).to.lte(20500);
+   })
+
+   it("liquidity on upper bump wei", async () => {
+      await curve.fixCurve(2, toSqrtPrice(1.0).sub(1), 6000, 10000);
+      await curve.fixAccum(2, toFixedGrowth(0.75), toFixedGrowth(2.5));
+
+      await curve.testLiqRecTicks(2, 3000, -1000, 0);
+      expect(await curve.baseFlow()).to.equal(150);
+      expect(await curve.quoteFlow()).to.equal(4); // Since price is actually in range, we pay the knock-in buffer
+      expect((await curve.pullTotalLiq(2)).toNumber()).to.lte(23500);
 
       await curve.testLiqPayTicks(2, 3000, -1000, 0);
       expect(await curve.baseFlow()).to.equal(146);

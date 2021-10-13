@@ -5,14 +5,52 @@ pragma experimental ABIEncoderV2;
 import "../mixins/LiquidityCurve.sol";
 import "../libraries/SwapCurve.sol";
 
-/*contract TestLiquidityCurve is LiquidityCurve {
+contract TestLiquidityCurve is LiquidityCurve {
     using TickMath for uint128;
     using CurveMath for CurveMath.CurveState;
     
     uint256 public baseFlow;
     uint256 public quoteFlow;
     CurveMath.SwapAccum public lastSwap;
-    
+
+    function liquidityReceivable (bytes32 poolIdx,
+                                  uint128 liq, int24 lower, int24 upper)
+        internal returns (uint128 base, uint128 flow) {
+        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        (base, flow) = liquidityReceivable(curve, liq, lower, upper);
+        commitCurve(poolIdx, curve);
+    }
+
+    function liquidityReceivable (bytes32 poolIdx, uint128 liq)
+        internal returns (uint128 base, uint128 flow) {
+        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        (base, flow) = liquidityReceivable(curve, liq);
+        commitCurve(poolIdx, curve);
+    }
+
+    function liquidityPayable (bytes32 poolIdx,
+                               uint128 liq, int24 lower, int24 upper)
+        internal returns (uint128 base, uint128 flow) {
+        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        (base, flow) = liquidityPayable(curve, liq, lower, upper);
+        commitCurve(poolIdx, curve);
+    }
+
+    function liquidityPayable (bytes32 poolIdx, uint128 liq, uint64 rewards,
+                               int24 lower, int24 upper)
+        internal returns (uint128 base, uint128 flow) {
+        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        (base, flow) = liquidityPayable(curve, liq, rewards, lower, upper);
+        commitCurve(poolIdx, curve);
+    }
+
+    function liquidityPayable (bytes32 poolIdx, uint128 liq)
+        internal returns (uint128 base, uint128 flow) {
+        CurveMath.CurveState memory curve = snapCurve(poolIdx);
+        (base, flow) = liquidityPayable(curve, liq);
+        commitCurve(poolIdx, curve);
+    }
+
     function testLiqRecConc (uint256 poolIdx, uint128 liq,
                              uint128 lower, uint128 upper) public {
         (baseFlow, quoteFlow) = liquidityReceivable
@@ -45,13 +83,13 @@ import "../libraries/SwapCurve.sol";
         (baseFlow, quoteFlow) = liquidityPayable(bytes32(poolIdx), liqSeed);
     }
 
-    function testSwap (uint256 poolIdx, CurveMath.SwapAccum memory accum,
+    /*function testSwap (uint256 poolIdx, CurveMath.SwapAccum memory accum,
                        uint128 bumpPrice, uint128 swapLimit) public {
         int24 bumpTick = TickMath.getTickAtSqrtRatio(bumpPrice);
         testSwapTick(poolIdx, accum, bumpTick, swapLimit);
     }
 
-    function testSwapTick (uint256 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwapTick (uint256 poolIdx, Chaining.PairFlow accum,
                            int24 bumpTick, uint128 swapLimit) public {
         CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
         SwapCurve.swapToLimit(curve, accum, bumpTick, swapLimit);
@@ -70,12 +108,12 @@ import "../libraries/SwapCurve.sol";
         uint128 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
             TickMath.MIN_SQRT_RATIO-1;
         testSwapTick(poolIdx, accum, tick, limit);
-    }
+        }*/
 
     function fixCurve (uint256 poolIdx, uint128 price,
                        uint128 ambientLiq, uint128 concLiq) public {
-        initPrice(bytes32(poolIdx), price);
-        CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
+        CurveMath.CurveState memory curve = snapCurveInit(bytes32(poolIdx));
+        curve.priceRoot_ = price;
         curve.liq_.ambientSeed_ = ambientLiq;
         curve.liq_.concentrated_ = concLiq;
         curve.priceRoot_ = price;
@@ -97,4 +135,4 @@ import "../libraries/SwapCurve.sol";
     function pullTotalLiq (uint256 poolIdx) public view returns (uint128) {
         return snapCurve(bytes32(poolIdx)).activeLiquidity();
     }
-    }*/
+}

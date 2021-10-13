@@ -1,19 +1,7 @@
-import { TestPool } from '../typechain/TestPool'
-import { MockFactory } from '../typechain/MockFactory'
-import { expect } from "chai";
-import "@nomiclabs/hardhat-ethers";
-import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
-import { solidity } from "ethereum-waffle";
-import chai from "chai";
-import { MockERC20 } from '../typechain/MockERC20';
-import { CrocSwapPool } from '../typechain/CrocSwapPool';
-import { BigNumber } from 'ethers';
 
-chai.use(solidity);
 
 /* Test behavior around infinite or zero pool boundaries. */
-describe('Pool Ininity Bounds', () => {
+/*describe('Pool Ininity Bounds', () => {
     let pool: CrocSwapPool
     let poolZero: CrocSwapPool
     let test: TestPool
@@ -373,4 +361,4 @@ describe('Pool Ininity Bounds', () => {
         expect(test.testSwap(false, 10000000, maxSqrtPrice())).to.be.reverted
         expect(test.testSwap(true, 10000000, maxSqrtPrice())).to.be.reverted
     })
-})
+})*/

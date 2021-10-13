@@ -1,4 +1,4 @@
-import { TestPool } from '../typechain/TestPool'
+/*import { TestPool } from '../typechain/TestPool'
 import { MockFactory } from '../typechain/MockFactory'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
@@ -277,4 +277,4 @@ describe('Pool dance integration', () => {
         expect(price).to.gte(1.399999)
         expect(price).to.lte(1.400001) 
     })
-})
+})*/
