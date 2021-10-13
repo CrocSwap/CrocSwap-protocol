@@ -27,13 +27,6 @@ describe('Price Improve', () => {
             .to.be.reverted
     })
 
-    it ("array length", async() => {
-        await expect(test.testThresh(true, 1024*1024, 500, UP_MULTS.slice(1), 16, 0, -5, 5))
-            .to.be.reverted
-        await expect(test.testThresh(true, 1024*1024, 500, UP_MULTS.concat([1]), 16, 0, -5, 5))
-            .to.be.reverted
-    })
-
     it ("non-improvable", async() => {
         expect(await test.testThresh(true, 0, 500, UP_MULTS, 16, 0, -5, 5))
             .to.gt(1000000000000)
@@ -114,7 +107,7 @@ describe('Price Improve', () => {
         // In quote for a high price ratio, should be lower liquidity to meet collateral threshold.
         // Should be very close to the inverted price (but not exact due to numerics).
         expect(await test.testThresh(false, 1024, 500, UP_MULTS, 128, 60025, 60000, 60001))
-            .to.equal(822600768)
+            .to.equal(822641896)
 
         // Unit price should be midway between, and almost identical between base and quote
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 0, 1, 2))
@@ -123,60 +116,15 @@ describe('Price Improve', () => {
             .to.equal(40958976)
     })
 
-    const scaled = 
-        [40958976,           // Base
-            61436928,        // 3X over 2 ticks
-            10238976,        // 1X over 4 ticks
-            27302570,        // 4X over 6 ticks
-            5118976,         // 1X over 8 ticks
-            17061546,        // 5X over 12 ticks
-            2558976,         // 1X over 16 ticks
-            10233856,        // 6X over 24 ticks
-            1278976,        // 1X over 32 ticks
-            7160834,        // 7X over 40 ticks
-            852308,        // 1X over 48 ticks
-            5111812,        // 8X over 64 ticks
-            425642,        // 1X over 96 ticks
-            3677192]        // 9X over 100 ticks (100 is arbitrary but used in test)
+    const scaled = 40958976
 
     it("scale thresh", async() => {
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+1))
-            .to.equal(scaled[0])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+2))
-            .to.equal(scaled[1])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+4))
-            .to.equal(scaled[2])
+            .to.equal(scaled)
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+6))
-            .to.equal(scaled[3])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+8))
-            .to.equal(scaled[4])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+12))
-            .to.equal(scaled[5])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+16))
-            .to.equal(scaled[6])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+24))
-            .to.equal(scaled[7])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+32))
-            .to.equal(scaled[8])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+40))
-            .to.equal(scaled[9])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+48))
-            .to.equal(scaled[10])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+64))
-            .to.equal(scaled[11])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+96))
-            .to.equal(scaled[12])
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+100))
-            .to.equal(scaled[13])
-    })
-
-    it("scale thresh between", async() => {
-        // Should map to the 12 mult, then requires 12/9 liquidity to match collateral
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+9))
-            .to.equal(22750436)
-        // Should map to the 12 mult, with 12/11 liquidity to match collateral
-        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+11))
-            .to.equal(18613062)
+            .to.equal(6825642)
+        expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 1, 1+36))
+            .to.equal(1136754)
     })
 
     it("grid pin ask wings", async() => {
@@ -216,9 +164,9 @@ describe('Price Improve', () => {
         expect(await test.testThresh(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052))
             .to.equal(7053371)
 
-        // 6 mult and 14/16 mult (wing
+        // 6 mult and a 4 mult
         expect(await test.testThresh(true, 1024, 500, UP_MULTS, 128, 128, 250, 270))
-            .to.equal(14925198)
+            .to.equal(4813406)
     })
 
     it("on grid", async() => {
