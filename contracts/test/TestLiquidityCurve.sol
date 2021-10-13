@@ -83,17 +83,43 @@ contract TestLiquidityCurve is LiquidityCurve {
         (baseFlow, quoteFlow) = liquidityPayable(bytes32(poolIdx), liqSeed);
     }
 
-    /*function testSwap (uint256 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwap (uint256 poolIdx,
+                       CurveMath.SwapAccum memory accum,
                        uint128 bumpPrice, uint128 swapLimit) public {
         int24 bumpTick = TickMath.getTickAtSqrtRatio(bumpPrice);
         testSwapTick(poolIdx, accum, bumpTick, swapLimit);
     }
 
-    function testSwapTick (uint256 poolIdx, Chaining.PairFlow accum,
+    function testSwapTick (uint256 poolIdx, CurveMath.SwapAccum memory accum,
                            int24 bumpTick, uint128 swapLimit) public {
+        Chaining.PairFlow memory flow;
+        Directives.SwapDirective memory swap;
+        PoolSpecs.Pool memory pool;
+
+        flow.baseFlow_ = accum.paidBase_;
+        flow.quoteFlow_ = accum.paidQuote_;
+        if (accum.cntx_.inBaseQty_) {
+            flow.quoteProto_ = accum.paidProto_;
+        } else {
+            flow.baseProto_ = accum.paidProto_;
+        }
+
+        swap.isBuy_ = accum.cntx_.isBuy_;
+        swap.inBaseQty_ = accum.cntx_.inBaseQty_;
+        swap.qty_ = accum.qtyLeft_;
+        swap.limitPrice_ = swapLimit;
+
+        pool.feeRate_ = accum.cntx_.feeRate_;
+        pool.protocolTake_ = accum.cntx_.protoCut_;
+        
         CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
-        SwapCurve.swapToLimit(curve, accum, bumpTick, swapLimit);
+        SwapCurve.swapToLimit(curve, flow, swap, pool, bumpTick);
         commitCurve(bytes32(poolIdx), curve);
+
+        accum.paidBase_ = flow.baseFlow_;
+        accum.paidQuote_ = flow.quoteFlow_;
+        accum.paidProto_ = !swap.inBaseQty_ ? flow.baseProto_ : flow.quoteProto_;
+        accum.qtyLeft_ = swap.qty_;
         lastSwap = accum;
     }
 
@@ -108,7 +134,7 @@ contract TestLiquidityCurve is LiquidityCurve {
         uint128 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
             TickMath.MIN_SQRT_RATIO-1;
         testSwapTick(poolIdx, accum, tick, limit);
-        }*/
+    }
 
     function fixCurve (uint256 poolIdx, uint128 price,
                        uint128 ambientLiq, uint128 concLiq) public {
