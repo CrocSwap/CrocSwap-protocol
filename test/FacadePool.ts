@@ -29,6 +29,7 @@ export class TestPool {
     quote: Promise<MockERC20>
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
+    useHotPath: boolean
 
     constructor() {
         let factory = ethers.getContractFactory("MockERC20") as Promise<ContractFactory>
@@ -56,6 +57,8 @@ export class TestPool {
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
+
+        this.useHotPath = true;
     }
 
     async fundTokens() {
@@ -124,67 +127,68 @@ export class TestPool {
     }
 
     async testMint (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
-        //let inputBytes = encodeOrderDirective(directive);
-        //return (await this.dex).connect(await this.trader).trade(inputBytes)
-
-        let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
-        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
+        return this.testMintFrom(await this.trader, lower, upper, liq)
     }
 
     async testMintOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
-        //let inputBytes = encodeOrderDirective(directive);
-        //return (await this.dex).connect(await this.other).trade(inputBytes)
-        let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
-        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
+        return this.testMintFrom(await this.other, lower, upper, liq)
     }
 
     async testBurn (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
-        /*let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)*/
-        let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
-        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
+        return this.testBurnFrom(await this.trader, lower, upper, liq)
     }
 
     async testBurnOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
-        /*let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)*/
-        let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
-        return (await this.dex).connect(await this.trader).tradeWarm(await inputBytes)
+        return this.testBurnFrom(await this.other, lower, upper, liq)
     }
 
     async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
         Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
-        let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes)
-        //return (await this.dex).connect(await this.trader).swap((await this.base).address,
-        //    (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
+        return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price)
     }
 
     async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
         Promise<ContractTransaction> {
-        await this.snapStart()
-        let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
-        let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.other).trade(inputBytes)
-        //return (await this.dex).connect(await this.other).swap((await this.base).address,
-        //    (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
+        return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
+    }
 
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: number): Promise<ContractTransaction> {
+        await this.snapStart()
+        if (this.useHotPath) {
+            let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes)
+        } else {
+            let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).trade(inputBytes)
+        }
+    }
+
+    async testBurnFrom (from: Signer, lower: number, upper: number, liq: number): Promise<ContractTransaction> {
+        await this.snapStart()
+        if (this.useHotPath) {
+            let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes)
+        } else {
+            let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).trade(inputBytes)
+        }
+    }
+
+    async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): Promise<ContractTransaction> {
+        await this.snapStart()
+        if (this.useHotPath) {
+            return (await this.dex).connect(from).swap((await this.base).address,
+                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
+        } else {
+            let directive = singleHop((await this.base).address,
+                (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).trade(inputBytes)
+        }
     }
 
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
