@@ -71,7 +71,7 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         callInitPool(base, quote, poolIdx, price);
     }
 
-    function collect (address recv, uint128 value, address token)
+    function collect (address recv, int128 value, address token)
         reEntrantLock public {
         callCollectSurplus(recv, value, token);
     }

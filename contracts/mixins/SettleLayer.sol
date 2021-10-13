@@ -41,8 +41,15 @@ contract SettleLayer is StorageLayout {
         return surplusCollateral_[key];
     }
 
-    function disburseSurplus (address recv, uint128 value, address token) internal {
-        bytes32 key = encodeSurplusKey(msg.sender, token);
+    function depositSurplus (address owner, uint128 value, address token) internal {
+        debitTransfer(owner, value, token);
+        bytes32 key = encodeSurplusKey(owner, token);
+        surplusCollateral_[key] += value;
+    }
+    
+    function disburseSurplus (address owner, address recv,
+                              uint128 value, address token) internal {
+        bytes32 key = encodeSurplusKey(owner, token);
         uint128 balance = surplusCollateral_[key];
 
         if (value == 0) { value = balance; }
