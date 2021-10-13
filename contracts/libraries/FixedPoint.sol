@@ -9,16 +9,16 @@ library FixedPoint {
     uint256 internal constant Q64 = 0x10000000000000000;
     uint256 internal constant Q48 = 0x1000000000000;
     
+    function mulQ64 (uint128 x, uint128 y) internal pure returns (uint192) {
+        return uint192((uint256(x) * uint256(y)) >> 64);
+    }
+
     function divQ64 (uint128 x, uint128 y) internal pure returns (uint192) {
         return (uint192(x) << 64) / y;
     }
 
     function divSqQ64 (uint128 x, uint128 y) internal pure returns (uint256) {
         return (uint192(x) << 64) / (uint256(y)*uint256(y));
-    }
-
-    function mulQ64 (uint128 x, uint128 y) internal pure returns (uint192) {
-        return uint192((uint256(x) * uint256(y)) >> 64);
     }
 
     function mulQ48 (uint128 x, uint64 y) internal pure returns (uint144) {

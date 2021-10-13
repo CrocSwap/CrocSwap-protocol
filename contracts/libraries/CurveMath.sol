@@ -9,6 +9,8 @@ import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
 
+import "hardhat/console.sol";
+
 /* @title Curve and swap math library
  * @notice Library that defines locally stable constant liquidity curves and
  *         swap struct, as well as functions to derive impact and aggregate 
@@ -320,9 +322,15 @@ library CurveMath {
     function liquiditySupported (uint128 collateral, bool inBase,
                                  uint128 priceX, uint128 priceY)
         internal pure returns (uint128) {
-        uint128 priceDelta = priceX > priceY ?
-            priceX - priceY : priceY - priceX;
-        return liquiditySupported(collateral, inBase, priceDelta);
+        if (!inBase) {
+            return liquiditySupported(collateral, true,
+                                      FixedPoint.recipQ64(priceX),
+                                      FixedPoint.recipQ64(priceY));
+        } else {
+            uint128 priceDelta = priceX > priceY ?
+                priceX - priceY : priceY - priceX;
+            return liquiditySupported(collateral, true, priceDelta);
+        }
     }
 
     function liquiditySupported (uint128 collateral, bool inBase, uint128 price)
