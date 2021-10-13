@@ -59,7 +59,7 @@ describe('Pool Gas Benchmarks', () => {
 
     it("mint pre-init ticks", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-100, 100, 10000), 141000)
+        await expectGas(test.testMintOther(-100, 100, 10000), 142000)
     })
 
     it("mint one fresh init", async() => {
@@ -143,7 +143,7 @@ describe('Pool Gas Benchmarks', () => {
 
     it("swap no pre-warm", async() => {
         await test.testMint(-100, 100, 10000)
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 128000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 129000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
