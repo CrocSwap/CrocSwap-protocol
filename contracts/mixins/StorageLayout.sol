@@ -62,7 +62,7 @@ contract StorageLayout {
     /**************************************************************/
     // ProtocolAccount
     /**************************************************************/
-    mapping(address => uint256) public feesAccum_;
+    mapping(address => uint128) public feesAccum_;
     /**************************************************************/
 
 
