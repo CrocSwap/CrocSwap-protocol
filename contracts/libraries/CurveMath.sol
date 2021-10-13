@@ -19,6 +19,7 @@ library CurveMath {
     using LiquidityMath for uint128;
     using CompoundMath for uint256;
     using SafeCast for uint256;
+    using SafeCast for uint192;
 
     /* All CrocSwap swaps occur along a locally stable constant-product AMM curve.
      * For large moves across tick boundaries, the state of this curve might change
@@ -261,7 +262,7 @@ library CurveMath {
      *    Y2/Z1 <= 1 
      *    Z1 >= Y2 */
     function calcQuoteDelta (uint128 liq, uint128 priceBig, uint128 priceSmall)
-        internal pure returns (uint128) {
+        private pure returns (uint128) {
         uint128 priceDelta = priceBig - priceSmall;
 
         /* For prices above one unit
@@ -314,6 +315,21 @@ library CurveMath {
         return uint256(inBaseQty ?
                        FixedPoint.mulQ64(liq, price) :
                        FixedPoint.divQ64(liq, price)).toUint128();
+    }
+
+    function liquiditySupported (uint128 collateral, bool inBase,
+                                 uint128 priceX, uint128 priceY)
+        internal pure returns (uint128) {
+        uint128 priceDelta = priceX > priceY ?
+            priceX - priceY : priceY - priceX;
+        return liquiditySupported(collateral, inBase, priceDelta);
+    }
+
+    function liquiditySupported (uint128 collateral, bool inBase, uint128 price)
+        internal pure returns (uint128) {
+        return inBase ?
+            FixedPoint.divQ64(collateral, price).toUint128By192() :
+            FixedPoint.mulQ64(collateral, price).toUint128By192();
     }
 
     /* @dev The fixed point arithmetic results in output that's a close approximation

@@ -122,16 +122,9 @@ contract MarketSequencer is TradeMatcher {
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
-        if (dir.qty_ == 0 && dir.limitPrice_ > 0) {
-           (dir.isBuy_, dir.qty_) = cntx.roll_.plugSwapGap
-               (flow, dir.inBaseQty_);
-        }
-            
+        cntx.roll_.plugSwapGap(dir, flow);   
         if (dir.qty_ != 0) {
-            //sweepSwapLiq(flow, curve.curve_, curve.pullPriceTick(), dir, cntx.pool_);
-            //curve.dirtyPrice();
-            callSwap(flow, curve, dir, cntx.pool_);
-            
+            callSwap(flow, curve, dir, cntx.pool_);            
         }
     }
 
@@ -139,17 +132,13 @@ contract MarketSequencer is TradeMatcher {
                            Directives.AmbientDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        if (dir.liquidity_ == 0) { return; }
-
-        /*(int128 base, int128 quote) = dir.isAdd_ ?
-            mintAmbient(curve.curve_, dir.liquidity_, cntx.pool_.hash_) :
-            burnAmbient(curve.curve_, dir.liquidity_, cntx.pool_.hash_);*/
-        
-        (int128 base, int128 quote) = dir.isAdd_ ?
-            callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
-            callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
-        
-        flow.accumFlow(base, quote);
+        if (dir.liquidity_ > 0) {
+            (int128 base, int128 quote) = dir.isAdd_ ?
+                callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
+                callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
+            
+            flow.accumFlow(base, quote);
+        }
     }
 
     function applyConcentrateds (Chaining.PairFlow memory flow,
@@ -162,29 +151,28 @@ contract MarketSequencer is TradeMatcher {
                     dirs[i].sliceBookend(j);
 
                 (int128 nextBase, int128 nextQuote) = applyConcentrated
-                    (curve, cntx, lowTick, highTick, isAdd, liquidity);
+                    (curve, flow, cntx, lowTick, highTick, isAdd, liquidity);
                 flow.accumFlow(nextBase, nextQuote);
             }
         }
     }
 
     function applyConcentrated (CurveCache.Cache memory curve,
+                                Chaining.PairFlow memory flow,
                                 Chaining.ExecCntx memory cntx,
                                 int24 lowTick, int24 highTick, bool isAdd, uint128 liq)
         private returns (int128, int128) {
+        if (liq == 0) {
+            (liq, isAdd) = Chaining.plugLiquidity(cntx.roll_, curve.curve_,
+                                                  flow, lowTick, highTick);
+        }
+        
         cntx.improve_.verifyFit(lowTick, highTick, isAdd, liq,
                                 cntx.pool_.head_.tickSize_, curve.pullPriceTick());
-
+        
         if (liq == 0) { return (0, 0); }
-        if (isAdd) {
-            /*return mintRange(curve.curve_, curve.pullPriceTick(),
-              lowTick, highTick, liq, cntx.pool_.hash_);*/
-            //callMintAmbient(curve, liq, cntx.pool_.hash_);
-            return callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
-        } else {
-            /*return burnRange(curve.curve_, curve.pullPriceTick(),
-              lowTick, highTick, liq, cntx.pool_.hash_);*/
-            return callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
-        }
+        return isAdd ?
+            callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_) :
+            callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
     }
 }

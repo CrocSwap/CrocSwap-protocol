@@ -134,13 +134,9 @@ library PriceGrid {
      * add liquidity inside the grid. */
     function convertToLiq (uint128 collateral, int24 tick, uint24 wingSize, bool inBase)
         private pure returns (uint128) {
-        if (inBase) {
-            uint128 priceX = tick.getSqrtRatioAtTick();
-            uint128 priceY = (tick + int24(wingSize)).getSqrtRatioAtTick();
-            return uint256(FixedPoint.divQ64(collateral, priceY - priceX)).toUint128();
-        } else {
-            return convertToLiq(collateral, -tick, wingSize, true);
-        }
+        uint128 priceTick = tick.getSqrtRatioAtTick();
+        uint128 priceWing = (tick + int24(wingSize)).getSqrtRatioAtTick();
+        return CurveMath.liquiditySupported(collateral, inBase, priceTick, priceWing);
     }
 
     function canImprove (ImproveSettings memory set, int24 priceTick,

@@ -7,7 +7,7 @@ import "../libraries/Directives.sol";
 contract TestPriceGrid {
 
     function testThresh (bool inBase, uint128 unit, uint16 awayTicks,
-                         int8[] calldata mults, uint16 tickSize,
+                         int8[] calldata, uint16 tickSize,
                          int24 priceTick, int24 bidTick, int24 askTick)
         public pure returns (uint128) {
         return PriceGrid.improveThresh
@@ -37,7 +37,7 @@ contract TestPriceGrid {
     }
 
     function testVerify (bool inBase, uint128 unit, uint16 awayTicks,
-                         int8[] calldata mults, uint16 tickSize,
+                         int8[] calldata, uint16 tickSize,
                          int24 priceTick, int24 bidTick, int24 askTick,
                          bool isAdd, uint128 liq) public pure {
         return PriceGrid.verifyFit(
