@@ -27,22 +27,14 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    constructor (address authority) {
-        authority_ = authority;
-        coldPath_ = address(new ColdPath());
-        warmPath_ = address(new WarmPath());
-        longPath_ = address(new LongPath());
-        microPath_ = address(new MicroPaths());
-    }
-
-    /*constructor (address authority, address coldPath, address warmPath,
+    constructor (address authority, address coldPath, address warmPath,
                  address longPath, address microPath) {
         authority_ = authority;
         coldPath_ = coldPath;
         warmPath_ = warmPath;
         longPath_ = longPath;
-        microPath = microPath_;
-        }*/
+        microPath_ = microPath;
+    }
     
     function swap (address base, address quote,
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
@@ -87,27 +79,19 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     function protocolCmd (bytes calldata input) protocolOnly public {
         callProtocolCmd(input);
     }
-    
-    /*function setTemplate (uint24 poolIdx, uint24 feeRate,
-                          uint8 protocolTake, uint16 tickSize,
-                          address permitOracle)
-        protocolOnly public {
-        callSetTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
-        }*/
-
-    /*function revisePool (address base, address quote, uint24 poolIdx,
-                         uint24 feeRate, uint8 protocolTake, uint16 tickSize)
-        protocolOnly public {
-        callRevisePool(base, quote, poolIdx, feeRate, protocolTake, tickSize);
-    }
-
-    function pegPriceImprove (address token, uint128 unitTickCollateral,
-                              uint16 awayTickTol)
-        protocolOnly public {
-        callPegPriceImprove(token, unitTickCollateral, awayTickTol);
-        }*/
-
-    /*function setAuthority (address authority) protocolOnly public {
-        authority_ = authority;
-        }*/
 }
+
+
+
+/* This is a more convenient constructor to call, but the deploy transaction is 100s
+ * kb and will get droppped by geth. Useful for testing environments. */
+contract CrocSwapDexSeed  is CrocSwapDex {
+    
+    constructor (address authority)
+        CrocSwapDex(authority,
+                    address(new ColdPath()),
+                    address(new WarmPath()),
+                    address(new LongPath()),
+                    address(new MicroPaths())) { }
+}
+

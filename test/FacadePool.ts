@@ -46,15 +46,9 @@ export class TestPool {
         this.auth = accts.then(a => a[1])
         this.other = accts.then(a => a[2])
 
-        factory = ethers.getContractFactory("CrocSwapDex")
+        factory = ethers.getContractFactory("CrocSwapDexSeed")
         this.dex = factory.then(f => this.auth.then(a => 
             f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
-        
-        factory.then(async f => this.auth.then(async a => {
-                let addr = await (a.getAddress());
-                console.log((f.getDeployTransaction(addr).data as string).length)
-        }))
-
 
         factory = ethers.getContractFactory("QueryHelper")
         this.query = factory.then(f => this.dex.then(
