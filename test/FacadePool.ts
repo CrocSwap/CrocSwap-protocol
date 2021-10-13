@@ -1,4 +1,3 @@
-import { TestDex } from '../typechain/TestDex'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
