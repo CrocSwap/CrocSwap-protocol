@@ -43,6 +43,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function mint (address base, address quote,
                    uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
+
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(bidTick, askTick, liq, pool);
         settlePairFlow(base, quote, baseFlow, quoteFlow);
@@ -51,6 +53,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function burn (address base, address quote,
                    uint24 poolIdx, int24 bidTick, int24 askTick, uint128 liq) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
+        
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool);
         settlePairFlow(base, quote, baseFlow, quoteFlow);
@@ -60,6 +64,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function mint (address base, address quote,
                        uint24 poolIdx, uint128 liq) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
+        
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(liq, pool);
         settlePairFlow(base, quote, baseFlow, quoteFlow);
@@ -68,6 +74,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function burn (address base, address quote,
                    uint24 poolIdx, uint128 liq) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
+        
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool);
         settlePairFlow(base, quote, baseFlow, quoteFlow);

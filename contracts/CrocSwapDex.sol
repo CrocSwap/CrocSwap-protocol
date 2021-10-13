@@ -46,6 +46,8 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         dir.limitPrice_ = limitPrice;
 
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermit(pool, base, quote, PoolRegistry.SWAP_ACT_CODE);
+        
         Chaining.PairFlow memory flow = swapOverPool(dir, pool);
 
         Directives.SettlementChannel memory settle;

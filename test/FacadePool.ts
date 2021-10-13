@@ -91,7 +91,8 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, (await this.permit).address, ZERO_ADDR, POOL_IDX, feeRate, protoTake, tickSize, 0))
+                66, (await this.permit).address, (await this.permit).address, POOL_IDX, 
+                feeRate, protoTake, tickSize, 0))
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price))

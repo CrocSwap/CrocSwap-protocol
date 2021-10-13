@@ -9,15 +9,15 @@ contract MockPermit is ICrocSwapPermitOracle {
     address public user_;
     address public base_;
     address public quote_;
-    uint256 public swapQty_;
+    uint256 public code_;
     bool public passThru_;
 
     function setMatching (address user, address base, address quote,
-                          uint256 swapQty) public {
+                          uint8 tradeCode) public {
         user_ = user;
         base_ = base;
         quote_ = quote;
-        swapQty_ = swapQty;
+        code_ = tradeCode;
     }
 
     function setPassThru (bool passThru) public {
@@ -26,12 +26,12 @@ contract MockPermit is ICrocSwapPermitOracle {
         
     
     function isApprovedForCrocPool (address nUser, address nBase, address nQuote,
-                                    Directives.PoolDirective memory dir)
+                                    uint8 tradeCode)
         public view override returns (bool) {
         if (passThru_) { return true; }
         return nUser == user_ &&
             nBase == base_ &&
             nQuote == quote_ &&
-            dir.swap_.qty_ == swapQty_;
+            code_ == tradeCode;
     }
 }

@@ -14,6 +14,11 @@ describe('permissioned pool', () => {
     let quoteToken: MockERC20
     const feeRate = 225 * 100
 
+    const SWAP_ACT_CODE = 1;
+    const MINT_ACT_CODE = 2;
+    const BURN_ACT_CODE = 3;
+    const COMP_ACT_CODE = 4;
+
     beforeEach("deploy",  async () => {
        test = new TestPool()
        await test.fundTokens()
@@ -24,32 +29,38 @@ describe('permissioned pool', () => {
        await test.fundTokens()    
        await (await test.permit).setPassThru(true)
        await test.testMint(-10000, 10000, 10000);
+
+       test.useHotPath = true
     })
 
     it("permit oracle", async() => {
         await (await test.permit).setPassThru(false)
         await (await test.permit).setMatching(await (await test.trader).getAddress(),
-            (await test.base).address, (await test.quote).address, 500)
+            (await test.base).address, (await test.quote).address, SWAP_ACT_CODE)
 
         // Should be approved
         await test.testSwap(true, true, 500, toSqrtPrice(2.0))
     
-        // Should fail due to swapQty
-        await expect(test.testSwap(true, true, 400, toSqrtPrice(2.0))).to.be.reverted
-
         // Fail due to base address
         await (await test.permit).setMatching(await (await test.trader).getAddress(),
-            ZERO_ADDR, (await test.quote).address, 500)
+            ZERO_ADDR, (await test.quote).address, SWAP_ACT_CODE)
         await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
 
         // Fail due to quote address
         await (await test.permit).setMatching(await (await test.trader).getAddress(),
-            (await test.base).address, ZERO_ADDR, 500)
+            (await test.base).address, ZERO_ADDR, SWAP_ACT_CODE)
         await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
 
         // Fail due to msg.sender
         await (await test.permit).setMatching(ZERO_ADDR,
-            (await test.base).address, (await test.quote).address, 500)
+            (await test.base).address, (await test.quote).address, SWAP_ACT_CODE)
         await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
+
+        // Fail due to wrong trade code (COMP composite becuase no longer using hot path)
+        test.useHotPath = false
+        await (await test.permit).setMatching(await (await test.trader).getAddress(),
+        (await test.base).address, (await test.quote).address, SWAP_ACT_CODE)
+        await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
+
     })
 })

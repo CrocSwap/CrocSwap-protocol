@@ -42,8 +42,10 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
                 cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
                                        dir.poolIdx_);
 
+                verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_,
+                             PoolRegistry.COMP_ACT_CODE);
                 targetRoll(cntx.roll_, dir.chain_, pairs);
-                verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_, dir);
+
                 Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
                 pairs.flow_.foldFlow(poolFlow);
             }

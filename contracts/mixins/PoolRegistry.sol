@@ -14,12 +14,17 @@ contract PoolRegistry is StorageLayout {
 
     using PoolSpecs for PoolSpecs.Pool;
 
+    uint8 constant SWAP_ACT_CODE = 1;
+    uint8 constant MINT_ACT_CODE = 2;
+    uint8 constant BURN_ACT_CODE = 3;
+    uint8 constant COMP_ACT_CODE = 4;
+
     function verifyPermit (PoolSpecs.PoolCursor memory pool,
                            address base, address quote,
-                           Directives.PoolDirective memory dir) view internal {
+                           uint8 actionCode) view internal {
         if (pool.head_.permitOracle_ != address(0)) {
             bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .isApprovedForCrocPool(msg.sender, base, quote, dir);
+                .isApprovedForCrocPool(msg.sender, base, quote, actionCode);
             require(approved, "Z");
         }
     }
