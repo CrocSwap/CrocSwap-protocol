@@ -122,17 +122,23 @@ contract MarketSequencer is TradeMatcher {
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
-        cntx.roll_.plugSwapGap(dir, flow);   
+        if (isRoll(dir)) {
+            cntx.roll_.plugSwapGap(dir, flow);
+        }
         if (dir.qty_ != 0) {
             callSwap(flow, curve, dir, cntx.pool_);            
         }
+    }
+
+    function isRoll (Directives.SwapDirective memory dir) private pure returns (bool) {
+        return dir.limitPrice_ > 0 && dir.qty_ == 0;
     }
 
     function applyAmbient (Chaining.PairFlow memory flow,
                            Directives.AmbientDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        if (dir.liquidity_ > 0) {
+        if (isRoll(dir.liquidity_, dir.isAdd_)) {
             (int128 base, int128 quote) = dir.isAdd_ ?
                 callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
                 callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
@@ -162,7 +168,7 @@ contract MarketSequencer is TradeMatcher {
                                 Chaining.ExecCntx memory cntx,
                                 int24 lowTick, int24 highTick, bool isAdd, uint128 liq)
         private returns (int128, int128) {
-        if (liq == 0) {
+        if (isRoll(liq, isAdd)) {
             (liq, isAdd) = Chaining.plugLiquidity(cntx.roll_, curve.curve_,
                                                   flow, lowTick, highTick);
         }
@@ -175,4 +181,9 @@ contract MarketSequencer is TradeMatcher {
             callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_) :
             callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
     }
+
+    function isRoll (uint128 liq, bool isAdd) private pure returns (bool) {
+        return liq == 0 && isAdd == true;
+    }
+
 }

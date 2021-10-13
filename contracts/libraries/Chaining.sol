@@ -41,13 +41,11 @@ library Chaining {
     function plugSwapGap (RollTarget memory roll,
                           Directives.SwapDirective memory swap,
                           PairFlow memory flow) internal pure {
-        if (swap.qty_ == 0 && swap.limitPrice_ > 0) {
-            require(swap.inBaseQty_ == roll.inBaseQty_);
-            int128 swapQty = totalBalance(roll, flow);
-
-            swap.isBuy_ = swap.inBaseQty_ ? (swapQty < 0) : (swapQty > 0);
-            swap.qty_ = swapQty > 0 ? uint128(swapQty) : uint128(-swapQty);
-        }
+        require(swap.inBaseQty_ == roll.inBaseQty_);
+        int128 swapQty = totalBalance(roll, flow);
+        
+        swap.isBuy_ = swap.inBaseQty_ ? (swapQty < 0) : (swapQty > 0);
+        swap.qty_ = swapQty > 0 ? uint128(swapQty) : uint128(-swapQty);
     }
 
     function plugLiquidity (RollTarget memory roll,

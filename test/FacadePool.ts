@@ -58,7 +58,7 @@ export class TestPool {
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
-        this.useHotPath = true;
+        this.useHotPath = false;
     }
 
     async fundTokens() {
