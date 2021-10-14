@@ -31,8 +31,8 @@ describe('Protocol Account', () => {
        owner = (await ethers.getSigners())[1]
        outsider = (await ethers.getSigners())[2]
 
-       baseToken = await sortBaseToken(tokenX, tokenY)
-       quoteToken = await sortQuoteToken(tokenX, tokenY)
+       baseToken = await sortBaseToken(await tokenX, await tokenY)
+       quoteToken = await sortQuoteToken(await tokenX, await tokenY)
 
        let baseAddr = baseToken.address
        let quoteAddr = quoteToken.address

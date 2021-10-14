@@ -78,7 +78,6 @@ describe('Settle Layer', () => {
     })
 
     it("credit ether", async() => {
-        // First add ether to the test address...
         let overrides = { value: BigNumber.from(75000) }
         await test.connect(sender).testSettleFlow(75000, ZERO_ADDR, overrides)
 
@@ -93,8 +92,25 @@ describe('Settle Layer', () => {
         expect(test.connect(sender).testSettleFlow(25000, ZERO_ADDR, overrides)).to.be.reverted
     })
 
+    it("debit ether overpay", async() => {
+        let recvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+        let overrides = { value: BigNumber.from(100000) }
+        await test.connect(sender).testSettleFlow(25000, ZERO_ADDR, overrides)
+        expect((await test.getMyBalance())).to.equal(25000)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(75000 + recvBal)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+    })
+
+    it("debit ether overpay surplus", async() => {
+        let recvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+        let overrides = { value: BigNumber.from(100000) }
+        await test.connect(sender).testSettleReserves(25000, ZERO_ADDR, overrides)
+        expect((await test.getMyBalance())).to.equal(100000)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(recvBal)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(75000)
+    })
+
     it("credit ether shortfall", async() => {
-        // First add ether to the test address...
         let overrides = { value: BigNumber.from(84999) }
         await test.connect(sender).testSettleFlow(84999, ZERO_ADDR, overrides)
         expect(test.connect(sender).testSettleFlow(-85000, ZERO_ADDR)).to.be.reverted
@@ -188,8 +204,8 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(60000, tokenX.address)
         expect((await test.hasSpentEth())).to.eq(false)
 
-        let overrides = { value: BigNumber.from(75000) }
-        await test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)
+        let overrides = { value: BigNumber.from(90000) }
+        await test.connect(sender).testSettleFlow(90000, ZERO_ADDR, overrides)
         expect((await test.hasSpentEth())).to.eq(true)
 
         await test.connect(sender).testSettleFlow(-50000, tokenX.address)
@@ -199,7 +215,7 @@ describe('Settle Layer', () => {
         await test.connect(sender).testSettleFlow(-40000, ZERO_ADDR)
         expect((await test.hasSpentEth())).to.eq(true)
 
-        overrides = { value: BigNumber.from(150000) }
+        overrides = { value: BigNumber.from(250000) }
         expect(test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)).to.be.reverted
     })
 
