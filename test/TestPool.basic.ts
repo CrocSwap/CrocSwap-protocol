@@ -1,4 +1,4 @@
-import { TestPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -11,17 +11,17 @@ chai.use(solidity);
 
 describe('Pool', () => {
     let test: TestPool
-    let baseToken: MockERC20
-    let quoteToken: MockERC20
+    let baseToken: Token
+    let quoteToken: Token
     const feeRate = 225 * 100
 
     beforeEach("deploy",  async () => {
-       test = new TestPool()
-       await test.fundTokens()
+       test = await makeTokenPool()
        baseToken = await test.base
        quoteToken = await test.quote
 
        await test.initPool(feeRate, 0, 1, 1.5)
+       test.useHotPath = false
     })
 
     const MINT_BUFFER = 4;
@@ -492,4 +492,42 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31)        
     })
+
+    it("mint ambient", async() => {
+        await test.testMintAmbient(20000);
+        await test.testMintAmbient(5000);
+        
+        expect(await test.liquidity()).to.equal(25000*1024)
+        expect(await test.snapQuoteOwed()).to.equal(4180466)
+        expect(await test.snapBaseOwed()).to.equal(6270697)
+    })
+
+    it("burn ambient", async() => {
+        await test.testMintAmbient(20000);
+        await test.testBurnAmbient(3000);
+        await test.testBurnAmbient(5000);
+        
+        expect(await test.liquidity()).to.equal(12000*1024)
+        expect(await test.snapQuoteOwed()).to.equal(-4180462)
+        expect(await test.snapBaseOwed()).to.equal(-6270693)
+    })
+
+
+    it("mint ambient with prev growth", async() => {
+        await test.testMintAmbient(5000);
+        await test.testMint(-5000, 8000, 1000); 
+
+        await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
+        await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.5))
+
+        let openLiq = (await test.liquidity()).toNumber()
+
+        await test.testMintAmbient(15000);
+        const SEED_SHRINK = 49894 // Seed deflator given 0.003% fee growth
+        expect(await test.liquidity()).to.equal(openLiq + (15000*1024 + SEED_SHRINK))
+
+        await test.testBurnAmbient(15000);
+        expect(await test.liquidity()).to.equal(openLiq)
+    })
+
 })

@@ -35,6 +35,24 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
     }
 }
 
+export function simpleMintAmbient (poolIdx: number, liq: number): PoolDirective  {
+    return { 
+       poolIdx: poolIdx,
+       passive: {
+           ambient: { isAdd: BigNumber.from(liq).gte(0), liquidity: BigNumber.from(liq).abs() },
+           concentrated: [],
+       },
+       swap: {
+           liqMask: 0,
+           isBuy: false,
+           inBaseQty: false,
+           qty: BigNumber.from(0),
+           limitPrice: BigNumber.from(0)
+       },
+       chain: { rollExit: false, swapDefer: false, offsetSurplus: false}
+   }
+}
+
 export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean, 
     qty: number, limitPrice: BigNumber): PoolDirective  {
     return { 
