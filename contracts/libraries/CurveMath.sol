@@ -261,39 +261,26 @@ library CurveMath {
      *    T2F + T1F * T2R/T1 <= 2
      *    T1F * T2R/T1 <=  1      (since T2F as a round-down is always < 1)
      *    T2R/T1 <= 1             (since T1F as a round-down is always < 1)
-     *    Y2/Z1 <= 1 
-     *    Z1 >= Y2 */
+     *    Y2/Z2 >= 1
+     *    Z2 >= Y2 */
     function calcQuoteDelta (uint128 liq, uint128 priceBig, uint128 priceSmall)
         private pure returns (uint128) {
         uint128 priceDelta = priceBig - priceSmall;
 
-        /* For prices above one unit
-         *     T1 = mulDiv(L, d, P')
-         *     T2 = mulDiv(T1, Q64, P)
-         *
-         * By definition P >= Q64, therefore satisfies Z1>Y2 condition for numrical
-         * stability. */
-        if (priceBig >= FixedPoint.Q64) {
-            // By definition the larger price is always bigger than the delta, therefore
-            // this term is always guaranteed to be smaller L and fit in 128-bit
-            // precision.
-            uint256 termOne = uint256(liq) * uint256(priceDelta) / uint256(priceBig);
-            uint256 termTwo = FixedPoint.divQ64(uint128(termOne), priceSmall);
-            return termTwo.toUint128();
-        } else {
-            /* Prices below one unit:
-             *     T1 = mulDiv(L, Q64, P')
-             *     T2 = mulDiv(T1, d, P)
-             *
-             * By definition Q64>P, therefore Z1>Y2 condition holds for numerical 
-             * stability. */
-            uint192 termOne = FixedPoint.divQ64(liq, priceBig);
+        // This is guaranteed to be at most 196 bits
+        uint256 termOne = FixedPoint.divQ64(liq, priceSmall);
+        
+        // As long as the final result doesn't overflow from 128-bits, this term is
+        // guaranteed not to overflow from 256 bits. That's because the final divisor
+        // can be at most 128-bits, therefore this intermediate term must be 256 bits
+        // or less.
+        uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceBig);
 
-            // All price terms, including delta are at most 64-bits. Therefore this
-            // calculation fits safely in 256-bits.
-            uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceSmall);
-            return termTwo.toUint128();
-        }
+        // By definition priceBig is always larger than priceDelta. Therefore the above
+        // condition of Z2 >= Y2 is satisfied and the equation caps at a maximum of 2
+        // wei of precision loss.
+        uint256 termThree = termTwo / uint256(priceBig);
+        return termThree.toUint128();
     }
 
     /* @notice Returns the amount of virtual reserves give the price and liquidity of the
