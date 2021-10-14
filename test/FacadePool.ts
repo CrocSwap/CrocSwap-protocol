@@ -151,7 +151,7 @@ export class TestPool {
                 tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
-                toSqrtPrice(price))
+                toSqrtPrice(price), this.overrides)
         await this.testPegPriceImprove(1024*1024*1024*1024, 50)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
@@ -168,7 +168,7 @@ export class TestPool {
                 feeRate, protoTake, tickSize, 0))
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
-                toSqrtPrice(price))
+                toSqrtPrice(price), this.overrides)
     }
 
     async testSetInitLiq (initLiq: number) {
@@ -378,6 +378,11 @@ export class TestPool {
     async traderBalance (token: Promise<MockERC20>): Promise<BigNumber> {
         let addr = (await (await this.trader).getAddress())
         return (await token).balanceOf(addr)
+    }
+
+    async prototypeOrder(): Promise<OrderDirective> {
+        return singleHop((await this.base).address,
+            (await this.quote).address, simpleMintAmbient(POOL_IDX, 0))
     }
 }
 
