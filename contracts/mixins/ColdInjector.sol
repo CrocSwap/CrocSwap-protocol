@@ -58,12 +58,13 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_.priceRoot_, 
               curve.curve_.liq_.ambientSeed_,
               curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.accum_.ambientGrowth_,
+              curve.curve_.accum_.concTokenGrowth_,
               liq, poolHash));
         require(success);
         
         (basePaid, quotePaid,
-         curve.curve_.liq_.concentrated_) = 
+         curve.curve_.liq_.ambientSeed_) = 
             abi.decode(output, (int128, int128, uint128));
     }
 
@@ -77,14 +78,14 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_.priceRoot_, 
               curve.curve_.liq_.ambientSeed_,
               curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.accum_.ambientGrowth_,
+              curve.curve_.accum_.concTokenGrowth_,
               liq, poolHash));
         require(success);
         
         (basePaid, quotePaid,
-         curve.curve_.liq_.ambientSeed_,
-         curve.curve_.liq_.concentrated_) = 
-            abi.decode(output, (int128, int128, uint128, uint128));
+         curve.curve_.liq_.ambientSeed_) = 
+            abi.decode(output, (int128, int128, uint128));
     }
     
 

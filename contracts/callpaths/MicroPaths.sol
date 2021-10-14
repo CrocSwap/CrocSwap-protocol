@@ -20,7 +20,7 @@ contract MicroPaths is MarketSequencer {
     function burnRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,
                         int24 lowTick, int24 highTick, uint128 liq, bytes32 poolHash)
-        public returns (int128 baseFlow, int128 quoteFlow,
+        public payable returns (int128 baseFlow, int128 quoteFlow,
                         uint128 seedOut, uint128 concOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
@@ -38,7 +38,7 @@ contract MicroPaths is MarketSequencer {
 
 
     function mintRange (uint128, int24, int24)
-        public returns (int128 baseFlow, int128 quoteFlow,
+        public payable returns (int128 baseFlow, int128 quoteFlow,
                         uint128 seedOut, uint128 concOut)  {
         
     }
@@ -46,7 +46,7 @@ contract MicroPaths is MarketSequencer {
     function mintRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,
                         int24 lowTick, int24 highTick, uint128 liq, bytes32 poolHash)
-        public returns (int128 baseFlow, int128 quoteFlow,
+        public payable returns (int128 baseFlow, int128 quoteFlow,
                         uint128 seedOut, uint128 concOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
@@ -66,7 +66,7 @@ contract MicroPaths is MarketSequencer {
     function burnAmbient (uint128 price, uint128 seed, uint128 conc,
                           uint64 seedGrowth, uint64 concGrowth,
                           uint128 liq, bytes32 poolHash)
-        public returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
+        public payable returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
         curve.liq_.ambientSeed_ = seed;
@@ -83,7 +83,7 @@ contract MicroPaths is MarketSequencer {
     function mintAmbient (uint128 price, uint128 seed, uint128 conc,
                           uint64 seedGrowth, uint64 concGrowth,
                           uint128 liq, bytes32 poolHash)
-        public returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
+        public payable returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
         curve.liq_.ambientSeed_ = seed;
@@ -100,9 +100,9 @@ contract MicroPaths is MarketSequencer {
     function sweepSwap (CurveMath.CurveState memory curve, int24 midTick,
                         Directives.SwapDirective memory swap,
                         PoolSpecs.PoolCursor memory pool)
-        public returns (Chaining.PairFlow memory accum,
-                        uint128 priceOut, uint128 seedOut, uint128 concOut,
-                        uint64 ambientOut, uint64 concGrowthOut) {
+        public payable returns (Chaining.PairFlow memory accum,
+                                uint128 priceOut, uint128 seedOut, uint128 concOut,
+                                uint64 ambientOut, uint64 concGrowthOut) {
         sweepSwapLiq(accum, curve, midTick, swap, pool);
         
         priceOut = curve.priceRoot_;

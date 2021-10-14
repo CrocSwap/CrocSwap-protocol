@@ -23,7 +23,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    function tradeWarm (bytes calldata input) public {
+    function tradeWarm (bytes calldata input) public payable {
         (uint8 code, address base, address quote, uint24 poolIdx,
          int24 bidTick, int24 askTick, uint128 liq) =
             abi.decode(input, (uint8,address,address,uint24,int24,int24,uint128));

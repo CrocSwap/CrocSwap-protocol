@@ -38,7 +38,7 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     
     function swap (address base, address quote,
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                   uint128 limitPrice) reEntrantLock public {
+                   uint128 limitPrice) reEntrantLock public payable {
         Directives.SwapDirective memory dir;
         dir.isBuy_ = isBuy;
         dir.inBaseQty_ = inBaseQty;
@@ -60,21 +60,21 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         accumProtocolFees(flow, base, quote); // Make sure to call before clipping
     }
 
-    function trade (bytes calldata input) reEntrantLock public {
+    function trade (bytes calldata input) reEntrantLock public payable {
         callTradePath(input);
     }
 
-    function tradeWarm (bytes calldata input) reEntrantLock public {
+    function tradeWarm (bytes calldata input) reEntrantLock public payable {
         callWarmPath(input);
     }
 
     function initPool (address base, address quote, uint24 poolIdx, uint128 price)
-        reEntrantLock public {
+        reEntrantLock public payable {
         callInitPool(base, quote, poolIdx, price);
     }
 
     function collect (address recv, int128 value, address token)
-        reEntrantLock public {
+        reEntrantLock public payable {
         callCollectSurplus(recv, value, token);
     }
 

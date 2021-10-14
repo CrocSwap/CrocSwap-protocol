@@ -23,7 +23,7 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    function trade (bytes calldata input) public {
+    function trade (bytes calldata input) public payable {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
@@ -51,10 +51,10 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             }
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
-            int128 settleFlow = pairs.clipFlow();                                       
+            int128 settleFlow = pairs.clipFlow();
             hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
                                         hasSpentTxSend);
-                                        settleChannel = order.hops_[i].settle_;
+            settleChannel = order.hops_[i].settle_;
         }
 
         settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 

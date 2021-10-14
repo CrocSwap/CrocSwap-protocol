@@ -23,7 +23,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using Chaining for Chaining.PairFlow;
 
     function initPool (address base, address quote, uint24 poolIdx,
-                       uint128 price) public {
+                       uint128 price) public payable {
         PoolSpecs.PoolCursor memory pool = registerPool(base, quote, poolIdx);
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, 0);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
@@ -68,7 +68,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         disburseProtocolFees(authority_, token);
     }
 
-    function colllectSurplus (address recv, int128 value, address token) public {
+    function colllectSurplus (address recv, int128 value, address token) public payable {
         if (value < 0) {
             depositSurplus(msg.sender, uint128(-value), token);
         } else {

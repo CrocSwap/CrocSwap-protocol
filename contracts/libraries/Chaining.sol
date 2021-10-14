@@ -49,8 +49,8 @@ library Chaining {
     }
 
     function plugLiquidity (RollTarget memory roll,
-                               CurveMath.CurveState memory curve,
-                               PairFlow memory flow, int24 lowTick, int24 highTick)
+                            CurveMath.CurveState memory curve,
+                            PairFlow memory flow, int24 lowTick, int24 highTick)
         internal pure returns (uint128 liq, bool isAdd) {
         uint128 collateral;
         (collateral, isAdd) = collateralDemand(roll, flow);
@@ -60,13 +60,12 @@ library Chaining {
         if (isAdd) { liq = liq.shaveRoundLots(); }
     }
 
-    function plugLiquidityGap (RollTarget memory roll,
-                               CurveMath.CurveState memory curve,
-                               PairFlow memory flow)
+    function plugLiquidity (RollTarget memory roll,
+                            CurveMath.CurveState memory curve,
+                            PairFlow memory flow)
         internal pure returns (uint128 liq, bool isAdd) {
         uint128 collateral;
         (collateral, isAdd) = collateralDemand(roll, flow);
-
         liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
     }
 
