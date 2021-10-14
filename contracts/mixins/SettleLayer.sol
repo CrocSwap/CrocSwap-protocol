@@ -10,6 +10,7 @@ import './StorageLayout.sol';
 import "hardhat/console.sol";
 
 contract SettleLayer is StorageLayout {
+    using SafeCast for uint256;
     using TokenFlow for address;
     
     function settleFlat (address recv, int128 flow,
@@ -42,7 +43,7 @@ contract SettleLayer is StorageLayout {
     }
 
     function depositSurplus (address owner, uint128 value, address token) internal {
-        debitTransfer(owner, value, token);
+        debitTransfer(owner, value, token, false);
         bytes32 key = encodeSurplusKey(owner, token);
         surplusCollateral_[key] += value;
     }
@@ -89,7 +90,7 @@ contract SettleLayer is StorageLayout {
             debit = debitSurplus(recv, value, token);
         }
         if (debit > 0) {
-            debitTransfer(recv, debit, token);
+            debitTransfer(recv, debit, token, useReserves);
         }
     }
 
@@ -110,13 +111,26 @@ contract SettleLayer is StorageLayout {
         }
     }
 
-    function debitTransfer (address recv, uint128 value, address token) private {
-        // markCumulative() makes sure that the user can't double spend msg.value
-        // on multiple Ether debits.
+    function debitTransfer (address recv, uint128 value, address token,
+                            bool useReserves) private {
+        // Don't worry about double spend here, becuase markCumulative() previously
+        // asserts that there's not multiple Ether debit calls in a single transaction
         if (token.isEtherNative()) {
-            require(msg.value >= value, "EC");
+            collectEther(recv, value, useReserves);
         } else {
             collectToken(recv, value, token);
+        }
+    }
+
+    function collectEther (address recv, uint128 value, bool useReserves) private {
+        require(msg.value >= value, "EC");
+        uint128 overpay = (msg.value).toUint128() - value;
+        if (overpay > 0) {
+            if (useReserves) {
+                creditSurplus(recv, overpay, address(0));
+            } else {
+                TransferHelper.safeEtherSend(recv, overpay);
+            }
         }
     }
 
