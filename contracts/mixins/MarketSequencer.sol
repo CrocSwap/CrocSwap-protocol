@@ -139,10 +139,14 @@ contract MarketSequencer is TradeMatcher {
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
         if (isRoll(dir.liquidity_, dir.isAdd_)) {
+            cntx.roll_.plugLiquidity(curve.curve_, flow);
+        }
+        
+        if (dir.liquidity_ > 0) {
             (int128 base, int128 quote) = dir.isAdd_ ?
                 callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
                 callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
-            
+        
             flow.accumFlow(base, quote);
         }
     }
