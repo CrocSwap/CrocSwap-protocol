@@ -11,7 +11,7 @@ chai.use(solidity);
 
 /* Test behavior around tick bump boundary conditions. */
 
-describe('Pool Bump', () => {
+/*describe('Pool Bump', () => {
     let test: TestPool
     let baseToken: MockERC20
     let quoteToken: MockERC20
@@ -478,5 +478,5 @@ describe('Pool Bump', () => {
         price = (await pool.slot0()).sqrtPriceX96
         expect(price).to.equal(toSqrtPrice(0.99995))
         expect(await pool.liquidity()).to.equal(65*1024 + 2731)
-    })*/
-})
+    })
+})*/

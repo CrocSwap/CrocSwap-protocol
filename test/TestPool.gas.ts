@@ -1,4 +1,4 @@
-import { TestPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -15,17 +15,13 @@ const METRIC_PROFILE = false
 
 describe('Pool Gas Benchmarks', () => {
     let test: TestPool
-    let baseToken: MockERC20
-    let quoteToken: MockERC20
     let initTx: Promise<ContractTransaction>
     const feeRate = 225 * 100
 
     beforeEach("deploy",  async () => {
-       test = new TestPool()
+       test = await makeTokenPool()
        await test.fundTokens()
-       baseToken = await test.base
-       quoteToken = await test.quote
-       
+
        initTx = test.initPool(feeRate, 0, 1, 1.0)
        await initTx
 
@@ -45,7 +41,7 @@ describe('Pool Gas Benchmarks', () => {
     }
 
     it("create pool", async() => {
-        await expectGas(initTx, 90000)
+        await expectGas(initTx, 92000)
     })
 
     it("mint in virgin pool", async() => {
