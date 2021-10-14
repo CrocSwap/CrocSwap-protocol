@@ -76,21 +76,22 @@ describe('Pool Ethereum', () => {
         expect(await test.snapBaseOwed()).to.gte(tgt)
         expect(await test.snapBaseOwed()).to.lt(tgt.add(BigNumber.from("10005756316541")))
         expect(await test.snapQuoteOwed()).to.equal(-33158884)
- 
      })
  
     it("swap protocol fee", async() => {
-        await test.testMint(-5000, 8000, 1000000); 
+        await test.testMint(200000, 210000, 1024*1000*1000);
         await test.testRevisePool(feeRate, 6, 1)
 
-        await test.testSwap(true, false, 10000, toSqrtPrice(2000000000))
-        await test.testSwap(false, false, 10000, toSqrtPrice(1000000000))
-        let tgt = BigNumber.from("10074005756316541")
-        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(tgt)
+        await test.testSwap(true, false, 10000, maxSqrtPrice())
+        await test.testSwap(false, false, 10000, minSqrtPrice())
+        
+        let bal = BigNumber.from("1010074455836789651")
+        let tgt = BigNumber.from("1000097398443009582")
+        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(bal)
         expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(4269666)
-        expect(await test.snapBaseOwed()).to.gte(tgt)
+        expect(await test.snapBaseOwed()).to.gt(tgt.sub(BigNumber.from("10005756316541")))
         expect(await test.snapBaseOwed()).to.lt(tgt.add(BigNumber.from("10005756316541")))
-        expect(await test.snapQuoteOwed()).to.equal(4269666)
+        expect(await test.snapQuoteOwed()).to.equal(10000)
     })
 })
 
