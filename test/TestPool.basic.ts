@@ -38,7 +38,7 @@ describe('Pool', () => {
        expect(await test.snapBaseOwed()).to.equal(0)
 
        await test.testMint(3000, 5000, 10000);
-       CONVEX_ADJ = 144
+       CONVEX_ADJ = 143
        expect(await test.snapQuoteOwed()).to.equal(377*1024 - CONVEX_ADJ + MINT_BUFFER)
        CONVEX_ADJ = 826
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
@@ -65,7 +65,7 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
         const liqGrowth = 93172
-        const counterFlow = -6620436
+        const counterFlow = -6620438
 
         await test.snapStart()
         await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
@@ -91,7 +91,7 @@ describe('Pool', () => {
         await test.snapStart()
         await test.testSwap(true, true, 10000, toSqrtPrice(2.0))
 
-        const swapFlow = 6602 + 57
+        const swapFlow = 6603 + 57
         const feeCost = 148
         const liqBonus = 1
         const liqGrowth = 75
@@ -165,7 +165,7 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
                 
         const liqGrowth = 142858
-        const counterFlow = 15904766
+        const counterFlow = 15904765
 
         await test.snapStart()
         await test.testSwap(true, false, 10000*1024, toSqrtPrice(2.0))
@@ -187,7 +187,7 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
                 
         const liqGrowth = 138168
-        const counterFlow = -14839766
+        const counterFlow = -14839765
 
         await test.snapStart()
         await test.testSwap(false, false, 10000*1024, toSqrtPrice(1.0))
@@ -228,7 +228,7 @@ describe('Pool', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
         let limitFlow = 7853
-        let counterFlow = -4426
+        let counterFlow = -4427
         let liqGrowth = 1020
 
         await test.snapStart()
@@ -257,7 +257,7 @@ describe('Pool', () => {
         await test.testSwap(true, true, 100000*1024, toSqrtPrice(2.0))
 
         let limitFlow = 9284923
-        let counterFlow = -5343553
+        let counterFlow = -5343556
         let liqGrowth = 76491
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -284,7 +284,7 @@ describe('Pool', () => {
         await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
         let limitFlow = -5595727
-        let counterFlow = 4117799
+        let counterFlow = 41177002
         let liqGrowth = 53147
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -311,8 +311,8 @@ describe('Pool', () => {
         await test.snapStart()
         let x = await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
-        let limitFlow = -5584421
-        let counterFlow = 4109877
+        let limitFlow = -5584420
+        let counterFlow = 4109879
         let liqGrowth = 44287
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -335,11 +335,11 @@ describe('Pool', () => {
         let startTraderBase = await baseToken.balanceOf((await (await test.trader).getAddress()))
 
         await test.testBurn(3000, 5000, 10000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385904)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385905)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-644294)
-        expect((await quoteToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderQuote)).to.equal(385904)
+        expect((await quoteToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderQuote)).to.equal(385905)
         expect((await baseToken.balanceOf(await (await test.trader).getAddress())).sub(startTraderBase)).to.equal(644294)
-        expect(await test.snapQuoteFlow()).to.equal(-385904)
+        expect(await test.snapQuoteFlow()).to.equal(-385905)
         expect(await test.snapBaseFlow()).to.equal(-644294)
      })
 
