@@ -49,6 +49,10 @@ contract PoolRegistry is StorageLayout {
         pool.tickSize_ = tickSize;
     }
 
+    function setNewPoolLiq (uint128 liqAnte) internal {
+        newPoolLiq_ = liqAnte;
+    }
+
     function setPriceImprove (address token, uint128 unitTickCollateral,
                               uint16 awayTickTol) internal {
         improves_[token].unitCollateral_ = unitTickCollateral;
@@ -56,10 +60,10 @@ contract PoolRegistry is StorageLayout {
     }
 
     function registerPool (address base, address quote, uint24 poolIdx) internal
-        returns (PoolSpecs.PoolCursor memory) {
+        returns (PoolSpecs.PoolCursor memory, uint128 liqAnte) {
         PoolSpecs.Pool memory template = queryTemplate(base, quote, poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
-        return queryPool(base, quote, poolIdx);
+        return (queryPool(base, quote, poolIdx), newPoolLiq_);
     }
 
     function queryPriceImprove (PriceGrid.ImproveSettings memory dest,

@@ -7,16 +7,87 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike } from 'ethers';
-import { simpleSettle, singleHop, simpleMint, simpleSwap } from './EncodeSimple';
+import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides } from 'ethers';
+import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
+import { TestSettleLayer } from "../typechain/TestSettleLayer";
 
 chai.use(solidity);
 
 const INIT_BAL = 1000000000
 const POOL_IDX = 85365
 
+export async function makeTokenPool(): Promise<TestPool> {
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let tokenX = await factory.deploy() as MockERC20
+    let tokenY = await factory.deploy() as MockERC20
+
+    let base = sortBaseToken(tokenX, tokenY)
+    let quote = sortQuoteToken(tokenX, tokenY)
+
+    let pool = new TestPool(new ERC20Token(await base), new ERC20Token(await quote))
+    await pool.fundTokens()
+    return pool
+}
+
+export async function makeEtherPool(): Promise<TestPool> {
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let quote = await factory.deploy() as MockERC20
+
+    let pool = new TestPool(new NativeEther(), new ERC20Token(await quote))
+    await pool.fundTokens()
+    return pool
+}
+
+export interface Token {
+    address: string
+    balanceOf: (address: string) => Promise<BigNumber>
+    fund: (s: Signer, dex: string, val: number) => Promise<void>
+    sendEth: boolean
+}
+
+class ERC20Token implements Token {
+    address: string
+    contract: MockERC20
+    sendEth: boolean
+
+    constructor (token: MockERC20) {
+        this.address = token.address
+        this.contract = token
+        this.sendEth = false;
+    }
+
+    async balanceOf(address: string): Promise<BigNumber> {
+        return this.contract.balanceOf(address)
+    }
+
+    async fund (s: Signer, dex: string, val: number): Promise<void> {
+        await this.contract.deposit(await s.getAddress(), BigNumber.from(val))
+        await this.contract.approveFor(await s.getAddress(), dex, BigNumber.from(val))
+    }
+}
+
+class NativeEther implements Token {
+    address: string
+    balanceFinder: Promise<TestSettleLayer>
+    sendEth: boolean
+
+    constructor() {
+        this.address = ZERO_ADDR
+        let factory = ethers.getContractFactory("TestSettleLayer") as Promise<ContractFactory>
+        this.balanceFinder = factory.then(f => f.deploy(ZERO_ADDR)) as Promise<TestSettleLayer>
+        this.sendEth = true;
+    }
+
+    async balanceOf(address: string): Promise<BigNumber> {
+        return await this.balanceFinder.then(b => b.getBalance(address))
+    }
+
+    async fund (s: Signer, dex: string, val: number): Promise<void> {
+        // Signed should already be funded
+    }
+}
 
 
 export class TestPool {
@@ -26,21 +97,18 @@ export class TestPool {
     auth: Promise<Signer>
     other: Promise<Signer>
     permit: Promise<MockPermit>
-    base: Promise<MockERC20>
-    quote: Promise<MockERC20>
+    base: Token
+    quote: Token
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
+    overrides: PayableOverrides
 
-    constructor() {
-        let factory = ethers.getContractFactory("MockERC20") as Promise<ContractFactory>
-        let tokenX = factory.then(f => f.deploy()) as Promise<MockERC20>
-        let tokenY = factory.then(f => f.deploy()) as Promise<MockERC20>
+    constructor (base: Token, quote: Token) {
+        this.base = base
+        this.quote = quote
 
-        this.base = sortBaseToken(tokenX, tokenY)
-        this.quote = sortQuoteToken(tokenX, tokenY)
-
-        factory = ethers.getContractFactory("MockPermit") as Promise<ContractFactory>
+        let factory = ethers.getContractFactory("MockPermit") as Promise<ContractFactory>
         this.permit = factory.then(f => f.deploy()) as Promise<MockPermit>
 
         let accts = ethers.getSigners() as Promise<Signer[]>
@@ -60,15 +128,18 @@ export class TestPool {
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
         this.useHotPath = false;
+
+        this.overrides = base.sendEth || quote.sendEth ?
+            { value: BigNumber.from(1000000000).mul(1000000000) } : { }
     }
 
     async fundTokens() {
-        await fundToken(this.base, this.trader, this.dex)
-        await fundToken(this.quote, this.trader, this.dex)
-        await fundToken(this.base, this.other, this.dex)
-        await fundToken(this.quote, this.other, this.dex)
-        this.baseSnap = this.traderBalance(this.base)
-        this.quoteSnap = this.traderBalance(this.quote)
+        await this.base.fund(await this.trader, (await this.dex).address, INIT_BAL)
+        await this.quote.fund(await this.trader, (await this.dex).address, INIT_BAL)
+        await this.base.fund(await this.other, (await this.dex).address, INIT_BAL)
+        await this.quote.fund(await this.other, (await this.dex).address, INIT_BAL)
+        this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
+        this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
     }
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
@@ -83,8 +154,8 @@ export class TestPool {
                 toSqrtPrice(price))
         await this.testPegPriceImprove(1024*1024*1024*1024, 50)
 
-        this.baseSnap = this.traderBalance(this.base)
-        this.quoteSnap = this.traderBalance(this.quote)
+        this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
+        this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
     }
 
@@ -128,8 +199,32 @@ export class TestPool {
             [ callCode, base, quote, POOL_IDX, lower, upper, liq  ]);
     }
 
+    async encodeMintAmbientPath (liq: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 3
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128" ], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq  ]);
+    }
+
+    async encodeBurnAmbientPath (liq: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 4
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128" ], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq  ]);
+    }
+
     async testMint (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq)
+    }
+
+    async testMintAmbient (liq: number): Promise<ContractTransaction> {
+        return this.testMintAmbientFrom(await this.trader, liq)
     }
 
     async testMintOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
@@ -138,6 +233,10 @@ export class TestPool {
 
     async testBurn (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
         return this.testBurnFrom(await this.trader, lower, upper, liq)
+    }
+
+    async testBurnAmbient (liq: number): Promise<ContractTransaction> {
+        return this.testBurnAmbientFrom(await this.trader, liq)
     }
 
     async testBurnOther (lower: number, upper: number, liq: number): Promise<ContractTransaction> {
@@ -158,12 +257,12 @@ export class TestPool {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintPath(lower, upper, liq*1024)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes)
+            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
         }
     }
 
@@ -171,12 +270,38 @@ export class TestPool {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnPath(lower, upper, liq*1024)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes)
+            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+        }
+    }
+
+    async testBurnAmbientFrom (from: Signer, liq: number): Promise<ContractTransaction> {
+        await this.snapStart()
+        if (this.useHotPath) {
+            let inputBytes = this.encodeBurnAmbientPath(liq*1024)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+        } else {
+            let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMintAmbient(POOL_IDX, -liq*1024))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+        }
+    }
+
+    async testMintAmbientFrom (from: Signer, liq: number): Promise<ContractTransaction> {
+        await this.snapStart()
+        if (this.useHotPath) {
+            let inputBytes = this.encodeMintAmbientPath(liq*1024)
+            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+        } else {
+            let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMintAmbient(POOL_IDX, liq*1024))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
         }
     }
 
@@ -184,19 +309,19 @@ export class TestPool {
         await this.snapStart()
         if (this.useHotPath) {
             return (await this.dex).connect(from).swap((await this.base).address,
-                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price)
+                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes)
+            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
         }
     }
 
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(68, (await this.base).address, 
+            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
                 (await this.quote).address, POOL_IDX, feeRate, protoTake, 1, 0))
     }
 
@@ -209,13 +334,13 @@ export class TestPool {
 
     async snapBaseOwed(): Promise<BigNumber> {
         let lastSnap = await this.baseSnap
-        this.baseSnap = this.traderBalance(this.base)
+        this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         return lastSnap.sub(await this.baseSnap)
     }
 
     async snapQuoteOwed(): Promise<BigNumber> {
         let lastSnap = await this.quoteSnap
-        this.quoteSnap = this.traderBalance(this.quote)
+        this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return lastSnap.sub(await this.quoteSnap)
     }
 
@@ -249,21 +374,13 @@ export class TestPool {
     }
 }
 
-async function fundToken (token: Promise<MockERC20>, trader: Promise<Signer>, 
-    dex: Promise<CrocSwapDex>) {
-    let tokenR = await token
-    let traderR = await trader
-    await tokenR.deposit(await traderR.getAddress(), INIT_BAL)
-    await tokenR.approveFor(await traderR.getAddress(), (await dex).address, INIT_BAL)
-}
-
-export async function sortBaseToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+export async function sortBaseToken (tokenX: MockERC20, tokenY: MockERC20):
     Promise<MockERC20> {
     return addrLessThan((await tokenX).address, (await tokenY).address) ?
         tokenX : tokenY;
 }
 
-export async function sortQuoteToken (tokenX: Promise<MockERC20>, tokenY: Promise<MockERC20>):
+export async function sortQuoteToken (tokenX: MockERC20, tokenY: MockERC20):
     Promise<MockERC20> {
     return addrLessThan((await tokenX).address, (await tokenY).address) ?
         tokenY : tokenX;

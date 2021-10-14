@@ -56,6 +56,7 @@ contract StorageLayout {
     mapping(uint24 => PoolSpecs.Pool) public templates_;
     mapping(bytes32 => PoolSpecs.Pool) public pools_;
     mapping(address => PriceGrid.ImproveSettings) public improves_;
+    uint128 public newPoolLiq_;
     /**************************************************************/
 
     
