@@ -1,4 +1,4 @@
-import { TestPool } from './FacadePool'
+import { TestPool, makeTokenPool } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { solidity } from "ethereum-waffle";
@@ -20,10 +20,8 @@ describe('permissioned pool', () => {
     const COMP_ACT_CODE = 4;
 
     beforeEach("deploy",  async () => {
-       test = new TestPool()
+       test = await makeTokenPool()
        await test.fundTokens()
-       baseToken = await test.base
-       quoteToken = await test.quote
 
        await test.initPermitPool(feeRate, 0, 1, 1.5)
        await test.fundTokens()    

@@ -1,4 +1,4 @@
-import { TestPool } from './FacadePool'
+import { TestPool, makeTokenPool } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -11,15 +11,11 @@ chai.use(solidity);
 
 describe('Pool Security', () => {
     let test: TestPool
-    let baseToken: MockERC20
-    let quoteToken: MockERC20
     const treasury: string = "0x0000000000000000000000000000000000000019"
 
     beforeEach("deploy",  async () => {
-       test = new TestPool()
+       test = await makeTokenPool()
        await test.fundTokens()
-       baseToken = await test.base
-       quoteToken = await test.quote
     })
 
     it("double initialize", async() => {
