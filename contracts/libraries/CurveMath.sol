@@ -274,13 +274,12 @@ library CurveMath {
         // guaranteed not to overflow from 256 bits. That's because the final divisor
         // can be at most 128-bits, therefore this intermediate term must be 256 bits
         // or less.
-        uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceBig);
-
+        //
         // By definition priceBig is always larger than priceDelta. Therefore the above
         // condition of Z2 >= Y2 is satisfied and the equation caps at a maximum of 2
         // wei of precision loss.
-        uint256 termThree = termTwo / uint256(priceBig);
-        return termThree.toUint128();
+        uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceBig);
+        return termTwo.toUint128();
     }
 
     /* @notice Returns the amount of virtual reserves give the price and liquidity of the
