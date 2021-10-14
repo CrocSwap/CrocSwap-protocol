@@ -171,6 +171,13 @@ export class TestPool {
                 toSqrtPrice(price))
     }
 
+    async testSetInitLiq (initLiq: number) {
+        await (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(
+                68, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
+    }    
+
     encodeProtocolCmd (code: number, token: string, sidecar: string, poolIdx: number, 
         feeRate: number, protoTake: number, ticks: number, value: number): BytesLike {
         let abiCoder = new ethers.utils.AbiCoder()
