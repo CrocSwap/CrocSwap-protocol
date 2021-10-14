@@ -74,7 +74,7 @@ describe('Pool Gas Benchmarks', () => {
 
     it("mint below price", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 182000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 183000)
     })
 
     it("mint above price", async() => {
@@ -95,24 +95,24 @@ describe('Pool Gas Benchmarks', () => {
 
     it("burn full", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 78000)
+        await expectGas(test.testBurn(-100, 100, 100), 108000)
     })
 
     it("burn full level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 93000)
+        await expectGas(test.testBurn(-100, 100, 100), 103000)
     })
 
     it("burn outside", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 62000)
+        await expectGas(test.testBurn(-200, -100, 100), 83000)
     })
 
     it("burn outside left", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 71000)
+        await expectGas(test.testBurn(-200, -100, 100), 83000)
     })
 
     it("burn liq rewards", async() => {
@@ -131,14 +131,14 @@ describe('Pool Gas Benchmarks', () => {
     it("burn flipped", async() => {
         await test.testMint(-100, 100, 100)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 106000)
+        await expectGas(test.testBurn(-100, 100, 100), 108000)
     })
 
     it("burn flipped level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 106000)
+        await expectGas(test.testBurn(-100, 100, 100), 104000)
     })
 
     it("swap no pre-warm", async() => {
