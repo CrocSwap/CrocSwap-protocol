@@ -35,7 +35,7 @@ describe('CurveMath', () => {
       expect(limitOne).to.equal(7151);
       expect(limitTwo).to.equal(1837);
       expect(limitThree).to.equal(1610);
-      expect(limitFour).to.equal(708);
+      expect(limitFour).to.equal(707);
    })
 
    it("limit exhaust qty", async() => {
@@ -52,7 +52,7 @@ describe('CurveMath', () => {
       expect(limitOne).to.equal(5223);
       expect(limitTwo).to.equal(11618);
       expect(limitThree).to.equal(5402);
-      expect(limitFour).to.equal(221961);
+      expect(limitFour).to.equal(221865);
    })
 
    it("limit invert exhaust qty", async() => {
@@ -68,7 +68,7 @@ describe('CurveMath', () => {
 
       expect(limitOne).to.equal(1000000); // Effective limit is Inifnity, Hits swap qtyLeft cap
       expect(limitTwo).to.equal(14999); // Rounds down one below reserve
-      expect(limitThree).to.equal(6666); // Since virtual reserve is 6666.667, rounds to 6665
+      expect(limitThree).to.equal(6665); // Since virtual reserve is 6666.667, rounds to 6665
       expect(limitFour).to.equal(1000000); 
    })
 
@@ -199,7 +199,7 @@ describe('CurveMath', () => {
       expect(resultOne.qtyLeft).to.equal(0);
       expect(resultOne.rollPrice).to.equal(maxSqrtPrice());
       expect(resultOne.paidBase).to.gt(infFloor);
-      expect(resultOne.paidQuote).to.equal(-6666 + COLLATERAL_BUFFER);
+      expect(resultOne.paidQuote).to.equal(-6665 + COLLATERAL_BUFFER);
 
       expect(resultTwo.qtyLeft).to.equal(0);
       expect(resultTwo.rollPrice).to.equal(minSqrtPrice());
