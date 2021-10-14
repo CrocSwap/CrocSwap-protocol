@@ -44,7 +44,7 @@ describe('Pool', () => {
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 337 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 336 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
@@ -284,7 +284,7 @@ describe('Pool', () => {
         await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
         let limitFlow = -5595727
-        let counterFlow = 41177002
+        let counterFlow = 4117802
         let liqGrowth = 53147
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
@@ -352,9 +352,9 @@ describe('Pool', () => {
         await test.testBurn(3000, 5000, 2500)
         await test.testBurn(3000, 5000, 2500)
 
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385902)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-385904)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-644293)
-        expect(await test.snapQuoteFlow()).to.equal(-96475)
+        expect(await test.snapQuoteFlow()).to.equal(-96476)
         expect(await test.snapBaseFlow()).to.equal(-161073)
      })
 
@@ -366,7 +366,7 @@ describe('Pool', () => {
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         await test.testBurn(3000, 5000, 2500)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-96475)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-96476)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-161073)
 
         startQuote = await quoteToken.balanceOf((await test.dex).address)

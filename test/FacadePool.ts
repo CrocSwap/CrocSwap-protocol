@@ -17,6 +17,8 @@ chai.use(solidity);
 const INIT_BAL = 1000000000
 const POOL_IDX = 85365
 
+
+
 export class TestPool {
     dex: Promise<CrocSwapDex>
     query: Promise<QueryHelper>
