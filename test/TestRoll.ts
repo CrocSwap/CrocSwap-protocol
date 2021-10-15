@@ -27,7 +27,7 @@ describe('Pool', () => {
        test.useHotPath = false
     })
 
-    /*it("swap->mint ambient", async() => {
+    it("swap->mint ambient", async() => {
         await test.testMintAmbient(100000)
 
         let order = await test.prototypeOrder()
@@ -271,7 +271,7 @@ describe('Pool', () => {
       expect(fromSqrtPrice(await test.price())).to.gt(1.5)
       expect(await test.snapBaseOwed()).to.equal(10159)
       expect(await test.snapQuoteOwed()).to.equal(0)
-   })*/
+   })
 
    it("swap->mint below range", async() => {
       await test.testMintAmbient(100000)

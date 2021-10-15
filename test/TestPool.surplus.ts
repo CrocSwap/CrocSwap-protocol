@@ -31,7 +31,7 @@ describe('Pool Surplus', () => {
 
     })
 
-    /*it("balance and withdraw", async() => {
+    it("balance and withdraw", async() => {
         let quoteBal = (await test.quote.balanceOf(sender)).toNumber()
         let baseBal = (await test.base.balanceOf(sender)).toNumber()
 
@@ -161,7 +161,7 @@ describe('Pool Surplus', () => {
 
         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000-4)
-     })*/
+     })
 
      it("swap hotpath", async() => {
         test.useHotPath = true
