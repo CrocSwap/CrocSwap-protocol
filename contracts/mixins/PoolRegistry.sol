@@ -71,8 +71,9 @@ contract PoolRegistry is StorageLayout {
                                 address base, address quote) view internal {
         if (req.isEnabled_) {
             address token = req.useBaseSide_ ? base : quote;
-            dest = improves_[token];
             dest.inBase_ = req.useBaseSide_;
+            dest.unitCollateral_ = improves_[token].unitCollateral_;
+            dest.awayTicks_ = improves_[token].awayTicks_;
         }
     }
 

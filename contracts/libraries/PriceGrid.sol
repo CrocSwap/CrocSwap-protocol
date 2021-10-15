@@ -22,15 +22,17 @@ library PriceGrid {
     }
 
     function verifyFit (ImproveSettings memory set, int24 lowTick, int24 highTick,
-                        bool isAdd, uint128 liquidity,
-                        uint16 gridSize, int24 priceTick) internal pure {
-        if (isAdd) {
-            if (!isOnGrid(lowTick, highTick, gridSize)) {
-                uint128 thresh = improveThresh(set, gridSize, priceTick,
-                                               lowTick, highTick);
-                require(liquidity >= thresh, "D");
-            }
+                        uint128 liquidity, uint16 gridSize, int24 priceTick)
+        internal pure {
+        if (!isOnGrid(lowTick, highTick, gridSize)) {
+            uint128 thresh = improveThresh(set, gridSize, priceTick,
+                                           lowTick, highTick);
+            require(liquidity >= thresh, "D");
         }
+    }
+
+    function verifyFit (int24 lowTick, int24 highTick, uint16 gridSize) internal pure {
+        require(isOnGrid(lowTick, highTick, gridSize), "D");
     }
 
     function isOnGrid (int24 lowerTick, int24 upperTick, uint16 gridSize)

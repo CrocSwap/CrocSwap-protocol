@@ -64,6 +64,7 @@ contract MarketSequencer is TradeMatcher {
         (baseFlow, quoteFlow) =
             mintRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
                       bidTick, askTick, liq, pool.hash_);
+        PriceGrid.verifyFit(bidTick, askTick, pool.head_.tickSize_);
         commitCurve(pool.hash_, curve);
     }
 
@@ -178,9 +179,12 @@ contract MarketSequencer is TradeMatcher {
             (liq, isAdd) = Chaining.plugLiquidity(cntx.roll_, curve.curve_,
                                                   flow, lowTick, highTick);
         }
-        
-        cntx.improve_.verifyFit(lowTick, highTick, isAdd, liq,
-                                cntx.pool_.head_.tickSize_, curve.pullPriceTick());
+
+        if (isAdd) {
+            cntx.improve_.verifyFit(lowTick, highTick, liq,
+                                    cntx.pool_.head_.tickSize_,
+                                    curve.pullPriceTick());
+        }
 
         if (liq == 0) { return (0, 0); }
         return isAdd ?

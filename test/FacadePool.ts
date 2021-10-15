@@ -153,7 +153,6 @@ export class TestPool {
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
                 toSqrtPrice(price), overrides)
-        await this.testPegPriceImprove(1024*1024*1024*1024, 50)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
@@ -343,13 +342,20 @@ export class TestPool {
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
-                (await this.quote).address, POOL_IDX, feeRate, protoTake, 1, 0))
+                (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, 0))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(69, (await this.base).address, ZERO_ADDR,
+                POOL_IDX, 0, 0, awayTick, collateral))
+    }
+
+    async testPegPriceImproveQuote (collateral: number, awayTick: number): Promise<ContractTransaction> {
+        return (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(69, (await this.quote).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
