@@ -20,13 +20,40 @@ export const POOL_IDX = 85365
 
 export async function makeTokenPool(): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
-    let tokenX = await factory.deploy() as MockERC20
-    let tokenY = await factory.deploy() as MockERC20
+    let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenY = new ERC20Token((await factory.deploy() as MockERC20))
 
+    return makePoolFrom(tokenX, tokenY)
+}
+
+export async function makeTokenSeq(): Promise<TestPool[]> {
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let tokenW = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenY = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
+
+    let tokens = [tokenW, tokenX, tokenY, tokenZ]
+    tokens.sort((x,y) => (x.address > y.address) ? 1 : -1)
+
+    let poolM = await makePoolFrom(tokens[0], tokens[1])
+    let poolN = await makePoolFrom(tokens[1], tokens[2], await poolM.dex)
+    let poolO = await makePoolFrom(tokens[2], tokens[3], await poolM.dex)
+    return [poolM, poolN, poolO] 
+}
+
+export async function makeTokenNext (pool: TestPool): Promise<TestPool> {
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
+
+    return makePoolFrom(pool.quote, tokenZ)
+}
+
+async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
     let base = sortBaseToken(tokenX, tokenY)
     let quote = sortQuoteToken(tokenX, tokenY)
 
-    let pool = new TestPool(new ERC20Token(await base), new ERC20Token(await quote))
+    let pool = new TestPool(base, quote, dex)
     await pool.fundTokens()
     return pool
 }
@@ -104,7 +131,7 @@ export class TestPool {
     useHotPath: boolean
     overrides: PayableOverrides
 
-    constructor (base: Token, quote: Token) {
+    constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
         this.base = base
         this.quote = quote
 
@@ -117,8 +144,12 @@ export class TestPool {
         this.other = accts.then(a => a[2])
 
         factory = ethers.getContractFactory("CrocSwapDexSeed")
-        this.dex = factory.then(f => this.auth.then(a => 
-            f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+        if (dex) {
+            this.dex = Promise.resolve(dex)
+        } else {
+            this.dex = factory.then(f => this.auth.then(a => 
+                f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+        }
 
         factory = ethers.getContractFactory("QueryHelper")
         this.query = factory.then(f => this.dex.then(
@@ -440,17 +471,24 @@ export class TestPool {
         return singleHopPools((await this.base).address,
             (await this.quote).address, pools)
     }
+
+    async prototypeOrderSide (openSide: string): Promise<OrderDirective> {
+        let order = await this.prototypeOrder()
+        if (order.open.token !== openSide) {
+            order.open.token = (await this.quote).address
+            order.hops[0].settlement.token = (await this.quote).address
+        }
+        return order
+    }
 }
 
-export async function sortBaseToken (tokenX: MockERC20, tokenY: MockERC20):
-    Promise<MockERC20> {
-    return addrLessThan((await tokenX).address, (await tokenY).address) ?
+export function sortBaseToken (tokenX: Token, tokenY: Token): Token {
+    return addrLessThan(tokenX.address, tokenY.address) ?
         tokenX : tokenY;
 }
 
-export async function sortQuoteToken (tokenX: MockERC20, tokenY: MockERC20):
-    Promise<MockERC20> {
-    return addrLessThan((await tokenX).address, (await tokenY).address) ?
+export function sortQuoteToken (tokenX: Token, tokenY: Token): Token {
+    return addrLessThan(tokenX.address, tokenY.address) ?
         tokenY : tokenX;
 }
 
