@@ -39,11 +39,10 @@ contract TestPriceGrid {
     function testVerify (bool inBase, uint128 unit, uint16 awayTicks,
                          int8[] calldata, uint16 tickSize,
                          int24 priceTick, int24 bidTick, int24 askTick,
-                         bool isAdd, uint128 liq) public pure {
+                         uint128 liq) public pure {
         return PriceGrid.verifyFit(
             PriceGrid.ImproveSettings(inBase, unit, awayTicks),
-            bidTick, askTick, isAdd, liq,
-            tickSize, priceTick);
+            bidTick, askTick, liq, tickSize, priceTick);
     }
                             
 }
