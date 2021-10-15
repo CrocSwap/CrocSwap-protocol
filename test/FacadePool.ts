@@ -143,7 +143,9 @@ export class TestPool {
     }
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
-        price: number): Promise<ContractTransaction> {
+        price: number, noOverrides?: boolean): Promise<ContractTransaction> {
+        let overrides = noOverrides ? {} : this.overrides 
+        console.log(overrides)
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
@@ -151,7 +153,7 @@ export class TestPool {
                 tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
-                toSqrtPrice(price), this.overrides)
+                toSqrtPrice(price), overrides)
         await this.testPegPriceImprove(1024*1024*1024*1024, 50)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())

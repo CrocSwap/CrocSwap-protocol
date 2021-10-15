@@ -22,13 +22,13 @@ describe('Pool Ethereum', () => {
        quoteToken = await test.quote
 
        // Price puts tick around 207,000
-       await test.initPool(feeRate, 0, 1, 1000000000)
+       await test.initPool(feeRate, 0, 1, 1000000000, true)
        test.useHotPath = true
     })
 
-    const MINT_BUFFER = 4;
-
     it("mint", async() => {
+       console.log((await baseToken.balanceOf((await test.dex).address)).toString())
+        
        await test.testMint(200000, 210000, 1024*1000*1000);
 
        let tgt = BigNumber.from("10074005756316541")
