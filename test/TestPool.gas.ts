@@ -229,4 +229,37 @@ describe('Pool Gas Benchmarks', () => {
         await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 142000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
     })
+
+    it("swap surplus", async() => {
+        let sender = await (await test.trader).getAddress() 
+        await (await test.dex).collect(sender, -100000, (await test.base).address) 
+        await (await test.dex).collect(sender, -250000, (await test.quote).address) 
+
+        await test.testMint(-1000, 1000, 10000)
+        await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
+        await expectGas(test.testSwapSurplus(true, true, 1000, toSqrtPrice(1.1)), 82000)
+        expect(await test.liquidity()).to.be.gt(10000*1024)
+    })
+
+    it("mint surplus", async() => {
+        let sender = await (await test.trader).getAddress() 
+        await (await test.dex).collect(sender, -100000, (await test.base).address) 
+        await (await test.dex).collect(sender, -250000, (await test.quote).address) 
+
+        await test.testMintOther(-1000, 1000, 10000)
+        await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
+        await expectGas(test.testMint(-1000, 1000, 5000, true), 124000)
+    })
+
+    it("burn surplus", async() => {
+        let sender = await (await test.trader).getAddress() 
+        await (await test.dex).collect(sender, -100000, (await test.base).address) 
+        await (await test.dex).collect(sender, -250000, (await test.quote).address) 
+
+        await test.testMintOther(-1000, 1000, 10000)
+        await test.testMint(-1000, 1000, 10000)
+        await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
+        await expectGas(test.testBurn(-1000, 1000, 5000, true), 84000)
+    })
+
 })

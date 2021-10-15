@@ -31,7 +31,7 @@ describe('Pool Surplus', () => {
 
     })
 
-    it("balance and withdraw", async() => {
+    /*it("balance and withdraw", async() => {
         let quoteBal = (await test.quote.balanceOf(sender)).toNumber()
         let baseBal = (await test.base.balanceOf(sender)).toNumber()
 
@@ -161,7 +161,77 @@ describe('Pool Surplus', () => {
 
         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000-4)
+     })*/
+
+     it("swap hotpath", async() => {
+        test.useHotPath = true
+        await test.testMintAmbient(10000)
+
+        await test.testSwapSurplus(true, true, 1000, toSqrtPrice(2.0))
+        expect(await test.price()).to.gt(toSqrtPrice(1.5))
+        expect(await test.snapBaseOwed()).to.equal(0)
+        expect(await test.snapQuoteOwed()).to.equal(0)
+
+        expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-1000)
+        expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000+648)
      })
+       
+     it("mint hotpath", async() => {
+      test.useHotPath = true
+      await test.testMintAmbient(10000)
+
+      await test.testMint(3000, 5000, 1000, true)
+      expect(await test.price()).to.eq(toSqrtPrice(1.5))
+      expect(await test.snapBaseOwed()).to.equal(0)
+      expect(await test.snapQuoteOwed()).to.equal(0)
+
+      expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(35567)
+      expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(211406)
+      
+     })
+     
+     it("burn hotpath", async() => {
+        test.useHotPath = true
+        await test.testMintAmbient(10000)
+
+        await test.testMint(3000, 5000, 1000, true)
+        await test.testBurn(3000, 5000, 1000, true)
+      
+
+        expect(await test.price()).to.eq(toSqrtPrice(1.5))
+        expect(await test.snapBaseOwed()).to.equal(0)
+        expect(await test.snapQuoteOwed()).to.equal(0)
+
+        expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-4)
+        expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000-4)
+      })
+
+      it("mint ambient hotpath", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+   
+         await test.testMintAmbient(50, true)
+         expect(await test.price()).to.eq(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(0)
+         expect(await test.snapQuoteOwed()).to.equal(0)
+   
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(37290)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(208192)         
+        })
+        
+      it("burn ambient hotpath", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+ 
+         await test.testMintAmbient(50, true)
+         await test.testBurnAmbient(50, true)
+         expect(await test.price()).to.eq(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(0)
+         expect(await test.snapQuoteOwed()).to.equal(0)
+ 
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-4)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000-4)
+      }) 
 })
 
 describe('Pool Surplus Ether', () => {

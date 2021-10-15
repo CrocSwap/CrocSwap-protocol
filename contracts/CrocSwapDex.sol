@@ -38,7 +38,7 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
     
     function swap (address base, address quote,
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                   uint128 limitPrice) reEntrantLock public payable {
+                   uint128 limitPrice, bool useSurplus) reEntrantLock public payable {
         Directives.SwapDirective memory dir;
         dir.isBuy_ = isBuy;
         dir.inBaseQty_ = inBaseQty;
@@ -52,6 +52,7 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
 
         Directives.SettlementChannel memory settle;
         settle.limitQty_ = type(int128).max;
+        settle.useSurplus_ = useSurplus;
         settle.token_ = base;
         settleFlat(msg.sender, flow.baseFlow_, settle, false);
 
