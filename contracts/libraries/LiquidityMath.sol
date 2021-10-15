@@ -70,6 +70,10 @@ library LiquidityMath {
         return (liq >> LOT_SIZE_BITS) << LOT_SIZE_BITS;
     }
 
+    function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128) {
+        return ((liq >> LOT_SIZE_BITS) + 1) << LOT_SIZE_BITS;
+    }
+
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
         uint128 liq = uint128(lots);
         return liq >> LOT_SIZE_BITS;

@@ -51,13 +51,18 @@ library Chaining {
     function plugLiquidity (RollTarget memory roll,
                             CurveMath.CurveState memory curve,
                             PairFlow memory flow, int24 lowTick, int24 highTick)
-        internal pure returns (uint128 liq, bool isAdd) {
+        internal view returns (uint128 liq, bool isAdd) {
         uint128 collateral;
-        (collateral, isAdd) = collateralDemand(roll, flow);
+        (collateral, isAdd) = collateralDemand(roll, flow);        
+
         (uint128 bidPrice, uint128 askPrice) =
             determinePriceRange(curve.priceRoot_, lowTick, highTick, roll.inBaseQty_);
+        
         liq = collateral.liquiditySupported(roll.inBaseQty_, bidPrice, askPrice);
-        if (isAdd) { liq = liq.shaveRoundLots(); }
+        liq = isAdd ?
+            liq.shaveRoundLots() :
+            liq.shaveRoundLotsUp();
+        console.log("Plus Liq", isAdd, liq);
     }
 
     function plugLiquidity (RollTarget memory roll,
@@ -69,6 +74,8 @@ library Chaining {
         liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
     }
 
+    uint128 constant private BUFFER_COLLATERAL = 4;
+    
     function collateralDemand (RollTarget memory roll,
                                PairFlow memory flow) private pure
         returns (uint128 collateral, bool isAdd) {
@@ -76,24 +83,28 @@ library Chaining {
 
         isAdd = collatFlow < 0;
         collateral = collatFlow > 0 ? uint128(collatFlow) : uint128(-collatFlow);
+
+        if (isAdd) {
+            collateral -= BUFFER_COLLATERAL;
+        } else {
+            collateral += BUFFER_COLLATERAL;
+        }
     }
 
     function determinePriceRange (uint128 curvePrice, int24 lowTick, int24 highTick,
                                   bool inBase) private pure
-        returns (uint128 lowPrice, uint128 highPrice) {
-        highPrice = highTick.getSqrtRatioAtTick();
-        lowPrice = lowTick.getSqrtRatioAtTick();
+        returns (uint128 bidPrice, uint128 askPrice) {
+        bidPrice = lowTick.getSqrtRatioAtTick();
+        askPrice = highTick.getSqrtRatioAtTick();
 
-        if (curvePrice >= lowPrice) {
-            lowPrice = curvePrice;
+        if (curvePrice <= bidPrice) {
+            require(!inBase);
+        } else if (curvePrice >= askPrice) {
+            require(inBase);
+        } else if (inBase) {
+            askPrice = curvePrice;
         } else {
-            require(!inBase, "LG");
-        }
-
-        if (curvePrice <= highPrice) {
-            highPrice = curvePrice;
-        } else {
-            require(inBase, "LG");
+            bidPrice = curvePrice;
         }
     }
 
