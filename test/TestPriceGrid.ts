@@ -187,37 +187,25 @@ describe('Price Improve', () => {
 
     it("verify", async() => {
         // Meets threshold
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052,
-            true, 7053371)
+        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 7053371)
         // Exceeds threshold
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052,
-            true, 171053371)
-        // Not adding, therefore threshold doesn't apply
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052,
-            false, 1024)
+        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 171053371)
         // On grid, threshold doesn't apply
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2048,
-            true, 1024)
+        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2048, 1024)
 
         // Just below threshold
-        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052,
-                true, 7053370)).to.be.reverted
+        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 7053370)).to.be.reverted
         // Well below threshold
-        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052,
-                true, 1024)).to.be.reverted
+        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 1024)).to.be.reverted
 
         // Off grid one side
-        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1025, 2048,
-                true, 1024)).to.be.reverted
-        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2040,
-                true, 1024)).to.be.reverted
+        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1025, 2048, 1024)).to.be.reverted
+        await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2040, 1024)).to.be.reverted
 
         // Market too far away for price improvement
-        await expect(test.testVerify(true, 1024, 500, UP_MULTS, 128, 128, 1016, 2052,
-                true, 1117053371)).to.be.reverted
+        await expect(test.testVerify(true, 1024, 500, UP_MULTS, 128, 128, 1016, 2052, 1117053371)).to.be.reverted
 
         // Zero collateral threshold treated as price improvement disabled
-        await expect(test.testVerify(true, 0, 500, UP_MULTS, 128, 128, 1016, 2052,
-                true, 1117053371)).to.be.reverted
+        await expect(test.testVerify(true, 0, 500, UP_MULTS, 128, 128, 1016, 2052, 1117053371)).to.be.reverted
     })
 })
