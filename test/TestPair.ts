@@ -251,7 +251,7 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
+        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(934)
         expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(283)
     })
 })
