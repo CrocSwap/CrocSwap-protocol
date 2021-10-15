@@ -138,14 +138,16 @@ contract MarketSequencer is TradeMatcher {
                            Directives.AmbientDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        if (isRoll(dir.liquidity_, dir.isAdd_)) {
-            cntx.roll_.plugLiquidity(curve.curve_, flow);
+        (uint128 liq, bool isAdd) = (dir.liquidity_, dir.isAdd_);
+
+        if (isRoll(liq, isAdd)) {
+            (liq, isAdd) = cntx.roll_.plugLiquidity(curve.curve_, flow);
         }
         
-        if (dir.liquidity_ > 0) {
-            (int128 base, int128 quote) = dir.isAdd_ ?
-                callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
-                callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
+        if (liq > 0) {
+            (int128 base, int128 quote) = isAdd ?
+                callMintAmbient(curve, liq, cntx.pool_.hash_) :
+                callBurnAmbient(curve, liq, cntx.pool_.hash_);
         
             flow.accumFlow(base, quote);
         }
@@ -179,7 +181,7 @@ contract MarketSequencer is TradeMatcher {
         
         cntx.improve_.verifyFit(lowTick, highTick, isAdd, liq,
                                 cntx.pool_.head_.tickSize_, curve.pullPriceTick());
-        
+
         if (liq == 0) { return (0, 0); }
         return isAdd ?
             callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_) :

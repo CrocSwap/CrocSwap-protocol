@@ -51,7 +51,7 @@ library Chaining {
     function plugLiquidity (RollTarget memory roll,
                             CurveMath.CurveState memory curve,
                             PairFlow memory flow, int24 lowTick, int24 highTick)
-        internal view returns (uint128 liq, bool isAdd) {
+        internal pure returns (uint128 liq, bool isAdd) {
         uint128 collateral;
         (collateral, isAdd) = collateralDemand(roll, flow);        
 
@@ -62,7 +62,6 @@ library Chaining {
         liq = isAdd ?
             liq.shaveRoundLots() :
             liq.shaveRoundLotsUp();
-        console.log("Plus Liq", isAdd, liq);
     }
 
     function plugLiquidity (RollTarget memory roll,

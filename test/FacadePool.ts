@@ -325,6 +325,12 @@ export class TestPool {
         }
     }
 
+    async testOrder (order: OrderDirective): Promise<ContractTransaction> {
+        await this.snapStart();
+        return (await this.dex).connect(await this.trader)
+            .trade(encodeOrderDirective(order))
+    }
+
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)

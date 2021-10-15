@@ -21,7 +21,7 @@ export function simpleMint (poolIdx: number, lowerTick: number, upperTick: numbe
             ambient: { isAdd: false, liquidity: BigNumber.from(0) },
             concentrated: [{ openTick: lowerTick,
                 bookends: [{ closeTick: upperTick, 
-                    isAdd: BigNumber.from(liq).gte(0), liquidity: BigNumber.from(liq).abs()}]
+                    isAdd: BigNumber.from(liq).gt(0), liquidity: BigNumber.from(liq).abs()}]
             }]
         },
         swap: {
@@ -39,7 +39,7 @@ export function simpleMintAmbient (poolIdx: number, liq: number): PoolDirective 
     return { 
        poolIdx: poolIdx,
        passive: {
-           ambient: { isAdd: BigNumber.from(liq).gte(0), liquidity: BigNumber.from(liq).abs() },
+           ambient: { isAdd: BigNumber.from(liq).gt(0), liquidity: BigNumber.from(liq).abs() },
            concentrated: [],
        },
        swap: {
