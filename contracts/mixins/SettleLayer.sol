@@ -175,7 +175,7 @@ contract SettleLayer is StorageLayout {
         }
     }
 
-    function encodeSurplusKey (address owner, address token) private
+    function encodeSurplusKey (address owner, address token) internal
         pure returns (bytes32) {
         return keccak256(abi.encode(owner, token));
     }

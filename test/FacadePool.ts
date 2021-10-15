@@ -145,7 +145,6 @@ export class TestPool {
     async initPool (feeRate: number, protoTake: number, tickSize: number,
         price: number, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
-        console.log(overrides)
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
@@ -327,10 +326,11 @@ export class TestPool {
         }
     }
 
-    async testOrder (order: OrderDirective): Promise<ContractTransaction> {
+    async testOrder (order: OrderDirective, noOverrides?: boolean): Promise<ContractTransaction> {
+        let override = noOverrides ? {} : this.overrides
         await this.snapStart();
         return (await this.dex).connect(await this.trader)
-            .trade(encodeOrderDirective(order))
+            .trade(encodeOrderDirective(order), override)
     }
 
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {

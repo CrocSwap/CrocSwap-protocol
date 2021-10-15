@@ -24,4 +24,11 @@ contract QueryHelper {
         public view returns (uint128) {
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
+
+    function querySurplus (address owner, address token)
+        public view returns (uint128) {
+        bytes32 key = keccak256(abi.encode(owner, token));
+        return CrocSwapDex(dex_).surplusCollateral_(key);
+    }
+
 }

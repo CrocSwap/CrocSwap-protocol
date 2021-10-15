@@ -57,7 +57,7 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend); 
+        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);
     }
 
         
