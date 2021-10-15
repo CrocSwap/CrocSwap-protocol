@@ -8,7 +8,7 @@ import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, Concent
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides } from 'ethers';
-import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient } from './EncodeSimple';
+import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
@@ -16,7 +16,7 @@ import { TestSettleLayer } from "../typechain/TestSettleLayer";
 chai.use(solidity);
 
 const INIT_BAL = 1000000000
-const POOL_IDX = 85365
+export const POOL_IDX = 85365
 
 export async function makeTokenPool(): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
@@ -144,14 +144,19 @@ export class TestPool {
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
         price: number, noOverrides?: boolean): Promise<ContractTransaction> {
+        return this.initPoolIdx(POOL_IDX, feeRate, protoTake, tickSize, price, noOverrides)
+    }
+
+    async initPoolIdx (poolIdx: number, feeRate: number, protoTake: number, tickSize: number,
+        price: number, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, feeRate, protoTake, 
+                66, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
                 tickSize, 0))
         let gasTx = await (await this.dex)
-            .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
+            .initPool((await this.base).address, (await this.quote).address, poolIdx, 
                 toSqrtPrice(price), overrides)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
@@ -304,6 +309,15 @@ export class TestPool {
         }
     }
 
+    async testMintAmbientIdx (liq: number, poolIdx: number): Promise<ContractTransaction> {
+        await this.snapStart()
+        let directive = singleHop((await this.base).address,
+        (await this.quote).address, simpleMintAmbient(POOL_IDX, liq*1024))
+        directive.hops[0].pools[0].poolIdx = poolIdx
+        let inputBytes = encodeOrderDirective(directive);
+        return (await this.dex).connect(await this.trader).trade(inputBytes, this.overrides)
+    }
+
     async testMintAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
@@ -343,6 +357,13 @@ export class TestPool {
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
                 (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, 0))
+    }
+
+    async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
+        return (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
+                (await this.quote).address, idx, feeRate, protoTake, tickSize, 0))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
@@ -389,9 +410,20 @@ export class TestPool {
             ((await this.base).address, (await this.quote).address, POOL_IDX)
     }
 
+    async liquidityIdx (idx: number): Promise<BigNumber> {
+        return await (await this.query).queryLiquidity
+            ((await this.base).address, (await this.quote).address, idx)
+    }
+
     async price(): Promise<BigNumber> {
         return (await (await this.query).queryCurve
             ((await this.base).address, (await this.quote).address, POOL_IDX))
+            .priceRoot_
+    }
+
+    async priceIdx (idx: number): Promise<BigNumber> {
+        return (await (await this.query).queryCurve
+            ((await this.base).address, (await this.quote).address, idx))
             .priceRoot_
     }
 
@@ -400,9 +432,13 @@ export class TestPool {
         return (await token).balanceOf(addr)
     }
 
-    async prototypeOrder(): Promise<OrderDirective> {
-        return singleHop((await this.base).address,
-            (await this.quote).address, simpleMintAmbient(POOL_IDX, 0))
+    async prototypeOrder(nPools: number = 1): Promise<OrderDirective> {
+        let pools: PoolDirective[] = []
+        for (let i = 0; i < nPools; ++i) {
+            pools.push(simpleMintAmbient(POOL_IDX, 0))
+        }
+        return singleHopPools((await this.base).address,
+            (await this.quote).address, pools)
     }
 }
 

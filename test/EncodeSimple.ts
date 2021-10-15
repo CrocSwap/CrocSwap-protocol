@@ -9,6 +9,15 @@ export function singleHop (open: string, close: string, pool: PoolDirective): Or
     }
 }
 
+export function singleHopPools (open: string, close: string, pools: PoolDirective[]): OrderDirective {
+    return {
+        open: simpleSettle(open),
+        hops: [ { settlement: simpleSettle(close), pools: pools, 
+            improve: { isEnabled: false, useBaseSide: false }}]
+    }
+}
+
+
 export function simpleSettle (token: string): SettlementDirective {
     return { token: token, limitQty: BigNumber.from("100000000000000000"),
         dustThresh: BigNumber.from(0), useSurplus: false }
