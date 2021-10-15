@@ -40,9 +40,9 @@ contract MarketSequencer is TradeMatcher {
     using Chaining for Chaining.PairFlow;
     using Chaining for Chaining.RollTarget;
     
-    function tradeOverPool (Directives.PoolDirective memory dir,
-                            Chaining.ExecCntx memory cntx)
-        internal returns (Chaining.PairFlow memory flow) {
+    function tradeOverPool (Chaining.PairFlow memory flow,
+                            Directives.PoolDirective memory dir,
+                            Chaining.ExecCntx memory cntx) internal {
         CurveCache.Cache memory curve;
         curve.curve_ = snapCurve(cntx.pool_.hash_);
         applyToCurve(flow, dir, curve, cntx);

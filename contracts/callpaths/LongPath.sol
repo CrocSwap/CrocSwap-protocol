@@ -46,8 +46,7 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
                              PoolRegistry.COMP_ACT_CODE);
                 targetRoll(cntx.roll_, dir.chain_, pairs);
 
-                Chaining.PairFlow memory poolFlow = tradeOverPool(dir, cntx);
-                pairs.flow_.foldFlow(poolFlow);
+                tradeOverPool(pairs.flow_, dir, cntx);
             }
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
