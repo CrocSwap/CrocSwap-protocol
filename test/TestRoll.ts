@@ -55,7 +55,37 @@ describe('Pool', () => {
         expect(await test.snapQuoteOwed()).to.equal(13339)
      })
 
-     it("swap quote->mint ambient", async() => {
+     it("exit at base", async() => {
+      await test.testMintAmbient(100000)
+
+      let order = await test.prototypeOrder()
+
+      order.hops[0].pools[0].chain.swapDefer = false
+      order.hops[0].pools[0].chain.rollExit = true
+
+      // Reverse entry/exit
+      order.open.token = (await test.quote).address
+      order.hops[0].settlement.token = (await test.base).address
+
+      order.hops[0].pools[0].passive.ambient.isAdd = true
+      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+
+      order.hops[0].pools[0].swap.isBuy = false
+      order.hops[0].pools[0].swap.inBaseQty = true
+      order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
+      order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
+
+      order.hops[0].settlement.dustThresh = BigNumber.from(10)
+      
+      await test.testOrder(order)
+
+      expect(await test.liquidity()).to.equal(100000*1024 + 8162)
+      expect(await test.price()).to.lt(toSqrtPrice(1.5))
+      expect(await test.snapBaseOwed()).to.equal(0)
+      expect(await test.snapQuoteOwed()).to.equal(13339)
+   })
+
+   it("swap quote->mint ambient", async() => {
       await test.testMintAmbient(100000)
 
       let order = await test.prototypeOrder()
@@ -83,6 +113,39 @@ describe('Pool', () => {
       expect(await test.snapBaseOwed()).to.equal(19992)
       expect(await test.snapQuoteOwed()).to.equal(0)
    })
+
+   // Make sure that entry/exit in roll are set correctly when entry occurs at quote
+   // token instead of base.
+   it("entry at quote", async() => {
+      await test.testMintAmbient(100000)
+
+      let order = await test.prototypeOrder()
+      order.hops[0].pools[0].chain.swapDefer = false
+      order.hops[0].pools[0].chain.rollExit = false
+
+      // Reverse entry/exit
+      order.open.token = (await test.quote).address
+      order.hops[0].settlement.token = (await test.base).address
+
+      // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
+      order.hops[0].pools[0].passive.ambient.isAdd = true
+      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      
+      order.hops[0].pools[0].swap.isBuy = true
+      order.hops[0].pools[0].swap.inBaseQty = true
+      order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
+      order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
+
+      order.open.dustThresh = BigNumber.from(10)
+      
+      await test.testOrder(order)
+
+      expect(await test.liquidity()).to.equal(100000*1024 + 8155)
+      expect(await test.price()).to.gt(toSqrtPrice(1.5))
+      expect(await test.snapBaseOwed()).to.equal(19992)
+      expect(await test.snapQuoteOwed()).to.equal(0)
+   })
+
 
      it("swap->burn ambient", async() => {
       await test.testMintAmbient(100000)

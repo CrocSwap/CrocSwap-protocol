@@ -289,7 +289,7 @@ describe('Pair', () => {
         await test.testOrder(order)
 
         expect(await test.liquidity()).equal(11000*1024)
-        //expect(await test.liquidityIdx(pool2)).equal(22000*1024)
+        expect(await test.liquidityIdx(pool2)).equal(22000*1024)
         expect(await test.liquidityIdx(pool3)).equal(33000*1024)
 
         // This should fail because we're adding range orders that don't match their
