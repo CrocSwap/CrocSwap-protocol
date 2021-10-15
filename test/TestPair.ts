@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
+import { ConcentratedDirective } from './EncodeOrder';
 
 chai.use(solidity);
 
@@ -252,6 +253,49 @@ describe('Pair', () => {
         await test.testOrder(order)
 
         expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(934)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(283)
+        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(194)
+    })
+
+    it("pool settings individual", async() => {
+        await test.testMintAmbient(10000)
+        await test.testMintAmbientIdx(20000, pool2)
+        await test.testMintAmbientIdx(30000, pool3)
+        
+        let order = await test.prototypeOrder(3)
+
+        let concenOffGrid: ConcentratedDirective = {
+            openTick: 3001,
+            bookends: [{closeTick: 5001, isAdd: true, liquidity: BigNumber.from(1000*1024)}]
+        }
+
+        let concenTenGrid: ConcentratedDirective = {
+            openTick: 1000,
+            bookends: [{closeTick: 9000, isAdd: true, liquidity: BigNumber.from(2000*1024)}]
+        }
+
+        let concenSixGrid: ConcentratedDirective = {
+            openTick: 3000,
+            bookends: [{closeTick: 5004, isAdd: true, liquidity: BigNumber.from(3000*1024)}]
+        }
+
+        order.hops[0].pools[1].poolIdx = pool2
+        order.hops[0].pools[2].poolIdx = pool3
+        
+        order.hops[0].pools[0].passive.concentrated.push(concenOffGrid)
+        order.hops[0].pools[1].passive.concentrated.push(concenTenGrid)
+        order.hops[0].pools[2].passive.concentrated.push(concenSixGrid)
+        
+        // This should execute because each range order lands on its respective grid
+        await test.testOrder(order)
+
+        expect(await test.liquidity()).equal(11000*1024)
+        //expect(await test.liquidityIdx(pool2)).equal(22000*1024)
+        expect(await test.liquidityIdx(pool3)).equal(33000*1024)
+
+        // This should fail because we're adding range orders that don't match their
+        // specific pool's grid.
+        order.hops[0].pools[1].passive.concentrated[0] = concenSixGrid
+        order.hops[0].pools[2].passive.concentrated[0] = concenTenGrid
+        await expect(test.testOrder(order)).to.be.reverted
     })
 })
