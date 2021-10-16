@@ -252,6 +252,31 @@ describe('Pool', () => {
       await expect(test.testOrder(order)).to.be.reverted
      })
 
+     it("swap roll flip direction", async() => {
+      await test.testMintAmbient(100000)
+
+      let order = await test.prototypeOrder()
+
+      order.hops[0].pools[0].chain.swapDefer = true
+
+      order.hops[0].pools[0].passive.ambient.isAdd = true
+      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(20000)
+
+      // Roll plug should flip isBuy to the correct direction.
+      order.hops[0].pools[0].swap.isBuy = false
+      order.hops[0].pools[0].swap.inBaseQty = false
+      order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
+      order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+
+      order.open.dustThresh = BigNumber.from(10)
+      
+      await test.testOrder(order)
+
+      expect(await test.liquidity()).to.equal(100000*1024 + 20000)
+      expect(await test.price()).to.lt(toSqrtPrice(1.5))
+      expect(await test.snapBaseOwed()).to.equal(0)
+      expect(await test.snapQuoteOwed()).to.equal(32672)
+     })
 
      it("swap->mint range", async() => {
         await test.testMintAmbient(100000)

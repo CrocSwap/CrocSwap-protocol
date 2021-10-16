@@ -11,7 +11,7 @@ import { ConcentratedDirective } from './EncodeOrder';
 
 chai.use(solidity);
 
-describe('Sequence Pair', () => {
+describe('Roll between pairs', () => {
     let test: TestPool
     let test2: TestPool
     let test3: TestPool
@@ -28,7 +28,7 @@ describe('Sequence Pair', () => {
        await test3.initPool(feeRate, 0, 1, 4.0)
     })
 
-    it("two pair sequence", async() => {
+    it("two pairs", async() => {
         await test.testMintAmbient(10000)
         await test2.testMintAmbient(20000)
         await test3.testMintAmbient(30000)
@@ -40,15 +40,16 @@ describe('Sequence Pair', () => {
         order.hops.push(order2.hops[0])
         //order.hops.push(order3.hops[0])
 
+        order.hops[1].settlement = order2.hops[0].settlement
+
         order.hops[0].pools[0].swap.isBuy = true
         order.hops[0].pools[0].swap.inBaseQty = false
         order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
         order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
         
-        order.hops[1].settlement = order2.hops[0].settlement
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
@@ -63,90 +64,38 @@ describe('Sequence Pair', () => {
         expect(await test2.snapQuoteOwed()).to.equal(-19982)
     })
 
-    it("surplus settle", async() => {
+    it("mint -> swap", async() => {
         await test.testMintAmbient(10000)
         await test2.testMintAmbient(20000)
         await test3.testMintAmbient(30000)
         
         let order = await test.prototypeOrder()
         let order2 = await test2.prototypeOrder()
-        let order3 = await test3.prototypeOrder();
+        let order3 = await test3.prototypeOrder()
         
-        let owner = await (await test.trader).getAddress();
-        await (await test.dex).collect(owner, -25000, test.base.address);
-        await (await test.dex).collect(owner, -15000, test2.quote.address)
-
         order.hops.push(order2.hops[0])
+        //order.hops.push(order3.hops[0])
 
         order.hops[1].settlement = order2.hops[0].settlement
 
-        order.open.useSurplus = true
-        order.hops[0].pools[0].swap.isBuy = true
-        order.hops[0].pools[0].swap.inBaseQty = false
-        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
-
-        order.hops[1].pools[0].swap.isBuy = true
+        order.hops[0].pools[0].passive.ambient.isAdd = true
+        order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(10000)
+        
+        order.hops[1].pools[0].swap.isBuy = false
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
-        order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
-        order.hops[1].settlement.useSurplus = true
+        order.hops[1].pools[0].swap.limitPrice = minSqrtPrice()
         
         await test2.snapStart()
         await test.testOrder(order)
 
-        expect(await test.snapBaseOwed()).to.equal(0)        
+        expect(await test.price()).to.be.eq(toSqrtPrice(1.5))
+        expect(await test2.price()).to.be.lt(toSqrtPrice(0.5))
+
+        expect(await test.snapBaseOwed()).to.equal(12251)
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(0)
-
-        expect(await (await test.query).querySurplus(owner, test.base.address)).to.eq(9979)
-        expect(await (await test.query).querySurplus(owner, test.quote.address)).to.eq(0)
-        expect(await (await test.query).querySurplus(owner, test2.quote.address)).to.eq(34982)
-    })
-
-    it("surplus partial", async() => {
-        await test.testMintAmbient(10000)
-        await test2.testMintAmbient(20000)
-        await test3.testMintAmbient(30000)
-        
-        let order = await test.prototypeOrder()
-        let order2 = await test2.prototypeOrder()
-        let order3 = await test3.prototypeOrder();
-        
-        let owner = await (await test.trader).getAddress();
-        await (await test.dex).collect(owner, -15000, test.base.address);
-        await (await test.dex).collect(owner, -10000, test.quote.address)
-        await (await test.dex).collect(owner, -15000, test2.quote.address)
-
-        order.hops.push(order2.hops[0])
-
-        order.hops[1].settlement = order2.hops[0].settlement
-
-        order.open.useSurplus = true
-        order.hops[0].pools[0].swap.isBuy = true
-        order.hops[0].pools[0].swap.inBaseQty = false
-        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
-        order.hops[1].settlement.useSurplus = true
-
-        order.hops[1].pools[0].swap.isBuy = true
-        order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
-        order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
-        order.hops[1].settlement.useSurplus = true
-        
-        await test2.snapStart()
-        await test.testOrder(order)
-
-        expect(await test.snapBaseOwed()).to.equal(21)        
-        expect(await test.snapQuoteOwed()).to.equal(0)
-        expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(0)
-
-        expect(await (await test.query).querySurplus(owner, test.base.address)).to.eq(0)
-        expect(await (await test.query).querySurplus(owner, test.quote.address)).to.eq(10000)
-        expect(await (await test.query).querySurplus(owner, test2.quote.address)).to.eq(34982)
+        expect(await test2.snapQuoteOwed()).to.equal(16349)
     })
 
     it("quote entry", async() => {
@@ -172,7 +121,7 @@ describe('Sequence Pair', () => {
         
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = false
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         await test2.snapStart()
@@ -185,41 +134,6 @@ describe('Sequence Pair', () => {
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
         expect(await test2.snapQuoteOwed()).to.equal(-19982)
-    })
-
-    it("settle mid", async() => {
-        await test.testMintAmbient(10000)
-        await test2.testMintAmbient(20000)
-        await test3.testMintAmbient(30000)
-        
-        let order = await test.prototypeOrder()
-        let order2 = await test2.prototypeOrder()
-        let order3 = await test3.prototypeOrder()
-        
-        order.hops.push(order2.hops[0])
-        //order.hops.push(order3.hops[0])
-
-        order.hops[0].pools[0].swap.isBuy = true
-        order.hops[0].pools[0].swap.inBaseQty = false
-        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
-        
-        order.hops[1].settlement = order2.hops[0].settlement
-        order.hops[1].pools[0].swap.isBuy = false
-        order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[1].pools[0].swap.limitPrice = minSqrtPrice()
-        
-        await test2.snapStart()
-        await test.testOrder(order)
-
-        expect(await test.price()).to.be.gt(toSqrtPrice(1.5))
-        expect(await test2.price()).to.be.lt(toSqrtPrice(0.5))
-
-        expect(await test.snapBaseOwed()).to.equal(15021)        
-        expect(await test.snapQuoteOwed()).to.equal(-20000)
-        expect(await test2.snapBaseOwed()).to.equal(-20000)        
-        expect(await test2.snapQuoteOwed()).to.equal(20017)
     })
 
     it("three pair sequence", async() => {
@@ -242,13 +156,13 @@ describe('Sequence Pair', () => {
         order.hops[1].settlement = order2.hops[0].settlement
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.hops[0].settlement
         order.hops[2].pools[0].swap.isBuy = true
-        order.hops[2].pools[0].swap.inBaseQty = false
-        order.hops[2].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[2].pools[0].swap.inBaseQty = true
+        order.hops[2].pools[0].swap.qty = BigNumber.from(0)
         order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
@@ -262,14 +176,13 @@ describe('Sequence Pair', () => {
         expect(await test.snapBaseOwed()).to.equal(15021)        
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(20048)
-        expect(await test3.snapBaseOwed()).to.equal(20048)        
-        expect(await test3.snapQuoteOwed()).to.equal(-10000)
+        expect(await test2.snapQuoteOwed()).to.equal(0)
+        expect(await test3.snapBaseOwed()).to.equal(0)        
+        expect(await test3.snapQuoteOwed()).to.equal(-4989)
     })
-        
 })
 
-describe('Sequence Triangle', () => {
+describe('Pair roll triangle', () => {
     let test: TestPool
     let test2: TestPool
     let test3: TestPool
@@ -286,48 +199,7 @@ describe('Sequence Triangle', () => {
        await test3.initPool(feeRate, 0, 1, 1.0)
     })
 
-    it("triangle sequence", async() => {
-        await test.testMintAmbient(10000)
-        await test2.testMintAmbient(20000)
-        await test3.testMintAmbient(30000)
-        
-        let order = await test.prototypeOrder()
-        let order2 = await test2.prototypeOrder()
-        let order3 = await test3.prototypeOrder()
-        
-        order.hops.push(order2.hops[0])
-        order.hops.push(order3.hops[0])
-
-        order.hops[0].pools[0].swap.isBuy = true
-        order.hops[0].pools[0].swap.inBaseQty = false
-        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
-        
-        order.hops[1].settlement = order2.hops[0].settlement
-        order.hops[1].pools[0].swap.isBuy = true
-        order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
-
-        order.hops[2].settlement = order3.open
-        order.hops[2].pools[0].swap.isBuy = false
-        order.hops[2].pools[0].swap.inBaseQty = false
-        order.hops[2].pools[0].swap.qty = BigNumber.from(10000)
-        order.hops[2].pools[0].swap.limitPrice = minSqrtPrice()
-        
-        await test2.snapStart()
-        await test3.snapStart()
-        await test.testOrder(order)
-
-        expect(await test.snapBaseOwed()).to.equal(29)        
-        expect(await test.snapQuoteOwed()).to.equal(0)
-        expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(9)
-        expect(await test3.snapBaseOwed()).to.equal(29)        
-        expect(await test3.snapQuoteOwed()).to.equal(9)
-    })
-
-    it("triangle arb", async() => {
+   it("triangle arb", async() => {
         await test.testMintAmbient(10000)
         await test2.testMintAmbient(20000)
         await test3.testMintAmbient(30000)
@@ -350,24 +222,121 @@ describe('Sequence Triangle', () => {
         order.hops[1].settlement = order2.hops[0].settlement
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
-        order.hops[1].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.open
         order.hops[2].pools[0].swap.isBuy = false
         order.hops[2].pools[0].swap.inBaseQty = false
-        order.hops[2].pools[0].swap.qty = BigNumber.from(10000)
+        order.hops[2].pools[0].swap.qty = BigNumber.from(0)
         order.hops[2].pools[0].swap.limitPrice = minSqrtPrice()
         
         await test2.snapStart()
         await test3.snapStart()
         await test.testOrder(order)
 
-        expect(await test.snapBaseOwed()).to.equal(-165)        
+        expect(await test.snapBaseOwed()).to.equal(-156)        
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(9)
-        expect(await test3.snapBaseOwed()).to.equal(-165)        
-        expect(await test3.snapQuoteOwed()).to.equal(9)
+        expect(await test2.snapQuoteOwed()).to.equal(0)
+        expect(await test3.snapBaseOwed()).to.equal(-156)        
+        expect(await test3.snapQuoteOwed()).to.equal(0)
+    })
+
+    it("roll surplus", async() => {
+        await test.testMintAmbient(10000)
+        await test2.testMintAmbient(20000)
+        await test3.testMintAmbient(30000)
+
+        // Create a mispricing
+        await test.testSwap(false, true, 100000, minSqrtPrice())
+        
+        let order = await test.prototypeOrder()
+        let order2 = await test2.prototypeOrder()
+        let order3 = await test3.prototypeOrder()
+        
+        order.hops.push(order2.hops[0])
+        order.hops.push(order3.hops[0])
+
+        // This should set up so that we burn a position in pair one, but convert
+        // the collateral to the token outside the pair.
+        order.open.useSurplus = true
+        order.hops[0].pools[0].passive.ambient.isAdd = false
+        order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(1000)
+        
+        order.hops[1].settlement = order2.hops[0].settlement
+        order.hops[1].pools[0].swap.isBuy = false
+        order.hops[1].pools[0].swap.inBaseQty = true
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
+
+        order.hops[2].settlement = order3.open
+        order.hops[2].settlement.useSurplus = true
+        order.hops[2].pools[0].chain.rollExit = true
+        order.hops[2].pools[0].chain.offsetSurplus = true        
+        order.hops[2].pools[0].swap.isBuy = false
+        order.hops[2].pools[0].swap.inBaseQty = true
+        order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
+        
+        await test2.snapStart()
+        await test3.snapStart()
+        await test.testOrder(order)
+
+        expect(await test.snapBaseOwed()).to.equal(0)        
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test2.snapBaseOwed()).to.equal(0)        
+        expect(await test2.snapQuoteOwed()).to.equal(-1989)
+        expect(await test3.snapBaseOwed()).to.equal(0)        
+        expect(await test3.snapQuoteOwed()).to.equal(-1989)
+    })
+
+    it("roll surplus diff sides", async() => {
+        await test.testMintAmbient(10000)
+        await test2.testMintAmbient(20000)
+        await test3.testMintAmbient(30000)
+
+        // Create a mispricing
+        await test.testSwap(false, true, 100000, minSqrtPrice())
+        
+        
+        let order = await test.prototypeOrder()
+        let order2 = await test2.prototypeOrder()
+        let order3 = await test3.prototypeOrder()
+        
+        order.hops.push(order2.hops[0])
+        order.hops.push(order3.hops[0])
+
+        // This should set up so that we burn a position in pair one, but convert
+        // the collateral to the token outside the pair.
+        order.open.useSurplus = true
+        order.hops[0].pools[0].passive.ambient.isAdd = false
+        order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(1000)
+        
+        order.hops[1].settlement = order2.hops[0].settlement
+        order.hops[1].pools[0].swap.isBuy = false
+        order.hops[1].pools[0].swap.inBaseQty = true
+        order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
+
+        order.hops[2].settlement = order3.open
+        order.hops[2].settlement.useSurplus = true
+        order.hops[2].pools[0].chain.rollExit = true
+        order.hops[2].pools[0].chain.offsetSurplus = true        
+        order.hops[2].pools[0].swap.isBuy = false
+        order.hops[2].pools[0].swap.inBaseQty = true
+        order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
+        
+        await test2.snapStart()
+        await test3.snapStart()
+        await test.testOrder(order)
+
+        expect(await test.snapBaseOwed()).to.equal(0)        
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        expect(await test2.snapBaseOwed()).to.equal(0)        
+        expect(await test2.snapQuoteOwed()).to.equal(-1989)
+        expect(await test3.snapBaseOwed()).to.equal(0)        
+        expect(await test3.snapQuoteOwed()).to.equal(-1989)
     })
 })

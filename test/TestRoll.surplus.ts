@@ -85,7 +85,7 @@ describe('Pool', () => {
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000)
    })
 
-   it("roll surplus", async() => {
+   it("surplus exit", async() => {
       await test.testMintAmbient(1000)
 
       let order = await test.prototypeOrder()
@@ -107,6 +107,36 @@ describe('Pool', () => {
       expect(await test.snapBaseOwed()).to.equal(374997)
       expect(await test.snapQuoteOwed()).to.equal(0)
       expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
+      expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(1)
+   })
+
+   it("surplus entry+exit", async() => {
+      await test.testMintAmbient(1000)
+
+      let order = await test.prototypeOrder()
+
+      let owner = await (await test.trader).getAddress();
+      // Top up the balance to 500,000
+      await (await test.dex).collect(owner, 400000, test.base.address);
+
+      order.open.useSurplus = true
+      order.hops[0].pools[0].chain.swapDefer = false
+      order.hops[0].pools[0].chain.rollExit = true
+
+      // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
+      order.hops[0].pools[0].chain.offsetSurplus = true
+      order.hops[0].pools[0].passive.ambient.isAdd = true
+      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      
+      order.hops[0].settlement.useSurplus = true
+      order.open.dustThresh = BigNumber.from(10)
+      
+      await test.testOrder(order)
+
+      expect(await test.liquidity()).to.equal(1000*1024 + 306181)
+      expect(await test.snapBaseOwed()).to.equal(0)
+      expect(await test.snapQuoteOwed()).to.equal(0)
+      expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(125003)
       expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(1)
    })
 })
