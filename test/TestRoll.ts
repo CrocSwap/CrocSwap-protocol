@@ -264,27 +264,6 @@ describe('Pool', () => {
       expect(await test.snapQuoteOwed()).to.equal(-32651)
      })
 
-     it("swap wrong roll direction", async() => {
-      await test.testMintAmbient(100000)
-
-      let order = await test.prototypeOrder()
-
-      order.hops[0].pools[0].chain.swapDefer = true
-
-      // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
-      order.hops[0].pools[0].passive.ambient.isAdd = false
-      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(20000)
-      
-      // Base side is the entry in TestFacade, so sell quote to get extra base
-      // tokens to mint with
-      order.hops[0].pools[0].swap.isBuy = false
-      order.hops[0].pools[0].swap.inBaseQty = true
-      order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
-      order.hops[0].pools[0].swap.qty = BigNumber.from(0)
-      
-      await expect(test.testOrder(order)).to.be.reverted
-     })
-
      it("swap roll flip direction", async() => {
       await test.testMintAmbient(100000)
 
@@ -298,7 +277,8 @@ describe('Pool', () => {
       // Roll plug should flip isBuy to the correct direction.
       order.hops[0].pools[0].swap.isBuy = true
       order.hops[0].pools[0].swap.inBaseQty = true
-      order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
+      // Should also disable the limit price, which is one the wrong side of the direction
+      order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
 
       order.open.dustThresh = BigNumber.from(10)
@@ -309,6 +289,33 @@ describe('Pool', () => {
       expect(await test.price()).to.lt(toSqrtPrice(1.5))
       expect(await test.snapBaseOwed()).to.equal(0)
       expect(await test.snapQuoteOwed()).to.equal(32672)
+     })
+
+     it("swap roll flip direction reverse", async() => {
+      await test.testMintAmbient(100000)
+
+      let order = await test.prototypeOrder()
+
+      order.hops[0].pools[0].chain.swapDefer = true
+
+      order.hops[0].pools[0].passive.ambient.isAdd = false
+      order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(20000)
+
+      // Roll plug should flip isBuy to the correct direction.
+      order.hops[0].pools[0].swap.isBuy = false
+      order.hops[0].pools[0].swap.inBaseQty = true
+      // Should also disable the limit price, which is one the wrong side of the direction
+      order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
+      order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+
+      order.open.dustThresh = BigNumber.from(10)
+      
+      await test.testOrder(order)
+
+      expect(await test.liquidity()).to.equal(100000*1024 - 20000)
+      expect(await test.price()).to.gt(toSqrtPrice(1.5))
+      expect(await test.snapBaseOwed()).to.equal(0)
+      expect(await test.snapQuoteOwed()).to.equal(32651)
      })
 
      it("swap->mint range", async() => {

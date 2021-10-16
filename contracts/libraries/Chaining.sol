@@ -43,9 +43,30 @@ library Chaining {
                           PairFlow memory flow) internal pure {
         require(swap.inBaseQty_ == roll.inBaseQty_);
         int128 swapQty = totalBalance(roll, flow);
-        
-        swap.isBuy_ = swap.inBaseQty_ ? (swapQty < 0) : (swapQty > 0);
-        swap.qty_ = swapQty > 0 ? uint128(swapQty) : uint128(-swapQty);
+        overwriteSwap(swap, swapQty);
+    }
+
+    /* This function will overwrite the swap directive template to plug the
+     * rolling qty. This obviously involves writing the swap quantity. It
+     * may also possibly flip the swap direction, which is useful in certain
+     * complex scenarios where the user can't exactly predict the direction'
+     * of the roll.
+     *
+     * If rolling plug flips the swap direction, then the limit price will
+     * be set in the wrong direction and the trade will fail. In this case
+     * we disable limitPrice. This is fine because rolling swaps are only
+     * used in the composite code path, where the user can set their output
+     * limits at the settle layer. */
+    function overwriteSwap (Directives.SwapDirective memory swap,
+                            int128 rollQty) private pure {
+        bool prevDir = swap.isBuy_;
+        swap.isBuy_ = swap.inBaseQty_ ? (rollQty < 0) : (rollQty > 0);
+        swap.qty_ = rollQty > 0 ? uint128(rollQty) : uint128(-rollQty);
+
+        if (prevDir != swap.isBuy_) {
+            swap.limitPrice_ = swap.isBuy_ ?
+                TickMath.MAX_SQRT_RATIO : TickMath.MIN_SQRT_RATIO;
+        }
     }
 
     function plugLiquidity (RollTarget memory roll,
