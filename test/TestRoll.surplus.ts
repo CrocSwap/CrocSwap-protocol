@@ -117,7 +117,7 @@ describe('Pool', () => {
 
       let owner = await (await test.trader).getAddress();
       // Top up the balance to 500,000
-      await (await test.dex).collect(owner, 400000, test.base.address);
+      await (await test.dex).collect(owner, -400000, test.base.address);
 
       order.open.useSurplus = true
       order.hops[0].pools[0].chain.swapDefer = false
