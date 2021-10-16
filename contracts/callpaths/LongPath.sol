@@ -26,19 +26,17 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     function trade (bytes calldata input) public payable {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
-        Directives.PoolDirective memory dir;
         TokenFlow.PairSeq memory pairs;
-        Chaining.ExecCntx memory cntx;
-
         bool hasSpentTxSend = false;
 
         for (uint i = 0; i < order.hops_.length; ++i) {
+            Chaining.ExecCntx memory cntx;
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
             queryPriceImprove(cntx.improve_, order.hops_[i].improve_,
                               pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
-                dir = order.hops_[i].pools_[j];
+                Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
                 cntx.pool_ = queryPool(pairs.baseToken_, pairs.quoteToken_,
                                        dir.poolIdx_);
 
