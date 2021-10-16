@@ -55,6 +55,39 @@ describe('Pool', () => {
         expect(await test.snapQuoteOwed()).to.equal(13339)
      })
 
+
+     it("ambient seed deflator", async() => {
+        await test.testMintAmbient(100000)
+        await test.testRevisePool(100*100, 0, 1)
+
+        // Accumulate a bunch of fees to deflate ambient seeds
+        await test.testSwap(true, true, 100000000, maxSqrtPrice())
+        await test.testSwap(false, true, 10000000000, toSqrtPrice(1.5))
+
+        let order = await test.prototypeOrder()
+        order.hops[0].pools[0].chain.swapDefer = false
+
+        // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
+        order.hops[0].pools[0].passive.ambient.isAdd = true
+        order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        
+        // Base side is the entry in TestFacade, so sell quote to get extra base
+        // tokens to mint with
+        order.hops[0].pools[0].swap.isBuy = false
+        order.hops[0].pools[0].swap.inBaseQty = true
+        order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
+        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
+
+        order.open.dustThresh = BigNumber.from(10)
+        
+        await test.testOrder(order)
+
+        expect(await test.liquidity()).to.gt(100000*1024 + 8162)
+        expect(await test.price()).to.lt(toSqrtPrice(1.5))
+        expect(await test.snapBaseOwed()).to.equal(0)
+        expect(await test.snapQuoteOwed()).to.equal(13404)        
+      })
+
      it("exit at base", async() => {
       await test.testMintAmbient(100000)
 

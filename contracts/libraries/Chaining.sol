@@ -67,10 +67,11 @@ library Chaining {
     function plugLiquidity (RollTarget memory roll,
                             CurveMath.CurveState memory curve,
                             PairFlow memory flow)
-        internal pure returns (uint128 liq, bool isAdd) {
+        internal pure returns (uint128 seed, bool isAdd) {
         uint128 collateral;
         (collateral, isAdd) = collateralDemand(roll, flow);
-        liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
+        uint128 liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
+        seed = CompoundMath.deflateLiqSeed(liq, curve.accum_.ambientGrowth_);
     }
 
     uint128 constant private BUFFER_COLLATERAL = 4;
