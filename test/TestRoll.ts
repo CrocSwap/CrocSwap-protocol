@@ -263,8 +263,8 @@ describe('Pool', () => {
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(20000)
 
       // Roll plug should flip isBuy to the correct direction.
-      order.hops[0].pools[0].swap.isBuy = false
-      order.hops[0].pools[0].swap.inBaseQty = false
+      order.hops[0].pools[0].swap.isBuy = true
+      order.hops[0].pools[0].swap.inBaseQty = true
       order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
 
