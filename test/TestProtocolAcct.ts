@@ -31,11 +31,13 @@ describe('Protocol Account', () => {
        owner = (await ethers.getSigners())[1]
        outsider = (await ethers.getSigners())[2]
 
-       baseToken = await sortBaseToken(await tokenX, await tokenY)
-       quoteToken = await sortQuoteToken(await tokenX, await tokenY)
+       quoteToken = await tokenX;
+       baseToken = await tokenY;
+       if ((await tokenX).address < (await tokenY).address) {
+         baseToken = await tokenX;
+         quoteToken = await tokenY;
+       }
 
-       let baseAddr = baseToken.address
-       let quoteAddr = quoteToken.address
        treasury = "0x0000000000000000000000000000000000000019"
 
        factory = await ethers.getContractFactory("TestProtocolAccount")

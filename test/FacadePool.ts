@@ -42,6 +42,21 @@ export async function makeTokenSeq(): Promise<TestPool[]> {
     return [poolM, poolN, poolO] 
 }
 
+export async function makeTokenTriangle(): Promise<TestPool[]> {
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenY = new ERC20Token((await factory.deploy() as MockERC20))
+    let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
+
+    let tokens = [tokenX, tokenY, tokenZ]
+    tokens.sort((x,y) => (x.address > y.address) ? 1 : -1)
+
+    let poolM = await makePoolFrom(tokens[0], tokens[1])
+    let poolN = await makePoolFrom(tokens[1], tokens[2], await poolM.dex)
+    let poolO = await makePoolFrom(tokens[2], tokens[0], await poolM.dex)
+    return [poolM, poolN, poolO] 
+}
+
 export async function makeTokenNext (pool: TestPool): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
