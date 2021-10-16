@@ -12,7 +12,7 @@ import { ConcentratedDirective } from './EncodeOrder';
 
 chai.use(solidity);
 
-describe('Pool', () => {
+describe('Roll Surplus', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token

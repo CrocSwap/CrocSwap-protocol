@@ -299,7 +299,6 @@ describe('Pair roll triangle', () => {
         // Create a mispricing
         await test.testSwap(false, true, 100000, minSqrtPrice())
         
-        
         let order = await test.prototypeOrder()
         let order2 = await test2.prototypeOrder()
         let order3 = await test3.prototypeOrder()
