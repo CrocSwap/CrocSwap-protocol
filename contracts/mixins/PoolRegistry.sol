@@ -66,9 +66,9 @@ contract PoolRegistry is StorageLayout {
         return (queryPool(base, quote, poolIdx), newPoolLiq_);
     }
 
-    function queryPriceImprove (PriceGrid.ImproveSettings memory dest,
-                                Directives.PriceImproveReq memory req,
-                                address base, address quote) view internal {
+    function queryPriceImprove (Directives.PriceImproveReq memory req,
+                                address base, address quote)
+        view internal returns (PriceGrid.ImproveSettings memory dest) {
         if (req.isEnabled_) {
             address token = req.useBaseSide_ ? base : quote;
             dest.inBase_ = req.useBaseSide_;

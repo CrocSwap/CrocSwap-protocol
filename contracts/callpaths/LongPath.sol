@@ -30,10 +30,11 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         bool hasSpentTxSend = false;
 
         for (uint i = 0; i < order.hops_.length; ++i) {
-            Chaining.ExecCntx memory cntx;
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-            queryPriceImprove(cntx.improve_, order.hops_[i].improve_,
-                              pairs.baseToken_, pairs.quoteToken_);
+
+            Chaining.ExecCntx memory cntx;
+            cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
+                                              pairs.baseToken_, pairs.quoteToken_);
 
             for (uint j = 0; j < order.hops_[i].pools_.length; ++j) {
                 Directives.PoolDirective memory dir = order.hops_[i].pools_[j];
@@ -42,7 +43,7 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
 
                 verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_,
                              PoolRegistry.COMP_ACT_CODE);
-                targetRoll(cntx.roll_, dir.chain_, pairs);
+                cntx.roll_ = targetRoll(dir.chain_, pairs);
 
                 tradeOverPool(pairs.flow_, dir, cntx);
             }
@@ -58,9 +59,9 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     }
 
         
-    function targetRoll (Chaining.RollTarget memory roll,
-                         Directives.ChainingFlags memory flags,
-                         TokenFlow.PairSeq memory pair) view private {
+    function targetRoll (Directives.ChainingFlags memory flags,
+                         TokenFlow.PairSeq memory pair) view private
+        returns (Chaining.RollTarget memory roll) {
         if (flags.rollExit_) {
             roll.inBaseQty_ = !pair.isBaseFront_;
             roll.prePairBal_ = 0;
