@@ -315,7 +315,7 @@ describe('Pool', () => {
       expect(await test.liquidity()).to.equal(100000*1024 - 20000)
       expect(await test.price()).to.gt(toSqrtPrice(1.5))
       expect(await test.snapBaseOwed()).to.equal(0)
-      expect(await test.snapQuoteOwed()).to.equal(32651)
+      expect(await test.snapQuoteOwed()).to.equal(-32651)
      })
 
      it("swap->mint range", async() => {
