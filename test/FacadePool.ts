@@ -15,6 +15,8 @@ import { TestSettleLayer } from "../typechain/TestSettleLayer";
 
 chai.use(solidity);
 
+const MAX_LIMIT = BigNumber.from("10").pow(21)
+const MIN_LIMIT = BigNumber.from("0")
 const INIT_BAL = 1000000000
 export const POOL_IDX = 85365
 
@@ -237,44 +239,46 @@ export class TestPool {
             [ code, token, sidecar, poolIdx, feeRate, protoTake, ticks, value ]);
     }
 
-    async encodeMintPath (lower: number, upper: number, liq: number, useSurplus: boolean): Promise<BytesLike> {
+    async encodeMintPath (lower: number, upper: number, liq: number, limitQty: BigNumber, 
+        useSurplus: boolean): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 1
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "int128", "bool" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitQty, useSurplus  ]);
     }
 
-    async encodeBurnPath (lower: number, upper: number, liq: number, useSurplus: boolean): Promise<BytesLike> {
+    async encodeBurnPath (lower: number, upper: number, liq: number, limitQty: BigNumber, 
+        useSurplus: boolean): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 2
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "int128", "bool" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitQty, useSurplus  ]);
     }
 
-    async encodeMintAmbientPath (liq: number, useSurplus: boolean): Promise<BytesLike> {
+    async encodeMintAmbientPath (liq: number, limitQty: BigNumber, useSurplus: boolean): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 3
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "int128", "bool" ], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
     }
 
-    async encodeBurnAmbientPath (liq: number, useSurplus: boolean): Promise<BytesLike> {
+    async encodeBurnAmbientPath (liq: number, limitQty: BigNumber, useSurplus: boolean): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 4
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, useSurplus  ]);
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
     }
 
     async testMint (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
@@ -319,7 +323,7 @@ export class TestPool {
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
-            let inputBytes = this.encodeMintPath(lower, upper, liq*1024, useSurplus)
+            let inputBytes = this.encodeMintPath(lower, upper, liq*1024, MAX_LIMIT, useSurplus)
             return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
@@ -332,7 +336,7 @@ export class TestPool {
     async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
-            let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, useSurplus)
+            let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, MIN_LIMIT, useSurplus)
             return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
@@ -345,7 +349,7 @@ export class TestPool {
     async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
-            let inputBytes = this.encodeBurnAmbientPath(liq*1024, useSurplus)
+            let inputBytes = this.encodeBurnAmbientPath(liq*1024, MIN_LIMIT, useSurplus)
             return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
@@ -367,7 +371,7 @@ export class TestPool {
     async testMintAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
-            let inputBytes = this.encodeMintAmbientPath(liq*1024, useSurplus)
+            let inputBytes = this.encodeMintAmbientPath(liq*1024, MAX_LIMIT, useSurplus)
             return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,

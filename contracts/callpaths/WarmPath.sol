@@ -25,72 +25,79 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
 
     function tradeWarm (bytes calldata input) public payable {
         (uint8 code, address base, address quote, uint24 poolIdx,
-         int24 bidTick, int24 askTick, uint128 liq, bool useSurplus) =
-            abi.decode(input, (uint8,address,address,uint24,int24,int24,uint128,bool));
-
+         int24 bidTick, int24 askTick, uint128 liq, int128 limitQty, bool useSurplus) =
+            abi.decode(input, (uint8,address,address,uint24,int24,int24,
+                               uint128,int128,bool));
+        
         if (code == 1) {
-            mint(base, quote, poolIdx, bidTick, askTick, liq, useSurplus);
+            mint(base, quote, poolIdx, bidTick, askTick, liq, limitQty, useSurplus);
         } else if (code == 2) {
-            burn(base, quote, poolIdx, bidTick, askTick, liq, useSurplus);
+            burn(base, quote, poolIdx, bidTick, askTick, liq, limitQty, useSurplus);
         } else if (code == 3) {
-            mint(base, quote, poolIdx, liq, useSurplus);
+            mint(base, quote, poolIdx, liq, limitQty, useSurplus);
         } else if (code == 4) {
-            burn(base, quote, poolIdx, liq, useSurplus);
+            burn(base, quote, poolIdx, liq, limitQty, useSurplus);
         }
-
     }
     
     function mint (address base, address quote, uint24 poolIdx,
-                   int24 bidTick, int24 askTick, uint128 liq, bool useSurplus) internal {
+                   int24 bidTick, int24 askTick, uint128 liq,
+                   int128 limitQty, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
 
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(bidTick, askTick, liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, useSurplus);
+        settlePairFlow(base, quote, baseFlow, quoteFlow, false, limitQty, useSurplus);
     }
 
     function burn (address base, address quote, uint24 poolIdx,
-                   int24 bidTick, int24 askTick, uint128 liq, bool useSurplus) internal {
+                   int24 bidTick, int24 askTick, uint128 liq,
+                   int128 limitQty, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, useSurplus);
+        settlePairFlow(base, quote, baseFlow, quoteFlow, true, limitQty,  useSurplus);
     }
 
 
-    function mint (address base, address quote,
-                   uint24 poolIdx, uint128 liq, bool useSurplus) internal {
+    function mint (address base, address quote, uint24 poolIdx, uint128 liq,
+                   int128 limitQty, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
         
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, useSurplus);
+        settlePairFlow(base, quote, baseFlow, quoteFlow, false, limitQty,  useSurplus);
     }
 
-    function burn (address base, address quote,
-                   uint24 poolIdx, uint128 liq, bool useSurplus) internal {
+    function burn (address base, address quote, uint24 poolIdx, uint128 liq,
+                   int128 limitQty, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, useSurplus);
+        settlePairFlow(base, quote, baseFlow, quoteFlow, true, limitQty,  useSurplus);
     }
 
     function settlePairFlow (address base, address quote,
                              int128 baseFlow, int128 quoteFlow,
-                             bool useSurplus) internal {
+                             bool isBurn, int128 limitQty, bool useSurplus) internal {
+        bool limitInBase = limitQty < 0;
+        int128 limitMagn = limitInBase ? -limitQty : limitQty;
+        limitQty = isBurn ? -limitMagn : limitMagn;
+        
         Directives.SettlementChannel memory settle;
-        settle.limitQty_ = type(int128).max;
+        settle.limitQty_ = limitInBase ? limitQty : type(int128).max;
         settle.useSurplus_ = useSurplus;
         settle.token_ = base;
         int128 ethFlow = settleLeg(msg.sender, baseFlow, settle);
 
         settle.token_ = quote;
+        settle.limitQty_ = !limitInBase ? limitQty : type(int128).max;
         settleFinal(msg.sender, quoteFlow, settle, ethFlow);
     }
 }
