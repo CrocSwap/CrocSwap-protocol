@@ -277,7 +277,7 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 4
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "bool" ], 
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "int128", "bool" ], 
             [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
     }
 
