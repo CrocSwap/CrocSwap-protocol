@@ -172,4 +172,179 @@ describe('Settle Layer Ethereum', () => {
         expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 5000)
         expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
+
+    it("settle debit surplus", async() => {
+        // Fund surplus
+        let ORIG_SURPLUS = 100000
+        await test.setFinal(true)
+        await test.testSettleReserves(-100000, ZERO_ADDR, {value: BigNumber.from(ORIG_SURPLUS)})
+        await test.setFinal(false)
+
+        let startTestBal = (await test.getMyBalance()).toNumber()
+        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+
+        await tokenX.deposit(RECV_ADDR, INIT_BAL)
+
+        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+
+        // For Ether, surplus is ignored until the final directive
+        await test.connect(sender).testSettleFlow(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(45000)
+        await test.connect(sender).testSettleReserves(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(90000)
+
+        await test.connect(sender).testSettleReserves(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(70000)
+        await test.connect(sender).testSettleFlow(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(50000)
+
+        // Make sure we haven't settled either in Ether or surplus
+        expect((await test.getMyBalance())).to.equal(startTestBal + 0)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(ORIG_SURPLUS)
+
+        // Should refund full amoutnt because it pays out of surplus
+        await test.setFinal(true)
+        await test.connect(sender).testSettleReserves(9000, ZERO_ADDR, {value: BigNumber.from(60000)})
+        
+        expect((await test.getMyBalance())).to.equal(startTestBal)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 60000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(ORIG_SURPLUS - 59000)
+    })
+
+    it("settle debit surplus partial", async() => {
+        // Fund surplus
+        let ORIG_SURPLUS = 100000
+        await test.setFinal(true)
+        await test.testSettleReserves(-100000, ZERO_ADDR, {value: BigNumber.from(ORIG_SURPLUS)})
+        await test.setFinal(false)
+
+        let startTestBal = (await test.getMyBalance()).toNumber()
+        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+
+        await tokenX.deposit(RECV_ADDR, INIT_BAL)
+
+        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+
+        // For Ether, surplus is ignored until the final directive
+        await test.connect(sender).testSettleFlow(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(45000)
+        await test.connect(sender).testSettleReserves(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(90000)
+
+        await test.connect(sender).testSettleReserves(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(70000)
+        await test.connect(sender).testSettleFlow(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(50000)
+
+        // Make sure we haven't settled either in Ether or surplus
+        expect((await test.getMyBalance())).to.equal(startTestBal + 0)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(ORIG_SURPLUS)
+
+        // Should refund full amoutnt because it pays out of surplus
+        await test.setFinal(true)
+        await expect(test.connect(sender).testSettleReserves
+            (120000, ZERO_ADDR, {value: BigNumber.from(60000)})).to.be.reverted
+
+        await test.connect(sender).testSettleReserves(120000, ZERO_ADDR, {value: BigNumber.from(75000)})
+
+        expect((await test.getMyBalance())).to.equal(startTestBal + 70000)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 5000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+    })
+
+    it("settle credit", async() => {
+        let startTestBal = (await test.getMyBalance()).toNumber()
+        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+
+        await tokenX.deposit(RECV_ADDR, INIT_BAL)
+
+        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+
+        // For Ether, surplus is ignored until the final directive
+        await test.connect(sender).testSettleFlow(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(45000)
+        await test.connect(sender).testSettleReserves(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(90000)
+
+        await test.connect(sender).testSettleReserves(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(70000)
+        await test.connect(sender).testSettleFlow(-120000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(-70000)
+
+        // Make sure we haven't settled either in Ether or surplus
+        expect((await test.getMyBalance())).to.equal(startTestBal + 0)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+
+        // Should refund full amoutnt because it pays out of surplus
+        await test.setFinal(true)
+        await test.connect(sender).testSettleReserves(-15000, ZERO_ADDR, {value: BigNumber.from(60000)})
+        
+        expect((await test.getMyBalance())).to.equal(startTestBal)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 60000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(85000)
+    })
+
+    it("settle refund", async() => {
+        let startTestBal = (await test.getMyBalance()).toNumber()
+        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+
+        await tokenX.deposit(RECV_ADDR, INIT_BAL)
+
+        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(0)
+
+        // For Ether, surplus is ignored until the final directive
+        await test.connect(sender).testSettleFlow(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(45000)
+        await test.connect(sender).testSettleReserves(45000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(90000)
+
+        await test.connect(sender).testSettleReserves(-50000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleFlow(60000, tokenX.address)
+        expect((await test.ethFlow())).to.eq(90000)
+        await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(70000)
+        await test.connect(sender).testSettleFlow(-120000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(-70000)
+
+        // Make sure we haven't settled either in Ether or surplus
+        expect((await test.getMyBalance())).to.equal(startTestBal + 0)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 0)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+
+        // Should refund full amoutnt because it pays out of surplus
+        await test.setFinal(true)
+        await test.connect(sender).testSettleReserves(70000, ZERO_ADDR, {value: BigNumber.from(60000)})
+        
+        expect((await test.getMyBalance())).to.equal(startTestBal)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 60000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
+    })
 })

@@ -97,11 +97,17 @@ contract SettleLayer is StorageLayout {
                         bool useReserves) private {
         if (useReserves) {
             uint128 remainder = debitSurplus(recv, value, token);
-            if (remainder > 0) {
-                debitTransfer(recv, remainder, token);
-            }
+            debitRemainder(recv, remainder, token);
         } else {
             debitTransfer(recv, value, token);
+        }
+    }
+
+    function debitRemainder (address recv, uint128 remainder, address token) private {
+        if (remainder > 0) {
+            debitTransfer(recv, remainder, token);
+        } else if (token.isEtherNative()) {
+            refundEther(recv);
         }
     }
 
@@ -159,7 +165,6 @@ contract SettleLayer is StorageLayout {
         bytes32 key = encodeSurplusKey(recv, token);
         surplusCollateral_[key] += value;
     }
-
 
     function debitSurplus (address recv, uint128 value, address token) private
         returns (uint128 remainder) {
