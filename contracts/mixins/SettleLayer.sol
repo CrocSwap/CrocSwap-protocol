@@ -115,8 +115,15 @@ contract SettleLayer is StorageLayout {
                          bool useReserves) private {
         if (useReserves) {
             creditSurplus(recv, value, token);
+            creditRemainder(recv, token);
         } else {
             creditTransfer(recv, value, token);
+        }
+    }
+
+    function creditRemainder (address recv, address token) private {
+        if (token.isEtherNative()) {
+            refundEther(recv);
         }
     }
 

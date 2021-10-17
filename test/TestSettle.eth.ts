@@ -291,7 +291,7 @@ describe('Settle Layer Ethereum', () => {
         expect((await test.ethFlow())).to.eq(90000)
         await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
         expect((await test.ethFlow())).to.eq(70000)
-        await test.connect(sender).testSettleFlow(-120000, ZERO_ADDR)
+        await test.connect(sender).testSettleFlow(-140000, ZERO_ADDR)
         expect((await test.ethFlow())).to.eq(-70000)
 
         // Make sure we haven't settled either in Ether or surplus
@@ -331,7 +331,7 @@ describe('Settle Layer Ethereum', () => {
         expect((await test.ethFlow())).to.eq(90000)
         await test.connect(sender).testSettleReserves(-20000, ZERO_ADDR)
         expect((await test.ethFlow())).to.eq(70000)
-        await test.connect(sender).testSettleFlow(-120000, ZERO_ADDR)
+        await test.connect(sender).testSettleFlow(-140000, ZERO_ADDR)
         expect((await test.ethFlow())).to.eq(-70000)
 
         // Make sure we haven't settled either in Ether or surplus
