@@ -81,7 +81,7 @@ describe('Settle Layer', () => {
     it("credit ether", async() => {
         let overrides = { value: BigNumber.from(75000) }
         await test.setFinal(true);
-        await test.connect(sender).testSettleFlow(75000, ZERO_ADDR, overrides)
+        await test.connect(sender).fund(overrides)
         await test.connect(sender).testSettleFlow(-1024, ZERO_ADDR)
         expect((await test.getMyBalance())).to.equal(75000-1024)
         expect((await test.getBalance(RECV_ADDR))).to.equal(1024)
@@ -200,40 +200,4 @@ describe('Settle Layer', () => {
         expect((await tokenX.balanceOf(RECV_ADDR))).to.eq(INIT_BAL - 15000);
         expect((await tokenX.balanceOf(test.address))).to.eq(INIT_BAL + 15000);
     })
-
-    it("msg double spend", async() => {
-        let startTestBal = (await test.getMyBalance()).toNumber()
-        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
-
-        await tokenX.deposit(RECV_ADDR, INIT_BAL)
-
-        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
-        expect((await test.ethFlow())).to.eq(0)
-        await test.connect(sender).testSettleFlow(60000, tokenX.address)
-        expect((await test.ethFlow())).to.eq(0)
-
-        await test.connect(sender).testSettleFlow(90000, ZERO_ADDR)
-        expect((await test.ethFlow())).to.eq(90000)
-
-        await test.connect(sender).testSettleFlow(-50000, tokenX.address)
-        expect((await test.ethFlow())).to.eq(90000)
-        await test.connect(sender).testSettleFlow(60000, tokenX.address)
-        expect((await test.ethFlow())).to.eq(90000)
-        await test.connect(sender).testSettleFlow(-40000, ZERO_ADDR)
-        expect((await test.ethFlow())).to.eq(50000)
-
-        await test.setFinal(true)
-
-        // Enough to cover this settle, but not enough with the previous ether flow
-        let overrides = { value: BigNumber.from(55000) }
-        expect(test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)).to.be.reverted
-
-        overrides = { value: BigNumber.from(60000) }
-        await test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)
-        
-        expect((await test.getMyBalance())).to.equal(startTestBal + 59000)
-        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 1000)
-        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
-    })
-
 })

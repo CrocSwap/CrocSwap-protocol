@@ -12,6 +12,8 @@ contract TestSettleLayer is SettleLayer {
     constructor (address recv) {
         recv_ = recv;
     }
+    
+    function fund() public payable { }
 
     function setFinal (bool isFinal) public {
         isFinal_ = isFinal;
