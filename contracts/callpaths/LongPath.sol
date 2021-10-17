@@ -27,8 +27,8 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
-        bool hasSpentTxSend = false;
-
+        int128 ethBalance = 0;
+        
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
 
@@ -50,12 +50,11 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
             int128 settleFlow = pairs.clipFlow();
-            hasSpentTxSend = settleFlat(msg.sender, settleFlow, settleChannel,
-                                        hasSpentTxSend);
+            ethBalance += settleLeg(msg.sender, settleFlow, settleChannel);
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFlat(msg.sender, pairs.closeFlow(), settleChannel, hasSpentTxSend);
+        settleFinal(msg.sender, pairs.closeFlow(), settleChannel, ethBalance);
     }
 
         

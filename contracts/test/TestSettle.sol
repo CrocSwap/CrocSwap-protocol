@@ -6,10 +6,15 @@ import "../mixins/SettleLayer.sol";
 contract TestSettleLayer is SettleLayer {
 
     address private recv_;
-    bool public hasSpentEth;
+    int128 public ethFlow;
+    bool public isFinal_;
     
     constructor (address recv) {
         recv_ = recv;
+    }
+
+    function setFinal (bool isFinal) public {
+        isFinal_ = isFinal;
     }
 
     function testQuerySurplus (address recv, address token) public
@@ -40,7 +45,11 @@ contract TestSettleLayer is SettleLayer {
         Directives.SettlementChannel memory dir = Directives.SettlementChannel
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
                     useSurplus_: useSurplus});
-        hasSpentEth = settleFlat(recv_, flow, dir, hasSpentEth);
+        if (isFinal_) {
+            settleFinal(recv_, flow, dir, ethFlow);
+        } else {
+            ethFlow += settleLeg(recv_, flow, dir);
+        }
     }
 
     function getMyBalance() public view returns (uint256) {

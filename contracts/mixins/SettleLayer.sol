@@ -12,17 +12,21 @@ import "hardhat/console.sol";
 contract SettleLayer is StorageLayout {
     using SafeCast for uint256;
     using TokenFlow for address;
-    
-    function settleFlat (address recv, int128 flow,
-                         Directives.SettlementChannel memory dir,
-                         bool hasSpentEth)
-        internal returns (bool) {
+        
+    function settleFinal (address recv, int128 flow,
+                          Directives.SettlementChannel memory dir,
+                          int128 ethFlows) internal {
+        ethFlows += settleLeg(recv, flow, dir);
+        transactEther(recv, ethFlows, dir.useSurplus_);
+    }
+
+    function settleLeg (address recv, int128 flow,
+                        Directives.SettlementChannel memory dir)
+        internal returns (int128 ethFlows) {
         require(passesLimit(flow, dir.limitQty_), "K");
         if (moreThanDust(flow, dir.dustThresh_)) {
-            hasSpentEth = pumpFlow(recv, flow, dir.token_, dir.useSurplus_,
-                                   hasSpentEth);
+            ethFlows = pumpFlow(recv, flow, dir.token_, dir.useSurplus_);
         }
-        return hasSpentEth;
     }
 
     function settleInitFlow (address recv, address base, int128 baseFlow,
@@ -31,10 +35,14 @@ contract SettleLayer is StorageLayout {
         transactFlow(recv, quoteFlow, quote, false);
     }
         
-    function pumpFlow (address recv, int128 flow, address token, bool useReserves,
-                       bool hasSpentEth) private returns (bool) {
-        transactFlow(recv, flow, token, useReserves);
-        return markCumulative(hasSpentEth, token, flow);
+    function pumpFlow (address recv, int128 flow, address token, bool useReserves)
+        private returns (int128) {
+        if (token.isEtherNative()) {
+            return flow;
+        } else {
+            transactFlow(recv, flow, token, useReserves);
+            return 0;
+        }
     }
 
     function querySurplus (address user, address token) internal view returns (uint128) {
@@ -43,7 +51,7 @@ contract SettleLayer is StorageLayout {
     }
 
     function depositSurplus (address owner, uint128 value, address token) internal {
-        debitTransfer(owner, value, token, false);
+        debitTransfer(owner, value, token);
         bytes32 key = encodeSurplusKey(owner, token);
         surplusCollateral_[key] += value;
     }
@@ -60,37 +68,40 @@ contract SettleLayer is StorageLayout {
         surplusCollateral_[key] -= value;
     }
 
-    function markCumulative (bool hasSpentEth, address token,
-                             int128 flow) private pure returns (bool) {
-        if (token.isEtherNative() && isDebit(flow)) {
-            require(!hasSpentEth, "DS");
-            return true;
-        }
-        return hasSpentEth;
-    }
-
     function isDebit (int128 flow) private pure returns (bool) {
         return flow > 0;
     }
+    function isCredit (int128 flow) private pure returns (bool) {
+        return flow < 0;
+    }
 
+    function transactEther (address recv, int128 flow, bool useReserves)
+        private {
+        if (flow != 0) {
+            transactFlow(recv, flow, address(0), useReserves);
+        } else {
+            refundEther(recv);
+        }
+    }
+    
     function transactFlow (address recv, int128 flow, address token, bool useReserves)
         private {
         if (isDebit(flow)) {
             debitUser(recv, uint128(flow), token, useReserves);
-        } else {
+        } else if (isCredit(flow)) {
             creditUser(recv, uint128(-flow), token, useReserves);            
-        }   
-        
+        }           
     }
     
     function debitUser (address recv, uint128 value, address token,
                         bool useReserves) private {
-        uint128 debit = value;
         if (useReserves) {
-            debit = debitSurplus(recv, value, token);
-        }
-        if (debit > 0) {
-            debitTransfer(recv, debit, token, useReserves);
+            uint128 remainder = debitSurplus(recv, value, token);
+            if (remainder > 0) {
+                debitTransfer(recv, remainder, token);
+            }
+        } else {
+            debitTransfer(recv, value, token);
         }
     }
 
@@ -98,40 +109,42 @@ contract SettleLayer is StorageLayout {
                          bool useReserves) private {
         if (useReserves) {
             creditSurplus(recv, value, token);
-        } else if (value > 0) {
+        } else {
             creditTransfer(recv, value, token);
         }
     }
 
     function creditTransfer (address recv, uint128 value, address token) private {
         if (token.isEtherNative()) {
-            TransferHelper.safeEtherSend(recv, value);
+            payEther(recv, value);
         } else {
             TransferHelper.safeTransfer(token, recv, value);
         }
     }
 
-    function debitTransfer (address recv, uint128 value, address token,
-                            bool useReserves) private {
-        // Don't worry about double spend here, becuase markCumulative() previously
-        // asserts that there's not multiple Ether debit calls in a single transaction
+    function debitTransfer (address recv, uint128 value, address token) private {
         if (token.isEtherNative()) {
-            collectEther(recv, value, useReserves);
+            collectEther(recv, value);
         } else {
             collectToken(recv, value, token);
         }
     }
 
-    function collectEther (address recv, uint128 value, bool useReserves) private {
+    function refundEther (address recv) private {
+        collectEther(recv, 0);
+    }
+
+    function payEther (address recv, uint128 value) private {
+        uint128 overpay = (msg.value).toUint128();
+        TransferHelper.safeEtherSend(recv, value + overpay);
+    }
+    
+    function collectEther (address recv, uint128 value) private {
         require(msg.value >= value, "EC");
         uint128 overpay = (msg.value).toUint128() - value;
         if (overpay > 0) {
-            if (useReserves) {
-                creditSurplus(recv, overpay, address(0));
-            } else {
-                TransferHelper.safeEtherSend(recv, overpay);
-            }
-        }
+            TransferHelper.safeEtherSend(recv, overpay);
+        }    
     }
 
     function collectToken (address recv, uint128 value, address token) private {

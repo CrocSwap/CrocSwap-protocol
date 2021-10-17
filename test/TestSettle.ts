@@ -7,6 +7,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { Signer, BigNumber, Overrides, PayableOverrides } from 'ethers';
 import { ZERO_ADDR } from './FixedPoint';
+import { start } from 'repl';
 
 chai.use(solidity);
 
@@ -79,8 +80,8 @@ describe('Settle Layer', () => {
 
     it("credit ether", async() => {
         let overrides = { value: BigNumber.from(75000) }
+        await test.setFinal(true);
         await test.connect(sender).testSettleFlow(75000, ZERO_ADDR, overrides)
-
         await test.connect(sender).testSettleFlow(-1024, ZERO_ADDR)
         expect((await test.getMyBalance())).to.equal(75000-1024)
         expect((await test.getBalance(RECV_ADDR))).to.equal(1024)
@@ -88,11 +89,13 @@ describe('Settle Layer', () => {
     })
 
     it("debit ether shortfall", async() => {
+        await test.setFinal(true);
         let overrides = { value: BigNumber.from(24999) }
         expect(test.connect(sender).testSettleFlow(25000, ZERO_ADDR, overrides)).to.be.reverted
     })
 
     it("debit ether overpay", async() => {
+        await test.setFinal(true);
         let recvBal = (await test.getBalance(RECV_ADDR)).toNumber()
         let overrides = { value: BigNumber.from(100000) }
         await test.connect(sender).testSettleFlow(25000, ZERO_ADDR, overrides)
@@ -102,15 +105,17 @@ describe('Settle Layer', () => {
     })
 
     it("debit ether overpay surplus", async() => {
+        await test.setFinal(true);
         let recvBal = (await test.getBalance(RECV_ADDR)).toNumber()
         let overrides = { value: BigNumber.from(100000) }
         await test.connect(sender).testSettleReserves(25000, ZERO_ADDR, overrides)
-        expect((await test.getMyBalance())).to.equal(100000)
-        expect((await test.getBalance(RECV_ADDR))).to.equal(recvBal)
-        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(75000)
+        expect((await test.getMyBalance())).to.equal(25000)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(recvBal + 75000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
     it("credit ether shortfall", async() => {
+        await test.setFinal(true);
         let overrides = { value: BigNumber.from(84999) }
         await test.connect(sender).testSettleFlow(84999, ZERO_ADDR, overrides)
         expect(test.connect(sender).testSettleFlow(-85000, ZERO_ADDR)).to.be.reverted
@@ -197,26 +202,38 @@ describe('Settle Layer', () => {
     })
 
     it("msg double spend", async() => {
+        let startTestBal = (await test.getMyBalance()).toNumber()
+        let startRecvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+
         await tokenX.deposit(RECV_ADDR, INIT_BAL)
 
         await test.connect(sender).testSettleFlow(-50000, tokenX.address)
-        expect((await test.hasSpentEth())).to.eq(false)
+        expect((await test.ethFlow())).to.eq(0)
         await test.connect(sender).testSettleFlow(60000, tokenX.address)
-        expect((await test.hasSpentEth())).to.eq(false)
+        expect((await test.ethFlow())).to.eq(0)
 
-        let overrides = { value: BigNumber.from(90000) }
-        await test.connect(sender).testSettleFlow(90000, ZERO_ADDR, overrides)
-        expect((await test.hasSpentEth())).to.eq(true)
+        await test.connect(sender).testSettleFlow(90000, ZERO_ADDR)
+        expect((await test.ethFlow())).to.eq(90000)
 
         await test.connect(sender).testSettleFlow(-50000, tokenX.address)
-        expect((await test.hasSpentEth())).to.eq(true)
+        expect((await test.ethFlow())).to.eq(90000)
         await test.connect(sender).testSettleFlow(60000, tokenX.address)
-        expect((await test.hasSpentEth())).to.eq(true)
+        expect((await test.ethFlow())).to.eq(90000)
         await test.connect(sender).testSettleFlow(-40000, ZERO_ADDR)
-        expect((await test.hasSpentEth())).to.eq(true)
+        expect((await test.ethFlow())).to.eq(50000)
 
-        overrides = { value: BigNumber.from(250000) }
+        await test.setFinal(true)
+
+        // Enough to cover this settle, but not enough with the previous ether flow
+        let overrides = { value: BigNumber.from(55000) }
         expect(test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)).to.be.reverted
+
+        overrides = { value: BigNumber.from(60000) }
+        await test.connect(sender).testSettleFlow(9000, ZERO_ADDR, overrides)
+        
+        expect((await test.getMyBalance())).to.equal(startTestBal + 59000)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(startRecvBal + 1000)
+        expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
 })
