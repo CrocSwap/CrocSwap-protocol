@@ -80,13 +80,13 @@ describe('Settle Layer', () => {
     })
 
     it("credit ether", async() => {
-        let initBal = await test.getBalance(RECV_ADDR)
+        let initBal = (await test.getBalance(RECV_ADDR)).toNumber()
         let overrides = { value: BigNumber.from(75000) }
         await test.setFinal(true);
         await test.connect(sender).fund(overrides)
         await test.connect(sender).testSettleFlow(-1024, ZERO_ADDR)
         expect((await test.getMyBalance())).to.equal(75000-1024)
-        expect((await test.getBalance(RECV_ADDR))).to.equal(initBal)
+        expect((await test.getBalance(RECV_ADDR))).to.equal(initBal+1024)
         expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
