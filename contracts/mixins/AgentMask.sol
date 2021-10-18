@@ -25,7 +25,7 @@ contract AgentMask is StorageLayout {
     
     function routerPosKey (address sender, address origin, bool isBurn) private view
         returns (bytes32) {
-        if (useStandardRouting(sender, origin)) {
+        if (!isMagic(sender, origin)) {
             return toHash(sender);
         } else if (useOriginKey(sender)) {
             assertApproved(sender, origin, isBurn);
@@ -40,7 +40,7 @@ contract AgentMask is StorageLayout {
     function agentsSettle (address sender, address origin) private view
         returns (address debit, address credit) {
         (debit, credit) = (sender, sender);
-        if (!useStandardRouting(sender, origin)) {
+        if (!isMagic(sender, origin)) {
             if (useCreditOrigin(sender)) {
                 credit = origin;
             }
@@ -59,45 +59,45 @@ contract AgentMask is StorageLayout {
         return uint256(uint160(sender));
     }
 
-    function assertApproved (address sender, address origin,
-                             bool isBurn) internal view {
+    function assertBurnApproved (address sender, address origin,
+                             bool isBurn) private view {
         if (isBurn) {
             bytes32 key = keccak256(abi.encode(sender, origin));
             require(agents_[key].burn_, "BA");
         }
     }
 
-    function assertDebitApproved (address sender, address origin) internal view {
+    function assertDebitApproved (address sender, address origin) private view {
         bytes32 key = keccak256(abi.encode(sender, origin));
         require(agents_[key].debit_, "DA");
     }
 
     function approveAgent (address router, address origin,
-                            bool forDebit, bool forBurn) internal {
+                            bool forDebit, bool forBurn) private {
         bytes32 key = keccak256(abi.encode(router, origin));
         agents_[key].burn_ = forBurn;
         agents_[key].debit_ = forDebit;
     }
 
-    function useStandardRouting (address sender, address origin) internal pure
+    function isMagic (address sender, address origin) private pure
         returns (bool) {
-        return sender == origin ||
+        return sender != origin ||
             (asNumber(sender) & 0xFF00 == 0xFF00);
     }
 
-    function useOriginKey (address sender) internal pure returns (bool) {
+    function useOriginKey (address sender) private pure returns (bool) {
         return (asNumber(sender) & 0x10000) > 0;
     }
 
-    function useJoinKey (address sender) internal pure returns (bool) {
+    function useJoinKey (address sender) private pure returns (bool) {
         return (asNumber(sender) & 0x20000) > 0;
     }
 
-    function useCreditOrigin (address sender) internal pure returns (bool) {
+    function useCreditOrigin (address sender) private pure returns (bool) {
         return (asNumber(sender) & 0x40000) > 0;
     }
 
-    function useDebitOrigin (address sender) internal pure returns (bool) {
+    function useDebitOrigin (address sender) private pure returns (bool) {
         return (asNumber(sender) & 0x80000) > 0;
     }
 }
