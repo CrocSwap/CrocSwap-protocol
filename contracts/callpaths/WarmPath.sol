@@ -48,7 +48,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
 
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(bidTick, askTick, liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, false, limitQty, useSurplus);
+        settleMint(base, quote, baseFlow, quoteFlow, limitQty, useSurplus);
     }
 
     function burn (address base, address quote, uint24 poolIdx,
@@ -59,7 +59,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, true, limitQty,  useSurplus);
+        settleBurn(base, quote, baseFlow, quoteFlow, limitQty, useSurplus);
     }
 
 
@@ -70,7 +70,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, false, limitQty,  useSurplus);
+        settleMint(base, quote, baseFlow, quoteFlow, limitQty, useSurplus);
     }
 
     function burn (address base, address quote, uint24 poolIdx, uint128 liq,
@@ -80,24 +80,6 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool);
-        settlePairFlow(base, quote, baseFlow, quoteFlow, true, limitQty,  useSurplus);
-    }
-
-    function settlePairFlow (address base, address quote,
-                             int128 baseFlow, int128 quoteFlow,
-                             bool isBurn, int128 limitQty, bool useSurplus) internal {
-        bool limitInBase = limitQty < 0;
-        int128 limitMagn = limitInBase ? -limitQty : limitQty;
-        limitQty = isBurn ? -limitMagn : limitMagn;
-        
-        Directives.SettlementChannel memory settle;
-        settle.limitQty_ = limitInBase ? limitQty : type(int128).max;
-        settle.useSurplus_ = useSurplus;
-        settle.token_ = base;
-        int128 ethFlow = settleLeg(baseFlow, settle);
-
-        settle.token_ = quote;
-        settle.limitQty_ = !limitInBase ? limitQty : type(int128).max;
-        settleFinal(quoteFlow, settle, ethFlow);
+        settleBurn(base, quote, baseFlow, quoteFlow, limitQty, useSurplus);
     }
 }

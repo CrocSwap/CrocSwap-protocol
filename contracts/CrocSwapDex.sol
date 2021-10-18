@@ -50,14 +50,7 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         
         Chaining.PairFlow memory flow = swapOverPool(dir, pool);
 
-        Directives.SettlementChannel memory settle;
-        settle.limitQty_ = type(int128).max;
-        settle.useSurplus_ = useSurplus;
-        settle.token_ = base;
-        int128 ethFlow = settleLeg(flow.baseFlow_, settle);
-
-        settle.token_ = quote;
-        settleFinal(flow.quoteFlow_, settle, ethFlow);
+        settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, useSurplus);
         accumProtocolFees(flow, base, quote);
     }
 

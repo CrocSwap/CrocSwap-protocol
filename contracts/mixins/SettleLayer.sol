@@ -42,6 +42,25 @@ contract SettleLayer is AgentMask {
         }
     }
 
+    function settleMint (address base, address quote, int128 baseFlow, int128 quoteFlow,
+                         int128 limitQty, bool useSurplus) internal {
+        require(passesMintLimit(baseFlow, quoteFlow, limitQty), "K");
+        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+    }
+
+    function settleBurn (address base, address quote, int128 baseFlow, int128 quoteFlow,
+                         int128 limitQty, bool useSurplus) internal {
+        require(passesBurnLimit(baseFlow, quoteFlow, limitQty), "K");
+        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+    }
+
+    function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
+                          bool useSurplus) internal {
+        (address debitor, address creditor) = agentsSettle();
+        transactFlow(debitor, creditor, baseFlow, base, useSurplus);
+        transactFlow(debitor, creditor, quoteFlow, quote, useSurplus);
+    }
+
     function settleInitFlow (address recv,
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
@@ -206,6 +225,20 @@ contract SettleLayer is AgentMask {
     function passesLimit (int128 flow, int128 limitQty)
         private pure returns (bool) {
         return flow <= limitQty;
+    }
+
+    function passesMintLimit (int128 baseFlow, int128 quoteFlow, int128 limitQty)
+        private pure returns (bool) {
+        return limitQty < 0 ?
+            baseFlow <= -limitQty :
+            quoteFlow <= limitQty;
+    }
+
+    function passesBurnLimit (int128 baseFlow, int128 quoteFlow, int128 limitQty)
+        private pure returns (bool) {
+        return limitQty < 0 ?
+            baseFlow <= limitQty :
+            quoteFlow <= -limitQty;
     }
 
     function moreThanDust (int128 flow, uint128 dustThresh)
