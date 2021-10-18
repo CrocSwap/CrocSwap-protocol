@@ -79,5 +79,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         }
     }
 
+    function approveRouter (address router, bool forDebit, bool forBurn) public {
+        approveAgent(router, forDebit, forBurn);
+    }
+
 }
 

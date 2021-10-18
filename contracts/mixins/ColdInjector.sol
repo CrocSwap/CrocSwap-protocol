@@ -36,6 +36,13 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    function callApproveRouter (address router, bool forDebit, bool forBurn) internal {
+        (bool success, ) = coldPath_.delegatecall(
+            abi.encodeWithSignature
+            ("approveRouter(address,bool,bool)", router, forDebit, forBurn));
+        require(success);
+    }
+
     function callTradePath (bytes calldata input) internal {
         (bool success, ) = longPath_.delegatecall(
             abi.encodeWithSignature("trade(bytes)", input));

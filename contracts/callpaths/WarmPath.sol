@@ -94,10 +94,10 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         settle.limitQty_ = limitInBase ? limitQty : type(int128).max;
         settle.useSurplus_ = useSurplus;
         settle.token_ = base;
-        int128 ethFlow = settleLeg(msg.sender, baseFlow, settle);
+        int128 ethFlow = settleLeg(baseFlow, settle);
 
         settle.token_ = quote;
         settle.limitQty_ = !limitInBase ? limitQty : type(int128).max;
-        settleFinal(msg.sender, quoteFlow, settle, ethFlow);
+        settleFinal(quoteFlow, settle, ethFlow);
     }
 }

@@ -50,11 +50,11 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
             int128 settleFlow = pairs.clipFlow();
-            ethBalance += settleLeg(msg.sender, settleFlow, settleChannel);
+            ethBalance += settleLeg(settleFlow, settleChannel);
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFinal(msg.sender, pairs.closeFlow(), settleChannel, ethBalance);
+        settleFinal(pairs.closeFlow(), settleChannel, ethBalance);
     }
 
         

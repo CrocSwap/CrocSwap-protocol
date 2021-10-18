@@ -6,11 +6,13 @@ import "../mixins/SettleLayer.sol";
 contract TestSettleLayer is SettleLayer {
 
     address private recv_;
+    address private send_;
     int128 public ethFlow;
     bool public isFinal_;
     
     constructor (address recv) {
         recv_ = recv;
+        send_ = recv;
     }
     
     function fund() public payable { }
@@ -48,9 +50,9 @@ contract TestSettleLayer is SettleLayer {
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
                     useSurplus_: useSurplus});
         if (isFinal_) {
-            settleFinal(recv_, flow, dir, ethFlow);
+            settleFinal(recv_, send_, flow, dir, ethFlow);
         } else {
-            ethFlow += settleLeg(recv_, flow, dir);
+            ethFlow += settleLeg(recv_, send_, flow, dir);
         }
     }
 

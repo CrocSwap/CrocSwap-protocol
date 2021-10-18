@@ -54,10 +54,10 @@ contract CrocSwapDex is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAcco
         settle.limitQty_ = type(int128).max;
         settle.useSurplus_ = useSurplus;
         settle.token_ = base;
-        int128 ethFlow = settleLeg(msg.sender, flow.baseFlow_, settle);
+        int128 ethFlow = settleLeg(flow.baseFlow_, settle);
 
         settle.token_ = quote;
-        settleFinal(msg.sender, flow.quoteFlow_, settle, ethFlow);
+        settleFinal(flow.quoteFlow_, settle, ethFlow);
         accumProtocolFees(flow, base, quote);
     }
 

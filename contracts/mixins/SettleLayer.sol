@@ -6,41 +6,56 @@ import '../libraries/Directives.sol';
 import '../libraries/TransferHelper.sol';
 import '../libraries/TokenFlow.sol';
 import './StorageLayout.sol';
+import './AgentMask.sol';
 
 import "hardhat/console.sol";
 
-contract SettleLayer is StorageLayout {
+contract SettleLayer is AgentMask {
     using SafeCast for uint256;
     using TokenFlow for address;
-        
-    function settleFinal (address recv, int128 flow,
-                          Directives.SettlementChannel memory dir,
+
+    function settleFinal (int128 flow, Directives.SettlementChannel memory dir,
                           int128 ethFlows) internal {
-        ethFlows += settleLeg(recv, flow, dir);
-        transactEther(recv, ethFlows, dir.useSurplus_);
+        (address debitor, address creditor) = agentsSettle();
+        settleFinal(debitor, creditor, flow, dir, ethFlows);
     }
 
-    function settleLeg (address recv, int128 flow,
+    function settleLeg (int128 flow, Directives.SettlementChannel memory dir)
+        internal returns (int128 ethFlows) {
+        (address debitor, address creditor) = agentsSettle();
+        return settleLeg(debitor, creditor, flow, dir);
+    }
+    
+    function settleFinal (address debitor, address creditor, int128 flow,
+                          Directives.SettlementChannel memory dir,
+                          int128 ethFlows) internal {
+        ethFlows += settleLeg(debitor, creditor, flow, dir);
+        transactEther(debitor, creditor, ethFlows, dir.useSurplus_);
+    }
+
+    function settleLeg (address debitor, address creditor, int128 flow,
                         Directives.SettlementChannel memory dir)
         internal returns (int128 ethFlows) {
         require(passesLimit(flow, dir.limitQty_), "K");
         if (moreThanDust(flow, dir.dustThresh_)) {
-            ethFlows = pumpFlow(recv, flow, dir.token_, dir.useSurplus_);
+            ethFlows = pumpFlow(debitor, creditor, flow, dir.token_, dir.useSurplus_);
         }
     }
 
-    function settleInitFlow (address recv, address base, int128 baseFlow,
+    function settleInitFlow (address recv,
+                             address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
-        transactFlow(recv, baseFlow, base, false);
-        transactFlow(recv, quoteFlow, quote, false);
+        transactFlow(recv, recv, baseFlow, base, false);
+        transactFlow(recv, recv, quoteFlow, quote, false);
     }
         
-    function pumpFlow (address recv, int128 flow, address token, bool useReserves)
+    function pumpFlow (address debitor, address creditor, int128 flow,
+                       address token, bool useReserves)
         private returns (int128) {
         if (token.isEtherNative()) {
             return flow;
         } else {
-            transactFlow(recv, flow, token, useReserves);
+            transactFlow(debitor, creditor, flow, token, useReserves);
             return 0;
         }
     }
@@ -75,21 +90,23 @@ contract SettleLayer is StorageLayout {
         return flow < 0;
     }
 
-    function transactEther (address recv, int128 flow, bool useReserves)
+    function transactEther (address debitor, address creditor,
+                            int128 flow, bool useReserves)
         private {
         if (flow != 0) {
-            transactFlow(recv, flow, address(0), useReserves);
+            transactFlow(debitor, creditor, flow, address(0), useReserves);
         } else {
-            refundEther(recv);
+            refundEther(creditor);
         }
     }
     
-    function transactFlow (address recv, int128 flow, address token, bool useReserves)
+    function transactFlow (address debitor, address creditor,
+                           int128 flow, address token, bool useReserves)
         private {
         if (isDebit(flow)) {
-            debitUser(recv, uint128(flow), token, useReserves);
+            debitUser(debitor, uint128(flow), token, useReserves);
         } else if (isCredit(flow)) {
-            creditUser(recv, uint128(-flow), token, useReserves);            
+            creditUser(creditor, uint128(-flow), token, useReserves);            
         }           
     }
     
