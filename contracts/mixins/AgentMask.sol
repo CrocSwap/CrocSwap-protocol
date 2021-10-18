@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./StorageLayout.sol";
 
+
 contract AgentMask is StorageLayout {
 
     function agentMintKey() internal view returns (bytes32) {
@@ -28,7 +29,7 @@ contract AgentMask is StorageLayout {
         if (!isMagic(sender, origin)) {
             return toHash(sender);
         } else if (useOriginKey(sender)) {
-            assertApproved(sender, origin, isBurn);
+            assertBurnApproved(sender, origin, isBurn);
             return toHash(origin);
         } else if (useJoinKey(sender)) {
             return keccak256(abi.encode(sender, origin));
@@ -79,25 +80,29 @@ contract AgentMask is StorageLayout {
         agents_[key].debit_ = forDebit;
     }
 
+    uint256 constant private MAGIC_PREFIX = 0xcc;
+    
     function isMagic (address sender, address origin) private pure
         returns (bool) {
-        return sender != origin ||
-            (asNumber(sender) & 0xFF00 == 0xFF00);
+        return sender != origin &&
+            ((asNumber(sender) >> 144) == MAGIC_PREFIX);
     }
 
     function useOriginKey (address sender) private pure returns (bool) {
-        return (asNumber(sender) & 0x10000) > 0;
+        return ((asNumber(sender) >> 136) & 0x1) > 0;
     }
 
     function useJoinKey (address sender) private pure returns (bool) {
+        return ((asNumber(sender) >> 136) & 0x2) > 0;
         return (asNumber(sender) & 0x20000) > 0;
     }
 
     function useCreditOrigin (address sender) private pure returns (bool) {
+        return ((asNumber(sender) >> 136) & 0x4) > 0;
         return (asNumber(sender) & 0x40000) > 0;
     }
 
     function useDebitOrigin (address sender) private pure returns (bool) {
-        return (asNumber(sender) & 0x80000) > 0;
+        return ((asNumber(sender) >> 136) & 0x8) > 0;
     }
 }
