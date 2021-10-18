@@ -27,5 +27,10 @@ module.exports = {
          url: 'http://127.0.0.1:8545',
          chainId: 31337
        }
+       ropsten: {
+         url: 'https://ropsten.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8',
+         chainId: 3,
+       }
+
     },
 };
