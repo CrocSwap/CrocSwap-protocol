@@ -92,7 +92,7 @@ contract StorageLayout {
         bool burn_;
         bool debit_;
     }
-    mapping(bytes32 => AgentApproval) agents_;
+    mapping(bytes32 => AgentApproval) public agents_;
     /**************************************************************/
 
     

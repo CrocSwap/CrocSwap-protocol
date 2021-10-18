@@ -31,4 +31,10 @@ contract QueryHelper {
         return CrocSwapDex(dex_).surplusCollateral_(key);
     }
 
+    function queryRouterApproved (address router, address origin)
+        public view returns (bool burn, bool debit) {
+        bytes32 key = keccak256(abi.encode(router, origin));
+        (burn, debit) = CrocSwapDex(dex_).agents_(key);
+    }
+
 }

@@ -55,6 +55,11 @@ contract CrocSwapDex is HotPath {
         callCollectSurplus(recv, value, token);
     }
 
+    function approveRouter (address router, bool forDebit, bool forBurn)
+        reEntrantLock public {
+        callApproveRouter(router, forDebit, forBurn);
+    }
+
     function protocolCmd (bytes calldata input) protocolOnly public {
         callProtocolCmd(input);
     }
