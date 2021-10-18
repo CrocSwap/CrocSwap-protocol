@@ -75,7 +75,7 @@ describe('Gas Benchmarks', () => {
 
     it("mint above price", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(200, 300, 100), 183000)
+        await expectGas(test.testMintOther(200, 300, 100), 184000)
     })
 
     it("burn partial", async() => {
@@ -102,13 +102,13 @@ describe('Gas Benchmarks', () => {
 
     it("burn outside", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 83000)
+        await expectGas(test.testBurn(-200, -100, 100), 84000)
     })
 
     it("burn outside left", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 83000)
+        await expectGas(test.testBurn(-200, -100, 100), 84000)
     })
 
     it("burn liq rewards", async() => {
@@ -139,28 +139,28 @@ describe('Gas Benchmarks', () => {
 
     it("swap no pre-warm", async() => {
         await test.testMint(-100, 100, 10000)
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 129000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 128000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap small", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 111000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 110000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap tick w/o cross", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.0005))
-        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.005)), 112000)
+        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.005)), 111000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap bitmap w/o cross", async() => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 132000)
+        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 131000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
@@ -168,7 +168,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-100, 100, 10000)
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 159000)
+        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 158000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -179,7 +179,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 165000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 164000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -190,7 +190,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 186000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 185000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -201,7 +201,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 186000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 185000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -217,7 +217,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-500, 500, 1000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 321000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 320000)
         expect(await test.liquidity()).to.be.lt(1010*1024)
         expect(await test.liquidity()).to.be.gt(1000*1024)
     })
@@ -237,7 +237,7 @@ describe('Gas Benchmarks', () => {
 
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapSurplus(true, true, 1000, toSqrtPrice(1.1)), 82000)
+        await expectGas(test.testSwapSurplus(true, true, 1000, toSqrtPrice(1.1)), 81000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
