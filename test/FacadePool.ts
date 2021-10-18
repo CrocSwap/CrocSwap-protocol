@@ -51,7 +51,7 @@ export async function makeTokenTriangle(): Promise<TestPool[]> {
     let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
 
     let tokens = [tokenX, tokenY, tokenZ]
-    tokens.sort((x,y) => (x.address > y.address) ? 1 : -1)
+    tokens.sort((x,y) => (x.address.localeCompare(y.address)))
 
     let poolM = await makePoolFrom(tokens[0], tokens[1])
     let poolN = await makePoolFrom(tokens[1], tokens[2], await poolM.dex)
