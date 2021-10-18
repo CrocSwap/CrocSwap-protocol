@@ -32,13 +32,13 @@ contract PositionRegistrar is StorageLayout {
      * updating 5. */
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
-    function encodePosKey (address owner, bytes32 poolIdx)
+    function encodePosKey (bytes32 owner, bytes32 poolIdx)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx));
     }
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
-    function encodePosKey (address owner, bytes32 poolIdx,
+    function encodePosKey (bytes32 owner, bytes32 poolIdx,
                            int24 lowerTick, int24 upperTick)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx, lowerTick, upperTick));
@@ -46,7 +46,7 @@ contract PositionRegistrar is StorageLayout {
 
     /* @notice Returns the current position associated with the owner/range. If nothing
      *         exists the result will have zero liquidity. */
-    function lookupPosition (address owner, bytes32 poolIdx, int24 lowerTick,
+    function lookupPosition (bytes32 owner, bytes32 poolIdx, int24 lowerTick,
                              int24 upperTick)
         internal view returns (RangePosition storage) {
         return positions_[encodePosKey(owner, poolIdx, lowerTick, upperTick)];
@@ -54,7 +54,7 @@ contract PositionRegistrar is StorageLayout {
 
     /* @notice Returns the current position associated with the owner's ambient 
      *         position. If nothing exists the result will have zero liquidity. */
-    function lookupPosition (address owner, bytes32 poolIdx)
+    function lookupPosition (bytes32 owner, bytes32 poolIdx)
         internal view returns (AmbientPosition storage) {
         return ambPositions_[encodePosKey(owner, poolIdx)];
     }
@@ -63,7 +63,7 @@ contract PositionRegistrar is StorageLayout {
      *         the cumulative rewards since last update, and updates the fee mileage
      *         (if position still have active liquidity).
      *
-     * @param owner The address owning the position.
+     * @param owner The bytes32 owning the position.
      * @param poolIdx The index of the pool the position belongs to
      * @param lowerTick The 24-bit tick index constituting the lower range of the 
      *                  concentrated liquidity position.
@@ -78,14 +78,14 @@ contract PositionRegistrar is StorageLayout {
      *
      * @return rewards The rewards accumulated between the current and last checkpoined
      *                 fee mileage. */
-    function burnPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
+    function burnPosLiq (bytes32 owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 burnLiq, uint64 feeMileage)
         internal returns (uint64) {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         return decrementLiq(pos, burnLiq, feeMileage);
     }
 
-    function burnPosLiq (address owner, bytes32 poolIdx, uint128 burnLiq,
+    function burnPosLiq (bytes32 owner, bytes32 poolIdx, uint128 burnLiq,
                          uint64 ambientGrowth)
         internal returns (uint128 burnSeeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
@@ -132,7 +132,7 @@ contract PositionRegistrar is StorageLayout {
     /* @notice Adds liquidity to a given concentrated liquidity position, creating the
      *         position if necessary.
      *
-     * @param owner The address owning the position.
+     * @param owner The bytes32 owning the position.
      * @param poolIdx The index of the pool the position belongs to
      * @param lowerTick The 24-bit tick index constituting the lower range of the 
      *                  concentrated liquidity position.
@@ -142,13 +142,13 @@ contract PositionRegistrar is StorageLayout {
      *               previously exists, position will be created.
      * @param feeMileage The up-to-date fee mileage associated with the range. If the
      *                   position will be checkpointed with this value. */
-    function mintPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
+    function mintPosLiq (bytes32 owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 liqAdd, uint64 feeMileage) internal {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         incrementPosLiq(pos, liqAdd, feeMileage);
     }
 
-    function mintPosLiq (address owner, bytes32 poolIdx, uint128 liqAdd,
+    function mintPosLiq (bytes32 owner, bytes32 poolIdx, uint128 liqAdd,
                          uint64 ambientGrowth) internal {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         uint128 seeds = liqAdd.deflateLiqSeed(ambientGrowth);
@@ -212,13 +212,13 @@ contract PositionRegistrar is StorageLayout {
      *         in any other way. This has no impact from an aggregate liquidity and fee
      *         accumulation standpoint, and can otherwise be ignored downstream.
      * @param poolIdx The index of the pool the position belongs to.
-     * @param owner The address which currently owns the position.
-     * @param receiver The address that ownership is being transferred to.
+     * @param owner The bytes32 which currently owns the position.
+     * @param receiver The bytes32 that ownership is being transferred to.
      * @param lowerTick The tick index of the lower boundary of the position. This
      *                  does *not* change during the ownership process.
      * @param upperTick The tick index of the upper boundary of the position. This
      *                  does *not* change during the ownership process. */
-    function changePosOwner (address owner, address receiver, bytes32 poolIdx, 
+    function changePosOwner (bytes32 owner, bytes32 receiver, bytes32 poolIdx, 
                              int24 lowerTick, int24 upperTick) internal {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         RangePosition storage newPos = lookupPosition

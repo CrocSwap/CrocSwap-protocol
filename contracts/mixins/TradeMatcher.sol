@@ -14,11 +14,12 @@ import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ColdInjector.sol';
+import './AgentMask.sol';
 
 import "hardhat/console.sol";
 
 contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
-    ColdPathInjector {
+    AgentMask, ColdPathInjector {
 
     using SafeCast for int256;
     using SafeCast for int128;
@@ -37,7 +38,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash)
         internal returns (int128, int128) {
-        mintPosLiq(msg.sender, poolHash, liqAdded, curve.accum_.ambientGrowth_);
+        mintPosLiq(agentMintKey(), poolHash,
+                   liqAdded, curve.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
         return signMintFlow(base, quote);
     }
@@ -51,7 +53,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function burnAmbient (CurveMath.CurveState memory curve, uint128 liqBurned, 
                           bytes32 poolHash)
         internal returns (int128, int128) {
-        burnPosLiq(msg.sender, poolHash, liqBurned, curve.accum_.ambientGrowth_);
+        burnPosLiq(agentBurnKey(), poolHash,
+                   liqBurned, curve.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
         return signBurnFlow(base, quote);
     }
@@ -62,7 +65,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         internal returns (int128, int128) {
         uint64 feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
                                        liquidity, curve.accum_.concTokenGrowth_);
-        mintPosLiq(msg.sender, poolHash, lowTick, highTick,
+        mintPosLiq(agentMintKey(), poolHash, lowTick, highTick,
                    liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityReceivable
             (curve, liquidity, lowTick, highTick);
@@ -75,8 +78,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         internal returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
                                           liquidity, curve.accum_.concTokenGrowth_);
-        uint64 rewards = burnPosLiq(msg.sender, poolHash, lowTick, highTick,
-                                    liquidity, feeMileage);
+        uint64 rewards = burnPosLiq(agentBurnKey(), poolHash,
+                                    lowTick, highTick, liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liquidity, rewards,
                                                          lowTick, highTick);
         return signBurnFlow(base, quote);
