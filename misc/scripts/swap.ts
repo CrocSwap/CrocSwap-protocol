@@ -16,7 +16,22 @@ export const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
 
 let override = { gasPrice: BigNumber.from("10").pow(9).mul(5)}
 
-async function deploy() {
+async function fundTokens (base: MockERC20, quote: MockERC20, owner: string) {
+    await base.deposit(owner, BigNumber.from("10000000000000000"))
+    await quote.deposit(owner, BigNumber.from("10000000000000000"))
+}
+
+async function approveTokens (base: MockERC20, quote: MockERC20, dex: CrocSwapDex) {
+    await base.approve(dex.address, BigNumber.from("1000000000000000000"))
+    await quote.approve(dex.address, BigNumber.from("1000000000000000000"))
+}
+
+async function swap (dex: CrocSwapDex, base: MockERC20, quote: MockERC20) {
+    await dex.swap(base.address, quote.address, POOL_IDX, true, true, BigNumber.from(1000), 
+        toSqrtPrice(2.0), false)
+}
+
+async function main() {
     let trader = (await ethers.getSigners())[0]
 
     let factory = await ethers.getContractFactory("CrocSwapDex");
@@ -35,15 +50,15 @@ async function deploy() {
     let price = fromSqrtPrice(curve.priceRoot_)
     console.log("Price " + price.toString())
 
-    let swapTx = await dex.connect(trader)
-        .swap(base.address, quote.address, POOL_IDX, 
-            true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)
+    await fundTokens(base, quote, await trader.getAddress());
+    await approveTokens(base, quote, dex)
+
+    await swap(dex, base, quote)
 
     liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
     curve = await query.queryCurve(base.address, quote.address, POOL_IDX)
     price = fromSqrtPrice(curve.priceRoot_)
-    console.log("Swap Tx: " + swapTx.hash)
-    console.log("Liquidity " + liq.toString() + " at price " + price.toString())
+    console.log("Price " + price.toString())
 }
 
-deploy()
+main()
