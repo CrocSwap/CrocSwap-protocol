@@ -4,7 +4,6 @@ pragma solidity >=0.8.4;
 
 import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
-import '../libraries/LowGasSafeMath.sol';
 import '../libraries/CompoundMath.sol';
 import './StorageLayout.sol';
 
@@ -14,7 +13,6 @@ import "hardhat/console.sol";
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
 contract PositionRegistrar is StorageLayout {
-    using LowGasSafeMath for uint64;
     using SafeCast for uint256;
     using CompoundMath for uint128;
     using LiquidityMath for uint128;

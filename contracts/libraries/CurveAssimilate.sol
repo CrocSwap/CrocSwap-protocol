@@ -3,7 +3,6 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 import './FixedPoint.sol';
 import './LiquidityMath.sol';
@@ -14,8 +13,6 @@ import './CurveMath.sol';
  * @notice Provides functionality for incorporating arbitrary token fees into
  *         a locally stable constant-product liquidity curve. */
 library CurveAssimilate {    
-    using LowGasSafeMath for uint256;
-    using LowGasSafeMath for int256;
     using LiquidityMath for uint128;
     using CompoundMath for uint128;
     using CompoundMath for uint64;

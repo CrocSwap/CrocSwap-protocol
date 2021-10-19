@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import './TickMath.sol';
 import './LiquidityMath.sol';
 import './SafeCast.sol';
-import './LowGasSafeMath.sol';
 import './CurveMath.sol';
 import './CurveAssimilate.sol';
 import './CurveRoll.sol';
@@ -21,8 +20,6 @@ import "hardhat/console.sol";
  *         a locally stable liquidty curve within the bounds of the stable range
  *         and in a way that accumulates fees onto the curve's liquidity. */
 library SwapCurve {
-    using LowGasSafeMath for uint128;
-    using LowGasSafeMath for int128;
     using SafeCast for uint128;
     using CurveMath for CurveMath.CurveState;
     using CurveAssimilate for CurveMath.CurveState;

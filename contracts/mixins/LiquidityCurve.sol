@@ -7,7 +7,6 @@ import '../libraries/TickMath.sol';
 import '../libraries/FixedPoint.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/SafeCast.sol';
-import '../libraries/LowGasSafeMath.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';

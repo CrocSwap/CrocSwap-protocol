@@ -3,7 +3,6 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
-import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 import './FixedPoint.sol';
 import './LiquidityMath.sol';
@@ -16,8 +15,6 @@ import "hardhat/console.sol";
  * @notice Provides functionality for rolling swap flows onto a constant-product
  *         AMM liquidity curve. */
 library CurveRoll {
-    using LowGasSafeMath for uint256;
-    using LowGasSafeMath for int256;
     using SafeCast for uint256;
     using SafeCast for uint128;
     using LiquidityMath for uint128;

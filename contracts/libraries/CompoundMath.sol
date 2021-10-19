@@ -2,7 +2,6 @@
 pragma solidity >=0.8.4;
 
 import "./FixedPoint.sol";
-import "./LowGasSafeMath.sol";
 import "./TickMath.sol";
 import "./SafeCast.sol";
 
@@ -10,8 +9,6 @@ import "./SafeCast.sol";
  * @notice Library provides convenient math functionality for various transformations
  *         and reverse transformations related to compound growth. */
 library CompoundMath {
-    using LowGasSafeMath for uint256;
-    using LowGasSafeMath for int256;
     using SafeCast for uint256;
 
     /* @notice Provides a safe lower-bound approximation of the square root of 1+x
