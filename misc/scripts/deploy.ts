@@ -64,7 +64,7 @@ async function deploy() {
     let factory = await ethers.getContractFactory("CrocSwapDex");
     /*let dex = await factory.deploy(authority.getAddress(), 
         coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed*/
-    let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A")
+    let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
 
     console.log("CrocSwap Dex Created:" + dex.address)
 
@@ -110,8 +110,9 @@ async function deploy() {
     let price = fromSqrtPrice(curve.priceRoot_)
     console.log("Liquidity added  " + liq.toString() + " at price " + price.toString())
 
-    let swapTx = await dex.connect(trader).swap(base.address, quote.address, POOL_IDX, 
-        true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)
+    let swapTx = await dex.connect(trader)
+        .swap(base.address, quote.address, POOL_IDX, 
+            true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)
 
     liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
     curve = await query.queryCurve(base.address, quote.address, POOL_IDX)

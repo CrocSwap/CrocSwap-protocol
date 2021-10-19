@@ -18,7 +18,6 @@ library PoolSpecs {
         Pool head_;
         bytes32 hash_;
     }
-
     
     function queryPool (mapping(bytes32 => Pool) storage pools,
                         address tokenX, address tokenY, uint256 poolIdx)
