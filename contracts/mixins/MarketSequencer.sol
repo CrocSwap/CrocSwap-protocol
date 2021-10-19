@@ -9,7 +9,6 @@ import '../libraries/SwapCurve.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
 import '../libraries/CurveCache.sol';
-import '../libraries/TickCluster.sol';
 import '../libraries/Chaining.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
@@ -27,7 +26,6 @@ contract MarketSequencer is TradeMatcher {
     using SafeCast for int128;
     using SafeCast for uint256;
     using SafeCast for uint128;
-    using TickCluster for int24;
     using TickMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using SwapCurve for CurveMath.CurveState;
