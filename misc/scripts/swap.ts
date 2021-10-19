@@ -6,7 +6,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { toSqrtPrice, fromSqrtPrice } from '../../test/FixedPoint';
 import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
-import { CrocSwapDex } from '../../contracts/mixins/typechain/CrocSwapDex';
+import { CrocSwapDex } from '../../typechain/CrocSwapDex';
 
 /* Helper script for testing a simple swap. Do NOT use in production. */
 
@@ -50,8 +50,8 @@ async function main() {
     let price = fromSqrtPrice(curve.priceRoot_)
     console.log("Price " + price.toString())
 
-    await fundTokens(base, quote, await trader.getAddress());
-    await approveTokens(base, quote, dex)
+    //await fundTokens(base, quote, await trader.getAddress());
+    //await approveTokens(base, quote, dex)
 
     await swap(dex, base, quote)
 
