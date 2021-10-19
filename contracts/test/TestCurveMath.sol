@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.7.0;
 
-import "../libraries/FullMath.sol";
 import "../libraries/CurveMath.sol";
 import "../libraries/CurveAssimilate.sol";
 import "../libraries/CurveRoll.sol";
@@ -137,8 +136,8 @@ contract TestCurveMath {
                              int128 paidBase, int128 paidQuote) {
         uint128 flow = (isBuy == inBase) ? uint128(type(int128).max) :
             SafeCast.toUint128(inBase ?
-                    FullMath.mulDiv(liq, price, FixedPoint.Q96) :
-                    FullMath.mulDiv(liq, FixedPoint.Q96, price));
+                               FixedPoint.mulQ64(liq, price) :
+                               FixedPoint.divQ64(liq, price));
         (rollPrice, qtyLeft, paidBase, paidQuote) =
             testRoll(flow, price, liq, isBuy, inBase);
     }
