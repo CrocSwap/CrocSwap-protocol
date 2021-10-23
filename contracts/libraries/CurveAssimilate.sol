@@ -63,8 +63,8 @@ library CurveAssimilate {
      *         Because of this the result can be an arbitrary epsilon smaller than
      *         the real formula.
      * @return The imputed percent growth to aggregate liquidity resulting from 
-     *         assimilating these fees into the virtual reserves. Represented as 128-bit
-     *         fixed point, G for a (1+G) multiplier */
+     *         assimilating these fees into the virtual reserves. Represented as
+     *         Q16.48 fixed-point, where the result G is used as a (1+G) multiplier. */
     function calcLiqInflator (uint128 liq, uint128 price, uint128 feesPaid,
                               bool inBaseQty) private pure returns (uint64) {
         // First calculate the virtual reserves at the curve's current price...
@@ -81,17 +81,18 @@ library CurveAssimilate {
         private pure returns (uint64) {
         // Short-circuit when virtual reserves are smaller than fees. This can only
         // occur when liquidity is extremely small, and so is economically
-        // meanignless. But preserves numerical stability.
+        // meanignless. But guarantees numerical stability.
         if (reserve == 0 || feesPaid > reserve) { return 0; }
         
         uint128 nextReserve = reserve + feesPaid;
         uint64 inflator = nextReserve.compoundDivide(reserve);
+        
         // Since Liquidity is represented as Sqrt(X*Y) the growth rate of liquidity is
         // Sqrt(X'/X) where X' = X + delta(X)
         return inflator.approxSqrtCompound();
     }
 
-    /* @notice Adusts the fees assimilated into the liquidity curve. This is done to
+    /* @notice Adjusts the fees assimilated into the liquidity curve. This is done to
      *    hold out a small amount of collateral that doesn't expand the liquidity
      *    in the curve. That's necessary so we have slack in the virtual reserves to
      *    prevent under-collateralization resulting from fixed point precision rounding
@@ -123,6 +124,7 @@ library CurveAssimilate {
      *    to prevent under-collateralization from over-expanding liquidity past virtual
      *    reserve support. This makes the actual realized an arbitrary epsilon below
      *    the targeted liquidity
+     *
      * @dev    Price is always rounded further in the direction of the shift. This 
      *         shifts the collateralization burden in the direction of the fee-token.
      *         This makes sure that the opposite token's collateral requirements is

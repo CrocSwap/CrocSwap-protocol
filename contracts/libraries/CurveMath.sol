@@ -20,11 +20,11 @@ library CurveMath {
     using SafeCast for uint256;
     using SafeCast for uint192;
 
-    /* All CrocSwap swaps occur along a locally stable constant-product AMM curve.
-     * For large moves across tick boundaries, the state of this curve might change
-     * as range-bound liquidity is kicked in or out of the currently active curve.
-     * But for small moves within tick boundaries (or between tick boundaries with
-     * no liquidity bumps), the curve behaves like a classic constant-product AMM.
+    /* All CrocSwap swaps occur as legs across locally stable constant-product AMM
+     * curves. For large moves across tick boundaries, the state of this curve might 
+     * change as range-bound liquidity is kicked in or out of the currently active 
+     * curve. But for small moves within tick boundaries (or between tick boundaries 
+     * with no liquidity bumps), the curve behaves like a classic constant-product AMM.
      *
      * CrocSwap tracks two types of liquidity. 1) Ambient liquidity that is non-
      * range bound and remains active at all prices from zero to infinity, until 
@@ -32,12 +32,12 @@ library CurveMath {
      * arbitrary lower<->upper tick range and is kicked out of the curve when the
      * price moves out of range.
      *
-     * In the CrocSwap model all collected fees are directly incorporated as additional
-     * liquidity into the curve itself. (See CurveAssimilate.sol for more on the 
+     * In the CrocSwap model all collected fees are directly incorporated as expanded
+     * liquidity onto the curve itself. (See CurveAssimilate.sol for more on the 
      * mechanics.) All accumulated fees are added as ambient-type liquidity, even those
      * fees that belong to the pro-rata share of the active concentrated liquidity.
      * This is because on an aggregate level, we can't break down the pro-rata share
-     * of concentrated rewards to the potentially infinite concentrated range
+     * of concentrated rewards to the potentially near infinite concentrated range
      * possibilities.
      *
      * Because of this concentrated liquidity can be flatly represented as 1:1 with
@@ -49,31 +49,40 @@ library CurveMath {
      *
      * Finally concentrated liquidity rewards are represented in terms of accumulated
      * ambient seeds. This automatically takes care of the compounding of ambient 
-     * rewards compounded on top of concentrated rewards. */    
+     * rewards compounded on top of concentrated rewards. 
+     *
+     * @param ambientSeed_ The total ambient liquidity seeds in the current curve.
+     *   Will need to be inflated by the cumulative ambient growth rate to get this term's
+     *   contribution to liquidity.
+     *
+     * @param concentrated_ The total concentrated liquidity active and in range at the
+     *   current state of the curve. */
     struct CurveLiquidity {
         uint128 ambientSeed_;
         uint128 concentrated_;
     }
 
-    /* @param ambientGrowth_ The cumulative growth rate (represented as 128-bit fixed
-     *    point) of 1 ambient liquidity seed since the beggining of the pool.
+    /* @param ambientGrowth_ The cumulative growth rate (represented as Q16.48 fixed
+     *    point) of a hypothetical 1-unit of ambient liquidity held in the pool since
+     *    inception.
      *    
-     * @param concTokenGrowth_ The cumulative rewards growth rate (represented as 128-
-     *   bit fixed point) of 1 unit of concentrated liquidity that was active since the
-     *   beggining of the pool.
+     * @param concTokenGrowth_ The cumulative rewards growth rate (represented as Q16.48
+     *   fixed point) of hypothetical 1 unit of concentrated liquidity in range in the
+     *   pool since inception. 
      *
      * @dev To be conservative with collateral these growth rates should always be
      *      rounded down from their real-value results. Some minor lower-bound 
-     *      approximation is find, since all it will result in is slightly smaller 
+     *      approximation is fine, since all it will result in is slightly smaller 
      *      reward payouts. */
     struct CurveFeeAccum {
         uint64 ambientGrowth_;
         uint64 concTokenGrowth_;
     }
 
-    /* @param priceRoot_ The square root of the active price of the AMM curve 
-     *   (represented in 96-bit fixed point). Stored as a square root to make fixed-
-     *   point liquidity math linear. */
+    /* @param priceRoot_ The square root of the price ratio exchange rate between the
+     *   base and quote-side tokens in the AMM curve. (represented in Q64.64 fixed point)
+     * @dev Price ratio is stored as a square root because it makes reserve calculation
+     *   arithmetic much easier. */
     struct CurveState {
         uint128 priceRoot_;
         CurveLiquidity liq_;
