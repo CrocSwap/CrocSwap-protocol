@@ -29,8 +29,8 @@ library Bitmaps {
      *    after N bits from the right or the left.
      * @param bitmap - The 256-bit bitmap object.
      * @param shift - Exclude the first shift N bits from the index result.
-     * @param left - If true find the first set bit starting from the left, 
-     *   otherwise starting from the right.
+     * @param right - If true find the first set bit starting from the right
+     *   (least significant bit as EVM is big endian). Otherwise from the lefft.
      * @return idx - The index of the matching set bit. Index position is always
      *   left indexed starting at zero regardless of the @right parameter.
      * @return spills - If no matching set bit is found, this return value is set to

@@ -6,6 +6,17 @@ import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
 
+/* @title Storage layout base layer
+ * 
+ * @notice Only exists to enforce a single consistent storage layout. Not
+ *    designed to be externally used. All storage in any CrocSwap contract
+ *    is defined here. That allows easy use of delegatecall() to move code
+ *    over the 24kb into proxy contracts.
+ *
+ * @dev Any contract or mixin with local defined storage variables *must*
+ *    define those storage variables here and inherit this mixin. Failure
+ *    to do this may lead to storage layout inconsistencies between proxy
+ *    contracts. */
 contract StorageLayout {
 
     // Generic general-purpose storage slots
