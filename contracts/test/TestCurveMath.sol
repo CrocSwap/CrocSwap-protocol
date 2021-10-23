@@ -9,8 +9,6 @@ import "../libraries/SwapCurve.sol";
 import "hardhat/console.sol";
 
 contract TestCurveMath {
-    using CurveMath for CurveMath.SwapFrame;
-    
     function testActiveLiq (uint128 seed, uint64 growth, uint128 concentrated)
         public pure returns (uint128) {
         return CurveMath.activeLiquidity(
@@ -160,19 +158,6 @@ contract TestCurveMath {
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
         return CurveRoll.deriveImpact(curve, flow, inBase, isBuy);
-    }
-    
-    function buildSwapFrame (bool isBuy, bool inBase)
-        private pure returns (CurveMath.SwapFrame memory) {
-        CurveMath.SwapFrame memory cntx = CurveMath.SwapFrame
-            (isBuy, inBase, 0, 0);            
-        return cntx;
-    }
-
-    function buildSwap (uint128 flow, bool isBuy, bool inBase)
-        private pure returns (CurveMath.SwapAccum memory) {
-        CurveMath.SwapFrame memory cntx = buildSwapFrame(isBuy, inBase);
-        return CurveMath.SwapAccum(flow, 0, 0, 0, cntx);
     }
     
     function buildCurve (uint128 seed, uint64 growth, uint128 conc, uint128 price)

@@ -26,10 +26,9 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     using SafeCast for uint128;
     using TickMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
-    using SwapCurve for CurveMath.CurveState;
-    using SwapCurve for CurveMath.SwapAccum;
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
+    using SwapCurve for CurveMath.CurveState;
     using Directives for Directives.ConcentratedDirective;
     using Chaining for Chaining.PairFlow;
 

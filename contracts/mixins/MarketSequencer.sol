@@ -29,7 +29,6 @@ contract MarketSequencer is TradeMatcher {
     using TickMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using SwapCurve for CurveMath.CurveState;
-    using SwapCurve for CurveMath.SwapAccum;
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
     using CurveCache for CurveCache.Cache;

@@ -11,7 +11,23 @@ contract TestLiquidityCurve is LiquidityCurve {
     
     uint256 public baseFlow;
     uint256 public quoteFlow;
-    CurveMath.SwapAccum public lastSwap;
+
+    struct SwapFrame {
+        bool isBuy_;
+        bool inBaseQty_;
+        uint24 feeRate_;
+        uint8 protoCut_;
+    }
+
+     struct SwapAccum {
+        uint128 qtyLeft_;
+        int128 paidBase_;
+        int128 paidQuote_;
+        uint128 paidProto_;
+        SwapFrame cntx_;
+    }
+    
+    SwapAccum public lastSwap;
 
     function liquidityReceivable (bytes32 poolIdx,
                                   uint128 liq, int24 lower, int24 upper)
@@ -84,13 +100,13 @@ contract TestLiquidityCurve is LiquidityCurve {
     }
 
     function testSwap (uint256 poolIdx,
-                       CurveMath.SwapAccum memory accum,
+                       SwapAccum memory accum,
                        uint128 bumpPrice, uint128 swapLimit) public {
         int24 bumpTick = TickMath.getTickAtSqrtRatio(bumpPrice);
         testSwapTick(poolIdx, accum, bumpTick, swapLimit);
     }
 
-    function testSwapTick (uint256 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwapTick (uint256 poolIdx, SwapAccum memory accum,
                            int24 bumpTick, uint128 swapLimit) public {
         Chaining.PairFlow memory flow;
         Directives.SwapDirective memory swap;
@@ -123,13 +139,13 @@ contract TestLiquidityCurve is LiquidityCurve {
         lastSwap = accum;
     }
 
-    function testSwapBumpInf (uint256 poolIdx, CurveMath.SwapAccum memory accum,
+    function testSwapBumpInf (uint256 poolIdx, SwapAccum memory accum,
                               uint128 swapLimit) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
         testSwapTick(poolIdx, accum, tick, swapLimit);
     }
     
-    function testSwapLimitInf (uint256 poolIdx, CurveMath.SwapAccum memory accum) public {
+    function testSwapLimitInf (uint256 poolIdx, SwapAccum memory accum) public {
         int24 tick = accum.cntx_.isBuy_ ? TickMath.MAX_TICK : TickMath.MIN_TICK;
         uint128 limit = accum.cntx_.isBuy_ ? TickMath.MAX_SQRT_RATIO+1 :
             TickMath.MIN_SQRT_RATIO-1;
