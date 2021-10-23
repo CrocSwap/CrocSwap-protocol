@@ -9,7 +9,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 
 chai.use(solidity);
 
-describe('Pool', () => {
+describe('Pool Settle', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token
