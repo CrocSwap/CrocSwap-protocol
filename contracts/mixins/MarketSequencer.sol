@@ -56,9 +56,11 @@ contract MarketSequencer is TradeMatcher {
     }
 
     function mintOverPool (int24 bidTick, int24 askTick, uint128 liq,
-                           PoolSpecs.PoolCursor memory pool)
+                           PoolSpecs.PoolCursor memory pool,
+                           uint128 minPrice, uint128 maxPrice)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             mintRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
                       bidTick, askTick, liq, pool.hash_);
@@ -67,26 +69,32 @@ contract MarketSequencer is TradeMatcher {
     }
 
     function burnOverPool (int24 bidTick, int24 askTick, uint128 liq,
-                           PoolSpecs.PoolCursor memory pool)
+                           PoolSpecs.PoolCursor memory pool,
+                           uint128 minPrice, uint128 maxPrice)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             burnRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
                       bidTick, askTick, liq, pool.hash_);
         commitCurve(pool.hash_, curve);
     }
 
-    function mintOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool)
+    function mintOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
+                           uint128 minPrice, uint128 maxPrice)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             mintAmbient(curve, liq, pool.hash_);
         commitCurve(pool.hash_, curve);
     }
     
-    function burnOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool)
+    function burnOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
+                           uint128 minPrice, uint128 maxPrice)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        CurveMath.CurveState memory curve = snapCurve(pool.hash_);
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             burnAmbient(curve, liq, pool.hash_);
         commitCurve(pool.hash_, curve);

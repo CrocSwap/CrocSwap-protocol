@@ -41,6 +41,13 @@ contract LiquidityCurve is StorageLayout {
         return curves_[poolIdx];
     }
 
+    function snapCurveInRange (bytes32 poolIdx, uint128 minPrice,
+                               uint128 maxPrice) view internal returns
+        (CurveMath.CurveState memory curve) {
+        curve = snapCurve(poolIdx);
+        require(curve.priceRoot_ >= minPrice && curve.priceRoot_ <= maxPrice, "RC");
+    }
+
     /* @notice Writes a CurveState modified in memory back into persistent storage. 
      *         Use for the working copy from snapCurve when finalized. */
     function commitCurve (bytes32 poolIdx, CurveMath.CurveState memory curve)

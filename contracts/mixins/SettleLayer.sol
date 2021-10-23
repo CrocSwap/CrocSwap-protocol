@@ -42,18 +42,6 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    function settleMint (address base, address quote, int128 baseFlow, int128 quoteFlow,
-                         int128 limitQty, bool useSurplus) internal {
-        require(passesMintLimit(baseFlow, quoteFlow, limitQty), "K");
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
-    }
-
-    function settleBurn (address base, address quote, int128 baseFlow, int128 quoteFlow,
-                         int128 limitQty, bool useSurplus) internal {
-        require(passesBurnLimit(baseFlow, quoteFlow, limitQty), "K");
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
-    }
-
     function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
                           bool useSurplus) internal {
         (address debitor, address creditor) = agentsSettle();
