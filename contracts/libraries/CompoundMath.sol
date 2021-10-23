@@ -11,11 +11,11 @@ import "./SafeCast.sol";
 library CompoundMath {
     using SafeCast for uint256;
 
-    /* @notice Provides a safe lower-bound approximation of the square root of 1+x
+    /* @notice Provides a safe lower-bound approximation of the square root of (1+x)
      *         based on a two-term Taylor series expansion.
      * @dev    Due to approximation error, only safe to use on input in the range of 
      *         [0,1). Will always round down from the true real value.
-     * @param x  The value of x in (1+x). Represented as a 128-bit fixed-point
+     * @param x  The value of x in (1+x). Represented as a Q16.48 fixed-point
      * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
      *            fixed point. */
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
@@ -34,13 +34,12 @@ library CompoundMath {
     }
 
     /* @notice Computes the result from compounding two cumulative growth rates.
-     * @dev    Rounds down from the real value.
-     * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
-     *           fixed-point. 
-     * @param y The compounded growth rate as in (1+y). Represted as 128-bit 
-     *           fixed-point.
+     * @dev    Rounds down from the real value. Caps teh result if type exceeds the max
+     *         fixed-point value.
+     * @param x The compounded growth rate as in (1+x). Represted as Q16.48 fixed-point.
+     * @param y The compounded growth rate as in (1+y). Represted as Q16.48 fixed-point.
      * @returns The cumulative compounded growth rate as in (1+z) = (1+x)*(1+y).
-     *          Represented as 128-bit fixed-point. */
+     *          Represented as Q16.48 fixed-point. */
     function compoundStack (uint64 x, uint64 y) internal
         pure returns (uint64) {
         uint256 ONE = FixedPoint.Q48;
@@ -52,12 +51,12 @@ library CompoundMath {
     }
 
     /* @notice Computes the result from backing out a compounded growth value from
-     *         an existing value. The inverse of compoundGrow().
+     *         an existing value. The inverse of compoundStack().
      * @dev    Rounds down from the real value.
      * @param price The fixed price representing the starting value that we want
      *              to back out a pre-growth seed from.
      * @param growth The compounded growth rate to back out, as in (1+g). Represented
-     *                as 128-bit fixed-point.
+     *                as Q16.48 fixed-point
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */
     function compoundShrink (uint64 val, uint64 deflator) internal
@@ -69,16 +68,15 @@ library CompoundMath {
         return uint64(z); // Will always fit in 64-bits because shrink can only decrease
     }
     
-    /* @notice Computes the compound growth rate from based off an inflated value
-     *         end value and a starting seed value.
+    /* @notice Computes the implied compound growth rate based on the division of two
+     *     arbitrary quantities.
      * @dev    Based on this function's use, calulated growth rate will always be 
-     *         capped at 100%
-     * @param x The compounded growth rate as in (1+x). Represted as 128-bit 
-     *           fixed-point. 
-     * @param y The compounded growth rate to shrink by as in (1+y). Represted as 
-     *           128-bit fixed-point.
+     *         capped at 100%. The implied growth rate must always be non-negative.
+     * @param inflated The larger value to be divided. Any 128-bit integer or fixed point
+     * @param seed The smaller value to use as a divisor. Any 128-bit integer or fixed 
+     *             point.
      * @returns The cumulative compounded growth rate as in (1+z) = (1+x)/(1+y).
-     *          Represented as 128-bit fixed-point. */
+     *          Represeted as Q16.48. */
     function compoundDivide (uint128 inflated, uint128 seed) internal
         pure returns (uint64) {
         // Otherwise arithmetic doesn't safely fit in 256 -bit
@@ -92,17 +90,16 @@ library CompoundMath {
         return uint64(z);
     }
 
-    /* @notice Computes the result from applying a compound growth rate to a fixed
-     *         quantity.
+    /* @notice Calculates an final price from applying a growth rate to a starting price.
      * @dev    Always rounds in the direction of @shiftUp
-     * @param price The fixed price to start with, growth to be applied on top.
-     *              Represented as an unsigned integer.
+     * @param price The starting price to be compounded. Q64.64 fixed point.
      * @param growth The compounded growth rate to apply, as in (1+g). Represented
-     *                as 128-bit fixed-point.
-     * @param shiftUp If true compounds the price up by the growth rate. If false,
-     *                compounds down.
-     * @returns The post-growth price as in price*(1+g). Rounded up to next unsigned
-     *          price representation. */
+     *                as Q16.48 fixed-point
+     * @param shiftUp If true compounds the starting price up, so the result will be 
+     *                greater. If false, compounds the price down so the result will be
+     *                smaller than the original price.
+     * @returns The post-growth price as in price*(1+g) (or price*(1-g) if shiftUp is 
+     *          false). Q64.64 always founded in the direction of shiftUp. */
     function compoundPrice (uint128 price, uint64 growth, bool shiftUp) internal
         pure returns (uint128) {
         uint256 ONE = FixedPoint.Q48;
@@ -121,9 +118,9 @@ library CompoundMath {
 
     
     /* @notice Inflates a starting value by a cumulative growth rate.
-     * @dev    Rounds down from the real value.
+     * @dev    Rounds down from the real value. Result is capped at max(uint128).
      * @param seed The pre-inflated starting value as unsigned integer
-     * @param growth Cumulative growth rate as 64-bit fixed-point value.
+     * @param growth Cumulative growth rate as Q16.48 fixed-point
      * @return The ending value = seed * (1 + growth). Rounded down to nearest
      *         integer value */
     function inflateLiqSeed (uint128 seed, uint64 growth)
@@ -139,7 +136,7 @@ library CompoundMath {
     /* @notice Deflates a starting value by a cumulative growth rate.
      * @dev    Rounds down from the real value.
      * @param liq The post-inflated liquidity as unsigned integer
-     * @param growth Cumulative growth rate as 64-bit fixed-point value.
+     * @param growth Cumulative growth rate as Q16.48 fixed-point
      * @return The ending value = liq/* (1 + growth). Rounded down to nearest
      *         integer value */
     function deflateLiqSeed (uint128 liq, uint64 growth)
