@@ -98,11 +98,11 @@ library CurveAssimilate {
      *    prevent under-collateralization resulting from fixed point precision rounding
      *    on the price shift. 
      *    
-     * @dev Price can round up to one precision unit (2^-96) away from the true real
+     * @dev Price can round up to one precision unit (2^-64) away from the true real
      *    value. Therefore we have to over-collateralize the existing liquidity by
-     *    enough to buffer the virtual reserves by this amount. The formula for that
-     *    is L/2^96. Economically this is almost always a meaningless amount. Often just
-     *    1 wei (rounded up) for all but the biggest pools.
+     *    enough to buffer the virtual reserves by this amount. Economically this is 
+     *    almost always a meaningless amount. Often just 1 wei (rounded up) for all but
+     *    the biggest or most extreme priced curves. 
      *
      * @return The amount of reward fees available to assimilate into the liquidity
      *    curve after deducting the precision over-collaterilization allocation. */
@@ -119,17 +119,17 @@ library CurveAssimilate {
      *    the curve object by expanding the ambient seeds, and adjusting the cumulative
      *    growth accumulators as needed. 
      *
-     * @dev To be conservative, a number of fixed point calculations will round down in
-     *    favor of lower realized liquidity than implied by the scalar inflator. This is
-     *    to prevent under-collateralization from over-expanding liquidity past virtual
-     *    reserve support. This makes the actual realized an arbitrary epsilon below
-     *    the targeted liquidity
+     * @dev To be conservative, a number of fixed point calculations will round down 
+     *    relative to the exact mathematical liquidity value. This is to prevent 
+     *    under-collateralization from over-expanding liquidity relative to virtual 
+     *    reserves available to the pool. This means the curve's liquidity grows slightly
+     *    less than mathematical exact calculation would imply. 
      *
      * @dev    Price is always rounded further in the direction of the shift. This 
      *         shifts the collateralization burden in the direction of the fee-token.
      *         This makes sure that the opposite token's collateral requirements is
      *         unchanged. The fee token should be sufficiently over-collateralized from
-     *         a previous adjustment made in shaveForPrecision() (see method docs) */
+     *         a previous adjustment made in shaveForPrecision() */
     function stepToLiquidity (CurveMath.CurveState memory curve,
                               uint64 inflator, bool feesInBase) private pure {
         curve.priceRoot_ = CompoundMath.compoundPrice
@@ -166,7 +166,7 @@ library CurveAssimilate {
         uint64 concRewards = adjustConcRewards(concInflator, ambientInject);
 
         curve.liq_.ambientSeed_ += ambientInject;
-        curve.accum_.concTokenGrowth_ = curve.accum_.concTokenGrowth_ + concRewards;
+        curve.accum_.concTokenGrowth_ += concRewards;
     }
 
     /* @notice To avoid over-promising rewards, we need to make sure that fixed-point
