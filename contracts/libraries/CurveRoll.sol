@@ -91,7 +91,7 @@ library CurveRoll {
                           bool inBaseQty, bool isBuy, uint128 swapLeft)
         pure internal returns (int128, int128, uint128) {
         uint128 burnDown = CurveMath.priceToTokenPrecision
-            (curve.activeLiquidity(), curve.priceRoot_, isBuy);
+            (curve.activeLiquidity(), curve.priceRoot_, inBaseQty);
         require(swapLeft > burnDown, "BD");
         
         if (isBuy) {
