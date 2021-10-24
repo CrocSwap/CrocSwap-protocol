@@ -90,14 +90,14 @@ library CurveMath {
     }
 
     
-    /* @notice Calculates the total scalar amount of liquidity currently active on the 
-     *    curve.
+    /* @notice Calculates the total amount of liquidity represented by the liquidity 
+     *         curve object.
      * @dev    Result always rounds down from the real value, *assuming* that the fee
      *         accumulation fields are conservative lower-bound rounded.
      * @param curve - The currently active liqudity curve state. Remember this curve 
-     *    state is only known valid within the current tick.
-     * @return - The total scalar liquidity. Equivalent to sqrt(X*Y) in a constant-
-     *           product AMM. */
+     *    state is only known to be valid within the current tick.
+     * @return - The total scalar liquidity. Equivalent to sqrt(X*Y) in an equivalent 
+     *           constant-product AMM. */
     function activeLiquidity (CurveState memory curve) internal pure returns (uint128) {
         uint128 ambient = CompoundMath.inflateLiqSeed
             (curve.liq_.ambientSeed_, curve.accum_.ambientGrowth_);
@@ -105,8 +105,8 @@ library CurveMath {
     }
 
     /* @notice Similar to calcLimitFlows(), except returns the max possible flow in the
-     *   *opposite* direction. I.e. is inBaseQty_ is True, returns the quote token flow
-     *   for the swap.
+     *   *opposite* direction. I.e. if inBaseQty_ is True, returns the quote token flow
+     *   for the swap. And vice versa..
      *
      * @dev The fixed-point result approximates the real valued formula with close but
      *   directionally unpredicable precision. It could be slightly above or slightly
@@ -137,13 +137,16 @@ library CurveMath {
      * 
      * @param curve - The current state of the liquidity curve. No guarantee that it's
      *   liquidity stable through the entire limit range (see @dev above). Note that this
-     *   function does *not* update the curve struct object.    
-     * @param swap - The swap against which we want to calculate the limit flow.
+     *   function does *not* update the curve struct object.   
+     * @param swapQty - The total remaining quantity left in the swap.
+     * @param inBaseQty - Whether the swap quantity is denomianted in base or quote side
+     *                    token.
      * @param limitPrice - The highest (lowest) acceptable ending price of the AMM curve
-     *   for a buy (sell) swap. Represented as 96-bit fixed point. 
+     *   for a buy (sell) swap. Represented as Q64.64 fixed point square root of the 
+     *   price. 
      *
-     * @return - The maximum executable swap flow (rounded down to the next integer).
-     *           Denominated on the token side based fro swap.cntx_.inBaseQty_. Will
+     * @return - The maximum executable swap flow (rounded down by fixed precision).
+     *           Denominated on the token side based on inBaseQty param. Will
      *           always return unsigned magnitude regardless of the direction. User
      *           can easily determine based on swap context. */
     function calcLimitFlows (CurveState memory curve, uint128 swapQty,
@@ -178,8 +181,8 @@ library CurveMath {
      *   move along an AMM curve of constant liquidity.
      * 
      * @dev Result is almost always within a fixed-point precision unit from the true
-     *   real value. However in certain very rare cases, the result could be up to 2
-     *   wei below the true real value. Caller should account for this upstream. */
+     *   real value. However in certain rare cases, the result could be up to 2 wei
+     *   below the true true mathematical value. Caller should account for this */
     function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint128) {
         // For purposes of downstream calculations, we make sure that limit price is
@@ -248,12 +251,11 @@ library CurveMath {
      *
      * @dev The actual pool probably holds significantly less collateral because of the 
      *   use of concentrated liquidity. 
-     * @dev Results always round down from the precise real-valued requirement if 
-     *   fractional tokens were possible.   
+     * @dev Results always round down from the precise real-valued mathematical result.
      * 
      * @param liq - The total active liquidity in AMM curve. Represented as sqrt(X*Y)
      * @param price - The current active (square root of) price of the AMM curve. 
-     *                 represnted as 96-bit fixed point.
+     *                 represnted as Q64.64 fixed point
      * @param inBaseQty - The side of the pool to calculate the virtual reserves for.
      *
      * @returns The virtual reserves of the token (rounded down to nearest integer). 
@@ -265,7 +267,19 @@ library CurveMath {
                        FixedPoint.mulQ64(liq, price) :
                        FixedPoint.divQ64(liq, price)).toUint128();
     }
-
+    
+    /* @notice Calculated the amount of concentrated liquidity within a price range
+     *         supported by a fixed amount of collateral. Note that this calculates the 
+     *         collateral only needed by one side of the pair.
+     *
+     * @dev    Always rounds fixed-point arithmetic result down. 
+     *
+     * @param collateral The total amount of token collateral being pledged.
+     * @param inBase If true, the collateral represents the base-side token in the pair.
+     *               If false the quote side token.
+     * @param priceX The price boundary of the concentrated liquidity position.
+     * @param priceX The price boundary of the concentrated liquidity position.
+     * @returns The total amount of liquidity supported by the collateral. */
     function liquiditySupported (uint128 collateral, bool inBase,
                                  uint128 priceX, uint128 priceY)
         internal pure returns (uint128) {
@@ -280,6 +294,17 @@ library CurveMath {
         }
     }
 
+    /* @notice Calculated the amount of ambient liquidity supported by a fixed amount of 
+     *         collateral. Note that this calculates the collateral only needed by one
+     *         side of the pair.
+     *
+     * @dev    Always rounds fixed-point arithmetic result down. 
+     *
+     * @param collateral The total amount of token collateral being pledged.
+     * @param inBase If true, the collateral represents the base-side token in the pair.
+     *               If false the quote side token.
+     * @param price The current (square root) price of the curve as Q64.64 fixed point.
+     * @returns The total amount of ambient liquidity supported by the collateral. */
     function liquiditySupported (uint128 collateral, bool inBase, uint128 price)
         internal pure returns (uint128) {
         return inBase ?
@@ -316,18 +341,18 @@ library CurveMath {
      *   pools where liquidity is very high or price is very low. 
      *
      * @param liq The total liquidity in the curve.
-     * @param price The (square root) price of the curve in 96-bit fixed point.
-     * @param isRoundUp If true, we're buffering collateral for fixed point rounds to
-     *   the upside (i.e. collateral burn in the base token).
+     * @param price The (square root) price of the curve in Q64.64 fixed point
+     * @param inBase If true calculate the token precision on the base side of the pair.
+     *               Otherwise, calculate on the quote token side. 
      *
      * @return The conservative upper bound in number of tokens that should be 
      *   burned to over-collateralize a single precision unit of price rounding. If
      *   the price arithmetic involves multiple units of precision loss, this number
      *   should be multiplied by that factor. */
     function priceToTokenPrecision (uint128 liq, uint128 price,
-                                    bool isRoundUp) internal pure returns (uint128) {
+                                    bool inBase) internal pure returns (uint128) {
         uint128 liqCons = liq + 1; // Round up to be conservative
-        uint128 shift = deriveTokenPrecision(liqCons, price, isRoundUp);
+        uint128 shift = deriveTokenPrecision(liqCons, price, inBase);
         return shift + 1; // Round up by 1 wei to be conservative
     }
 
@@ -364,8 +389,8 @@ library CurveMath {
                 // If price is greater than 1, Can reduce to this (potentially loose,
                 // but still economically small) upper bound:
                 //           P >= 1
-                //    delta(Q) >= L * 2^-96/P^2
-                //             >= L * 2^-96
+                //    delta(Q) >= L * 2^-64/P^2
+                //             >= L * 2^-64
                 return liq >> 64;
             }
         }
