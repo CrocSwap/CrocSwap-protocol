@@ -10,7 +10,7 @@ library TickMath {
     /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**120
     int24 internal constant MAX_TICK = 831818;
     
-    /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
+    /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK). The reason we don't set this as min(uint128) is so that single precicion moves represent a small fraction.
     uint128 internal constant MIN_SQRT_RATIO = 65538;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint128 internal constant MAX_SQRT_RATIO = 21267430153580247136652501917186561138;
