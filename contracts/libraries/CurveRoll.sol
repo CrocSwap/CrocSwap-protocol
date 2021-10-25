@@ -23,12 +23,11 @@ library CurveRoll {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for uint128;
 
-    /* @notice Applies a given swap flow onto a constant product AMM curve and adjusts
-     *   the swap accumulators and curve price. The price target and flows are set
-     *   at a point that guarantees incremental collateral safety. 
+    /* @notice Applies a given flow onto a constant product AMM curve, adjusts the curve
+     *   price, and outputs accumulator deltas on both sides.
      *
      * @dev Note that this function does *NOT* check whether the curve is liquidity 
-     *   stable through the swap impact. It's the callers job to make sure that the 
+     *   stable through the flow impact. It's the callers job to make sure that the 
      *   impact doesn't cross through any tick barrier that knocks concentrated liquidity
      *   in/out. 
      *
@@ -37,12 +36,23 @@ library CurveRoll {
      *   fee accumulator fields are adjusted. This function does *not* collect or apply
      *   liquidity fees. It's the callers responsibility to handle fees outside this
      *   call.
-     * @param flow - The amount of tokens to swap on this leg. Denominated in quote or
-     *   base tokens based on the swap object context. In certain cases this number
-     *   may be a fixed point estimate based on a price target. Collateral safety
+     * @param flow - The amount of tokens to swap on this leg. In certain cases this 
+     *   number may be a fixed point estimate based on a price target. Collateral safety
      *   is guaranteed with up to 2 wei of precision loss.
-     * @param swap - The in-progress swap object. The accumulator fields will be 
-     *   incremented based on the swapped flow and its relevant impact. */
+     * @param inBaseQty - If true, the above flow applies to the base-side tokens in the
+     *                    pair. If false, applies to the quote-side tokens.
+     * @param isBuy - If true, the flows are paying base tokens to the pool and receiving
+     *                quote tokens. (Hence pushing the price up.) If false, vice versa.
+     * @param swapQty - The total quantity left on the swap across all legs. May or may
+     *                  not be equal to flow, or could be left depending on whether this
+     *                  leg will fill the entire quantity.
+     *
+     * @return baseFlow - The signed flow of the base-side tokens. Negative means the flow
+     *              is being paid from the pool to the user. Positive means the flow is
+     *              being paid from the user to the pool.
+     * @return quoteFlow - The signed flow of the quote-side tokens.
+     * @return qtyLeft - The amount of swapQty remaining after the flow from this leg is
+     *                   processed. */
     function rollFlow (CurveMath.CurveState memory curve, uint128 flow,
                        bool inBaseQty, bool isBuy, uint128 swapQty)
         internal pure returns (int128, int128, uint128) {
@@ -54,7 +64,7 @@ library CurveRoll {
                            nextPrice, paidFlow, paidCounter);
     }
 
-    /* @notice Moves a curve to a pre-determined price target, and adjusts the swap flows
+    /* @notice Moves a curve to a pre-determined price target, and calculates the flows
      *   as necessary to reach the target. The final curve will end at exactly that price
      *   and the flows are set to guarantee incremental collateral safety.
      *
@@ -68,9 +78,22 @@ library CurveRoll {
      *   fee accumulator fields are adjusted. This function does *not* collect or apply
      *   liquidity fees. It's the callers responsibility to handle fees outside this
      *   call.
-     * @param price - Price target that the curve will be re-pegged at.
-     * @param swap - The in-progress swap object. The accumulator fields will be 
-     *   incremented based on the swapped flow and its relevant impact. */
+     * @param price - The target limit price that the curve is being rolled to. Defined
+     *                as Q64.64 fixed point.
+     * @param inBaseQty - If true, the above flow applies to the base-side tokens in the
+     *                    pair. If false, applies to the quote-side tokens.
+     * @param isBuy - If true, the flows are paying base tokens to the pool and receiving
+     *                quote tokens. (Hence pushing the price up.) If false, vice versa.
+     * @param swapQty - The total quantity left on the swap across all legs. May or may
+     *                  not be equal to flow, or could be left depending on whether this
+     *                  leg will fill the entire quantity.
+     *
+     * @return baseFlow - The signed flow of the base-side tokens. Negative means the flow
+     *              is being paid from the pool to the user. Positive means the flow is
+     *              being paid from the user to the pool.
+     * @return quoteFlow - The signed flow of the quote-side tokens.
+     * @return qtyLeft - The amount of swapQty remaining after the flow from this leg is
+     *                   processed. */
     function rollPrice (CurveMath.CurveState memory curve, uint128 price,
                         bool inBaseQty, bool isBuy, uint128 swapQty)
         internal pure returns (int128, int128, uint128)  {
@@ -81,12 +104,12 @@ library CurveRoll {
                            paidFlow, paidCounter);
     }
 
-    /* @notice Called when a curve has reached its lower bump barrier. Because the 
-     *   barrier occurs at the first price in the tick, we need to "shave the price"
-     *   down into the next tick. The curve has kicked in liquidity that's only active
+    /* @notice Called when a curve has reached its a  bump barrier. Because the 
+     *   barrier occurs at the final price in the tick, we need to "shave the price"
+     *   over into the next tick. The curve has kicked in liquidity that's only active
      *   below this price, and we need the price to reflect the correct tick. So we burn
-     *   an economically meaningless amount of quote token wei to bring the price down
-     *   by exactly one unit of precision into the next tick. */
+     *   an economically meaningless amount of collateral token wei to shift the price 
+     *   down by exactly one unit of precision into the next tick. */
     function shaveAtBump (CurveMath.CurveState memory curve,
                           bool inBaseQty, bool isBuy, uint128 swapLeft)
         pure internal returns (int128, int128, uint128) {
@@ -101,6 +124,8 @@ library CurveRoll {
         }
     }
 
+    /* @notice After calculating a burn down amount of collateral, roll the curve over
+     *         into the next tick below the current tick. */
     function setShaveDown (CurveMath.CurveState memory curve, bool inBaseQty,
                            uint128 burnDown) private pure
         returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
@@ -110,6 +135,8 @@ library CurveRoll {
         return (0, burnDown.toInt128Sign(), !inBaseQty ? burnDown : 0);
     }
 
+    /* @notice After calculating a burn down amount of collateral, roll the curve over
+     *         into the next tick above the current tick. */
     function setShaveUp (CurveMath.CurveState memory curve, bool inBaseQty,
                          uint128 burnDown) private pure
         returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
@@ -119,6 +146,9 @@ library CurveRoll {
         return (burnDown.toInt128Sign(), 0, inBaseQty ? burnDown : 0);
     }
 
+    /* @notice After previously calculating the denominated and counter-denominated flows,
+     *         this function assigns those to the correct side of the pair and decrements
+     *         the total swap quantity by the amount spent. */
     function setCurvePos (CurveMath.CurveState memory curve,
                           bool inBaseQty, bool isBuy, uint128 swapQty,
                           uint128 price, int128 paidFlow, int128 paidCounter)
@@ -177,7 +207,9 @@ library CurveRoll {
      *
      * @param curve The constant-product AMM curve
      * @param flow  The fixed token flow from the side the swap is denominated in.
-     * @param cntx  The context of the executiing swap
+     * @param inBaseQty If true, the flow is denominated in base-side tokens.
+     * @param isBuy If true, the flows are paying base tokens to the pool and receiving
+     *              quote tokens.
      *
      * @return counterFlow The magnitude of token flow on the opposite side the swap
      *                     is denominated in. Note that this value is *not* signed. Also
@@ -225,7 +257,7 @@ library CurveRoll {
         return curvePrice;
     }
 
-    /* Because the base flow is fixed, we want to always set the price to in favor of 
+    /* Because the base flow is fixed, we want to always set the price in favor of 
      * base token over-collateralization. Upstream, we'll independently set quote token
      * flows based off the price calculated here. Since higher price increases base 
      * collateral, we round price down regardless of whether the fixed base flow is a 
@@ -299,7 +331,9 @@ library CurveRoll {
         flow = flow + ROUND_PRECISION_WEI;
         counter = counter + ROUND_PRECISION_WEI;
     }
-    
+
+    /* @notice Takes an unsigned flow magntiude and correctly signs it based on the
+     *         directiona and denomination of the flows. */
     function signMagn (uint128 flowMagn, uint128 counterMagn,
                        bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {
