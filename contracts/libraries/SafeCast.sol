@@ -25,8 +25,8 @@ library SafeCast {
         require((z = uint128(y)) == y);
     }
 
-    /// @notice Cast a uint192 to a uint128, revert on overflow
-    /// @param y The uint182 to be downcasted
+    /// @notice Cast a uint144 to a uint128, revert on overflow
+    /// @param y The uint144 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128By144(uint144 y) internal pure returns (uint128 z) {
         require((z = uint128(y)) == y);
@@ -34,7 +34,7 @@ library SafeCast {
 
     /// @notice Cast a uint256 to a uint64, revert on overflow
     /// @param y The uint64 to be downcasted
-    /// @return z The downcasted integer, now type uint128
+    /// @return z The downcasted integer, now type uint64
     function toUint64(uint256 y) internal pure returns (uint64 z) {
         require((z = uint64(y)) == y);
     }
@@ -80,6 +80,8 @@ library SafeCast {
         return uint32(time);
     }
 
+    // @notice Converts a uint128 to a uint64, capping the result to max(uint64) if the
+    //         original value overflows.
     function capUint64 (uint128 x) internal pure returns (uint64) {
         if (x >= type(uint64).max) {
             return type(uint64).max;
