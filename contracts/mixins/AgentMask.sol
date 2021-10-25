@@ -84,6 +84,13 @@ contract AgentMask is StorageLayout {
      *         the user to explicitly authorize the external smart contract beforehand
      *         using this function.
      *
+     * @dev    This authorizes for the address from msg.sender-- not tx.origin. That
+     *         requires that the authorizing user directly calls this method directly
+     *         on CrocSwap before using the external smart contract for any actions
+     *         requiring authorization. (Don't use tx.origin, because otherwise it could
+     *         allow malicious contracts to sneak in an authorization the user doesn't
+     *         want.)
+     *
      * @param router The address of the external smart contract being authorized to
      *               act on the user's behalf.
      * @param forDebit If true authorizes the smart contract to debit the user for 
@@ -92,7 +99,7 @@ contract AgentMask is StorageLayout {
      * @param forBurn If true authorizes the smart contract to burn LP positions owned
      *                by the user. If false, revokes authorization. */
     function approveAgent (address router, bool forDebit, bool forBurn) internal {
-        approveAgent(router, tx.origin, forDebit, forBurn);
+        approveAgent(router, msg.sender, forDebit, forBurn);
     }
 
     /* @notice Returns the key used to map and assign user LP positions in this call.
