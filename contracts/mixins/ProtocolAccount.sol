@@ -8,8 +8,9 @@ import '../libraries/SafeCast.sol';
 import './StorageLayout.sol';
 
 /* @title Protocol Account Mixin
- * @notice Tracks and pays out the protocol fees in the dex I.e. these are the
- *         fees belonging to the CrocSwap protocol, not the liquidity miners.
+ * @notice Tracks and pays out the accumulated protocol fees across the entire exchange 
+ *         These are the fees belonging to the CrocSwap protocol, not the liquidity 
+ *         miners.
  * @dev Unlike liquidity fees, protocol fees are accumulated as resting tokens 
  *      instead of ambient liquidity. */
 contract ProtocolAccount is StorageLayout  {
@@ -22,6 +23,7 @@ contract ProtocolAccount is StorageLayout  {
         accumProtocolFees(accum.flow_, accum.baseToken_, accum.quoteToken_);
     }
 
+    /* @notice Increments the protocol's account with the fees collected on the pair. */
     function accumProtocolFees (Chaining.PairFlow memory accum,
                                 address base, address quote) internal {
         if (accum.baseProto_ > 0) {
