@@ -37,6 +37,8 @@ library TransferHelper {
         require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
     }
 
+    // @notice Transfers native Ether to a recipient.
+    // @dev errors with TF if transfer fails
     function safeEtherSend(
         address to,
         uint256 value
