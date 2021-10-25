@@ -17,8 +17,8 @@ import "hardhat/console.sol";
 
 /* @title Swap Curve library.
  * @notice Library contains functionality for fully applying a swap directive to 
- *         a locally stable liquidty curve within the bounds of the stable range
- *         and in a way that accumulates fees onto the curve's liquidity. */
+ *         a locally stable AMM liquidty curve within the bounds of the stable range,
+ *         in a way that accumulates fees onto the curve's liquidity. */
 library SwapCurve {
     using SafeCast for uint128;
     using CurveMath for CurveMath.CurveState;
@@ -28,30 +28,26 @@ library SwapCurve {
 
     /* @notice Applies the swap on to the liquidity curve, either fully exhausting
      *   the swap or reaching the concentrated liquidity bounds or the user-specified
-     *   limit price. After calling the curve and swap objects will be updated with
+     *   limit price. After calling, the curve and swap objects will be updated with
      *   the swap price impact, the liquidity fees assimilated into the curve's ambient
      *   liquidity, and the swap accumulators incremented with the cumulative flows.
      * 
      * @param curve - The current in-range liquidity curve. After calling, price and
      *    fee accumulation will be adjusted based on the swap processed in this leg.
-     * @param accum - The in-process swap to cross against the liquidity curve. After
-     *    the call, the accumulator fields will be adjusted with the amount of flow
-     *    processed on this leg. The swap may or may not be fully exhausted. Caller 
-     *    should check qtyLeft_ field.
-     *
+     * @param accum - An accumulator for the asset pair the swap/curve applies to.
+     *    This object will be incremented with the flow processed on this leg. The swap
+     *    may or may not be fully exhausted. Caller should check qtyLeft_ field.
+     @ @param swap - The user directive specifying the swap to execute on this curve.
+     *    Defines the direction, size, and limit price. After calling, the swapQty will
+     *    be decremented with the amount of size executed in this leg.
+     * @param pool - The specifications for the pool's AMM curve, notably in this context
+     *    the fee rate and protocol take.     *
      * @param bumpTick - The tick boundary, past which the constant product AMM 
-     *    liquidity curve is no longer valid because liquidity gets knocked in or
-     *    out. The curve will never move past this tick boundary in the call. Caller's
-     *    responsibility is to set this parameter in the correct direction. I.e. buys
-     *    should be the boundary from above and sells from below. Represneted as a
-     *    24-bit tick index. (See TickMath.sol)
-     *
-     * @param swapLimit - The user-specified limit price on the swap. Like all prices
-     *    in CrocSwap, this is represented as a 96-bit fixed point of the *square root*
-     *    of the real price. Note that this the limit on the ending *curve price* not 
-     *    the realized swap price. Because the swap fills liquidity up to this point, 
-     *    the realized swap price will never be worse than this limitPrice. If 
-     *    limitPrice is inside the starting curvePrice 0 quantity will execute. */
+     *    liquidity curve is no longer known to be valid. (Either because it represents
+     *    a liquidity bump point, or a the end of a tick bitmap horizon.) The curve will 
+     *    never move past this tick boundary in the call. Caller's responsibility is to 
+     *    set this parameter in the correct direction. I.e. buys should be the boundary 
+     *    from above and sells from below. Represented as a price tick index. */
     function swapToLimit (CurveMath.CurveState memory curve,
                           Chaining.PairFlow memory accum,
                           Directives.SwapDirective memory swap,
@@ -79,12 +75,21 @@ library SwapCurve {
      *
      * @param curve The current state of the AMM liquidity curve. Must be stable without
      *              liquidity bumps through the price impact.
-     * @param swap  The swap to be executed. This function will *not* mutate any 
-     *              accumulator fields on the swap. 
-     * @param limitPrice The limit price (in square root 96-bit fixed point precision)
-     * @return liqFee The total fee accumulated to liquidity providers in the pool (in 
-     *                the opposite side tokens of the swap denomination).
-     * @return protoFee The total fee accumulated to the CrocSwap protocol. */
+     * @param swapQty The quantity specified forthis leg of the swap, may or may not be
+     *                fully executed depending on limitPrice.
+     * @param feeRate The pool's fee as a proportion of notion executed. Represented as
+     *                a multiple of 0.0001%
+     * @param protoTake The protocol's take as a share of the exchange fee. (Rest goes to
+     *                  liquidity rewards.) Represented as 1/n (with zero a special case.)
+     * @param inBaseQty If true the swap quantity is denominated as base-side tokens. If 
+     *                  false, quote-side tokens.
+     * @param limitPrice The max (min) price this leg will swap to if it's a buy (sell).
+     *                   Represented as the square root of price as a Q64.64 fixed-point.
+     *
+     * @return liqFee The total fees that's allocated as liquidity rewards accumulated
+     *                to liquidity providers in the pool (in the opposite side tokens of
+     *                the swap denomination).
+     * @return protoFee The total fee accumulated as CrocSwap protocol fees. */
     function vigOverSwap (CurveMath.CurveState memory curve, uint128 swapQty,
                           uint24 feeRate, uint8 protoTake,
                           bool inBaseQty, uint128 limitPrice)
@@ -93,6 +98,30 @@ library SwapCurve {
         (liqFee, protoFee) = vigOverFlow(flow, feeRate, protoTake);
     }
 
+    /* @notice Give a pre-determined price limit, executes a fixed amount of swap 
+     *         quantity into the liquidity curve. 
+     *
+     * @dev    Note that this function does *not* process liquidity fees, and those should
+     *         be collected and assimilated into the curve *before* calling this function.
+     *         Otherwise we may reach the end of the locally stable curve and not be able
+     *         to correctly account for the imapct on the curve.
+     *
+     * @param curve The liquidity curve state being executed on. This object will udpate 
+     *              with the post-swap impact.
+     * @param inBaseQty If true, the swapQty param is denominated in base-side tokens.
+     * @param isBuy If true, the swap is paying base tokens to the pool and receiving 
+     *              quote tokens.
+     * @param swapQty The total quantity to be swapped. May or may not be fully exhausted
+     *                depending on limitPrice.
+     * @param limitPrice The max (min) price this leg will swap to if it's a buy (sell).
+     *                   Represented as the square root of price as a Q64.64 fixed-point.
+     *
+     * @return paidBase The amount of base-side token flow associated with this leg of
+     *                  the swap (not counting previously collected fees). If negative
+     *                  pool is paying out base-tokens. If posistive pool is collecting.
+     * @return paidQuote The amount of quote-side token flow for this leg of the swap.
+     * @return qtyLeft The total amount of swapQty left after this leg executes. If swap
+     *                 fully executes, this value will be zero. */
     function swapOverCurve (CurveMath.CurveState memory curve,
                             bool inBaseQty, bool isBuy, uint128 swapQty,
                             uint128 limitPrice) pure private
@@ -161,6 +190,8 @@ library SwapCurve {
         return bounded;
     }
 
+    /* @notice Finds the effective max (min) swap limit price giving a bump tick index
+     *         boundary and a user specified limitPrice. */
     function boundLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
         pure private returns (uint128) {
         if (bumpTick <= TickMath.MIN_TICK || bumpTick >= TickMath.MAX_TICK) {
@@ -203,6 +234,8 @@ library SwapCurve {
         return assignFees(liqFees, exchFees, inBaseQty);
     }
 
+    /* @notice Correctly applies the liquidity and protocol fees to the correct side in
+     *         in th pair, given how the swap is denominated. */
     function assignFees (uint128 liqFees, uint128 exchFees, bool inBaseQty)
         pure private returns (int128 paidBase, int128 paidQuote,
                               uint128 paidProto) {
@@ -215,6 +248,8 @@ library SwapCurve {
         paidProto = exchFees;
     }
 
+    /* @notice Given a fixed flow and a fee rate, calculates the owed liquidty and 
+     *         protocol fees. */
     function vigOverFlow (uint128 flow, uint24 feeRate, uint8 protoProp)
         private pure returns (uint128 liqFee, uint128 protoFee) {
         // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
