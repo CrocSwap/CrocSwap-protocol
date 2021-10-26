@@ -10,6 +10,9 @@ import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
+/* @title Oracle historian
+ * @notice Provides a way to checkpoint and track a long history of prices and liquidity
+ *         over time. (Not currently used by top-level CrocSwap contract). */
 contract OracleHistorian is StorageLayout {
     using TickMath for uint128;
     using TickCluster for int24;

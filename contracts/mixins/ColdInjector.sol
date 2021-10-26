@@ -9,11 +9,18 @@ import '../libraries/Directives.sol';
 
 import "hardhat/console.sol";
 
+/* @title Cold path injector
+ * @notice Because of the Ethereum contract limit, much of the CrocSwap code is pushed
+ *         into sidecar proxy contracts, which is involed with DELEGATECALLs. The code
+ *         moved to these sidecars is less gas critical ("cold path") than the code in
+ *         in the core contract ("hot path"). This provides a facility for invoking that
+ *         cold path code and setting up the DELEGATECALLs in a standard and safe way. */
 contract ColdPathInjector is StorageLayout {
     using CurveCache for CurveCache.Cache;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
-    
+
+    /* @notice Passes through the initPool call in ColdPath sidecar. */
     function callInitPool (address base, address quote, uint24 poolIdx,  
                            uint128 price) internal {
         (bool success, ) = coldPath_.delegatecall(
@@ -23,12 +30,14 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    /* @notice Passes through the protocolCmd call in ColdPath sidecar. */
     function callProtocolCmd (bytes calldata input) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
     }
-    
+
+    /* @notice Passes through the collectSurplus call in ColdPath sidecar. */
     function callCollectSurplus (address recv, int128 value, address token) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature
@@ -36,6 +45,7 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    /* @notice Passes through the approveRouter call in ColdPath sidecar. */
     function callApproveRouter (address router, bool forDebit, bool forBurn) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature
@@ -43,19 +53,21 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
+    /* @notice Passes through the trade() call in LongPath sidecar. */
     function callTradePath (bytes calldata input) internal {
         (bool success, ) = longPath_.delegatecall(
             abi.encodeWithSignature("trade(bytes)", input));
         require(success);
     }
 
+    /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
     function callWarmPath (bytes calldata input) internal {
         (bool success, ) = warmPath_.delegatecall(
             abi.encodeWithSignature("tradeWarm(bytes)", input));
         require(success);
     }
 
-    
+    /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
@@ -75,6 +87,7 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (int128, int128, uint128));
     }
 
+    /* @notice Invokes burnAmbient() call in MicroPaths sidecar and relays the result. */
     function callBurnAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
@@ -94,8 +107,8 @@ contract ColdPathInjector is StorageLayout {
          curve.curve_.liq_.ambientSeed_) = 
             abi.decode(output, (int128, int128, uint128));
     }
-    
 
+    /* @notice Invokes mintRange() call in MicroPaths sidecar and relays the result. */
     function callMintRange (CurveCache.Cache memory curve,
                             int24 bidTick, int24 askTick, uint128 liq,
                             bytes32 poolHash) internal
@@ -117,7 +130,7 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (int128, int128, uint128, uint128));
     }
     
-
+    /* @notice Invokes burnRange() call in MicroPaths sidecar and relays the result. */
     function callBurnRange (CurveCache.Cache memory curve,
                             int24 bidTick, int24 askTick, uint128 liq,
                             bytes32 poolHash) internal
@@ -138,7 +151,7 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (int128, int128, uint128, uint128));
     }
 
-    
+    /* @notice Invokes sweepSwap() call in MicroPaths sidecar and relays the result. */
     function callSwap (Chaining.PairFlow memory flow,
                        CurveCache.Cache memory curve,
                        Directives.SwapDirective memory swap,
