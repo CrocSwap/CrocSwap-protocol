@@ -19,7 +19,7 @@ contract PositionRegistrar is StorageLayout {
 
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
-     *    2) The pool the position's on.
+     *    2) The pool the position is on.
      *    2) Lower tick bound on the range
      *    3) Upper tick bound on the range
      *    4) Total liquidity
@@ -62,7 +62,7 @@ contract PositionRegistrar is StorageLayout {
      *         (if position still have active liquidity).
      *
      * @param owner The bytes32 owning the position.
-     * @param poolIdx The index of the pool the position belongs to
+     * @param poolIdx The hash key of the pool the position lives on.
      * @param lowerTick The 24-bit tick index constituting the lower range of the 
      *                  concentrated liquidity position.
      * @param upperTick The 24-bit tick index constituting the upper range of the 
