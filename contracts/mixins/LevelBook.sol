@@ -36,7 +36,7 @@ contract LevelBook is TickCensus {
      *         behavior is undefined. This is safe to call with non-initialized zero
      *         ticks but should generally be avoided for gas efficiency reasons.
      *
-     * @param poolIdx - The index of the pool being traded on.
+     * @param poolIdx - The hash index of the pool being traded on.
      * @param tick - The 24-bit tick index being crossed.
      * @param isBuy - If true indicates that price is crossing the tick boundary from 
      *                 below. If false, means tick is being crossed from above. 
@@ -65,20 +65,19 @@ contract LevelBook is TickCensus {
         return levels_[keccak256(abi.encodePacked(poolIdx, tick))];
     }
 
+    /* @notice Retrieves a storage pointer to the level associated with the tick. */
     function fetchLevel (bytes32 poolIdx, int24 tick) private view returns
         (BookLevel storage) {
         return levels_[keccak256(abi.encodePacked(poolIdx, tick))];
     }
 
+    /* @notice Deletes the level at the tick. */
     function deleteLevel (bytes32 poolIdx, int24 tick) private {
         delete levels_[keccak256(abi.encodePacked(poolIdx, tick))];
     }
 
     /* @notice Adds the liquidity associated with a new range order into the associated
      *         book levels, initializing the level structs if necessary.
-     *
-     * @dev This method will enforce the minimum tick spacing constraint by requiring 
-     *      that any upper or lower bound tick index is modulo the current tick size. 
      * 
      * @param poolIdx - The index of the pool the liquidity is being added to.
      * @param midTick - The tick index associated with the current price of the AMM curve
@@ -134,6 +133,8 @@ contract LevelBook is TickCensus {
         if (deleteAsk) { deleteLevel(poolIdx, askTick); }
     }
 
+    /* @notice Initializes a new level, including marking the tick as active in the 
+     *         bitmap, if the level doesn't previously exist. */
     function initLevel (bytes32 poolIdx, int24 midTick,
                         int24 tick, uint64 feeGlobal) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
@@ -144,7 +145,8 @@ contract LevelBook is TickCensus {
             bookmarkTick(poolIdx, tick);
         }
     }
-    
+
+    /* @notice Increments bid liquidity on a previously existing level. */
     function addBid (bytes32 poolIdx, int24 tick, uint96 incrLots) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         uint96 prevLiq = lvl.bidLots_;
@@ -152,19 +154,24 @@ contract LevelBook is TickCensus {
         lvl.bidLots_ = newLiq;
     }
 
+    /* @notice Increments ask liquidity on a previously existing level. */    
     function addAsk (bytes32 poolIdx, int24 tick, uint96 incrLots) private {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         uint96 prevLiq = lvl.askLots_;
         uint96 newLiq = prevLiq.addLots(incrLots);
         lvl.askLots_ = newLiq;
     }
-    
+
+    /* @notice Decrements bid liquidity on a level, and also removes the level from
+     *          the tick bitmap if necessary. */
     function removeBid (bytes32 poolIdx, int24 tick,
                         uint96 subLots) private returns (bool) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         uint96 prevLiq = lvl.bidLots_;
         uint96 newLiq = prevLiq.minusLots(subLots);
-        
+
+        // A level should only be marked inactive in the tick bitmap if *both* bid and
+        // ask liquidity are zero.
         lvl.bidLots_ = newLiq;
         if (newLiq == 0 && lvl.askLots_ == 0) {
             forgetTick(poolIdx, tick);
@@ -173,6 +180,8 @@ contract LevelBook is TickCensus {
         return false;
     }    
 
+    /* @notice Decrements ask liquidity on a level, and also removes the level from
+     *          the tick bitmap if necessary. */    
     function removeAsk (bytes32 poolIdx, int24 tick,
                         uint96 subLots) private returns (bool) {
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
@@ -194,7 +203,19 @@ contract LevelBook is TickCensus {
      * @dev This returned result only has meaning when compared against the result
      *      from the same method call on the same range at a different time. Any
      *      given range could have an arbitrary offset relative to the pool's actual
-     *      cumulative rewards. */
+     *      cumulative rewards.
+     *
+     * @param poolIdx The hash key specifying the pool being operated on.
+     * @param currentTick The price tick of the curve's current price
+     * @param lowerTick The prick tick of the lower boundary of the range order
+     * @param lowerTick The prick tick of the upper boundary of the range order
+     * @param feeGlobal The cumulative rewards accumulated to a single unit of 
+     *                  concentrated liquidity that was active since pool inception.
+     *
+     * @return The cumulative growth rate to a single unit of concentrated liquidity
+     *         within the range. (Adjusted for an arbitrary offset that stays consistent
+     *         over time. Only use this number to compare growth in the range over two
+     *         points in time) */
     function clockFeeOdometer (bytes32 poolIdx, int24 currentTick,
                                int24 lowerTick, int24 upperTick, uint64 feeGlobal)
         internal view returns (uint64) {
