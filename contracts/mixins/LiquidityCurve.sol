@@ -36,11 +36,17 @@ contract LiquidityCurve is StorageLayout {
         require(curve.priceRoot_ > 0, "J");
     }
 
+    /* @notice Snapshots the curve for pool initialization operation.
+     * @dev    This only skips the initialization check from snapCurve() does *not* assert
+     *         that the curve was not previously initialized. That's the caller's 
+     *         responsibility */
     function snapCurveInit (bytes32 poolIdx) view internal returns
         (CurveMath.CurveState memory) {
         return curves_[poolIdx];
     }
 
+    /* @notice Snapshots the curve to memory, but verifies that the price occurs within
+     *         a pre-specified price range. If not, reverts the entire transaction. */
     function snapCurveInRange (bytes32 poolIdx, uint128 minPrice,
                                uint128 maxPrice) view internal returns
         (CurveMath.CurveState memory curve) {
@@ -62,7 +68,7 @@ contract LiquidityCurve is StorageLayout {
      *      but it's the callers responsibility to make sure that the required 
      *      collateral is actually collected.
      *
-     * @param poolIdx   The index of the pool applied to
+     * @param curve The liquidity curve object that range liquidity will be added to.
      * @param liquidity The amount of liquidity being added. Represented in the form of
      *                  sqrt(X*Y) where X,Y are the virtual reserves of the tokens in a
      *                  constant product AMM. Calculate the same whether in-range or not.
@@ -88,7 +94,8 @@ contract LiquidityCurve is StorageLayout {
      *         product ambient liquidity.
      * @dev Like above, it's the caller's responsibility to collect the necessary 
      *      collateral to add to the pool.
-
+     *
+     * @param curve The liquidity curve object that ambient liquidity will be added to.
      * @param seeds The number of ambient seeds being added. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
@@ -107,7 +114,9 @@ contract LiquidityCurve is StorageLayout {
      * @dev It's the caller's responsibility to actually return the collateral to the 
      *      user. This method will only calculate what's owed, but won't actually pay it.
      *
-     * @param poolIdx   The index of the pool applied to
+     * 
+     * @param curve The liquidity curve object that concentrated liquidity will be 
+     *              removed from.
      * @param liquidity The amount of liquidity being removed, whether in-range or not.
      *                  Represented in the form of sqrt(X*Y) where x,Y are the virtual
      *                  reserves of a constant product AMM.
@@ -161,7 +170,8 @@ contract LiquidityCurve is StorageLayout {
     /* @notice Same as above liquidityPayable() but used for non-range based ambient
      *         constant product liquidity.
      *
-     * @param poolIdx   The index of the pool applied to
+     * @param curve The liquidity curve object that ambient liquidity will be 
+     *              removed from.
      * @param seeds The number of ambient seeds being added. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
@@ -178,22 +188,28 @@ contract LiquidityCurve is StorageLayout {
         bumpAmbient(curve, -(seeds.toInt128Sign()));
     }
 
+    /* @notice Directly increments the ambient liquidity on the curve. */
     function bumpAmbient (CurveMath.CurveState memory curve, uint128 seedDelta)
         private pure {
         bumpAmbient(curve, seedDelta.toInt128Sign());
     }
 
+    /* @notice Directly increments the ambient liquidity on the curve. */
     function bumpAmbient (CurveMath.CurveState memory curve, int128 seedDelta)
         private pure {
         curve.liq_.ambientSeed_ =
             LiquidityMath.addDelta(curve.liq_.ambientSeed_, seedDelta);
     }
 
+    /* @notice Directly increments the concentrated liquidity on the curve, depending
+     *         on whether it's in range. */
     function bumpConcentrated (CurveMath.CurveState memory curve,
                                uint128 liqDelta, bool inRange) private pure {
         bumpConcentrated(curve, int128(uint128(liqDelta)), inRange);
     }
-    
+
+    /* @notice Directly increments the concentrated liquidity on the curve, depending
+     *         on whether it's in range. */    
     function bumpConcentrated (CurveMath.CurveState memory curve,
                                int128 liqDelta, bool inRange) private pure {
         if (inRange) {
@@ -203,7 +219,9 @@ contract LiquidityCurve is StorageLayout {
     }
     
 
-    /* @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
+    /* @notice Calculates the liquidity flows associated with the concentrated liquidity
+     *         from a range order.
+     * @dev Uses fixed-point math that rounds down up to 2 wei from the true real valued
      *   flows. Safe to pay this flow, but when pool is receiving caller must make sure
      *   to round up for collateral safety. */
     function liquidityFlows (uint128 price, uint128 liquidity,
@@ -222,8 +240,10 @@ contract LiquidityCurve is StorageLayout {
             inRange = true;
         }
     }
-    
-    /* @dev Uses fixed-point math that rounds down at each division. Because there are
+
+    /* @notice Calculates the liquidity flows associated with the concentrated liquidity
+     *         from a range order.    
+     * @dev Uses fixed-point math that rounds down at each division. Because there are
      *   divisions, max precision loss is under 2 wei. Safe to pay this flow, but when
      *   when pool is receiving, caller must make sure to round up for collateral 
      *   safety. */
@@ -239,7 +259,7 @@ contract LiquidityCurve is StorageLayout {
      *         liquidity curve at an arbitrary price.
      * @dev Throws error if price was already initialized. 
      *
-     * @param poolIdx   The index of the pool applied to
+     * @param curve   The liquidity curve for the pool being initialized.
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
     function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
         internal pure {
@@ -247,6 +267,7 @@ contract LiquidityCurve is StorageLayout {
         curve.priceRoot_ = priceRoot;
     }
 
+    /* @notice Converts a price tick index range into a range of prices. */
     function translateTickRange (int24 lowerTick, int24 upperTick)
         private pure returns (uint128 bidPrice, uint128 askPrice) {
         require(upperTick > lowerTick, "O");
@@ -260,7 +281,9 @@ contract LiquidityCurve is StorageLayout {
     // token reserve deltas. (See CurveMath's deltaPriceQuote() function.) 4 gives us a
     // safe cushion and is economically meaningless.
     uint8 constant TOKEN_ROUND = 4;
-    
+
+    /* @notice Rounds liquidity flows up in cases where we want to be conservative with
+     *         collateral. */
     function chargeConservative (uint128 liqBase, uint128 liqQuote, bool inRange)
         private pure returns (uint128, uint128) {
         return ((liqBase > 0 || inRange) ? liqBase + TOKEN_ROUND : 0,
