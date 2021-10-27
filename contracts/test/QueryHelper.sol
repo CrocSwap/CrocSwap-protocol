@@ -25,6 +25,11 @@ contract QueryHelper {
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
+    function queryPrice (address base, address quote, uint24 poolIdx)
+        public view returns (uint128) {
+        return queryCurve(base, quote, poolIdx).priceRoot_;
+    }
+
     function querySurplus (address owner, address token)
         public view returns (uint128) {
         bytes32 key = keccak256(abi.encode(owner, token));

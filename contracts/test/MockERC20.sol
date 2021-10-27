@@ -7,6 +7,9 @@ import "../interfaces/IERC20Minimal.sol";
 contract MockERC20 is IERC20Minimal {
     mapping(address => uint256) public override balanceOf;
     mapping(address => mapping(address => uint256)) public override allowance;
+    
+    uint8 public decimals;
+    string public symbol;
 
     function deposit (address acct, uint256 qty) public {
         balanceOf[acct] = balanceOf[acct] + qty;
@@ -42,5 +45,13 @@ contract MockERC20 is IERC20Minimal {
     function approveFor (address owner, address agent, uint256 qty) external {
         allowance[owner][agent] = qty;
         emit Approval(owner, agent, qty);
+    }
+
+    function setDecimals (uint8 dec) public {
+        decimals = dec;
+    }
+
+    function setSymbol (string calldata sym) public {
+        symbol = sym;
     }
 }

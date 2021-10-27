@@ -6,6 +6,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { toSqrtPrice, fromSqrtPrice } from '../../test/FixedPoint';
 import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
+import { CrocSwapDex } from '../../contracts/typechain/CrocSwapDex';
 
 /* Helper script for deploying a basic mock setup to a localhost or test network.
  * Only for ad-hoc testing purposes. Do NOT use in production. */
@@ -33,7 +34,7 @@ function encodeMintAmbient (base: string, quote: string,
         [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
 }
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(5)}
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 1000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -77,28 +78,38 @@ async function deploy() {
         quote = holder
     }*/
 
-    let base = factory.attach("0x66B5b7f1F5604FC33aF247D59a7938369B37358F")
-    let quote = factory.attach("0x6c53969F9273560F393a8BcbFA40906E7B51b1B2")
+    //let base = factory.attach("0x66B5b7f1F5604FC33aF247D59a7938369B37358F")
+    //let quote = factory.attach("0x6c53969F9273560F393a8BcbFA40906E7B51b1B2")
+    let base = factory.attach("0x10e13e6DE3BD3A5D2e0361F56a695EB08731E40B") as MockERC20
+    let quote = factory.attach("0x788C030D0ac6cd3902Da1Bcc3C6945b8be6f3BA2") as MockERC20
 
     console.log("Mock Base Token created: " + base.address)
-    console.log("Mock Quote Token created: " + quote.address)
+    console.log("Mock Quote Token created: " + quote.address);
 
-    /*await base.deposit(await lp.getAddress(), BIG_QTY, override)
+    /*await base.setDecimals(3)
+    await quote.setDecimals(6)*/
+    await base.setSymbol("USDC")
+    await quote.setSymbol("WETH")
+    return;
+
+    await base.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
+    await quote.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
+    await base.deposit(await lp.getAddress(), BIG_QTY, override)
     await quote.deposit(await lp.getAddress(), BIG_QTY, override)
     await base.deposit(await trader.getAddress(), BIG_QTY, override)
     await quote.deposit(await trader.getAddress(), BIG_QTY, override)
     await base.connect(lp).approve(dex.address, BIG_QTY, override)
     await quote.connect(lp).approve(dex.address, BIG_QTY, override)
     await base.connect(trader).approve(dex.address, BIG_QTY, override)
-    await quote.connect(trader).approve(dex.address, BIG_QTY, override)*/
+    await quote.connect(trader).approve(dex.address, BIG_QTY, override)
 
-    /*let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
-    await dex.protocolCmd(protoCmd, override)
-    await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)*/
+    //let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
+    //await dex.protocolCmd(protoCmd, override)
+    await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)
 
     console.log("Pool initialized at Index: " + POOL_IDX)
 
-    let mintCmd = encodeMintAmbient(base.address, quote.address, 1000000000, BIG_QTY, false)
+    let mintCmd = encodeMintAmbient(base.address, quote.address, 100000000000, BIG_QTY, false)
     await dex.connect(lp).tradeWarm(mintCmd, override)
 
     factory = await ethers.getContractFactory("QueryHelper")
