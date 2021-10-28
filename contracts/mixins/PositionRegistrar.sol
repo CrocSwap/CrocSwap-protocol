@@ -83,6 +83,16 @@ contract PositionRegistrar is StorageLayout {
         return decrementLiq(pos, burnLiq, feeMileage);
     }
 
+    /* @notice Removes all or some liquidity associated with a an ambient position. 
+     *         
+     * @param owner The bytes32 owning the position.
+     * @param poolIdx The hash key of the pool the position lives on.
+     * @param burnLiq The amount of liquidity to remove from the position. Caller is free
+     *                to oversize this number and it will just cap at the position size.
+     * @param ambientGrowth The up-to-date ambient liquidity seed deflator for the curve.
+     *
+     * @return burnSeeds The total number of ambient seeds that have been removed with
+     *                   this operation. */
     function burnPosLiq (bytes32 owner, bytes32 poolIdx, uint128 burnLiq,
                          uint64 ambientGrowth)
         internal returns (uint128 burnSeeds) {
@@ -100,6 +110,8 @@ contract PositionRegistrar is StorageLayout {
         }
     }
 
+    /* @notice Decrements a range order position with the amount of liquidity being
+     *         burned, and calculates the incremental rewards mileage. */
     function decrementLiq (RangePosition storage pos,
                            uint128 burnLiq, uint64 feeMileage) internal returns
         (uint64 rewards) {
@@ -146,7 +158,17 @@ contract PositionRegistrar is StorageLayout {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         incrementPosLiq(pos, liqAdd, feeMileage);
     }
-
+    
+    /* @notice Adds ambient liquidity to a give position, creating a new position tracker
+     *         if necessry.
+     *         
+     * @param owner The bytes32 owning the position.
+     * @param poolIdx The hash key of the pool the position lives on.
+     * @param liqAdd The amount of liquidity to add to the position.
+     * @param ambientGrowth The up-to-date ambient liquidity seed deflator for the curve.
+     *
+     * @return seeds The total number of ambient seeds that this incremental liquidity
+     *               corresponds to. */
     function mintPosLiq (bytes32 owner, bytes32 poolIdx, uint128 liqAdd,
                          uint64 ambientGrowth) internal returns (uint128 seeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
@@ -155,6 +177,9 @@ contract PositionRegistrar is StorageLayout {
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }
 
+    /* @notice Increments a range order position with the amount of liquidity being
+     *         burned. If necessary blends a weighted average rewards mileage with the
+     *         previous position. */
     function incrementPosLiq (RangePosition storage pos, uint128 liqAdd,
                               uint64 feeMileage) private {
         uint128 liq = pos.liquidity_;
@@ -199,6 +224,7 @@ contract PositionRegistrar is StorageLayout {
         return termX + termY;
     }
 
+    /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
         private pure returns (uint64) {
         // Can safely cast, because result will always be smaller than origina since
