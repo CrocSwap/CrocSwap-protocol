@@ -8,7 +8,7 @@ import './StorageLayout.sol';
 
 import "hardhat/console.sol";
 
-/* @title Tick census contract.
+/* @title Tick census mixin.
  * @notice Tracks which tick indices have an active liquidity bump, making it gas
  *   efficient for random read and writes, and to find the next bump tick boundary
  *   on the curve. */
