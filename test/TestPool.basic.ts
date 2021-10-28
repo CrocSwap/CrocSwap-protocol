@@ -512,8 +512,24 @@ describe('Pool', () => {
         expect(await test.snapBaseOwed()).to.equal(-6270693)
     })
 
+    it("mint ambient seed inflator", async() => {
+        await test.testMintAmbient(5000);
+        await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
+        await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.5))
 
-    it("mint ambient with prev growth", async() => {
+        let openLiq = (await test.liquidity()).toNumber()
+        expect(openLiq).to.gt(5000)
+
+        await test.testMintAmbient(15000); 
+        expect(await test.liquidity()).to.equal(openLiq + 15000*1024)
+
+        await test.testBurnAmbient(15000);
+        expect(await test.liquidity()).to.equal(openLiq)
+        expect(await test.snapQuoteOwed()).to.equal(-12541386)
+        expect(await test.snapBaseOwed()).to.equal(-18812079)
+    })
+
+    it("burn ambient growth deflator", async() => {
         await test.testMintAmbient(5000);
         await test.testMint(-5000, 8000, 1000); 
 
@@ -523,11 +539,40 @@ describe('Pool', () => {
         let openLiq = (await test.liquidity()).toNumber()
 
         await test.testMintAmbient(15000);
-        const SEED_SHRINK = 49894 // Seed deflator given 0.003% fee growth
-        expect(await test.liquidity()).to.equal(openLiq + (15000*1024 + SEED_SHRINK))
+        expect(await test.liquidity()).to.equal(openLiq + 15000*1024)
 
-        await test.testBurnAmbient(15000);
-        expect(await test.liquidity()).to.equal(openLiq)
+        await test.testBurnAmbient(5000);
+        expect(await test.liquidity()).to.equal(openLiq + 15000*1024 - 5000*1024)
+        expect(await test.snapQuoteOwed()).to.equal(-4180461)
+        expect(await test.snapBaseOwed()).to.equal(-6270692)
+    })
+
+    it("burn ambient post growth deflator", async() => {
+        await test.testMintAmbient(5000);
+        await test.testMintAmbient(15000);
+
+        await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
+        await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.5))
+
+        let openLiq = (await test.liquidity()).toNumber()
+        await test.testBurnAmbient(5000);
+        const ROUND_DOWN = 1
+        expect(await test.liquidity()).to.equal(openLiq - 5000*1024 + ROUND_DOWN)
+        expect(await test.snapQuoteOwed()).to.equal(-4180461)
+        expect(await test.snapBaseOwed()).to.equal(-6270692)
+    })
+
+
+    it("burn ambient over provision", async() => {
+        await test.testMintAmbient(5000);
+
+        await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
+        await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.5))
+
+        await test.testBurnAmbient(6000);
+        expect(await test.liquidity()).to.equal(0)
+        expect(await test.snapQuoteOwed()).to.equal(-4194040)
+        expect(await test.snapBaseOwed()).to.equal(-6291061)
     })
 
 })
