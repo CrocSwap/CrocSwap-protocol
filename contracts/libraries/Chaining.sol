@@ -132,18 +132,16 @@ library Chaining {
      * @param flow The previously accumulated flow on this pair. Based on the context 
      *   above, this function will target the accumulated flow contained herein.
      * 
-     * @return seed The amount of ambient liquidity seeds to mint/burn to meet the
-     *   target. 
+     * @return liq The amount of ambient liquidity to mint/burn to meet the target.
      * @return isAdd If true, then liquidity must be minted to neutralize rolling flow,
      *   If false, then liquidity must be burned. */
     function plugLiquidity (RollTarget memory roll,
                             CurveMath.CurveState memory curve,
                             PairFlow memory flow)
-        internal pure returns (uint128 seed, bool isAdd) {
+        internal pure returns (uint128 liq, bool isAdd) {
         uint128 collateral;
         (collateral, isAdd) = collateralDemand(roll, flow);
-        uint128 liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
-        seed = CompoundMath.deflateLiqSeed(liq, curve.accum_.ambientGrowth_);
+        liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
     }
     
     /* @notice Computes the amount of concentrated liquidity to mint/burn in order to 
