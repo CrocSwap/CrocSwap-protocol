@@ -88,13 +88,14 @@ contract PositionRegistrar is StorageLayout {
         internal returns (uint128 burnSeeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         burnSeeds = burnLiq.deflateLiqSeed(ambientGrowth);
-        uint128 nextSeeds = pos.seeds_.minusDelta(burnSeeds);
-        if (nextSeeds == 0) {
+
+        if (burnSeeds >= pos.seeds_) {
+            burnSeeds = pos.seeds_;
             // Solidity optimizer should convert this to a single refunded SSTORE
             pos.seeds_ = 0;
             pos.timestamp_ = 0;
         } else {
-            pos.seeds_ = nextSeeds;
+            pos.seeds_ -= burnSeeds;
             // Decreasing liquidity does not lose time priority
         }
     }
@@ -147,9 +148,9 @@ contract PositionRegistrar is StorageLayout {
     }
 
     function mintPosLiq (bytes32 owner, bytes32 poolIdx, uint128 liqAdd,
-                         uint64 ambientGrowth) internal {
+                         uint64 ambientGrowth) internal returns (uint128 seeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
-        uint128 seeds = liqAdd.deflateLiqSeed(ambientGrowth);
+        seeds = liqAdd.deflateLiqSeed(ambientGrowth);
         pos.seeds_ = pos.seeds_.addDelta(seeds);
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }

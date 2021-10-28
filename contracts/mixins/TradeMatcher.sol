@@ -59,9 +59,9 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash)
         internal returns (int128, int128) {
-        mintPosLiq(agentMintKey(), poolHash,
-                   liqAdded, curve.accum_.ambientGrowth_);
-        (uint128 base, uint128 quote) = liquidityReceivable(curve, liqAdded);
+        uint128 liqSeeds = mintPosLiq(agentMintKey(), poolHash,
+                                      liqAdded, curve.accum_.ambientGrowth_);
+        (uint128 base, uint128 quote) = liquidityReceivable(curve, liqSeeds);
         return signMintFlow(base, quote);
     }
 
@@ -91,9 +91,9 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function burnAmbient (CurveMath.CurveState memory curve, uint128 liqBurned, 
                           bytes32 poolHash)
         internal returns (int128, int128) {
-        burnPosLiq(agentBurnKey(), poolHash,
-                   liqBurned, curve.accum_.ambientGrowth_);
-        (uint128 base, uint128 quote) = liquidityPayable(curve, liqBurned);
+        uint128 liqSeeds = burnPosLiq(agentBurnKey(), poolHash,
+                                      liqBurned, curve.accum_.ambientGrowth_);
+        (uint128 base, uint128 quote) = liquidityPayable(curve, liqSeeds);
         return signBurnFlow(base, quote);
     }
 
