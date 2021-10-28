@@ -40,7 +40,10 @@ contract TickCensus is StorageLayout {
      * terminal 8-bits within that root. */
 
     /* @notice Returns the associated bitmap for the terminus position (bottom layer) 
-     * of the tick index. */
+     *         of the tick index. 
+     * @param poolIdx The hash key associated with the pool being queried.
+     * @param tick A price tick index within the neighborhood that we want the bitmap for.
+     * @return The bitmap of the 256-tick neighborhood. */
     function terminusBitmap (bytes32 poolIdx, int24 tick)
         internal view returns (uint256) {
         bytes32 idx = encodeTerm(poolIdx, tick);
@@ -48,14 +51,20 @@ contract TickCensus is StorageLayout {
     }
     
     /* @notice Returns the associated bitmap for the mezzanine position (middle layer) 
-     * of the tick index. */
+     *         of the tick index.
+     * @param poolIdx The hash key associated with the pool being queried.
+     * @param tick A price tick index within the neighborhood that we want the bitmap for.
+     * @return The mezzanine bitmap of the 65536-tick neighborhood. */
     function mezzanineBitmap (bytes32 poolIdx, int24 tick)
         internal view returns (uint256) {
         bytes32 idx = encodeMezz(poolIdx, tick);
         return mezzanine_[idx];
     }
 
-    /* @notice Returns true if the tick index is currently set. */
+    /* @notice Returns true if the tick index is currently set. Indicates an tick exists
+     *         at that index. 
+     * @param poolIdx The hash key associated with the pool being queried.
+     * @param tick The price tick that we're querying. */
     function hasTickBookmark (bytes32 poolIdx, int24 tick)
         internal view returns (bool) {
         uint256 bitmap = terminusBitmap(poolIdx, tick);
@@ -64,7 +73,9 @@ contract TickCensus is StorageLayout {
     }
 
     /* @notice Mark the tick index as active.
-     * @dev Idempotent. Can be called repeatedly on previously initialized ticks. */
+     * @dev Idempotent. Can be called repeatedly on previously initialized ticks.
+     * @param poolIdx The hash key associated with the pool being queried.
+     * @param tick The price tick that we're marking as enabled. */
     function bookmarkTick (bytes32 poolIdx, int24 tick)
         internal {
         uint256 mezzMask = 1 << tick.mezzBit();
@@ -76,7 +87,9 @@ contract TickCensus is StorageLayout {
     /* @notice Unset the tick index as no longer active. Take care of any book keeping
      *   related to the recursive bitmap levels.
      * @dev Idempontent. Can be called repeatedly even if tick was previously 
-     *   forgotten. */
+     *   forgotten.
+     * @param poolIdx The hash key associated with the pool being queried.
+     * @param tick The price tick that we're marking as disabled. */
     function forgetTick (bytes32 poolIdx, int24 tick) internal {
         uint256 mezzMask = ~(1 << tick.mezzBit());
         uint256 termMask = ~(1 << tick.termBit());
@@ -103,17 +116,16 @@ contract TickCensus is StorageLayout {
      *   terminus boundary. So there's no point doing a mezzanine layer seek unless we
      *   end up needing it.
      *
+     * @param poolIdx The hash key associated with the pool being queried.
      * @param isUpper - If true indicates that we're looking for an upper boundary.
      * @param startTick - The current tick index that we're finding the boundary from.
-     * @param termBitmap - The previously loaded terminus bitmap associated with the
-     *    starting tick. It's the caller's responsibility to make sure this is correct.
      *
-     * @return boundTick - The tick index that we can conservatively roll to before 
-     *    potentially hitting an initialized liquidity bump.
+     * @return boundTick - The tick index that we can conservatively move to without 
+     *    potentially hitting any currently active liquidity bump points.
      * @return isSpill - If true indicates that the boundary represents the end of the
      *    terminus bitmap. Could or could not also still be an active bump, but only
-     *    at the lower bound (because lower bounds exist in the bitmap, but upper bounds
-     *    exist at the next bitmap over). */
+     *    at the lower bound. (Lower bounds exist in the bitmap, but upper bounds
+     *    exist at the next bitmap over, which is beyond the horizon). */
     function pinBitmap (bytes32 poolIdx,
                         bool isUpper, int24 startTick)
         internal view returns (int24 boundTick, bool isSpill) {
@@ -124,6 +136,8 @@ contract TickCensus is StorageLayout {
             (isUpper, shiftTerm, tickMezz, termBitmap);
     }
 
+    /* @notice Formats the tick bit horizon index and sets the flag for whether it
+    *          represents whether the seeks spills over the terminus neighborhood */
     function pinTermMezz (bool isUpper, uint16 shiftTerm, int16 tickMezz,
                           uint256 termBitmap)
         private pure returns (int24 nextTick, bool spillBit) {
@@ -135,6 +149,9 @@ contract TickCensus is StorageLayout {
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
+    /* @notice Returns true if the tick seek spills out of the terminus neighborhood.
+     *         Which indicates to the user that the returned value represents a censored
+     *         horizon not a genuine liquidity bump point. */
     function doesSpillBit (bool isUpper, bool spillTrunc, uint256 termBitmap)
         private pure returns (bool spillBit) {
         if (isUpper) {
@@ -146,6 +163,8 @@ contract TickCensus is StorageLayout {
         }
     }
 
+    /* @notice Formats the censored horizon tick index when the seek has spilled out of 
+     *         the terminus bitmap neighborhood. */
     function spillOverPin (bool isUpper, int16 tickMezz) private pure returns (int24) {
         if (isUpper) {
             return tickMezz == Bitmaps.zeroMezz(isUpper) ?
@@ -165,6 +184,7 @@ contract TickCensus is StorageLayout {
      *   though all three layers of bitmaps. It should only be called if pinBitmap()
      *   can't find the boundary in the terminus layer.
      *
+     * @param poolIdx The hash key associated with the pool being queried.
      * @param borderTick - The current tick that we want to seek a tick liquidity
      *   boundary from. For defined behavior this tick must occur at the border of
      *   terminus bitmap. For lower borders, must be the tick from the start of the byte.
@@ -194,6 +214,7 @@ contract TickCensus is StorageLayout {
         return seekOverLobby(poolIdx, lobbyBorder, isUpper);
     }
 
+    /* @notice Seeks the next tick bitmap by searching in the adjacent neighborhood. */
     function seekAtTerm (bytes32 poolIdx, uint8 lobbyBit, uint8 mezzBit, bool isUpper)
         private view returns (int24, bool) {
         uint256 neighborBitmap = terminus_
@@ -203,6 +224,9 @@ contract TickCensus is StorageLayout {
         return (Bitmaps.weldLobbyPosMezzTerm(lobbyBit, mezzBit, termBit), false);
     }
 
+    /* @notice Seeks the next tick bitmap by searching in the current mezzanine 
+     *         neighborhood.
+     * @dev This covers a span of 65 thousand ticks, so should capture most cases. */
     function seekAtMezz (bytes32 poolIdx, uint8 lobbyBit,
                          uint8 mezzBorder, bool isUpper)
         private view returns (int24, bool) {
@@ -214,6 +238,8 @@ contract TickCensus is StorageLayout {
         return seekAtTerm(poolIdx, lobbyBit, mezzBit, isUpper);
     }
 
+    /* @notice Used when the tick is not contained in the mezzanine. We walk through the
+     *         the mezzanine tick bitmaps one by one until we find an active tick bit. */
     function seekOverLobby (bytes32 poolIdx, uint8 lobbyBit, bool isUpper)
         private view returns (int24) {
         return isUpper ?
@@ -251,7 +277,10 @@ contract TickCensus is StorageLayout {
         }
         return Bitmaps.zeroTick(false);
     }
-    
+
+    /* @notice Splits out the lobby bits and the mezzanine bits from the 24-bit price
+     *         tick index associated with the type of border tick used in seekMezzSpill()
+     *         call */
     function rootsForBorder (int24 borderTick, bool isUpper) private pure
         returns (uint8 lobbyBit, uint8 mezzBit) {
         // Because pinTermMezz returns a border *on* the previous bitmap, we need to
@@ -261,26 +290,34 @@ contract TickCensus is StorageLayout {
         mezzBit = pinTick.mezzBit();
     }
 
+    /* @notice Encodes the hash key for the mezzanine neighborhood of the tick. */
     function encodeMezz (bytes32 poolIdx, int24 tick) private pure returns (bytes32) {
         int8 wordPos = tick.lobbyKey();
         return keccak256(abi.encodePacked(poolIdx, wordPos)); 
     }
 
+    /* @notice Encodes the hash key for the terminus neighborhood of the tick. */
     function encodeTerm (bytes32 poolIdx, int24 tick) private pure returns (bytes32) {
         int16 wordPos = tick.mezzKey();
         return keccak256(abi.encodePacked(poolIdx, wordPos)); 
     }
 
+    /* @notice Encodes the hash key for the mezzanine neighborhood of the first 8-bits
+     *         of a tick index. (This is all that's needed to determine mezzanine.) */
     function encodeMezzWord (bytes32 poolIdx, int8 lobbyPos)
         private pure returns (bytes32) {
         return keccak256(abi.encodePacked(poolIdx, lobbyPos));  
     }
 
+    /* @notice Encodes the hash key for the mezzanine neighborhood of the first 8-bits
+     *         of a tick index. (This is all that's needed to determine mezzanine.) */
     function encodeMezzWord (bytes32 poolIdx, uint8 lobbyPos)
         private pure returns (bytes32) {
         return encodeMezzWord(poolIdx, Bitmaps.uncastBitmapIndex(lobbyPos));
     }
 
+    /* @notice Encodes the hash key for the terminus neighborhood of the first 16-bits
+     *         of a tick index. (This is all that's needed to determine terminus.) */
     function encodeTermWord (bytes32 poolIdx, uint8 lobbyPos, uint8 mezzPos)
         private pure returns (bytes32) {
         int16 mezzIdx = Bitmaps.weldLobbyMezz
