@@ -48,6 +48,7 @@ The long-form order directive contains four distinct types of fields:
 
 All array fields conform to the following structure:
 
+![trade() Order Directive](assets/Array.jpg)
 
 Starts with a length premable: a single `uint8` byte that encodes the length of the array. If the length is zero, that's the entire field. Otherwise 
 there is N sequential elements of the sub-type of the array. 
