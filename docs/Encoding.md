@@ -33,8 +33,36 @@ field slots are big-Endian, occupy 32 bytes and are padded with zeros. Therefore
 ## trade() Method Call
 
 The input argument for this method is a binary encoding, but with several nested variable length array fields. Each array field is preceded by a count field that
-must allign with the number of elements in the array. The nested structure is visualized below. (
+must allign with the number of elements in the array. The nested structure is visualized below. 
 
 ![trade() Order Directive](assets/OrderDirective.jpg)
 
+### Field Encoding
 
+The long-form order directive contains four distinct types of fields:
+
+* Composite fields: Composed of multiple sub-fields in a pre-determined arrangement. Composite fields can be nested.
+* Arrays: Contain 0, 1 or more (up to 256) elements of the same type. 
+* Primitives: A single address or value representing a specific Solidity type that can be encoded in 32 bytes or less
+* Flags: One or more boolean flags that are packed bitwise into a single byte.
+
+All array fields conform to the following structure:
+
+
+Starts with a length premable: a single `uint8` byte that encodes the length of the array. If the length is zero, that's the entire field. Otherwise 
+there is N sequential elements of the sub-type of the array. 
+
+Valid primitive types are the following, along with the number of bytes they're encoded over. All primitives are big-Endian, and any bytes in excess of the 
+size type should be padded with zero. Unlike Solidity's `abi.encode`, smaller types do not use a full 32 bytes to avoid needlessly bloating the transaction
+data on large order directives.
+
+* `uint8`: 1 byte
+* `uint3`: 3 bytes
+* `int3`: 3 bytes
+* `address`: 32 bytes
+* `int128`: 32 bytes
+* `uint128`: 32 bytes
+* `uint256`: 32 bytes
+* `int256`: 32 bytes
+
+Flags are always encoded big-endian and padded with zeros for any unused bits in the field.
