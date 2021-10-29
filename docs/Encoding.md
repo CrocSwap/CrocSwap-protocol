@@ -37,6 +37,59 @@ must allign with the number of elements in the array. The nested structure is vi
 
 ![trade() Order Directive](assets/OrderDirective.jpg)
 
+(In the above and following diagrams all primitive type fields are marked with their Solidity type and byte size.)
+
+The base layer order directive is composed of the following sub-fields:
+
+* Settlement directive (opening): The user directive for settling collateral related to flows in the first token of the first pair.
+* Hop directives array: An array of directives, constituting a chain of hops, each corresponding to a sequence of overlapping pairs.
+
+Each hop directive is composed of the following sub-fields:
+* Pool directives array: An array of one or more directives, each corresponding to a set of tradable actions to take place on a single liquidity pool type within the pair.
+* Settlement directive: The user directive for settling related to flows in the second token of the pair. Along with the previous settlement directive (either the previous hop in the chain or the top-layer opening settlement directive), this defines the token pair over which this hop takes place on.
+* Price improve flags: Flags indicating if the user is requesting off-grid price improvement and on which side.
+
+Settlement directive field types are arranged as a composite of the following primitives:
+
+![Settle directive](assets/Settlement.jpg)
+
+* Token: The address of the token for this leg of the chain. (Or `0x0` for pairs with native Ethereum legs)
+* Limit Qty: The user's minimal-acceptable quantity for net flows on this leg. Worse than this threshold will revert the entire transaction
+* Dust threshold: The quantity threshold below which the user requests to skip the token transfer (usually to save gas on economically meaningless flows)
+* Surplus collateral flag: If true, the user requests to first settle any flows using their surplus collateral balance at the exchange.
+
+Price improve request flags constitute the following bit fields:
+
+![Price Improve](assets/PriceImprove.jpg)
+
+* Is Enabled: If true the user is requesting off-grid price improvement. (Normally disabled unless used to save on gas.)
+* Use base side: If enabled the user is requesting that price improve collateral threshold is based on the base-side token in the pair. (Be aware by convention CrocSwap internally always defines the base side as the token with the lexically smaller address in the pair.)
+
+Pool directives (visualized in the original nested diagram) are arranged as a compose of the following:
+
+* Pool type index: Index of the pool type that the trading actions should be applied to. This index is set by the protocol and corresponds to market parameters such as fee rate, grid size, etc.
+* Ambient liquidity directive: A directive defining any net mint or burn actions (if any) to take on ambient liquidity in the pool 
+* Range liquidity directives: An array (possibly empty) of directives related to minting or burning concentrated liquidity range orders
+* Swap directive: A directive specifying the net swap action (if any) to take on the pool
+
+Ambient liquidity directives are composed of the following primitive sub-fields:
+
+![Ambient liquidity](assets/Ambient.jpg)
+
+* Is Add: If true indicates that this action is to mint liquidity. If false, burns liquidity.
+* Liquidity: The total amount of liquidity to mint or burn. (Or zero if no action)
+
+Swap directives are composed of the following primitive sub-fields:
+
+![Swap directive](assets/Swap.jpg)
+
+* Mask: Unusued. Always set to zero.
+* Flags: Bit flag field with two flags:
+    * Is Buy: Indicates swap will convert base-side token to quote-side token. (By convention CrocSwap internally always defines the base side as the token with the lexically smaller address in the pair.)
+    * In Base Qty: The quantity field of the swa is denominated in the pair's base-side token.
+* Qty: The quantity to swap (final result could be smaller if swap hits the limit price).
+* Limit Price: The worse price up to which the user is willing to trade. Note that this represents the price on the margin, for this reason the average fill price of the swap will always be better than this limit price.
+
 ### Field Encoding
 
 The long-form order directive contains four distinct types of fields:
