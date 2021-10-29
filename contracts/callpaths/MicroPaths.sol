@@ -15,8 +15,38 @@ import '../mixins/StorageLayout.sol';
 
 import "hardhat/console.sol";
 
+/* @title Micro paths callpath sidecar.
+ * @notice Defines a proxy sidecar contract that's used to move code outside the 
+ *         main contract to avoid Ethereum's contract code size limit. Contains
+ *         mid-level components related to single atomic actions to be called within the
+ *         context of a longer compound action on a pre-loaded pool's liquidity curve.
+ * 
+ * @dev    This exists as a standalone contract but will only ever contain proxy code,
+ *         not state. As such it should never be called directly or externally, and should
+ *         only be invoked with DELEGATECALL so that it operates on the contract state
+ *         within the primary CrocSwap contract. */
 contract MicroPaths is MarketSequencer {
 
+    /* @notice Burns liquidity on a concentrated range position within a single curve.
+     *
+     * @param price The price of the curve. Represented as the square root of the exchange
+     *              rate in Q64.64 fixed point
+     * @param seed The ambient liquidity seeds in the current curve.
+     * @param conc The active in-range concentrated liquidity in the current curve.
+     * @param seedGrowth The cumulative ambient seed deflator in the current curve.
+     * @param concGrowth The cumulative concentrated reward growth on the current curve.
+     * @param lowTick The price tick index of the lower barrier.
+     * @param highTick The price tick index of the upper barrier.
+     * @param liq The amount of liquidity to burn.
+     * @param poolHash The key hash of the pool the curve belongs to.
+     *
+     * @return baseFlow The user<->pool flow on the base-side token associated with the 
+     *                  action. Negative implies flow from the pool to the user. Positive
+     *                  vice versa.
+     * @return quoteFlow The user<->pool flow on the quote-side token associated with the 
+     *                   action. 
+     * @return seedOut The updated ambient seed liquidity on the curve.
+     * @return concOut The updated concentrated liquidity on the curve. */     
     function burnRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,
                         int24 lowTick, int24 highTick, uint128 liq, bytes32 poolHash)
@@ -37,12 +67,26 @@ contract MicroPaths is MarketSequencer {
     }
 
 
-    function mintRange (uint128, int24, int24)
-        public payable returns (int128 baseFlow, int128 quoteFlow,
-                        uint128 seedOut, uint128 concOut)  {
-        
-    }
-    
+    /* @notice Mints liquidity on a concentrated range position within a single curve.
+     *
+     * @param price The price of the curve. Represented as the square root of the exchange
+     *              rate in Q64.64 fixed point
+     * @param seed The ambient liquidity seeds in the current curve.
+     * @param conc The active in-range concentrated liquidity in the current curve.
+     * @param seedGrowth The cumulative ambient seed deflator in the current curve.
+     * @param concGrowth The cumulative concentrated reward growth on the current curve.
+     * @param lowTick The price tick index of the lower barrier.
+     * @param highTick The price tick index of the upper barrier.
+     * @param liq The amount of liquidity to burn.
+     * @param poolHash The key hash of the pool the curve belongs to.
+     *
+     * @return baseFlow The user<->pool flow on the base-side token associated with the 
+     *                  action. Negative implies flow from the pool to the user. Positive
+     *                  vice versa.
+     * @return quoteFlow The user<->pool flow on the quote-side token associated with the 
+     *                   action. 
+     * @return seedOut The updated ambient seed liquidity on the curve.
+     * @return concOut The updated concentrated liquidity on the curve. */         
     function mintRange (uint128 price, int24 priceTick, uint128 seed, uint128 conc,
                         uint64 seedGrowth, uint64 concGrowth,
                         int24 lowTick, int24 highTick, uint128 liq, bytes32 poolHash)
@@ -62,7 +106,23 @@ contract MicroPaths is MarketSequencer {
         seedOut = curve.liq_.ambientSeed_;
     }
     
-    
+    /* @notice Burns liquidity from an ambient liquidity position on a single curve.
+     *
+     * @param price The price of the curve. Represented as the square root of the exchange
+     *              rate in Q64.64 fixed point
+     * @param seed The ambient liquidity seeds in the current curve.
+     * @param conc The active in-range concentrated liquidity in the current curve.
+     * @param seedGrowth The cumulative ambient seed deflator in the current curve.
+     * @param concGrowth The cumulative concentrated reward growth on the current curve.
+     * @param liq The amount of liquidity to burn.
+     * @param poolHash The key hash of the pool the curve belongs to.
+     *
+     * @return baseFlow The user<->pool flow on the base-side token associated with the 
+     *                  action. Negative implies flow from the pool to the user. Positive
+     *                  vice versa.
+     * @return quoteFlow The user<->pool flow on the quote-side token associated with the 
+     *                   action. 
+     * @return seedOut The updated ambient seed liquidity on the curve. */     
     function burnAmbient (uint128 price, uint128 seed, uint128 conc,
                           uint64 seedGrowth, uint64 concGrowth,
                           uint128 liq, bytes32 poolHash)
@@ -79,7 +139,23 @@ contract MicroPaths is MarketSequencer {
         seedOut = curve.liq_.ambientSeed_;
     }
 
-    
+    /* @notice Mints liquidity from an ambient liquidity position on a single curve.
+     *
+     * @param price The price of the curve. Represented as the square root of the exchange
+     *              rate in Q64.64 fixed point
+     * @param seed The ambient liquidity seeds in the current curve.
+     * @param conc The active in-range concentrated liquidity in the current curve.
+     * @param seedGrowth The cumulative ambient seed deflator in the current curve.
+     * @param concGrowth The cumulative concentrated reward growth on the current curve.
+     * @param liq The amount of liquidity to burn.
+     * @param poolHash The key hash of the pool the curve belongs to.
+     *
+     * @return baseFlow The user<->pool flow on the base-side token associated with the 
+     *                  action. Negative implies flow from the pool to the user. Positive
+     *                  vice versa.
+     * @return quoteFlow The user<->pool flow on the quote-side token associated with the 
+     *                   action. 
+     * @return seedOut The updated ambient seed liquidity on the curve. */         
     function mintAmbient (uint128 price, uint128 seed, uint128 conc,
                           uint64 seedGrowth, uint64 concGrowth,
                           uint128 liq, bytes32 poolHash)
@@ -96,7 +172,22 @@ contract MicroPaths is MarketSequencer {
         seedOut = curve.liq_.ambientSeed_;
     }
 
-
+    /* @notice Executes a user-directed swap through a single liquidity curve.
+     * 
+     * @param curve The current state of the liquidity curve.
+     * @param midTick The tick index of the current price of the curve.
+     * @param swap The parameters of the swap to be executed.
+     * @param pool The pre-loaded specification and hash key of the liquidity curve's
+     *             pool.
+     *
+     * @return accum The accumulated flows on the pair associated with the swap.
+     * @return priceOut The price of the curve after the swap completes. Represented as
+     *                  the square root of the price in Q64.64 fixed point.
+     * @return seedOut The ambient liquidity seeds in the curve after the swap completes
+     * @return concOut The active in-range concentrated liquidity in the curve post-swap
+     * @return ambientOut The cumulative ambient seed deflator on the curve post-swap.
+     * @return concGrowthOut The cumulative concentrated rewards growth on the curve 
+     *                       post-swap. */
     function sweepSwap (CurveMath.CurveState memory curve, int24 midTick,
                         Directives.SwapDirective memory swap,
                         PoolSpecs.PoolCursor memory pool)

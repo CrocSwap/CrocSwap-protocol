@@ -16,6 +16,15 @@ import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
+/* @title Long path callpath sidecar.
+ * @notice Defines a proxy sidecar contract that's used to move code outside the 
+ *         main contract to avoid Ethereum's contract code size limit. Contains
+ *         top-level logic for parsing and executing arbitrarily long compound orders.
+ * 
+ * @dev    This exists as a standalone contract but will only ever contain proxy code,
+ *         not state. As such it should never be called directly or externally, and should
+ *         only be invoked with DELEGATECALL so that it operates on the contract state
+ *         within the primary CrocSwap contract. */
 contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount {
     
     using SafeCast for uint128;
@@ -23,6 +32,13 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    /* @notice Executes the user-defined compound order, constitutiin an arbitrary
+     *         combination of mints, burns and swaps across an arbitrary set of pools
+     *         across an arbitrary set of pairs.
+     *
+     * @input  The encoded byte data associated with the user's order directive. See
+     *         Encoding.sol and Directives.sol library for information on how to encode
+     *         order directives as byte data. */
     function trade (bytes calldata input) public payable {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
@@ -57,7 +73,12 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         settleFinal(pairs.closeFlow(), settleChannel, ethBalance);
     }
 
-        
+
+    /* @notice Sets the roll target parameters based on the user's directive and the
+     *         previously accumulated flow on the pair.
+     * @param flags The user specified chaining directive for this pair.
+     * @param pair The hitherto accumulated flows on the pair. 
+     * @return roll The rolling back fill context to be used in any back-fill quantity. */
     function targetRoll (Directives.ChainingFlags memory flags,
                          TokenFlow.PairSeq memory pair) view private
         returns (Chaining.RollTarget memory roll) {
