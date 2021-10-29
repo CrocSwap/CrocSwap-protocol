@@ -71,6 +71,7 @@ Pool directives (visualized in the original nested diagram) are arranged as a co
 * Ambient liquidity directive: A directive defining any net mint or burn actions (if any) to take on ambient liquidity in the pool 
 * Range liquidity directives: An array (possibly empty) of directives related to minting or burning concentrated liquidity range orders
 * Swap directive: A directive specifying the net swap action (if any) to take on the pool
+* Chaining flags: A set of flags related to how the pool chains rolling flow between pairs. 
 
 Ambient liquidity directives are composed of the following primitive sub-fields:
 
@@ -89,6 +90,19 @@ Swap directives are composed of the following primitive sub-fields:
     * In Base Qty: The quantity field of the swa is denominated in the pair's base-side token.
 * Qty: The quantity to swap (final result could be smaller if swap hits the limit price).
 * Limit Price: The worse price up to which the user is willing to trade. Note that this represents the price on the margin, for this reason the average fill price of the swap will always be better than this limit price.
+
+Range order directives (visualized in the original nested diagram) are arranged as a composite of the following sub-fields:
+
+* Open tick: The price tick index on one side of the range order
+* Close bookend array: The reason this is an array is because it allows us to economically encode multiple range orders sharing a single boundary on one side.
+
+Each range bookend is composed of the following:
+
+![Swap directive](assets/RangeBookend.jpg)
+
+* Close tick: The price tick index on the opposite side of the range order.
+* Is Add: If true indicates that the order is minting liquidity. If false, burning.
+* Liquidity: The amount of liquidity to mint/burn.
 
 ### Field Encoding
 
