@@ -33,5 +33,8 @@ field slots are big-Endian, occupy 32 bytes and are padded with zeros. Therefore
 ## trade() Method Call
 
 The input argument for this method is a binary encoding, but with several nested variable length array fields. Each array field is preceded by a count field that
-must allign with the number of elements in the array. The nested structure is visualized below:
+must allign with the number of elements in the array. The nested structure is visualized below. (
+
+![trade() Order Directive](assets/OrderDirective.jpg)
+
 
