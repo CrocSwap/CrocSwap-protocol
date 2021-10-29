@@ -29,3 +29,9 @@ Details for these fields:
 
 For certain command types some of those fields may not be relevant, in which case the value of those fields are ignored. Regardless of the type of the field, all
 field slots are big-Endian, occupy 32 bytes and are padded with zeros. Therefore the encoded byte string is equivalent to calling abi.encode on the field arguments.
+
+## trade() Method Call
+
+The input argument for this method is a binary encoding, but with several nested variable length array fields. Each array field is preceded by a count field that
+must allign with the number of elements in the array. The nested structure is visualized below:
+
