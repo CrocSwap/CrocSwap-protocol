@@ -73,6 +73,14 @@ Pool directives (visualized in the original nested diagram) are arranged as a co
 * Swap directive: A directive specifying the net swap action (if any) to take on the pool
 * Chaining flags: A set of flags related to how the pool chains rolling flow between pairs. 
 
+The chaining flags are encoded as the following bits:
+
+![Chaining](assets/Chaining.jpg)
+
+* Exit side: If true, indicates whether any gap back fills should use the second token in the pair
+* Swap Defer: If true, the swap directive is executed *after* the liquidity directives. Default is to execute before.
+* Offset surplus: If true, any gap backfills should be offset by the client's pre-existing surplus collateral held at the exchange.
+
 Ambient liquidity directives are composed of the following primitive sub-fields:
 
 ![Ambient liquidity](assets/Ambient.jpg)
