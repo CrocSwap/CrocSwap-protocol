@@ -30,4 +30,4 @@ are substantially simpler and exposes less overall functionality.
 
 The below chart illustrates the common control flow for these simple order calls:
 
-![Simple Directive](assets/Simple.jpeg)
+![Simple Directive](assets/SimpleFlow.jpeg)
