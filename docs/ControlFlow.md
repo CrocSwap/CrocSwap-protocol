@@ -4,7 +4,7 @@ This document contains flow chart visualizations for the common tradable operati
 
 CrocSwap provides two different facilities for executing tradable actions
 * *Long-Form Orders* - Lets users specify an arbitrary sequence of mints, burns, and swaps across an arbitrary number of pairs and pool types.
-* *Simple Orders* - Gas-efficient way to execute a single tradable action (mint, burn or swap) on a single pool within a single pair.
+* *Simple Orders* - Gas-efficient way to execute a single tradable action-- mint, burn or swap-- on a single pool within a single pair.
 
 ## Long Form Orders
 
