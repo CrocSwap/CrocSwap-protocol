@@ -61,4 +61,4 @@ async function main() {
     console.log("Price " + price.toString())
 }
 
-main()
+//main()

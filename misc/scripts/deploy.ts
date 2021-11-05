@@ -12,7 +12,10 @@ import { CrocSwapDex } from '../../contracts/typechain/CrocSwapDex';
  * Only for ad-hoc testing purposes. Do NOT use in production. */
 
 const POOL_IDX = 35000
+const POOL_IDX_2 = 212
+
 const FEE_RATE = 30 * 100
+const FEE_RATE_2 = 5 * 100
 const BIG_QTY = BigNumber.from("1000000000000000")
 
 export const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
@@ -34,7 +37,7 @@ function encodeMintAmbient (base: string, quote: string,
         [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
 }
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 1000000 }
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 6000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -50,7 +53,7 @@ async function deploy() {
     console.log("Liquidity Provider: ", await lp.address)
     console.log("Trader: ", await trader.address)    
 
-    /*let factory = await ethers.getContractFactory("ColdPath")
+    let factory = await ethers.getContractFactory("ColdPath")
     let coldPath = (await factory.deploy(override)).address
 
     factory = await ethers.getContractFactory("WarmPath")
@@ -60,16 +63,16 @@ async function deploy() {
     let longPath = (await factory.deploy(override)).address
 
     factory = await ethers.getContractFactory("MicroPaths")
-    let microPath = (await factory.deploy(override)).address*/
+    let microPath = (await factory.deploy(override)).address
 
-    let factory = await ethers.getContractFactory("CrocSwapDex");
-    /*let dex = await factory.deploy(authority.getAddress(), 
-        coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed*/
-    let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
+    factory = await ethers.getContractFactory("CrocSwapDex");
+    let dex = await factory.deploy(authority.getAddress(), 
+        coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed
+    //let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
 
     console.log("CrocSwap Dex Created:" + dex.address)
 
-    factory = await ethers.getContractFactory("MockERC20")
+    //factory = await ethers.getContractFactory("MockERC20")
     /*let base = await factory.deploy(override) as MockERC20
     let quote = await factory.deploy(override) as MockERC20
     if( base.address > quote.address) {
@@ -80,19 +83,18 @@ async function deploy() {
 
     //let base = factory.attach("0x66B5b7f1F5604FC33aF247D59a7938369B37358F")
     //let quote = factory.attach("0x6c53969F9273560F393a8BcbFA40906E7B51b1B2")
-    let base = factory.attach("0x10e13e6DE3BD3A5D2e0361F56a695EB08731E40B") as MockERC20
+    /*let base = factory.attach("0x10e13e6DE3BD3A5D2e0361F56a695EB08731E40B") as MockERC20
     let quote = factory.attach("0x788C030D0ac6cd3902Da1Bcc3C6945b8be6f3BA2") as MockERC20
 
     console.log("Mock Base Token created: " + base.address)
-    console.log("Mock Quote Token created: " + quote.address);
+    console.log("Mock Quote Token created: " + quote.address);*/
 
     /*await base.setDecimals(3)
-    await quote.setDecimals(6)*/
+    await quote.setDecimals(6)
     await base.setSymbol("USDC")
-    await quote.setSymbol("WETH")
-    return;
+    await quote.setSymbol("WETH")*/
 
-    await base.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
+    /*await base.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
     await quote.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
     await base.deposit(await lp.getAddress(), BIG_QTY, override)
     await quote.deposit(await lp.getAddress(), BIG_QTY, override)
@@ -101,35 +103,38 @@ async function deploy() {
     await base.connect(lp).approve(dex.address, BIG_QTY, override)
     await quote.connect(lp).approve(dex.address, BIG_QTY, override)
     await base.connect(trader).approve(dex.address, BIG_QTY, override)
-    await quote.connect(trader).approve(dex.address, BIG_QTY, override)
+    await quote.connect(trader).approve(dex.address, BIG_QTY, override)*/
 
-    //let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
-    //await dex.protocolCmd(protoCmd, override)
-    await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)
+    let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
+    await dex.protocolCmd(protoCmd, override)
+
+    protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX_2, FEE_RATE_2, 0, 5, 100)
+    await dex.protocolCmd(protoCmd, override)
+    //await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)
 
     console.log("Pool initialized at Index: " + POOL_IDX)
 
-    let mintCmd = encodeMintAmbient(base.address, quote.address, 100000000000, BIG_QTY, false)
-    await dex.connect(lp).tradeWarm(mintCmd, override)
+    /*let mintCmd = encodeMintAmbient(base.address, quote.address, 100000000000, BIG_QTY, false)
+    await dex.connect(lp).tradeWarm(mintCmd, override)*/
 
     factory = await ethers.getContractFactory("QueryHelper")
     let query = await factory.deploy(dex.address, override) as QueryHelper
     console.log("Query Sidecar at " + query.address)
 
-    let liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
+    /*let liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
     let curve = await query.queryCurve(base.address, quote.address, POOL_IDX)
     let price = fromSqrtPrice(curve.priceRoot_)
     console.log("Liquidity added  " + liq.toString() + " at price " + price.toString())
 
     let swapTx = await dex.connect(trader)
         .swap(base.address, quote.address, POOL_IDX, 
-            true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)
+            true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)*/
 
-    liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
+    /*liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
     curve = await query.queryCurve(base.address, quote.address, POOL_IDX)
     price = fromSqrtPrice(curve.priceRoot_)
     console.log("Swap Tx: " + swapTx.hash)
-    console.log("Liquidity " + liq.toString() + " at price " + price.toString())
+    console.log("Liquidity " + liq.toString() + " at price " + price.toString())*/
 }
 
 deploy()
