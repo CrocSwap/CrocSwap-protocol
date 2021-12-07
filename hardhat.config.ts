@@ -18,8 +18,7 @@ module.exports = {
         }
       }],
       overrides: {
-        
-      }
+      },
     },
 
     networks: {
@@ -30,7 +29,11 @@ module.exports = {
        ropsten: {
          url: 'https://ropsten.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8',
          chainId: 3
-       }
+       },
 
+       fuji: {
+         url: "https://api.avax-test.network/ext/bc/C/rpc",
+         chainId: 43113,
+       }
     },
 };
