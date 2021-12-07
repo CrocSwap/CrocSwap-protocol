@@ -13,9 +13,9 @@ library LiquidityMath {
     function addDelta(uint128 x, int128 y) internal pure returns (uint128 z) {
         unchecked {
         if (y < 0) {
-            require((z = x - uint128(-y)) < x, 'LS');
+            require((z = x - uint128(-y)) < x);
         } else {
-            require((z = x + uint128(y)) >= x, 'LA');
+            require((z = x + uint128(y)) >= x);
         }
         }
     }
@@ -26,7 +26,7 @@ library LiquidityMath {
     /// @return z The liquidity delta
     function addDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
         unchecked {
-        require((z = x + y) >= x, 'LA');
+        require((z = x + y) >= x);
         }
     }
 
@@ -36,7 +36,7 @@ library LiquidityMath {
     /// @return z The liquidity delta
     function addLots(uint96 x, uint96 y) internal pure returns (uint96 z) {
         unchecked {
-        require((z = x + y) >= x, 'LA');
+        require((z = x + y) >= x);
         }
     }
 
