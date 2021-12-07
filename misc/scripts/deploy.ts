@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 import { ContractFactory, BytesLike, BigNumber } from 'ethers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { toSqrtPrice, fromSqrtPrice } from '../../test/FixedPoint';
-import { MockERC20 } from '../../typechain/MockERC20';
+import { MockBypassERC20 } from '../../typechain/MockBypassERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
 import { CrocSwapDex } from '../../contracts/typechain/CrocSwapDex';
 
@@ -37,7 +37,7 @@ function encodeMintAmbient (base: string, quote: string,
         [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
 }
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 6000000 }
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(30), gasLimit: 6000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -50,10 +50,11 @@ async function deploy() {
 
     console.log("Deploying with the following addresses...")
     console.log("Protocol Authority: ", await authority.address)
-    console.log("Liquidity Provider: ", await lp.address)
-    console.log("Trader: ", await trader.address)    
+    console.log("Liquidity Provider: ", await lp.address);
+    
+    /*let factory = await ethers.getContractFactory("ColdPath")
+    let tx = await factory.deploy(override)
 
-    let factory = await ethers.getContractFactory("ColdPath")
     let coldPath = (await factory.deploy(override)).address
 
     factory = await ethers.getContractFactory("WarmPath")
@@ -63,14 +64,14 @@ async function deploy() {
     let longPath = (await factory.deploy(override)).address
 
     factory = await ethers.getContractFactory("MicroPaths")
-    let microPath = (await factory.deploy(override)).address
+    let microPath = (await factory.deploy(override)).address*/
 
-    factory = await ethers.getContractFactory("CrocSwapDex");
-    let dex = await factory.deploy(authority.getAddress(), 
-        coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed
+    /*let dex = await factory.deploy(authority.getAddress(), 
+        coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed*/
     //let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
 
-    console.log("CrocSwap Dex Created:" + dex.address)
+    let factory = await ethers.getContractFactory("CrocSwapDex");
+    let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
 
     //factory = await ethers.getContractFactory("MockERC20")
     /*let base = await factory.deploy(override) as MockERC20
