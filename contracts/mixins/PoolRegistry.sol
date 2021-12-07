@@ -69,7 +69,7 @@ contract PoolRegistry is StorageLayout {
         templ.feeRate_ = feeRate;
         templ.protocolTake_ = protocolTake;
         templ.tickSize_ = tickSize;
-        templ.priceOracle_ = 0;
+        templ.jitThresh_ = 0;
         templ.permitOracle_ = permitOracle;
     }
 
