@@ -67,9 +67,11 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         if (code == 65) {
             collectProtocol(token);
         } else if (code == 66) {
-            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar);
+            uint8 jit = value.toUint8();
+            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
         } else if (code == 67) {
-            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks);
+            uint8 jit = value.toUint8();
+            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
         } else if (code == 68) {
             setNewPoolLiq(value);
         } else if (code == 69) {
@@ -88,8 +90,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *                     0x0 address pool type is permissionless). */
     function setTemplate (uint24 poolIdx, uint24 feeRate,
                           uint8 protocolTake, uint16 tickSize,
-                          address permitOracle) private {
-        setPoolTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle);
+                          address permitOracle, uint8 jitThresh) private {
+        setPoolTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle,
+                        jitThresh);
     }
 
     /* @notice Update parameters for a pre-existing pool.
@@ -100,8 +103,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks. */
     function revisePool (address base, address quote, uint24 poolIdx,
-                         uint24 feeRate, uint8 protocolTake, uint16 tickSize) private {
-        setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize);
+                         uint24 feeRate, uint8 protocolTake, uint16 tickSize,
+                         uint8 jitThresh) private {
+        setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize, jitThresh);
     }
 
     /* @notice Set off-grid price improvement.

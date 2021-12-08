@@ -61,15 +61,16 @@ contract PoolRegistry is StorageLayout {
      *                 also be disabled by setting this to zero.)
      * @param permitOracle The address of the external permission oracle contract that
      *                governs who and how can use the pool. If zero, the pool is 
-     *                permissionless. */
+     *                permissionless.
+     * @param jitThresh The minimum time a concentrated liquidity */
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
-                              address permitOracle) internal {
+                              address permitOracle, uint8 jitThresh) internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
         templ.feeRate_ = feeRate;
         templ.protocolTake_ = protocolTake;
         templ.tickSize_ = tickSize;
-        templ.jitThresh_ = 0;
+        templ.jitThresh_ = jitThresh;
         templ.permitOracle_ = permitOracle;
     }
 
@@ -89,11 +90,12 @@ contract PoolRegistry is StorageLayout {
      * @param tickSize The tick grid size for range orders in the pool. */
     function setPoolSpecs (address base, address quote, uint24 poolIdx,
                            uint24 feeRate, uint8 protocolTake,
-                           uint16 tickSize) internal {
+                           uint16 tickSize, uint8 jitThresh) internal {
         PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
         pool.feeRate_ = feeRate;
         pool.protocolTake_ = protocolTake;
         pool.tickSize_ = tickSize;
+        pool.jitThresh_ = jitThresh;
         
         // Even the protocol authority should not be able to lock up an initialized pool,
         // otherwise LPs could find themselves locked out of their funds. 
