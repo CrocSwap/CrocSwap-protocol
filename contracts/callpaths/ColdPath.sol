@@ -87,7 +87,8 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks.
      * @param permitOracle The external oracle that permissions pool users (or if set to
-     *                     0x0 address pool type is permissionless). */
+     *                     0x0 address pool type is permissionless).
+     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs. */
     function setTemplate (uint24 poolIdx, uint24 feeRate,
                           uint8 protocolTake, uint16 tickSize,
                           address permitOracle, uint8 jitThresh) private {
@@ -101,7 +102,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
      * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
-     * @param tickSize The pool's grid size in ticks. */
+     * @param tickSize The pool's grid size in ticks.
+     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs in
+     *                  in the pool. */
     function revisePool (address base, address quote, uint24 poolIdx,
                          uint24 feeRate, uint8 protocolTake, uint16 tickSize,
                          uint8 jitThresh) private {

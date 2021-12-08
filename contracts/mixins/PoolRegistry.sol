@@ -62,7 +62,8 @@ contract PoolRegistry is StorageLayout {
      * @param permitOracle The address of the external permission oracle contract that
      *                governs who and how can use the pool. If zero, the pool is 
      *                permissionless.
-     * @param jitThresh The minimum time a concentrated liquidity */
+     * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
+     *                  rest before it can be burned. */
     function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
                               address permitOracle, uint8 jitThresh) internal {
@@ -87,7 +88,9 @@ contract PoolRegistry is StorageLayout {
      * @param protocolTake The protocol's take rate on the pool's fees. (The rest goes to
      *                liquidity rewards.) Specified as a fraction 1/n. Zero is a special
      *                case that indicates the protocol fee is turned off.
-     * @param tickSize The tick grid size for range orders in the pool. */
+     * @param tickSize The tick grid size for range orders in the pool.
+     * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
+     *                  rest before it can be burned. */
     function setPoolSpecs (address base, address quote, uint24 poolIdx,
                            uint24 feeRate, uint8 protocolTake,
                            uint16 tickSize, uint8 jitThresh) internal {
