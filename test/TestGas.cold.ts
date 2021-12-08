@@ -102,19 +102,19 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("burn outside", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 108000)
+        await expectGas(test.testBurn(-200, -100, 100), 109000)
     })
 
     it("burn outside left", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 114000)
+        await expectGas(test.testBurn(-200, -100, 100), 115000)
     })
 
     it("burn liq rewards", async() => {
         await test.testMint(-100, 100, 100000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 140000)
+        await expectGas(test.testBurn(-100, 100, 100), 141000)
     })
 
     it("burn liq level left", async() => {
