@@ -404,18 +404,18 @@ export class TestPool {
             .trade(encodeOrderDirective(order), override)
     }
 
-    async testRevisePool (feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
+    async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
-                (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, 0))
+                (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, jit))
     }
 
-    async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number): Promise<ContractTransaction> {
+    async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number=0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
-                (await this.quote).address, idx, feeRate, protoTake, tickSize, 0))
+                (await this.quote).address, idx, feeRate, protoTake, tickSize, jit))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
