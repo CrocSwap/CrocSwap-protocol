@@ -137,17 +137,29 @@ contract PositionRegistrar is StorageLayout {
             // unit of liquidity, so the pro-rata rewards of the remaining liquidity
             // (if any) remain unnaffected. 
         }
-        
+
         if (nextLiq > 0) {
-            pos.liquidity_ = nextLiq;
+            // Partial burn. Check that it's allowed on this position.
+            require(pos.atomicLiq_ == false, "OR");
+            pos.liquidity_ = nextLiq;            
         } else {
             // Solidity optimizer should convert this to a single refunded SSTORE
             pos.liquidity_ = 0;
             pos.feeMileage_ = 0;
             pos.timestamp_ = 0;
+            pos.atomicLiq_ = false;
         }
     }
-    
+
+    /* @notice Marks a flag on a speciic position that indicates that it's liquidity
+     *         is atomic. I.e. the position size cannot be partially reduced, only
+     *         removed entirely. */
+    function markPosAtomic (bytes32 owner, bytes32 poolIdx,
+                            int24 lowTick, int24 highTick) internal {
+        RangePosition storage pos = lookupPosition(owner, poolIdx, lowTick, highTick);
+        pos.atomicLiq_ = true;
+    }
+
     /* @notice Adds liquidity to a given concentrated liquidity position, creating the
      *         position if necessary.
      *

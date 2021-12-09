@@ -16,6 +16,7 @@
     "N": "Already initialized",
     "O": "Ticks out of order",
     "OD": "Odd lot size",
+    "OR": "Off-grid partial burn",
     "Q": "Insufficient quote token",
     "PA": "Protocol authorization",
     "PI": "Pool not initialized",

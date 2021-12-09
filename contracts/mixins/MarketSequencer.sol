@@ -303,9 +303,16 @@ contract MarketSequencer is TradeMatcher {
         }
 
         if (isAdd) {
-            cntx.improve_.verifyFit(lowTick, highTick, liq,
-                                    cntx.pool_.head_.tickSize_,
-                                    curve.pullPriceTick());
+            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, liq,
+                                                   cntx.pool_.head_.tickSize_,
+                                                   curve.pullPriceTick());
+            if (offGrid) {
+                // Off-grid positions are set with atomic liquidity. That prevents
+                // partial burns on these positions. Since off-grid size eligibility
+                // is only checked at mint time this is necessary to prevent under-sized
+                // off-grid orders.
+                markPosAtomic(agentMintKey(), cntx.pool_.hash_, lowTick, highTick);
+            }
         }
 
         if (liq == 0) { return (0, 0); }

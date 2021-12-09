@@ -85,6 +85,7 @@ contract StorageLayout {
         uint128 liquidity_;
         uint64 feeMileage_;
         uint32 timestamp_;
+        bool atomicLiq_;
     }
 
     struct AmbientPosition {
