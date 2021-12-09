@@ -80,13 +80,13 @@ describe('Gas Benchmarks', () => {
 
     it("burn partial", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 109000)
+        await expectGas(test.testBurn(-100, 100, 50), 110000)
     })
 
     it("burn partial level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 109000)
+        await expectGas(test.testBurn(-100, 100, 50), 110000)
     })
 
     it("burn full", async() => {
