@@ -80,7 +80,15 @@ contract PositionRegistrar is StorageLayout {
                          int24 upperTick, uint128 burnLiq, uint64 feeMileage)
         internal returns (uint64) {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        assertJitSafe(pos.timestamp_, poolIdx);
         return decrementLiq(pos, burnLiq, feeMileage);
+    }
+
+    function assertJitSafe (uint32 posTime, bytes32 poolIdx) internal view {
+        uint32 elapsed = SafeCast.timeUint32() - posTime;
+        if (elapsed <= type(uint8).max) {
+            require(elapsed >= pools_[poolIdx].jitThresh_, "J");
+        }
     }
 
     /* @notice Removes all or some liquidity associated with a an ambient position. 

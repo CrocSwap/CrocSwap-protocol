@@ -31,7 +31,7 @@ library PoolSpecs {
         uint24 feeRate_;
         uint8 protocolTake_;
         uint16 tickSize_;
-        uint8 priceOracle_;
+        uint8 jitThresh_;
         address permitOracle_;
     }
 
