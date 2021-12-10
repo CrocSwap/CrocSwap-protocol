@@ -80,35 +80,35 @@ describe('Gas Benchmarks', () => {
 
     it("burn partial", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 109000)
+        await expectGas(test.testBurn(-100, 100, 50), 110000)
     })
 
     it("burn partial level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 109000)
+        await expectGas(test.testBurn(-100, 100, 50), 110000)
     })
 
     it("burn full", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 108000)
+        await expectGas(test.testBurn(-100, 100, 100), 109000)
     })
 
     it("burn full level left", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 104000)
+        await expectGas(test.testBurn(-100, 100, 100), 105000)
     })
 
     it("burn outside", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 84000)
+        await expectGas(test.testBurn(-200, -100, 100), 85000)
     })
 
     it("burn outside left", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 84000)
+        await expectGas(test.testBurn(-200, -100, 100), 85000)
     })
 
     it("burn liq rewards", async() => {
@@ -134,7 +134,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 105000)
+        await expectGas(test.testBurn(-100, 100, 100), 106000)
     })
 
     it("swap no pre-warm", async() => {

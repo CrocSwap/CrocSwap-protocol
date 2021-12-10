@@ -124,6 +124,70 @@ describe('Pool Grid', () => {
         await expect(test.testOrder(order)).to.be.reverted
     })
 
+
+    it("price improve burn full", async() => {
+        await test.testPegPriceImprove(10000, 1000)
+        let order = await test.prototypeOrder()
+
+        // Collateral thresh is about 18k of liquidity
+        let concen: ConcentratedDirective = {
+            openTick: 3801,
+            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+        }
+        order.hops[0].pools[0].passive.concentrated.push(concen)
+        order.hops[0].improve.isEnabled = true
+        order.hops[0].improve.useBaseSide = true
+        
+        await test.testOrder(order)
+
+        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(18000*1024)
+        order.hops[0].pools[0].passive.concentrated[0].bookends[0].isAdd = false
+        await test.testOrder(order)
+        expect(await test.liquidity()).to.eq(0) 
+    })
+
+    it("price improve burn partial", async() => {
+        await test.testPegPriceImprove(10000, 1000)
+        let order = await test.prototypeOrder()
+
+        // Collateral thresh is about 18k of liquidity
+        let concen: ConcentratedDirective = {
+            openTick: 3801,
+            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+        }
+        order.hops[0].pools[0].passive.concentrated.push(concen)
+        order.hops[0].improve.isEnabled = true
+        order.hops[0].improve.useBaseSide = true
+        
+        await test.testOrder(order)
+
+        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(17999*1024)
+        order.hops[0].pools[0].passive.concentrated[0].bookends[0].isAdd = false
+        expect(test.testOrder(order)).to.be.reverted
+    })
+
+    it("price improve burn hot path", async() => {
+        await test.testPegPriceImprove(10000, 1000)
+        let order = await test.prototypeOrder()
+
+        // Collateral thresh is about 18k of liquidity
+        let concen: ConcentratedDirective = {
+            openTick: 3801,
+            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+        }
+        order.hops[0].pools[0].passive.concentrated.push(concen)
+        order.hops[0].improve.isEnabled = true
+        order.hops[0].improve.useBaseSide = true
+        
+        await test.testOrder(order)
+
+        test.useHotPath = true
+        await expect(test.testBurn(3801, 4200, 1024)).to.be.reverted
+
+        await test.testBurn(3801, 4200, 18000)
+        expect(await test.liquidity()).to.eq(0) 
+    })
+
     it("price improve - quote side", async() => {
         // Set to 1/1.5 the threshold of the previous test, should be consistent threshold
         await test.testPegPriceImproveQuote(6667, 1000)

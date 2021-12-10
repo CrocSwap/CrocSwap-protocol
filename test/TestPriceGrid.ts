@@ -187,11 +187,11 @@ describe('Price Improve', () => {
 
     it("verify", async() => {
         // Meets threshold
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 7053371)
+        expect(await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 7053371)).to.be.true
         // Exceeds threshold
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 171053371)
+        expect(await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 171053371)).to.be.true
         // On grid, threshold doesn't apply
-        await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2048, 1024)
+        expect(await test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1024, 2048, 1024)).to.be.false
 
         // Just below threshold
         await expect(test.testVerify(true, 1024, 5000, UP_MULTS, 128, 128, 1016, 2052, 7053370)).to.be.reverted
