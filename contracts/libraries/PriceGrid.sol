@@ -35,27 +35,35 @@ library PriceGrid {
 
     /* @notice Asserts that a given range order is either on grid or eligble for off-grid
      *         price improvement.
+     *
      * @param set The off-grid price improvement requirements active for this pool.
      * @param lowTick The lower tick index of the range order.
      * @param highTick The upper tick index of the range order.
      * @param liquidity The amount of liquidity in the range order.
      * @param gridSize The grid size associated with the pool in ticks.
-     * @param priceTick The price tick of the current price in the pool. */
+     * @param priceTick The price tick of the current price in the pool.
+     *
+     * @return Returns false if the range is on-grid, and true if the range order
+     *         is off-grid but eligible for price improvement. (If off-grid and 
+     *         ineligible, the transaction will revert.) */
     function verifyFit (ImproveSettings memory set, int24 lowTick, int24 highTick,
                         uint128 liquidity, uint16 gridSize, int24 priceTick)
-        internal pure {
+        internal pure returns (bool) {
         if (!isOnGrid(lowTick, highTick, gridSize)) {
             uint128 thresh = improveThresh(set, gridSize, priceTick,
                                            lowTick, highTick);
             require(liquidity >= thresh, "D");
+            return true;
         }
+        return false;
     }
 
     /* @notice Asserts that a given range order is on grid.
      * @param lowTick The lower tick index of the range order.
      * @param highTick The upper tick index of the range order.
      * @param gridSize The grid size associated with the pool in ticks. */
-    function verifyFit (int24 lowTick, int24 highTick, uint16 gridSize) internal pure {
+    function verifyFit (int24 lowTick, int24 highTick, uint16 gridSize)
+        internal pure {
         require(isOnGrid(lowTick, highTick, gridSize), "D");
     }
 
