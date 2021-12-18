@@ -218,8 +218,10 @@ describe('CurveMath', () => {
       expect(fromFixedGrowth(result.concGrowth)).to.lte(0.02523302);
       expect(fromFixedGrowth(result.concGrowth)).to.gte(0.025233);
       expect(result.shiftSeed.toNumber()).to.eq(2000 + 190);
+   })
 
-      result = await curve.testAssimilate(1250, toSqrtPrice(0.64), 
+   it("assimilate liq denom", async() => {
+      let result = await curve.testAssimilate(1250, toSqrtPrice(0.64), 
          2000, 7500, toFixedGrowth(0.25), true);      
       expect(fromSqrtPrice(result.shiftPrice)).gte(0.64 / 1.1);
       expect(fromSqrtPrice(result.shiftPrice)).lte(0.64 / 1.099);      
