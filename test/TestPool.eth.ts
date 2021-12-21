@@ -6,9 +6,14 @@ import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedP
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { BigNumber } from 'ethers';
+import { BigNumber, ContractTransaction } from 'ethers';
 
 chai.use(solidity);
+
+async function getTxGasCost (tx: Promise<ContractTransaction>): Promise<BigNumber> {
+    let rcpt = await (await tx).wait(1)
+    return rcpt.cumulativeGasUsed.mul(rcpt.effectiveGasPrice)
+}
 
 describe('Pool Ethereum', () => {
     let test: TestPool
@@ -27,12 +32,26 @@ describe('Pool Ethereum', () => {
     })
 
     it("mint", async() => {
-        await test.testMint(200000, 210000, 1024*1000*1000);
+       await test.testMint(200000, 210000, 1024*1000*1000);
 
        let tgt = BigNumber.from("10074005756316541")
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(tgt)
        expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(4269666)
+    })
 
+    it("balance client side", async() => {
+       let startBase = await baseToken.balanceOf(await (await test.trader).getAddress())
+       let startQuote = await quoteToken.balanceOf(await (await test.trader).getAddress())
+
+       let tx = test.testMint(200000, 210000, 1024*1000*1000);
+       let gasCost = await getTxGasCost(tx)
+       let tgt = BigNumber.from("10074005756316541")
+
+       let endBase = await baseToken.balanceOf(await (await test.trader).getAddress())
+       let endQuote = await quoteToken.balanceOf(await (await test.trader).getAddress())
+
+       expect(startBase.sub(endBase).sub(gasCost)).to.equal(tgt)
+       expect(startQuote.sub(endQuote)).to.equal(4269666)
     })
 
     it("burn", async() => {
@@ -95,6 +114,21 @@ describe('Pool Ethereum Hotpath', () => {
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(tgt)
        expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(4269666)
     })
+
+    it("balance client side", async() => {
+        let startBase = await baseToken.balanceOf(await (await test.trader).getAddress())
+        let startQuote = await quoteToken.balanceOf(await (await test.trader).getAddress())
+ 
+        let tx = test.testMint(200000, 210000, 1024*1000*1000);
+        let gasCost = await getTxGasCost(tx)
+        let tgt = BigNumber.from("10074005756316541")
+ 
+        let endBase = await baseToken.balanceOf(await (await test.trader).getAddress())
+        let endQuote = await quoteToken.balanceOf(await (await test.trader).getAddress())
+ 
+        expect(startBase.sub(endBase).sub(gasCost)).to.equal(tgt)
+        expect(startQuote.sub(endQuote)).to.equal(4269666)
+     })
 
     it("burn", async() => {
         await test.testMint(200000, 210000, 1024*1000*1000);
