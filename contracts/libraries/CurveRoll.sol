@@ -214,7 +214,7 @@ library CurveRoll {
      * @return counterFlow The magnitude of token flow on the opposite side the swap
      *                     is denominated in. Note that this value is *not* signed. Also
      *                     note that this value is always rounded down. 
-     * @return nextPrice   The ending price of the curve assumign the full flow is 
+     * @return nextPrice   The ending price of the curve assuming the full flow is 
      *                     processed. Note that this value is *not* written into the 
      *                     curve struct. */
     function deriveImpact (CurveMath.CurveState memory curve, uint128 flow,
@@ -239,7 +239,7 @@ library CurveRoll {
      *       Base   |   Buy   |     Down         |    1 wei
      *       Base   |   Sell  |     Down         |    1 wei
      *       Quote  |   Buy   |     Up           |   Arbitrary
-     *       Quote  |   Buy   |     Up           |   Arbitrary
+     *       Quote  |   Sell  |     Up           |   Arbitrary
      * 
      *   This guarantees that the pool is adaquately collateralized given the flow of the
      *   fixed side. Because of the arbitrary roudning, it's critical that the counter-
@@ -288,11 +288,7 @@ library CurveRoll {
      * 
      * Calculating flow price for quote flow is more complex because the flow delta 
      * applies to the inverse of the price. So when calculating the inverse, we make 
-     * sure to round in the direction that founds up the final price.
-     *
-     * Because the calculation involves multiple nested divisors there's an arbitrary 
-     * loss of precision due to rounding. However this is almost always small unless
-     * liquidity is very small, flow is very large or price is very extreme. */
+     * sure to round in the direction that rounds up the final price. */
     function calcQuoteFlowPrice (uint128 price, uint128 liq, uint128 flow, bool isBuy)
         private pure returns (uint128) {
         // Since this is a term in the quotient rounding down, rounds up the final price
@@ -304,8 +300,8 @@ library CurveRoll {
     }
 
 
-    // Max round precision loss is 2 wei, but a 4 wei cushion provides extra margin
-    // and is economically meaningless.
+    // Max round precision loss on token flow is 2 wei, but a 4 wei cushion provides
+    // extra margin and is economically meaningless.
     int128 constant ROUND_PRECISION_WEI = 4;
 
     /* @notice Correctly assigns the signed direction to the unsigned flow and counter

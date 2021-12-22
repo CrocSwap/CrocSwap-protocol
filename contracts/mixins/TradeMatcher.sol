@@ -208,38 +208,34 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         bool doMore = true;
         while (doMore) {
             // Swap to furthest point we can based on the local bitmap. Don't bother
-            // seeking a bump outside the bump, because we're not sure if the swap will
-            // exhaust the bitmap.
+            // seeking a bump outside the local neighborhood yet, because we're not sure
+            // if the swap will exhaust the bitmap.
             (int24 bumpTick, bool spillsOver) = pinBitmap
                 (pool.hash_, swap.isBuy_, midTick);
             curve.swapToLimit(accum, swap, pool.head_, bumpTick);
             
             
-            // The swap can be in one of three states at this point: 1) qty exhausted,
-            // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
-            // the swap is complete. The latter means that we have adust AMM liquidity,
-            // and find the next liquidity bump.
+            // The swap can be in one of four states at this point: 1) qty exhausted,
+            // 2) limit price reached, 3) bump or barrier point reached on the curve.
+            // The former two indicate the swap is complete. The latter means we have to
+            // find the next bump point and possibly adjust AMM liquidity.
             doMore = hasSwapLeft(curve, swap);
-            
-            // The swap can be in one of three states at this point: 1) qty exhausted,
-            // 2) limit price reached, or 3) AMM liquidity bump hit. The former two mean
-            // the swap is complete. The latter means that we have adust AMM liquidity,
-            // and find the next liquidity bump.
             if (doMore) {
 
-                // The spills over variable indicates that we reaced the end of the
-                // local bitmap, rather than actually hitting a level bump. Therefore
-                // we should query the global bitmap, find the next level bitmap, and
-                // keep swapping on the constant-product curve until we hit point.
+                // The spillsOver variable indicates that we reached stopped because we
+                // reached the end of the local bitmap, rather than actually hitting a
+                // level bump. Therefore we should query the global bitmap, find the next
+                // bump point, and keep swapping across the constant-product curve until
+                // if/when we hit that point.
                 if (spillsOver) {
                     int24 liqTick = seekMezzSpill(pool.hash_, bumpTick, swap.isBuy_);
                     bool tightSpill = (bumpTick == liqTick);
                     bumpTick = liqTick;
                     
                     // In some corner cases the local bitmap border also happens to
-                    // be the next level bump. In which case we're done. Otherwise,
-                    // we keep swapping since we still have some distance on the curve
-                    // to cover.
+                    // be the next bump point. If so, we're done with this inner section.
+                    // Otherwise, we keep swapping since we still have some distance on
+                    // the curve to cover until we reach a bump point.
                     if (!tightSpill) {
                         curve.swapToLimit(accum, swap, pool.head_, bumpTick);
                         doMore = hasSwapLeft(curve, swap);
@@ -258,7 +254,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     }
 
     /* @notice Determines if we've terminated the swap execution. I.e. fully exhausted
-     *         the specified swap quantity to have hit the directive's limit price. */
+     *         the specified swap quantity *OR* hit the directive's limit price. */
     function hasSwapLeft (CurveMath.CurveState memory curve,
                           Directives.SwapDirective memory swap)
         private pure returns (bool) {

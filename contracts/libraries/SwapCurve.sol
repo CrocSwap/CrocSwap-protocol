@@ -58,7 +58,7 @@ library SwapCurve {
             bookExchFees(curve, swap.qty_, pool, swap.inBaseQty_, limitPrice);
         accum.accumSwap(swap.inBaseQty_, paidBase, paidQuote, paidProto);
         
-        // limitPrice is still valid even though curve has move from ingesting liquidity
+        // limitPrice is still valid even though curve has moved from ingesting liquidity
         // fees in bookExchFees(). That's because the collected fees are mathematically
         // capped at a fraction of the flow necessary to reach limitPrice. See
         // bookExchFees() comments. (This is also why we book fees before swapping, so we

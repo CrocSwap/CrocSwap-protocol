@@ -24,15 +24,16 @@ contract TickCensus is StorageLayout {
      * store this layer, because it adds an unnecessary SLOAD/SSTORE operation on
      * almost all operations. Instead users can query this layer by checking whether
      * mezzanine key is set for each bit. The tradeoff is that lobby bitmap queries
-     * are no longer O(1) random access but O(N) seeks. However spills at the lobby
-     * layer are so rare (moving between lobby bits requires a 65,000% price change)
-     * that this gas tradeoff is virtually always justified. a bitmap *
-    
+     * are no longer O(1) random access but O(N) seeks. However at most there are 256
+     * SLOAD on a lobby-layer seek, and spills at the lobby layer are rare (moving 
+     * between multiple lobby bits requires a 65,000% price change). This gas tradeoff
+     *  is virtually always justified. 
+     *
      * The second layer (mezzanine) maps whether each 16-bit tick root is set. An 
      * entry will be set if and only if *any* tick index in the 8-bit range is set. 
-     * Because there are 256^2 slots, this is represented as map from the first 8-
+     * Because there are 256^2 slots, this is represented as a map from the first 8-
      * bits in the root to individual 8-bit/256-slot bitmaps for the middle 8-bits 
-     * at that root.
+     * at that root. 
      *
      * The final layer (terminus) directly maps whether individual tick indices are
      * set. Because there are 256^3 possible slots, this is represnted as a mapping 
