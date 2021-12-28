@@ -263,6 +263,9 @@ contract LiquidityCurve is StorageLayout {
      * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
     function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
         internal pure {
+        int24 tick = TickMath.getTickAtSqrtRatio(priceRoot);
+        require(tick >= TickMath.MIN_TICK && tick <= TickMath.MAX_TICK, "R");
+        
         require(curve.priceRoot_ == 0, "N");
         curve.priceRoot_ = priceRoot;
     }
