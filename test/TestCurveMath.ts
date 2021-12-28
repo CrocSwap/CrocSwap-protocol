@@ -342,7 +342,7 @@ describe('CurveMath', () => {
       expect(fromSqrtPrice(impact[1])).gte(.11111110);
 
       impact = await curve.testDeriveImpact(toSqrtPrice(.0625), 0, 0, 1000, 2000, false, false);
-      //expect(impact[0]).eq(47);
+      expect(impact[0]).eq(83);
       expect(fromSqrtPrice(impact[1])).lte(.02777777778);       // Quote flow rounds down
       expect(fromSqrtPrice(impact[1])).gte(.0277777);
    })
