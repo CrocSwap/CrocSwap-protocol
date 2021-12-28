@@ -191,13 +191,14 @@ export class TestPool {
     }
 
     async initPool (feeRate: number, protoTake: number, tickSize: number,
-        price: number, noOverrides?: boolean): Promise<ContractTransaction> {
+        price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
         return this.initPoolIdx(POOL_IDX, feeRate, protoTake, tickSize, price, noOverrides)
     }
 
     async initPoolIdx (poolIdx: number, feeRate: number, protoTake: number, tickSize: number,
-        price: number, noOverrides?: boolean): Promise<ContractTransaction> {
+        price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
+
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
@@ -205,11 +206,15 @@ export class TestPool {
                 tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, poolIdx, 
-                toSqrtPrice(price), overrides)
+                this.toCrocPrice(price), overrides)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
+    }
+
+    toCrocPrice (price: number | BigNumber): BigNumber {
+        return typeof(price) === "number" ? toSqrtPrice(price) : price
     }
 
     async initPermitPool (feeRate: number, protoTake: number, tickSize: number,

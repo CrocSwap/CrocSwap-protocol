@@ -407,4 +407,69 @@ describe('Swap Curve', () => {
       expect(accum.paidBase_.toNumber()).to.equal(-14999 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(2000000000);
    })
+
+   it("swap zero liq base buy", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 100*100, protoCut_: 0}
+      let swap = { qtyLeft_: 1000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      await curve.fixCurve(1, toSqrtPrice(1.0), 0, 0);
+      await curve.testSwap(1, swap, toSqrtPrice(2.0), toSqrtPrice(2.0))
+
+      let state = await curve.pullCurve(1);
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.0-1e8)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.0+1e8)
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_.toNumber()).to.equal(1000 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+   })
+
+   it("swap zero liq quote buy", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 100*100, protoCut_: 0}
+      let swap = { qtyLeft_: 1000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      await curve.fixCurve(1, toSqrtPrice(1.0), 0, 0);
+      await curve.testSwap(1, swap, toSqrtPrice(2.0), toSqrtPrice(2.0))
+
+      let state = await curve.pullCurve(1);
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.0-1e8)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.0+1e8)
+
+      let accum = await curve.lastSwap();
+      // Because swapLeft is denominated in output, the extra 4 wei burned doesn't alter the qtyLeft
+      expect(accum.qtyLeft_.toNumber()).to.equal(1000);
+      expect(accum.paidBase_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+   })
+
+   it("swap zero liq base sell", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 100*100, protoCut_: 0}
+      let swap = { qtyLeft_: 1000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      await curve.fixCurve(1, toSqrtPrice(1.0), 0, 0);
+      await curve.testSwap(1, swap, toSqrtPrice(0.5), toSqrtPrice(0.5))
+
+      let state = await curve.pullCurve(1);
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.0-1e8)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.0+1e8)
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_.toNumber()).to.equal(1000);
+      expect(accum.paidBase_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+   })
+
+   it("swap zero liq quote buy", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 100*100, protoCut_: 0}
+      let swap = { qtyLeft_: 1000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      await curve.fixCurve(1, toSqrtPrice(1.0), 0, 0);
+      await curve.testSwap(1, swap, toSqrtPrice(0.5), toSqrtPrice(0.5))
+
+      let state = await curve.pullCurve(1);
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(0.5-1e8)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(0.5+1e8)
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_.toNumber()).to.equal(1000 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
+   })
 })
