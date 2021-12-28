@@ -318,6 +318,8 @@ library CurveMath {
      *   boundness. */
     function invertFlow (uint128 liq, uint128 price, uint128 denomFlow,
                          bool isBuy, bool inBaseQty) private pure returns (uint128) {
+        if (liq == 0) { return 0; }
+        
         uint128 invertReserve = reserveAtPrice(liq, price, !inBaseQty);
         uint128 initReserve = reserveAtPrice(liq, price, inBaseQty);
         
