@@ -83,6 +83,15 @@ describe('Pool Extremes', () => {
         expect((await baseToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
         expect(await gasUsed(tx)).to.lte(620000)
     })
+
+    it("outside price", async() => {
+        await expect(test.initPool(feeRate, 0, 1, MAX_PRICE.add(1), true)).to.be.reverted
+        await expect(test.initPool(feeRate, 0, 1, MIN_PRICE.sub(1), true)).to.be.reverted
+
+        await test.initPool(feeRate, 0, 1, 1.0, true)
+        await expect(test.testSwap(true, true, 1000, MAX_PRICE.add(1))).to.be.reverted
+        await expect(test.testSwap(false, true, 1000, MIN_PRICE.sub(1))).to.be.reverted
+    })
 })
 
 
