@@ -152,7 +152,7 @@ contract ColdPathInjector is StorageLayout {
     }
 
     /* @notice Invokes sweepSwap() call in MicroPaths sidecar and relays the result. */
-    function callSwap (Chaining.PairFlow memory flow,
+    function callSwap (Chaining.PairFlow memory accum,
                        CurveCache.Cache memory curve,
                        Directives.SwapDirective memory swap,
                        PoolSpecs.PoolCursor memory pool) internal {
@@ -171,7 +171,7 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint128,
                                 uint64, uint64));
 
-        flow.foldFlow(swapFlow);
+        accum.foldFlow(swapFlow);
     }
 
 }
