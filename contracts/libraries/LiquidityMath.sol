@@ -24,7 +24,7 @@ library LiquidityMath {
     /// @param x The liquidity before change
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
-    function addDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
+    function addLiq(uint128 x, uint128 y) internal pure returns (uint128 z) {
         unchecked {
         require((z = x + y) >= x);
         }

@@ -193,7 +193,7 @@ contract PositionRegistrar is StorageLayout {
                          uint64 ambientGrowth) internal returns (uint128 seeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         seeds = liqAdd.deflateLiqSeed(ambientGrowth);
-        pos.seeds_ = pos.seeds_.addDelta(seeds);
+        pos.seeds_ = pos.seeds_.addLiq(seeds);
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }
 
@@ -211,7 +211,7 @@ contract PositionRegistrar is StorageLayout {
             oldMileage = 0;
         }
 
-        uint128 liqNext = LiquidityMath.addDelta(liq, liqAdd);
+        uint128 liqNext = LiquidityMath.addLiq(liq, liqAdd);
         uint64 mileage = blendMileage(feeMileage, liqAdd, oldMileage, liq);
         uint32 stamp = SafeCast.timeUint32();
         

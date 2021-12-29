@@ -101,7 +101,7 @@ library CurveMath {
     function activeLiquidity (CurveState memory curve) internal pure returns (uint128) {
         uint128 ambient = CompoundMath.inflateLiqSeed
             (curve.liq_.ambientSeed_, curve.accum_.ambientGrowth_);
-        return LiquidityMath.addDelta(ambient, curve.liq_.concentrated_);
+        return LiquidityMath.addLiq(ambient, curve.liq_.concentrated_);
     }
 
     /* @notice Similar to calcLimitFlows(), except returns the max possible flow in the
