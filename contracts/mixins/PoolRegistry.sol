@@ -184,6 +184,12 @@ contract PoolRegistry is StorageLayout {
         require(isPoolInit(pool), "PI");
     }
 
+    function assertPoolFresh (address base, address quote, uint24 poolIdx) internal view {
+        PoolSpecs.PoolCursor memory pool =
+            PoolSpecs.queryPool(pools_, base, quote, poolIdx);
+        require(!isPoolInit(pool), "PF");
+    }
+
     /* @notice Looks up and returns a storage pointer associated with the pair and pool 
      *         type.
      *

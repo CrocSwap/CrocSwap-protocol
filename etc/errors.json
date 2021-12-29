@@ -21,6 +21,7 @@
     "PA": "Protocol authorization",
     "PI": "Pool not initialized",
     "PT": "No pool template at index",
+    "PF": "Pool already initialized",
     "R": "Price outside tick range",
     "RB": "Swap Curve Boundary Crash",
     "S": "Mezzanine spill broken",
