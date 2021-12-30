@@ -13,6 +13,7 @@ import './mixins/OracleHist.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
+import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/WarmPath.sol';
 import './callpaths/HotPath.sol';
@@ -28,7 +29,7 @@ import "hardhat/console.sol";
  * @dev    Sidecar proxy contracts exist to contain code that doesn't fit in the Ethereum
  *         limit, but this is the only contract that users need to directly interface 
  *         with. */
-contract CrocSwapDex is HotPath {
+contract CrocSwapDex is HotPath, ICrocMinion {
 
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
@@ -124,7 +125,7 @@ contract CrocSwapDex is HotPath {
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function protocolCmd (bytes calldata input) protocolOnly public {
+    function protocolCmd (bytes calldata input) protocolOnly public override {
         callProtocolCmd(input);
     }
 }

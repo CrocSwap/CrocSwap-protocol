@@ -66,12 +66,9 @@ library PoolSpecs {
     /* @notice Writes a pool specification for a pair and pool type combination. */
     function writePool (mapping(bytes32 => Pool) storage pools,
                         address tokenX, address tokenY, uint256 poolIdx,
-                        Pool memory val)
-        internal returns (Pool memory prev) {
+                        Pool memory val) internal {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
-        prev = pools[key];
         pools[key] = val;
-        return prev;
     }
 
     /* @notice Hashes the key associated with a pool for a base/quote asset pair and
