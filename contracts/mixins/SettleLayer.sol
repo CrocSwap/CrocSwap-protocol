@@ -121,8 +121,7 @@ contract SettleLayer is AgentMask {
     function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
                           bool useSurplus) internal {
         (address debitor, address creditor) = agentsSettle();
-        transactFlow(debitor, creditor, baseFlow, base, useSurplus);
-        transactFlow(debitor, creditor, quoteFlow, quote, useSurplus);
+        settleFlat(debitor, creditor, base, baseFlow, quote, quoteFlow, useSurplus);
     }
 
     /* @notice Settle the collateral exchange associated with a the initailization of
@@ -138,8 +137,25 @@ contract SettleLayer is AgentMask {
     function settleInitFlow (address recv,
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
-        transactFlow(recv, recv, baseFlow, base, false);
-        transactFlow(recv, recv, quoteFlow, quote, false);
+        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
+    }
+
+    /* @notice Settles the collateral exchanged associated with the flow in a single 
+     *         pair.
+     * @dev    This must only be used when no other pairs settle in the transaction. */
+    function settleFlat (address debitor, address creditor,
+                         address base, int128 baseFlow,
+                         address quote, int128 quoteFlow, bool useReserves) private {
+        if (base.isEtherNative()) {
+            transactEther(debitor, creditor, baseFlow, useReserves);
+        } else {
+            transactToken(debitor, creditor, baseFlow, base, useReserves);
+        }
+
+        // Because Ether native trapdoor is 0x0 address, and because base is always
+        // smaller of the two addresses, native ETH will always appear on the base
+        // side.
+        transactToken(debitor, creditor, quoteFlow, quote, useReserves);
     }
 
     /* @notice Given a pre-determined amount of flow, settles according to collateral 
@@ -150,7 +166,7 @@ contract SettleLayer is AgentMask {
         if (token.isEtherNative()) {
             return flow;
         } else {
-            transactFlow(debitor, creditor, flow, token, useReserves);
+            transactToken(debitor, creditor, flow, token, useReserves);
             return 0;
         }
     }
@@ -177,7 +193,7 @@ contract SettleLayer is AgentMask {
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              deposited. */
     function depositSurplus (address owner, uint128 value, address token) internal {
-        debitTransfer(owner, value, token);
+        debitTransfer(owner, value, token, msg.value.toUint128());
         bytes32 key = encodeSurplusKey(owner, token);
         surplusCollateral_[key] += value;
     }
@@ -202,7 +218,9 @@ contract SettleLayer is AgentMask {
         if (value == 0) { value = balance; }
         require(balance > 0 && value < balance, "SC");
 
-        creditTransfer(recv, value, token);
+        // No need to use msg.value, because unlike trading there's no logical reason
+        // we'd expect it to be set on this call.
+        creditTransfer(recv, value, token, 0);
         surplusCollateral_[key] -= value;
     }
 
@@ -231,10 +249,12 @@ contract SettleLayer is AgentMask {
     function transactEther (address debitor, address creditor,
                             int128 flow, bool useReserves)
         private {
+        // This is the only point in a standard transaction where msg.value is accessed.
+        uint128 recvEth = msg.value.toUint128();
         if (flow != 0) {
-            transactFlow(debitor, creditor, flow, address(0), useReserves);
+            transactFlow(debitor, creditor, flow, address(0), recvEth, useReserves);
         } else {
-            refundEther(creditor);
+            refundEther(creditor, recvEth);
         }
     }
 
@@ -249,86 +269,91 @@ contract SettleLayer is AgentMask {
      * @param token The address of the token's ERC20 tracker.
      * @para useReserves If true, any settlement is first done against the user's surplus
      *                   collateral account at the exchange. */
+    function transactToken (address debitor, address creditor, int128 flow,
+                           address token, bool useReserves) private {
+        require(!token.isEtherNative());
+        // Since this is a token settlement, we defer booking any native ETH in msg.value
+        uint128 bookedEth = 0;
+        transactFlow(debitor, creditor, flow, token, bookedEth, useReserves);
+    }
+
+    /* @notice Handles the single sided settlement of a token or native ETH flow. */
     function transactFlow (address debitor, address creditor,
-                           int128 flow, address token, bool useReserves)
-        private {
+                           int128 flow, address token,
+                           uint128 bookedEth, bool useReserves) private {
         if (isDebit(flow)) {
-            debitUser(debitor, uint128(flow), token, useReserves);
+            debitUser(debitor, uint128(flow), token, bookedEth, useReserves);
         } else if (isCredit(flow)) {
-            creditUser(creditor, uint128(-flow), token, useReserves);            
+            creditUser(creditor, uint128(-flow), token, bookedEth, useReserves);
         }           
     }
 
     /* @notice Collects a collateral debit from the user depending on the asset type
      *         and the settlement specifcation. */
     function debitUser (address recv, uint128 value, address token,
-                        bool useReserves) private {
+                        uint128 bookedEth, bool useReserves) private {
         if (useReserves) {
             uint128 remainder = debitSurplus(recv, value, token);
-            debitRemainder(recv, remainder, token);
+            debitRemainder(recv, remainder, token, bookedEth);
         } else {
-            debitTransfer(recv, value, token);
+            debitTransfer(recv, value, token, bookedEth);
         }
     }
 
     /* @notice Collects the remaining debit (if any) after the user's surplus collateral
      *         balance has been exhausted. */
-    function debitRemainder (address recv, uint128 remainder, address token) private {
+    function debitRemainder (address recv, uint128 remainder, address token,
+                             uint128 bookedEth) private {
         if (remainder > 0) {
-            debitTransfer(recv, remainder, token);
+            debitTransfer(recv, remainder, token, bookedEth);
         } else if (token.isEtherNative()) {
-            refundEther(recv);
+            refundEther(recv, bookedEth);
         }
     }
 
     /* @notice Pays out a collateral credit to the user depending on asset type and 
      *         settlement specification. */
     function creditUser (address recv, uint128 value, address token,
-                         bool useReserves) private {
+                         uint128 bookedEth, bool useReserves) private {
         if (useReserves) {
             creditSurplus(recv, value, token);
-            creditRemainder(recv, token);
+            creditRemainder(recv, token, bookedEth);
         } else {
-            creditTransfer(recv, value, token);
+            creditTransfer(recv, value, token, bookedEth);
         }
     }
 
     /* @notice Handles any refund necessary after a credit has been paid to the user's 
      *         surplus collateral balance. */
-    function creditRemainder (address recv, address token) private {
+    function creditRemainder (address recv, address token, uint128 bookedEth) private {
         if (token.isEtherNative()) {
-            refundEther(recv);
+            refundEther(recv, bookedEth);
         }
     }
 
     /* @notice Settles a credit with an external transfer to user. */
-    function creditTransfer (address recv, uint128 value, address token) private {
+    function creditTransfer (address recv, uint128 value, address token,
+                             uint128 bookedEth) private {
         if (token.isEtherNative()) {
-            payEther(recv, value);
+            payEther(recv, value, bookedEth);
         } else {
             TransferHelper.safeTransfer(token, recv, value);
         }
     }
 
     /* @notice Settles a debit with an external transfer from user. */
-    function debitTransfer (address recv, uint128 value, address token) private {
+    function debitTransfer (address recv, uint128 value, address token,
+                            uint128 bookedEth) private {
         if (token.isEtherNative()) {
-            collectEther(recv, value);
+            collectEther(recv, value, bookedEth);
         } else {
             collectToken(recv, value, token);
         }
     }
 
-    /* @notice Called when there's no native Ether owed either way. Refunds any msg.value
-     *         in the transaction. */
-    function refundEther (address recv) private {
-        collectEther(recv, 0);
-    }
-
-    /* @notice Pays a native Ethereum credit to the user (and refunds any msg.value in
+    /* @notice Pays a native Ethereum credit to the user (and refunds any overpay in
      *         the transction, since by definition they have no debit.) */
-    function payEther (address recv, uint128 value) private {
-        uint128 overpay = (msg.value).toUint128();
+    function payEther (address recv, uint128 value, uint128 overpay) private {
         TransferHelper.safeEtherSend(recv, value + overpay);
     }
 
@@ -339,13 +364,20 @@ contract SettleLayer is AgentMask {
      *      once in a transaction.
      * @param recv The address to send any over-payment refunds to.
      * @param value The amount of Ether owed to the exchange. msg.value must exceed
-     *              this threshold. */
-    function collectEther (address recv, uint128 value) private {
-        require(msg.value >= value, "EC");
-        uint128 overpay = (msg.value).toUint128() - value;
+     *              this threshold.
+     * @param paidEth The amount of Ether paid by the user in this transaction (usually
+     *                msg.value) */
+    function collectEther (address recv, uint128 value, uint128 paidEth) private {
+        require(paidEth >= value, "EC");
+        uint128 overpay = paidEth - value;
+        refundEther(recv, overpay);
+    }
+
+    /* @notice Refunds any overpaid native Eth (if any) */
+    function refundEther (address recv, uint128 overpay) private {
         if (overpay > 0) {
             TransferHelper.safeEtherSend(recv, overpay);
-        }    
+        }
     }
 
     /* @notice Collects a token debt from a specfic debtor.
