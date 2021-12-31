@@ -75,7 +75,7 @@ describe('Gas Benchmarks', () => {
 
     it("mint above price", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(200, 300, 100), 184000)
+        await expectGas(test.testMintOther(200, 300, 100), 185000)
     })
 
     it("burn partial", async() => {
@@ -259,7 +259,7 @@ describe('Gas Benchmarks', () => {
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-1000, 1000, 5000, true), 90000)
+        await expectGas(test.testBurn(-1000, 1000, 5000, true), 91000)
     })
 
 })
