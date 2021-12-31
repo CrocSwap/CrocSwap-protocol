@@ -13,6 +13,7 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../interfaces/ICrocSwapHistRecv.sol';
+import '../CrocEvents.sol';
 
 import "hardhat/console.sol";
 
@@ -65,7 +66,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
                                uint8, uint16, uint128));
 
         if (code == 65) {
-            collectProtocol(token);
+            collectProtocol(token, sidecar);
         } else if (code == 66) {
             uint8 jit = value.toUint8();
             setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
@@ -77,6 +78,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         } else if (code == 69) {
             pegPriceImprove(token, value, ticks);
         } else if (code == 70) {
+            emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
         } 
     }
@@ -124,8 +126,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     /* @notice Pays out the the protocol fees.
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
-    function collectProtocol (address token) public {
-        disburseProtocolFees(authority_, token);
+    function collectProtocol (address token, address recv) public {
+        disburseProtocolFees(recv, token);
+        emit CrocEvents.ProtocolDividend(token, recv);
     }
 
     /* @notice Used to directly pay out or pay in surplus collateral.

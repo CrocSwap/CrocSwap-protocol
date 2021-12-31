@@ -128,6 +128,14 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     function protocolCmd (bytes calldata input) protocolOnly public override {
         callProtocolCmd(input);
     }
+
+    function sidecarProxies() public view returns (address cold, address warm,
+                                                   address long, address micro) {
+        cold = coldPath_;
+        warm = warmPath_;
+        long = longPath_;
+        micro = microPath_;
+    }
 }
 
 

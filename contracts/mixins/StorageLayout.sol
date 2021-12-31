@@ -21,7 +21,7 @@ contract StorageLayout {
 
     // Generic general-purpose storage slots
     bool public reEntrantLocked_;
-    address internal authority_;
+    address public authority_;
     address internal coldPath_;
     address internal warmPath_;
     address internal longPath_;
