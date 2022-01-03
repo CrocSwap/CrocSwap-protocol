@@ -100,7 +100,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callInitPool(base, quote, poolIdx, price);
     }
 
-    /* @notice Pays out the the protocol fees.
+    /* @notice Adds or returns surplus collateral held at the exchange
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
     function collect (address recv, int128 value, address token)
