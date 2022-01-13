@@ -3,10 +3,11 @@ import { CrocSwapDexSeed } from '../../typechain/CrocSwapDexSeed';
 import { ethers } from 'hardhat';
 import { ContractFactory, BytesLike, BigNumber } from 'ethers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { toSqrtPrice, fromSqrtPrice } from '../../test/FixedPoint';
-import { MockBypassERC20 } from '../../typechain/MockBypassERC20';
+import { toSqrtPrice, fromSqrtPrice, MIN_PRICE, MAX_PRICE } from '../../test/FixedPoint';
+import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
-import { CrocSwapDex } from '../../contracts/typechain/CrocSwapDex';
+import { CrocSwapDex } from '../../typechain/CrocSwapDex';
+import { IERC20Minimal } from '../../typechain/IERC20Minimal';
 
 /* Helper script for deploying a basic mock setup to a localhost or test network.
  * Only for ad-hoc testing purposes. Do NOT use in production. */
@@ -29,15 +30,49 @@ function encodeProtocolCmd (code: number, token: string, sidecar: string, poolId
 }
 
 function encodeMintAmbient (base: string, quote: string,
-    liq: number, limitQty: BigNumber, useSurplus: boolean): BytesLike {
+    liq: BigNumber | number, useSurplus: boolean): BytesLike {
     let abiCoder = new ethers.utils.AbiCoder()
     const callCode = 3
     return abiCoder.encode(
-        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "int128", "bool" ], 
-        [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitQty, useSurplus  ]);
+        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
+        [ callCode, base, quote, POOL_IDX, 0, 0, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
 }
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(30), gasLimit: 6000000 }
+function encodeBurnAmbient (base: string, quote: string,
+    liq: BigNumber | number, useSurplus: boolean): BytesLike {
+    let abiCoder = new ethers.utils.AbiCoder()
+    const callCode = 4
+    return abiCoder.encode(
+        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
+        [ callCode, base, quote, POOL_IDX, 0, 0, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
+}
+
+async function describeCurve (query: QueryHelper, base: string, quote: string) {
+    let liq = await query.queryLiquidity(base, quote, POOL_IDX)
+    let curve = await query.queryCurve(base, quote, POOL_IDX)
+    let weiPrice = fromSqrtPrice(curve.priceRoot_)
+    let baseDeflator = await tokenDeflator(base)
+    let quoteDeflator = await tokenDeflator(quote)
+    console.log(curve.priceRoot_.toString())
+    console.log(weiPrice)
+    console.log("Deflators " + baseDeflator.toString() + " " + quoteDeflator.toString())
+    let price = weiPrice * (quoteDeflator / baseDeflator)
+    console.log("Liquidity " + liq.toString() + " at price " + price.toString())
+}
+
+async function tokenDeflator (token: string): Promise<number> {
+    if (token === ZERO_ADDR) {
+        return 1e18
+    } else {
+        let factory = await ethers.getContractFactory("MockERC20")
+        let tracker = factory.attach(token) as MockERC20
+        let decimals = await tracker.decimals()
+        console.log("Decimals " + decimals.toString())
+        return Math.pow(10.0, decimals)
+    }
+}
+
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(3), gasLimit: 6000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -66,12 +101,11 @@ async function deploy() {
     factory = await ethers.getContractFactory("MicroPaths")
     let microPath = (await factory.deploy(override)).address*/
 
-    /*let dex = await factory.deploy(authority.getAddress(), 
-        coldPath, warmPath, longPath, microPath) as CrocSwapDexSeed*/
-    //let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
-
     let factory = await ethers.getContractFactory("CrocSwapDex");
-    let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
+    /*let dex = await factory.deploy(authority.getAddress(), 
+        coldPath, warmPath, longPath, microPath, override) as CrocSwapDexSeed*/
+    //let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
+    let dex = factory.attach("0xB6Ff2e53408f38A5a363586746d1dB306AF5caa4") as CrocSwapDex
 
     //factory = await ethers.getContractFactory("MockERC20")
     /*let base = await factory.deploy(override) as MockERC20
@@ -106,33 +140,77 @@ async function deploy() {
     await base.connect(trader).approve(dex.address, BIG_QTY, override)
     await quote.connect(trader).approve(dex.address, BIG_QTY, override)*/
 
-    let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
-    await dex.protocolCmd(protoCmd, override)
+    /*let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
+    await dex.protocolCmd(protoCmd, override)*/
 
-    protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX_2, FEE_RATE_2, 0, 5, 100)
-    await dex.protocolCmd(protoCmd, override)
+    /*protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX_2, FEE_RATE_2, 0, 5, 100)
+    await dex.protocolCmd(protoCmd, override)*/
     //await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)
 
-    console.log("Pool initialized at Index: " + POOL_IDX)
+    const ropstenDai = "0xad6d458402f60fd3bd25163575031acdce07538d"
+    const ropstenWbtc = "0x442be68395613bdcd19778e761f03261ec46c06d"
+    const ropstenUsdc = "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
 
-    /*let mintCmd = encodeMintAmbient(base.address, quote.address, 100000000000, BIG_QTY, false)
+    //await dex.initPool(ZERO_ADDR, ropstenDai, POOL_IDX, toSqrtPrice(6), override)
+    /*await dex.initPool(ZERO_ADDR, ropstenWbtc, POOL_IDX, toSqrtPrice(60000000), override)
+    await dex.initPool(ZERO_ADDR, ropstenUsdc, POOL_IDX, toSqrtPrice(3e+15), override)
+    await dex.initPool(ropstenUsdc, ropstenDai, POOL_IDX, toSqrtPrice(1e-06), override)
+
+    console.log("Pool initialized at Index: " + POOL_IDX)*/
+
+    /*factory = await ethers.getContractFactory("MockERC20")
+    let daiErc20 = factory.attach(ropstenDai) as MockERC20
+    await daiErc20.approve(dex.address, BigNumber.from(10).pow(30), override)*/
+
+    /*factory = await ethers.getContractFactory("MockERC20")
+    let wbtcErc20 = factory.attach(ropstenWbtc) as MockERC20
+    await wbtcErc20.approve(dex.address, BigNumber.from(10).pow(30), override)
+
+    factory = await ethers.getContractFactory("MockERC20")
+    let usdcErc20 = factory.attach(ropstenUsdc) as MockERC20
+    await usdcErc20.approve(dex.address, BigNumber.from(10).pow(30), override)*/
+
+    /*let mintCmd = encodeMintAmbient(ZERO_ADDR, ropstenDai, BigNumber.from(10).pow(18), false)
+    await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
+
+    /*let burnCmd = encodeBurnAmbient(ZERO_ADDR, ropstenWbtc, BigNumber.from(10).pow(4), false)
+    await dex.connect(lp).tradeWarm(burnCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
+
+    /*let mintCmd = encodeMintAmbient(ropstenUsdc, ropstenDai, BigNumber.from(10).pow(12), false)
     await dex.connect(lp).tradeWarm(mintCmd, override)*/
 
+    /*await dex.swap(ZERO_ADDR, ropstenWbtc, POOL_IDX, true, true, BigNumber.from(10).pow(6), toSqrtPrice(1.8e11), false, 
+        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+
+    /*await dex.swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, false, BigNumber.from(10).pow(6), toSqrtPrice(1.866667e-09), false, 
+        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+
+    /*await dex.swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, true, BigNumber.from(10).pow(6), toSqrtPrice(3e9), false, 
+        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+
+    /*await dex.swap(ropstenUsdc, ropstenDai, POOL_IDX, false, true, BigNumber.from(10).pow(6), toSqrtPrice(1e-12), false, 
+        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+
     factory = await ethers.getContractFactory("QueryHelper")
-    let query = await factory.deploy(dex.address, override) as QueryHelper
+    //let query = await factory.deploy(dex.address, override) as QueryHelper
+    let query = factory.attach("0x3F6B274529dDe713CF7703129f219e38dC0D83b5") as QueryHelper
     console.log("Query Sidecar at " + query.address)
 
-    /*let liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
-    let curve = await query.queryCurve(base.address, quote.address, POOL_IDX)
-    let price = fromSqrtPrice(curve.priceRoot_)
-    console.log("Liquidity added  " + liq.toString() + " at price " + price.toString())
+    await describeCurve(query, ZERO_ADDR, ropstenDai)
+    await describeCurve(query, ZERO_ADDR, ropstenWbtc)
+    await describeCurve(query, ZERO_ADDR, ropstenUsdc)
+    await describeCurve(query, ropstenUsdc, ropstenDai)
 
-    let swapTx = await dex.connect(trader)
-        .swap(base.address, quote.address, POOL_IDX, 
-            true, true, BigNumber.from(10000000000), toSqrtPrice(1.5), false, override)*/
+    /*let swapTx = await dex.connect(trader)
+        .swap(ZERO_ADDR, ropstenDai, POOL_IDX, true, true, BigNumber.from(10).pow(10), MAX_PRICE, false,
+                Object.assign({value: BigNumber.from(10).pow(15)}, override))*/
+    
+    /*let swapTx = await dex.connect(trader)
+        .swap(ZERO_ADDR, ropstenDai, POOL_IDX, false, false, BigNumber.from(10).pow(15), MIN_PRICE, false,
+                override)*/
 
-    /*liq = await query.queryLiquidity(base.address, quote.address, POOL_IDX)
-    curve = await query.queryCurve(base.address, quote.address, POOL_IDX)
+    /*liq = await query.queryLiquidity(ZERO_ADDR, ropstenDai, POOL_IDX)
+    curve = await query.queryCurve(ZERO_ADDR, ropstenDai, POOL_IDX)
     price = fromSqrtPrice(curve.priceRoot_)
     console.log("Swap Tx: " + swapTx.hash)
     console.log("Liquidity " + liq.toString() + " at price " + price.toString())*/
