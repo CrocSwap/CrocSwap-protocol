@@ -394,15 +394,15 @@ contract SettleLayer is AgentMask {
     }
 
     /* @notice Collects a token debt from a specfic debtor.
+     * @dev    Note that this function does *not* assert that the post-transfer balance
+     *         is correct. CrocSwap is not safe to use for any fee-on-transfer tokens
+     *         or any other tokens that break ERC20 transfer functionality.
+     *
      * @param recv The address of the debtor being collected from.
      * @param value The total amount of tokens being collected.
      * @param token The address of the ERC20 token tracker. */
     function collectToken (address recv, uint128 value, address token) private {
-        uint256 openBal = IERC20Minimal(token).balanceOf(address(this));
         TransferHelper.safeTransferFrom(token, recv, address(this), value);
-        uint256 postBal = IERC20Minimal(token).balanceOf(address(this));
-        require(postBal > openBal &&
-                postBal - openBal >= value, "TD");
     }
 
     /* @notice Credits a user's surplus collateral account at the exchange (instead of
