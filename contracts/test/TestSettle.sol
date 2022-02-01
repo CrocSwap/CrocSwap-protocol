@@ -58,7 +58,7 @@ contract TestSettleLayer is SettleLayer {
 
     function testDesposit (address owner, uint128 value,
                            address token) internal {
-        depositSurplus(msg.sender, value, token);
+        depositSurplus(owner, value, token);
     }
 
     function testDisburse (address owner, address recv, uint128 value,

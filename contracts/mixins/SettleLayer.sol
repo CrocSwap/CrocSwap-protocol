@@ -216,7 +216,7 @@ contract SettleLayer is AgentMask {
         uint128 balance = surplusCollateral_[key];
 
         if (value == 0) { value = balance; }
-        require(balance > 0 && value < balance, "SC");
+        require(balance > 0 && value <= balance, "SC");
 
         // No need to use msg.value, because unlike trading there's no logical reason
         // we'd expect it to be set on this call.

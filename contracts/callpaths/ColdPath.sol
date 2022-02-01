@@ -140,7 +140,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *              native Ethereum) */
     function collectSurplus (address recv, int128 value, address token) public payable {
         if (value < 0) {
-            depositSurplus(msg.sender, uint128(-value), token);
+            depositSurplus(recv, uint128(-value), token);
         } else {
             disburseSurplus(msg.sender, recv, uint128(value), token);
         }
