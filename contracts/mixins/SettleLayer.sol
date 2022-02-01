@@ -140,7 +140,6 @@ contract SettleLayer is AgentMask {
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
         settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
-        console.log("A");
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
