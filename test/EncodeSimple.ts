@@ -1,10 +1,22 @@
 import { BigNumber, BytesLike, ethers } from 'ethers';
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
+import { MAX_PRICE, MIN_PRICE } from './FixedPoint';
 
 export function singleHop (open: string, close: string, pool: PoolDirective): OrderDirective {
     return {
         open: simpleSettle(open),
         hops: [ { settlement: simpleSettle(close), pools: [pool], 
+            improve: { isEnabled: false, useBaseSide: false }}]
+    }
+}
+
+export function doubleHop (open: string, middle: string, close: string, first: PoolDirective, 
+    second: PoolDirective): OrderDirective {
+    return {
+        open: simpleSettle(open),
+        hops: [ { settlement: simpleSettle(middle), pools: [first],
+            improve: { isEnabled: false, useBaseSide: false } },
+            { settlement: simpleSettle(close), pools: [second], 
             improve: { isEnabled: false, useBaseSide: false }}]
     }
 }
@@ -16,7 +28,6 @@ export function singleHopPools (open: string, close: string, pools: PoolDirectiv
             improve: { isEnabled: false, useBaseSide: false }}]
     }
 }
-
 
 export function simpleSettle (token: string): SettlementDirective {
     return { token: token, limitQty: BigNumber.from("100000000000000000"),
@@ -80,4 +91,8 @@ export function simpleSwap (poolIdx: number, isBuy: boolean, inBaseQty: boolean,
        },
        chain: { rollExit: false, swapDefer: false, offsetSurplus: false}
    }
+}
+
+export function twoHopExit (poolIdx: number, baseIn: boolean): PoolDirective {
+    return simpleSwap(poolIdx, baseIn, baseIn, 0, baseIn ? MAX_PRICE : MIN_PRICE)
 }

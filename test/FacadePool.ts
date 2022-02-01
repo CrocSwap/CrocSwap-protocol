@@ -8,7 +8,7 @@ import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, Concent
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides } from 'ethers';
-import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools } from './EncodeSimple';
+import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools, doubleHop } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";

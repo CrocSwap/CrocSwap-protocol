@@ -53,7 +53,7 @@ describe('Roll between pairs', () => {
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
-        await test.testOrder(order)
+        let tx = await test.testOrder(order)
 
         expect(await test.price()).to.be.gt(toSqrtPrice(1.5))
         expect(await test2.price()).to.be.gt(toSqrtPrice(0.5))
@@ -62,6 +62,10 @@ describe('Roll between pairs', () => {
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
         expect(await test2.snapQuoteOwed()).to.equal(-19982)
+
+        order.hops[0].pools[0].swap.qty = BigNumber.from(100)
+        tx = await test.testOrder(order)
+        console.log((await tx.wait()).gasUsed.toString())
     })
 
     it("mint -> swap", async() => {
