@@ -56,6 +56,16 @@ contract TestSettleLayer is SettleLayer {
         }
     }
 
+    function testDesposit (address owner, uint128 value,
+                           address token) internal {
+        depositSurplus(msg.sender, value, token);
+    }
+
+    function testDisburse (address owner, address recv, uint128 value,
+                           address token) internal {
+        disburseSurplus(owner, recv, value, token);
+    }
+
     function getMyBalance() public view returns (uint256) {
         return getBalance(address(this));
     }

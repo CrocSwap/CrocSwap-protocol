@@ -112,7 +112,7 @@ class ERC20Token implements Token {
     }
 }
 
-class NativeEther implements Token {
+export class NativeEther implements Token {
     address: string
     balanceFinder: Promise<TestSettleLayer>
     sendEth: boolean
