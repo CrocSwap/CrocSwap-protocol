@@ -140,6 +140,7 @@ contract SettleLayer is AgentMask {
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
         settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
+        console.log("A");
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
@@ -168,7 +169,7 @@ contract SettleLayer is AgentMask {
         private view {
         if (token != address(0)) {            
             uint256 close = IERC20Minimal(token).balanceOf(address(this));
-            require(close > open && expected >= 0 &&
+            require(close >= open && expected >= 0 &&
                     close - open >= uint128(expected), "TD");
         }
     }
