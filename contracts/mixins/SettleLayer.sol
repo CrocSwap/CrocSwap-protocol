@@ -224,6 +224,19 @@ contract SettleLayer is AgentMask {
         surplusCollateral_[key] -= value;
     }
 
+    function moveSurplus (address from, address to, uint128 value, address token)
+        internal {
+        bytes32 fromKey = encodeSurplusKey(from, token);
+        bytes32 toKey = encodeSurplusKey(to, token);
+        uint128 balance = surplusCollateral_[fromKey];
+
+        if (value == 0) { value = balance; }
+        require(balance > 0 && value <= balance, "SC");
+
+        surplusCollateral_[fromKey] -= value;
+        surplusCollateral_[toKey] += value;
+    }
+
     /* @notice Returns true if the flow represents a debit owed from the user to the
      *         exchange. */
     function isDebit (int128 flow) private pure returns (bool) {

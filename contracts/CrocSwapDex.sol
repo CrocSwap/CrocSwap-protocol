@@ -103,9 +103,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     /* @notice Adds or returns surplus collateral held at the exchange
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
-    function collect (address recv, int128 value, address token)
+    function collectSurplus (address recv, int128 value, address token, bool isTransfer)
         reEntrantLock public payable {
-        callCollectSurplus(recv, value, token);
+        callCollectSurplus(recv, value, token, isTransfer);
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.

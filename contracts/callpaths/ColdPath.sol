@@ -137,10 +137,15 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param value The amount of surplus collateral being paid or received. If negative
      *              paid from the user into the pool, increasing their balance.
      * @param token The token to which the surplus collateral is applied. (If 0x0, then
-     *              native Ethereum) */
-    function collectSurplus (address recv, int128 value, address token) public payable {
+     *              native Ethereum)
+     * @param isTransfer If set to true, disburse calls will transfer the surplus 
+     *                   collateral balance to the recv address instead of paying. */
+    function collectSurplus (address recv, int128 value, address token,
+                             bool isTransfer) public payable {
         if (value < 0) {
             depositSurplus(recv, uint128(-value), token);
+        } else if (isTransfer) {
+            moveSurplus(msg.sender, recv, uint128(value), token);
         } else {
             disburseSurplus(msg.sender, recv, uint128(value), token);
         }

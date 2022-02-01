@@ -38,10 +38,11 @@ contract ColdPathInjector is StorageLayout {
     }
 
     /* @notice Passes through the collectSurplus call in ColdPath sidecar. */
-    function callCollectSurplus (address recv, int128 value, address token) internal {
+    function callCollectSurplus (address recv, int128 value, address token,
+                                 bool move) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature
-            ("collectSurplus(address,int128,address)", recv, value, token));
+            ("collectSurplus(address,int128,address,bool)", recv, value, token, move));
         require(success);
     }
 
