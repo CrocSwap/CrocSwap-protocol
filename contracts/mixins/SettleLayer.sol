@@ -16,6 +16,7 @@ import "hardhat/console.sol";
  *         native Ethereum as asset collateral. */
 contract SettleLayer is AgentMask {
     using SafeCast for uint256;
+    using SafeCast for uint128;
     using TokenFlow for address;
 
     /* @notice Completes the user<->exchange collateral settlement at the final hop
@@ -137,7 +138,10 @@ contract SettleLayer is AgentMask {
     function settleInitFlow (address recv,
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
+        (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
         settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
+        assertCloseMatches(base, baseSnap, baseFlow);
+        assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
 
     /* @notice Settles the collateral exchanged associated with the flow in a single 
@@ -156,6 +160,25 @@ contract SettleLayer is AgentMask {
         // smaller of the two addresses, native ETH will always appear on the base
         // side.
         transactToken(debitor, creditor, quoteFlow, quote, useReserves);
+    }
+
+    /* @notice Performs check to make sure the new balance matches the expected 
+     * transfer amount. */
+    function assertCloseMatches (address token, uint256 open, int128 expected)
+        private view {
+        if (token != address(0)) {            
+            uint256 close = IERC20Minimal(token).balanceOf(address(this));
+            require(close > open && expected > 0 &&
+                    close - open >= uint128(expected), "TD");
+        }
+    }
+
+    /* @notice Snapshots the DEX contract's ERC20 token balance at call time. */
+    function snapOpenBalance (address base, address quote) private view returns
+        (uint256 openBase, uint256 openQuote) {
+        openBase = base == address(0) ? 0 :
+            IERC20Minimal(base).balanceOf(address(this));
+        openQuote = IERC20Minimal(quote).balanceOf(address(this));
     }
 
     /* @notice Given a pre-determined amount of flow, settles according to collateral 
