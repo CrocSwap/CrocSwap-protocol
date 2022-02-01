@@ -168,7 +168,7 @@ contract SettleLayer is AgentMask {
         private view {
         if (token != address(0)) {            
             uint256 close = IERC20Minimal(token).balanceOf(address(this));
-            require(close > open && expected > 0 &&
+            require(close > open && expected >= 0 &&
                     close - open >= uint128(expected), "TD");
         }
     }
