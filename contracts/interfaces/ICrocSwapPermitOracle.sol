@@ -73,5 +73,5 @@ interface ICrocSwapPermitOracle {
      *                the transaction. */
     function checkApprovedForCrocBurn (address user, address base, address quote,
                                        int24 bidTick, int24 askTick, uint128 liq)
-        external view returns (bool);
+        external returns (bool);
 }
