@@ -49,18 +49,19 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function tradeWarm (bytes calldata input) public payable {
         (uint8 code, address base, address quote, uint24 poolIdx,
          int24 bidTick, int24 askTick, uint128 liq,
-         uint128 limitLower, uint128 limitHigher, bool useSurplus) =
+         uint128 limitLower, uint128 limitHigher, bool useSurplus, address lpConduit) =
             abi.decode(input, (uint8,address,address,uint24,int24,int24,
-                               uint128,uint128,uint128,bool));
+                               uint128,uint128,uint128,bool,address));
         
         if (code == 1) {
-            mint(base, quote, poolIdx, bidTick, askTick, liq,
+            mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                  limitLower, limitHigher, useSurplus);
         } else if (code == 2) {
             burn(base, quote, poolIdx, bidTick, askTick, liq,
                  limitLower, limitHigher, useSurplus);
         } else if (code == 3) {
-            mint(base, quote, poolIdx, liq, limitLower, limitHigher, useSurplus);
+            mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher,
+                 useSurplus);
         } else if (code == 4) {
             burn(base, quote, poolIdx, liq, limitLower, limitHigher, useSurplus);
         }
@@ -74,6 +75,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      * @param askTick The price tick index of the upper boundary of the range order.
      * @param liq The total amount of liquidity being minted. Represented as sqrt(X*Y)
      *            for the equivalent constant-product AMM.
+     @ @param lpConduit The address of the LP conduit to deposit the minted position at
+     *                  (direct owned liquidity if 0)
      * @param limitLower Exists to make sure the user is happy with the price the 
      *                   liquidity is minted at. Transaction fails if the curve price
      *                   at call time is below this value.
@@ -82,13 +85,14 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      * @param useSurplus If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */    
     function mint (address base, address quote, uint24 poolIdx,
-                   int24 bidTick, int24 askTick, uint128 liq,
+                   int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitMint(pool, base, quote, bidTick, askTick, liq);
 
         (int128 baseFlow, int128 quoteFlow) =
-            mintOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher);
+            mintOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher,
+                         lpConduit);
         settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
     }
     
@@ -124,6 +128,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      * @param poolIdx The index of the pool type being minted on.
      * @param liq The total amount of liquidity being minted. Represented as sqrt(X*Y)
      *            for the equivalent constant-product AMM.
+     @ @param lpConduit The address of the LP conduit to deposit the minted position at
+     *                  (direct owned liquidity if 0)
      * @param limitLower Exists to make sure the user is happy with the price the 
      *                   liquidity is minted at. Transaction fails if the curve price
      *                   at call time is below this value.
@@ -132,12 +138,13 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      * @param useSurplus If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
     function mint (address base, address quote, uint24 poolIdx, uint128 liq,
-                   uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
+                   address lpConduit, uint128 limitLower, uint128 limitHigher,
+                   bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitMint(pool, base, quote, 0, 0, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
-            mintOverPool(liq, pool, limitLower, limitHigher);
+            mintOverPool(liq, pool, limitLower, limitHigher, lpConduit);
         settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
     }
 

@@ -88,6 +88,8 @@ contract MarketSequencer is TradeMatcher {
      *                 price falls outside this point, the transaction is reverted.
      * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
      *                 price falls outside this point, the transaction is reverted.
+     * @param lpConduit The address of the ICrocLpConduit that the liquidity will be
+     *                  assigned to (0 for user owned liquidity).
      *
      * @return baseFlow The total amount of base-side token collateral that must be
      *                  committed to the pool as part of the mint. Will always be
@@ -96,13 +98,14 @@ contract MarketSequencer is TradeMatcher {
      *                   committed to the pool as part of the mint. */
     function mintOverPool (int24 bidTick, int24 askTick, uint128 liq,
                            PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice,
+                           address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             mintRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
-                      bidTick, askTick, liq, pool.hash_);
+                      bidTick, askTick, liq, pool.hash_, lpConduit);
         PriceGrid.verifyFit(bidTick, askTick, pool.head_.tickSize_);
         commitCurve(pool.hash_, curve);
     }
@@ -147,6 +150,8 @@ contract MarketSequencer is TradeMatcher {
      *                 price falls outside this point, the transaction is reverted.
      * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
      *                 price falls outside this point, the transaction is reverted.
+     * @param lpConduit The address of the ICrocLpConduit that the liquidity will be
+     *                  assigned to (0 for user owned liquidity).
      *
      * @return baseFlow The total amount of base-side token collateral that must be
      *                  committed to the pool as part of the mint. Will always be
@@ -154,12 +159,12 @@ contract MarketSequencer is TradeMatcher {
      * @return quoteFlow The total amount of quote-side token collateral that must be
      *                   committed to the pool as part of the mint. */
     function mintOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
-            mintAmbient(curve, liq, pool.hash_);
+            mintAmbient(curve, liq, pool.hash_, lpConduit);
         commitCurve(pool.hash_, curve);
     }
 
