@@ -58,7 +58,7 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
                                        dir.poolIdx_);
 
                 verifyPermit(cntx.pool_, pairs.baseToken_, pairs.quoteToken_,
-                             PoolRegistry.COMP_ACT_CODE);
+                             dir.ambient_, dir.swap_, dir.conc_);
                 cntx.roll_ = targetRoll(dir.chain_, pairs);
 
                 tradeOverPool(pairs.flow_, dir, cntx);

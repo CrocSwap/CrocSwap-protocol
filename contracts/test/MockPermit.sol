@@ -24,14 +24,34 @@ contract MockPermit is ICrocSwapPermitOracle {
         passThru_ = passThru;
     }
         
-    
-    function isApprovedForCrocPool (address nUser, address nBase, address nQuote,
-                                    uint8 tradeCode)
-        public view override returns (bool) {
-        if (passThru_) { return true; }
-        return nUser == user_ &&
-            nBase == base_ &&
-            nQuote == quote_ &&
-            code_ == tradeCode;
-    }
+
+     function checkApprovedForCrocPool (address user, address base, address quote,
+                                        Directives.AmbientDirective calldata ambient,
+                                        Directives.SwapDirective calldata swap,
+                                        Directives.ConcentratedDirective[] calldata concs)
+         external override returns (bool) {
+         if (passThru_) { return true; }
+         return true;
+     }
+
+     function checkApprovedForCrocSwap (address user, address base, address quote,
+                                        bool isBuy, bool inBaseQty, uint128 qty)
+         external override returns (bool) {
+         if (passThru_) { return true; }
+         return true;
+     }
+
+     function checkApprovedForCrocMint (address user, address base, address quote,
+                                        int24 bidTick, int24 askTick, uint128 liq)
+         external override returns (bool) {
+         if (passThru_) { return true; }
+         return true;
+     }
+
+     function checkApprovedForCrocBurn (address user, address base, address quote,
+                                       int24 bidTick, int24 askTick, uint128 liq)
+         external override view returns (bool) {
+         if (passThru_) { return true; }
+         return true;
+     }
 }

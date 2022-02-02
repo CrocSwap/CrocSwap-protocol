@@ -85,7 +85,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
                    int24 bidTick, int24 askTick, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
+        verifyPermitMint(pool, base, quote, bidTick, askTick, liq);
 
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher);
@@ -111,7 +111,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
                    int24 bidTick, int24 askTick, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
+        verifyPermitBurn(pool, base, quote, bidTick, askTick, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher);
@@ -134,7 +134,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function mint (address base, address quote, uint24 poolIdx, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermit(pool, base, quote, PoolRegistry.MINT_ACT_CODE);
+        verifyPermitMint(pool, base, quote, 0, 0, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(liq, pool, limitLower, limitHigher);
@@ -157,7 +157,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function burn (address base, address quote, uint24 poolIdx, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermit(pool, base, quote, PoolRegistry.BURN_ACT_CODE);
+        verifyPermitBurn(pool, base, quote, 0, 0, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool, limitLower, limitHigher);

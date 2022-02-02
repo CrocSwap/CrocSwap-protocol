@@ -58,7 +58,7 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
         dir.limitPrice_ = limitPrice;
 
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermit(pool, base, quote, PoolRegistry.SWAP_ACT_CODE);
+        verifyPermitSwap(pool, base, quote, isBuy, inBaseQty, qty);
         
         Chaining.PairFlow memory flow = swapOverPool(dir, pool);
 

@@ -22,20 +22,59 @@ contract PoolRegistry is StorageLayout {
     uint8 constant BURN_ACT_CODE = 3;
     uint8 constant COMP_ACT_CODE = 4;
 
-    /* @notice Tests whether the given action by the given user is authorized on this
+    /* @notice Tests whether the given swap by the given user is authorized on this
      *         specific pool. If not, reverts the transaction. If pool is permissionless
-     *         this function will just noop.
-     *
-     * @param pool The specification of the pool being operated on.
-     * @param base The address of the base-side token (or 0x0 if native Eth) in the pair.
-     * @param quote The address of the quote-side token in the pair.
-     * @param actionCode The type of action being executed (see codes above) */
-    function verifyPermit (PoolSpecs.PoolCursor memory pool,
-                           address base, address quote,
-                           uint8 actionCode) view internal {
+     *         this function will just noop. */
+    function verifyPermitSwap (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               bool isBuy, bool inBaseQty, uint128 qty) internal {
         if (pool.head_.permitOracle_ != address(0)) {
             bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .isApprovedForCrocPool(msg.sender, base, quote, actionCode);
+                .checkApprovedForCrocSwap(msg.sender, base, quote,
+                                          isBuy, inBaseQty, qty);
+            require(approved, "Z");
+        }
+    }
+
+    /* @notice Tests whether the given mint by the given user is authorized on this
+     *         specific pool. If not, reverts the transaction. If pool is permissionless
+     *         this function will just noop. */
+    function verifyPermitMint (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               int24 bidTick, int24 askTick, uint128 liq) internal {
+        if (pool.head_.permitOracle_ != address(0)) {
+            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
+                .checkApprovedForCrocMint(msg.sender, base, quote,
+                                          bidTick, askTick, liq);
+            require(approved, "Z");
+        }
+    }
+
+    /* @notice Tests whether the given burn by the given user is authorized on this
+     *         specific pool. If not, reverts the transaction. If pool is permissionless
+     *         this function will just noop. */
+    function verifyPermitBurn (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               int24 bidTick, int24 askTick, uint128 liq) internal {
+        if (pool.head_.permitOracle_ != address(0)) {
+            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
+                .checkApprovedForCrocBurn(msg.sender, base, quote,
+                                          bidTick, askTick, liq);
+            require(approved, "Z");
+        }
+    }
+
+    /* @notice Tests whether the given pool directive by the given user is authorized on 
+     *         this specific pool. If not, reverts the transaction. If pool is 
+     *         permissionless this function will just noop. */
+    function verifyPermit (PoolSpecs.PoolCursor memory pool,
+                           address base, address quote,
+                           Directives.AmbientDirective memory ambient,
+                           Directives.SwapDirective memory swap,
+                           Directives.ConcentratedDirective[] memory concs) internal {
+        if (pool.head_.permitOracle_ != address(0)) {
+            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
+                .checkApprovedForCrocPool(msg.sender, base, quote, ambient, swap, concs);
             require(approved, "Z");
         }
     }
