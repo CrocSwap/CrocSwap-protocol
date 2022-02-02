@@ -50,7 +50,8 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
      *                   associated with an explicit transfer.) */
     function swap (address base, address quote,
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                   uint128 limitPrice, bool useSurplus) reEntrantLock public payable {
+                   uint128 limitPrice, uint128 limitStart,
+                   bool useSurplus) reEntrantLock public payable {
         Directives.SwapDirective memory dir;
         dir.isBuy_ = isBuy;
         dir.inBaseQty_ = inBaseQty;
@@ -60,7 +61,7 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitSwap(pool, base, quote, isBuy, inBaseQty, qty);
         
-        Chaining.PairFlow memory flow = swapOverPool(dir, pool);
+        Chaining.PairFlow memory flow = swapOverPool(dir, pool, limitStart);
 
         settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, useSurplus);
         accumProtocolFees(flow, base, quote);
