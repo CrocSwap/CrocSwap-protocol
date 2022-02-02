@@ -133,7 +133,6 @@ export class NativeEther implements Token {
     }
 }
 
-
 export class TestPool {
     dex: Promise<CrocSwapDex>
     query: Promise<QueryHelper>
@@ -146,6 +145,7 @@ export class TestPool {
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
+    lpConduit: string
     overrides: PayableOverrides
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
@@ -176,6 +176,7 @@ export class TestPool {
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
         this.useHotPath = false;
+        this.lpConduit = ZERO_ADDR
 
         this.overrides = base.sendEth || quote.sendEth ?
             { value: BigNumber.from(1000000000).mul(1000000000) } : { }
@@ -251,8 +252,8 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 1
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
@@ -262,8 +263,8 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 2
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
     async encodeMintAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
@@ -273,8 +274,8 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 3
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber, 
@@ -284,8 +285,8 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 4
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address"], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
     async testMint (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
