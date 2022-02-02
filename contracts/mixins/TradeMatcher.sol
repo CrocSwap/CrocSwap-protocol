@@ -78,8 +78,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function mintAmbientAt (CurveMath.CurveState memory curve, uint128 liqAdded, 
                             bytes32 poolHash, bytes32 lpKey)
         private returns (int128 baseFlow, int128 quoteFlow, uint128 liqSeeds) {
-        liqSeeds = mintPosLiq(lpKey, poolHash,
-                                      liqAdded, curve.accum_.ambientGrowth_);
+        liqSeeds = mintPosLiq(lpKey, poolHash, liqAdded,
+                              curve.accum_.ambientGrowth_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqSeeds);
         (baseFlow, quoteFlow) = signMintFlow(base, quote);
     }
@@ -141,11 +141,11 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                         bytes32 poolHash, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         uint64 mileage;
-        
+
         (baseFlow, quoteFlow, mileage) = mintRangeAt
             (curve, priceTick, lowTick, highTick,
              liquidity, poolHash, agentMintKey(lpConduit));
-        
+
         depositConduit(poolHash, lowTick, highTick, liquidity, mileage, lpConduit);
     }
 
@@ -162,7 +162,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           bytes32 poolHash, bytes32 lpKey)
         private returns (int128 baseFlow, int128 quoteFlow, uint64 feeMileage) {
         feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
-                                       liquidity, curve.accum_.concTokenGrowth_);
+                                liquidity, curve.accum_.concTokenGrowth_);
         mintPosLiq(lpKey, poolHash, lowTick, highTick,
                    liquidity, feeMileage);
 
