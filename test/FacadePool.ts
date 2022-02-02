@@ -146,6 +146,7 @@ export class TestPool {
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
     lpConduit: string
+    startLimit: BigNumber
     overrides: PayableOverrides
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
@@ -177,6 +178,7 @@ export class TestPool {
 
         this.useHotPath = false;
         this.lpConduit = ZERO_ADDR
+        this.startLimit = BigNumber.from(0)
 
         this.overrides = base.sendEth || quote.sendEth ?
             { value: BigNumber.from(1000000000).mul(1000000000) } : { }
@@ -394,7 +396,8 @@ export class TestPool {
         await this.snapStart()
         if (this.useHotPath) {
             return (await this.dex).connect(from).swap((await this.base).address,
-                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price, useSurplus, this.overrides)
+                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price, this.startLimit, 
+                useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
