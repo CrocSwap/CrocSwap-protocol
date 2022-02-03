@@ -248,66 +248,66 @@ export class TestPool {
     }
 
     async encodeMintPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 1
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 2
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
     async encodeMintAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 3
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address" ], 
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber, 
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 4
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool", "address"], 
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"], 
             [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
-    async testMint (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
-    async testMintAmbient (liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMintAmbient (liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintAmbientFrom(await this.trader, liq, useSurplus)
     }
 
-    async testMintOther (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMintOther (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.other, lower, upper, liq, useSurplus)
     }
 
-    async testBurn (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testBurn (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testBurnFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
-    async testBurnAmbient (liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testBurnAmbient (liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testBurnAmbientFrom(await this.trader, liq, useSurplus)
     }
 
@@ -320,9 +320,9 @@ export class TestPool {
         return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price)
     }
 
-    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
-        Promise<ContractTransaction> {
-        return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price, true)
+    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber, 
+        surplusFlag: number = 1 + 2): Promise<ContractTransaction> {
+        return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price, surplusFlag)
     }
 
     async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
@@ -330,7 +330,7 @@ export class TestPool {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
 
-    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -343,7 +343,7 @@ export class TestPool {
         }
     }
 
-    async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -356,7 +356,7 @@ export class TestPool {
         }
     }
 
-    async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -378,7 +378,7 @@ export class TestPool {
         return (await this.dex).connect(await this.trader).trade(inputBytes, this.overrides)
     }
 
-    async testMintAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testMintAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -392,7 +392,7 @@ export class TestPool {
     }
 
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
-        useSurplus: boolean = false): Promise<ContractTransaction> {
+        useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             return (await this.dex).connect(from).swap((await this.base).address,

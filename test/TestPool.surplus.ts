@@ -18,6 +18,10 @@ describe('Pool Surplus', () => {
     let sender: string
     const feeRate = 225 * 100
 
+    const SURPPLUS_FLAGS = 0x3
+    const BASE_FLAGS = 0x1
+    const QUOTE_FLAGS = 0x2
+
     beforeEach("deploy",  async () => {
        test = await makeTokenPool()
        testEth = await makeEtherPool()
@@ -175,12 +179,12 @@ describe('Pool Surplus', () => {
         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-1000)
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000+648)
      })
-       
+
      it("mint hotpath", async() => {
       test.useHotPath = true
       await test.testMintAmbient(10000)
 
-      await test.testMint(3000, 5000, 1000, true)
+      await test.testMint(3000, 5000, 1000, SURPPLUS_FLAGS)
       expect(await test.price()).to.eq(toSqrtPrice(1.5))
       expect(await test.snapBaseOwed()).to.equal(0)
       expect(await test.snapQuoteOwed()).to.equal(0)
@@ -194,8 +198,8 @@ describe('Pool Surplus', () => {
         test.useHotPath = true
         await test.testMintAmbient(10000)
 
-        await test.testMint(3000, 5000, 1000, true)
-        await test.testBurn(3000, 5000, 1000, true)
+        await test.testMint(3000, 5000, 1000, SURPPLUS_FLAGS)
+        await test.testBurn(3000, 5000, 1000, SURPPLUS_FLAGS)
       
 
         expect(await test.price()).to.eq(toSqrtPrice(1.5))
@@ -210,7 +214,7 @@ describe('Pool Surplus', () => {
          test.useHotPath = true
          await test.testMintAmbient(10000)
    
-         await test.testMintAmbient(50, true)
+         await test.testMintAmbient(50, SURPPLUS_FLAGS)
          expect(await test.price()).to.eq(toSqrtPrice(1.5))
          expect(await test.snapBaseOwed()).to.equal(0)
          expect(await test.snapQuoteOwed()).to.equal(0)
@@ -223,15 +227,67 @@ describe('Pool Surplus', () => {
          test.useHotPath = true
          await test.testMintAmbient(10000)
  
-         await test.testMintAmbient(50, true)
-         await test.testBurnAmbient(50, true)
+         await test.testMintAmbient(50, SURPPLUS_FLAGS)
+         await test.testBurnAmbient(50, SURPPLUS_FLAGS)
          expect(await test.price()).to.eq(toSqrtPrice(1.5))
          expect(await test.snapBaseOwed()).to.equal(0)
          expect(await test.snapQuoteOwed()).to.equal(0)
  
          expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-4)
          expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000-4)
-      }) 
+      })
+      
+      it("swap base settle", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+ 
+         await test.testSwapSurplus(true, true, 1000, toSqrtPrice(2.0), BASE_FLAGS)
+         expect(await test.price()).to.gt(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(0)
+         expect(await test.snapQuoteOwed()).to.equal(-648)
+ 
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000-1000)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000)
+      })
+
+      it("swap quote settle", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+ 
+         await test.testSwapSurplus(true, true, 1000, toSqrtPrice(2.0), QUOTE_FLAGS)
+         expect(await test.price()).to.gt(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(1000)
+         expect(await test.snapQuoteOwed()).to.equal(0)
+ 
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000+648)
+      })
+
+      it("mint base settle", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+   
+         await test.testMintAmbient(50, BASE_FLAGS)
+         expect(await test.price()).to.eq(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(0)
+         expect(await test.snapQuoteOwed()).to.equal(41808)
+   
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(37290)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000)         
+      })
+
+      it("mint quote settle", async() => {
+         test.useHotPath = true
+         await test.testMintAmbient(10000)
+   
+         await test.testMintAmbient(50, QUOTE_FLAGS)
+         expect(await test.price()).to.eq(toSqrtPrice(1.5))
+         expect(await test.snapBaseOwed()).to.equal(62710)
+         expect(await test.snapQuoteOwed()).to.equal(0)
+   
+         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
+         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(208192)         
+      })
 })
 
 describe('Pool Surplus Ether', () => {

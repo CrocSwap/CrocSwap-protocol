@@ -241,6 +241,8 @@ describe('Gas Benchmarks Coldpath', () => {
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
+    const SURPLUS_FLAG = 0x3
+
     it("mint surplus", async() => {
         let sender = await (await test.trader).getAddress() 
         await (await test.dex).collectSurplus(sender, -100000, (await test.base).address, false) 
@@ -248,7 +250,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
         await test.testMintOther(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testMint(-1000, 1000, 5000, true), 174000)
+        await expectGas(test.testMint(-1000, 1000, 5000, SURPLUS_FLAG), 174000)
     })
 
     it("burn surplus", async() => {
@@ -259,7 +261,7 @@ describe('Gas Benchmarks Coldpath', () => {
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-1000, 1000, 5000, true), 142000)
+        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAG), 142000)
     })
 
 })
