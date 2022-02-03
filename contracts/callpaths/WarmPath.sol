@@ -49,21 +49,22 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
     function tradeWarm (bytes calldata input) public payable {
         (uint8 code, address base, address quote, uint24 poolIdx,
          int24 bidTick, int24 askTick, uint128 liq,
-         uint128 limitLower, uint128 limitHigher, bool useSurplus, address lpConduit) =
+         uint128 limitLower, uint128 limitHigher,
+         uint8 reserveFlags, address lpConduit) =
             abi.decode(input, (uint8,address,address,uint24,int24,int24,
-                               uint128,uint128,uint128,bool,address));
+                               uint128,uint128,uint128,uint8,address));
         
         if (code == 1) {
             mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
-                 limitLower, limitHigher, useSurplus);
+                 limitLower, limitHigher, reserveFlags);
         } else if (code == 2) {
             burn(base, quote, poolIdx, bidTick, askTick, liq,
-                 limitLower, limitHigher, useSurplus);
+                 limitLower, limitHigher, reserveFlags);
         } else if (code == 3) {
             mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher,
-                 useSurplus);
+                 reserveFlags);
         } else if (code == 4) {
-            burn(base, quote, poolIdx, liq, limitLower, limitHigher, useSurplus);
+            burn(base, quote, poolIdx, liq, limitLower, limitHigher, reserveFlags);
         }
     }
 
@@ -82,18 +83,18 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold.
-     * @param useSurplus If true, settlement is first attempted with the surplus 
+     * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */    
     function mint (address base, address quote, uint24 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
-                   uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
+                   uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitMint(pool, base, quote, bidTick, askTick, liq);
 
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher,
                          lpConduit);
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+        settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
     
     /* @notice Burns liquidity as a concentrated liquidity range order.
@@ -109,17 +110,17 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold. 
-     * @param useSurplus If true, settlement is first attempted with the surplus 
+     * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
     function burn (address base, address quote, uint24 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq,
-                   uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
+                   uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitBurn(pool, base, quote, bidTick, askTick, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher);
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+        settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 
     /* @notice Mints ambient liquidity that's active at every price.
@@ -135,17 +136,17 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold. 
-     * @param useSurplus If true, settlement is first attempted with the surplus 
+     * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
     function mint (address base, address quote, uint24 poolIdx, uint128 liq,
                    address lpConduit, uint128 limitLower, uint128 limitHigher,
-                   bool useSurplus) internal {
+                   uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitMint(pool, base, quote, 0, 0, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             mintOverPool(liq, pool, limitLower, limitHigher, lpConduit);
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+        settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 
     /* @notice Burns ambient liquidity that's active at every price.
@@ -159,15 +160,15 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold. 
-     * @param useSurplus If true, settlement is first attempted with the surplus 
+     * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
     function burn (address base, address quote, uint24 poolIdx, uint128 liq,
-                   uint128 limitLower, uint128 limitHigher, bool useSurplus) internal {
+                   uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitBurn(pool, base, quote, 0, 0, liq);
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool, limitLower, limitHigher);
-        settleFlows(base, quote, baseFlow, quoteFlow, useSurplus);
+        settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 }

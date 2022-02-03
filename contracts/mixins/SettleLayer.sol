@@ -120,9 +120,9 @@ contract SettleLayer is AgentMask {
      * @param useSurplus If true, first try to settle using the user's exchange-held
      *                   surplus collateral account, rather than external transfer. */
     function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
-                          bool useSurplus) internal {
+                          uint8 reserveFlags) internal {
         (address debitor, address creditor) = agentsSettle();
-        settleFlat(debitor, creditor, base, baseFlow, quote, quoteFlow, useSurplus);
+        settleFlat(debitor, creditor, base, baseFlow, quote, quoteFlow, reserveFlags);
     }
 
     /* @notice Settle the collateral exchange associated with a the initailization of
@@ -139,7 +139,7 @@ contract SettleLayer is AgentMask {
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
-        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
+        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, NO_RESERVE_FLAGS);
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
@@ -149,18 +149,30 @@ contract SettleLayer is AgentMask {
      * @dev    This must only be used when no other pairs settle in the transaction. */
     function settleFlat (address debitor, address creditor,
                          address base, int128 baseFlow,
-                         address quote, int128 quoteFlow, bool useReserves) private {
+                         address quote, int128 quoteFlow, uint8 reserveFlags) private {
         if (base.isEtherNative()) {
-            transactEther(debitor, creditor, baseFlow, useReserves);
+            transactEther(debitor, creditor, baseFlow, useReservesBase(reserveFlags));
         } else {
-            transactToken(debitor, creditor, baseFlow, base, useReserves);
+            transactToken(debitor, creditor, baseFlow, base,
+                          useReservesBase(reserveFlags));
         }
 
         // Because Ether native trapdoor is 0x0 address, and because base is always
         // smaller of the two addresses, native ETH will always appear on the base
         // side.
-        transactToken(debitor, creditor, quoteFlow, quote, useReserves);
+        transactToken(debitor, creditor, quoteFlow, quote,
+                      useReservesQuote(reserveFlags));
     }
+
+    function useReservesBase (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & 0x1 > 0;
+    }
+    
+    function useReservesQuote (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & 0x2 > 0;
+    }
+
+    uint8 constant NO_RESERVE_FLAGS = 0x0;
 
     /* @notice Performs check to make sure the new balance matches the expected 
      * transfer amount. */
