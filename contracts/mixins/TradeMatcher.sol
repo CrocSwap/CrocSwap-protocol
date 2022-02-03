@@ -220,6 +220,33 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         return signBurnFlow(base, quote);
     }
 
+    /* @notice Harvests the accumulated rewards on a concentrated liquidity position.
+     * 
+     * @param curve The object representing the pre-loaded liquidity curve. Will be
+     *              updated in memory after this call, but it's the caller's 
+     *              responsbility to check it back into storage.
+     * @param prickTick The tick index of the curve's current price.
+     * @param lowTick The tick index of the lower boundary of the range order.
+     * @param highTick The tick index of the upper boundary of the range order.
+     * @param poolHash The hash indexing the pool this liquidity curve applies to.
+     *
+     * @return baseFlow The amount of base-side token collateral returned by this
+     *                  operations. Will always be negative indicating, a credit from
+     *                  the pool to the user.
+     * @return quoteFlow The amount of quote-side token collateral returned by this
+     *                   operation. */
+    function harvestRange (CurveMath.CurveState memory curve, int24 priceTick,
+                           int24 lowTick, int24 highTick, 
+                           bytes32 poolHash)
+        internal returns (int128, int128) {
+        uint64 feeMileage = clockFeeOdometer(poolHash, priceTick, lowTick, highTick,
+                                             curve.accum_.concTokenGrowth_);
+        uint128 rewards = harvestPosLiq(agentBurnKey(), poolHash,
+                                       lowTick, highTick, feeMileage);
+        (uint128 base, uint128 quote) = liquidityPayable(curve, rewards);
+        return signBurnFlow(base, quote);
+    }
+    
     /* @notice Converts the unsigned flow associated with a mint operation to a pair
      *         net settlement flow. (Will always be positive because a mint requires use
      *         to pay collateral to the pool.) */

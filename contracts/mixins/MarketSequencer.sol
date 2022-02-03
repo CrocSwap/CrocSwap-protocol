@@ -152,6 +152,35 @@ contract MarketSequencer is TradeMatcher {
         commitCurve(pool.hash_, curve);
     }
 
+    /* @notice Harvests rewards from a concentrated liquidity position.
+     *
+     * @param bidTick The price tick associated with the lower boundary of the range
+     *                order.
+     * @param askTick The price tick associated with the upper boundary of the range
+     *                order.
+     * @param pool The pre-loaded speciication and hash of the pool to be swapped against.
+     * @param minPrice The minimum acceptable curve price to mint liquidity. If curve
+     *                 price falls outside this point, the transaction is reverted.
+     * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
+     *                 price falls outside this point, the transaction is reverted.
+     *
+     * @return baseFlow The total amount of base-side token collateral that is returned
+     *                  from the pool as part of the burn. Will always be
+     *                  negative as it's paid from the pool to the user.
+     * @return quoteFlow The total amount of quote-side token collateral that is returned
+     *                   from the pool as part of the burn. */
+    function harvestOverPool (int24 bidTick, int24 askTick,
+                              PoolSpecs.PoolCursor memory pool,
+                              uint128 minPrice, uint128 maxPrice)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
+        (baseFlow, quoteFlow) =
+            harvestRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
+                         bidTick, askTick, pool.hash_);
+        commitCurve(pool.hash_, curve);
+    }
+
     /* @notice Mints ambient liquidity on to the pool's curve.
      *
      * @param liq The amount of liquidity being minted represented as the equivalent to

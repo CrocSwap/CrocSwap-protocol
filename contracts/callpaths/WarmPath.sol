@@ -65,6 +65,9 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
                  reserveFlags);
         } else if (code == 4) {
             burn(base, quote, poolIdx, liq, limitLower, limitHigher, reserveFlags);
+        } else if (code == 5) {
+            harvest(base, quote, poolIdx, bidTick, askTick, limitLower, limitHigher,
+                    reserveFlags);            
         }
     }
 
@@ -120,6 +123,35 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(bidTick, askTick, liq, pool, limitLower, limitHigher);
+        settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
+    }
+
+    /* @notice Harvests the rewards for a concentrated liquidity position.
+     * @param base The base-side token in the pair.
+     * @param quote The quote-side token in the par.
+     * @param poolIdx The index of the pool type being burned on.
+     * @param bidTick The price tick index of the lower boundary of the range order.
+     * @param askTick The price tick index of the upper boundary of the range order.
+     * @param limitLower Exists to make sure the user is happy with the price the 
+     *                   liquidity is burned at. Transaction fails if the curve price
+     *                   at call time is below this value.
+     * @param limitUpper Transaction fails if the curve price at call time is above this
+     *                   threshold. 
+     * @param reserveFlags If true, settlement is first attempted with the surplus 
+     *                   collateral (if any) that the user holds at the exchange. */
+    function harvest (address base, address quote, uint24 poolIdx,
+                      int24 bidTick, int24 askTick, 
+                      uint128 limitLower, uint128 limitHigher, uint8 reserveFlags)
+        internal {
+        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        
+        // On permissioned pools harvests are treated like a special case burn
+        // with 0 liquidity. Note that unlike a true 0 burn, ambient liquidity will still
+        // be returned, so oracles should handle 0 as special case if that's an issue. 
+        verifyPermitBurn(pool, base, quote, bidTick, askTick, 0);
+        
+        (int128 baseFlow, int128 quoteFlow) =
+            harvestOverPool(bidTick, askTick, pool, limitLower, limitHigher);
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 

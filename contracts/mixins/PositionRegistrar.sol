@@ -14,6 +14,7 @@ import "hardhat/console.sol";
  *         accumulation checkpoints for fair distribution of rewards. */
 contract PositionRegistrar is StorageLayout {
     using SafeCast for uint256;
+    using SafeCast for uint144;
     using CompoundMath for uint128;
     using LiquidityMath for uint128;
 
@@ -150,6 +151,28 @@ contract PositionRegistrar is StorageLayout {
             pos.atomicLiq_ = false;
         }
     }
+
+    /* @notice Harvests all of the rewards on a concentrated liquidity position and 
+     *         resets the accumulated fees to zero.
+     *         
+     * @param owner The bytes32 owning the position.
+     * @param poolIdx The hash key of the pool the position lives on.
+     * @param lowerTick The lower tick of the LP position
+     * @param upperTick The upper tick of the LP position.
+     *
+     * @return rewards The total number of ambient seeds to collect as rewards */
+    function harvestPosLiq (bytes32 owner, bytes32 poolIdx, int24 lowerTick,
+                            int24 upperTick, uint64 feeMileage)
+        internal returns (uint128 rewards) {        
+        RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        uint64 oldMileage = pos.feeMileage_;
+        
+        if (feeMileage > oldMileage) {
+            uint64 rewardsRate = feeMileage - oldMileage;
+            rewards = FixedPoint.mulQ48(pos.liquidity_, rewardsRate).toUint128By144();
+            pos.feeMileage_ = feeMileage;
+        }
+    }    
 
     /* @notice Marks a flag on a speciic position that indicates that it's liquidity
      *         is atomic. I.e. the position size cannot be partially reduced, only
