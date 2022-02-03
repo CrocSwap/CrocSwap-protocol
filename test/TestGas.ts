@@ -137,6 +137,14 @@ describe('Gas Benchmarks', () => {
         await expectGas(test.testBurn(-100, 100, 100), 106000)
     })
 
+    it("harvest fees", async() => {
+        await test.testMint(-100, 100, 100)
+        await test.testMintOther(-100, 100, 1000)
+        await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
+        await test.testSwapOther(false, true, 1000000, toSqrtPrice(1.0))
+        await expectGas(test.testHarvest(-100, 100), 99000)
+    })
+
     it("swap no pre-warm", async() => {
         await test.testMint(-100, 100, 10000)
         await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 128000)

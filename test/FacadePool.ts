@@ -269,6 +269,17 @@ export class TestPool {
             [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
+    async encodeHarvest(lower: number, upper: number, limitLow: BigNumber, limitHigh: BigNumber,
+        useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 5
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, 0, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+    }
+
     async encodeMintAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
@@ -305,6 +316,10 @@ export class TestPool {
 
     async testBurn (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testBurnFrom(await this.trader, lower, upper, liq, useSurplus)
+    }
+
+    async testHarvest (lower: number, upper: number, useSurplus?: number): Promise<ContractTransaction> {
+        return this.testHarvestFrom(await this.trader, lower, upper, useSurplus)
     }
 
     async testBurnAmbient (liq: number, useSurplus?: number): Promise<ContractTransaction> {
@@ -354,6 +369,12 @@ export class TestPool {
             let inputBytes = encodeOrderDirective(directive);
             return (await this.dex).connect(from).trade(inputBytes, this.overrides)
         }
+    }
+
+    async testHarvestFrom (from: Signer, lower: number, upper: number, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeHarvest(lower, upper, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+        return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
     }
 
     async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
