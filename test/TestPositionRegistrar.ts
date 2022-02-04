@@ -119,6 +119,8 @@ describe('PositionRegistrar', () => {
         expect(result[1].toNumber()).to.equal(18500);
     })
 
+    const REWARD_ROUND_DOWN = 2
+
     it("burn rewards", async() => {
         await reg.testAdd(owner, 0, -100, 100, 250000, 12500);
         await reg.testBurn(owner, 0, -100, 100, 10000, 13500);
@@ -132,9 +134,9 @@ describe('PositionRegistrar', () => {
         await reg.testBurn(owner, 0, -100, 100, 10000, 20500);
         let rewardFour = await reg.lastRewards();
 
-        expect(rewardOne.toNumber()).to.equal(1000);
+        expect(rewardOne.toNumber()).to.equal(998);
         expect(rewardTwo.toNumber()).to.equal(0);
-        expect(rewardThree.toNumber()).to.equal(2300);
+        expect(rewardThree.toNumber()).to.equal(2300 - REWARD_ROUND_DOWN);
         expect(rewardFour.toNumber()).to.lte(6000);
         expect(rewardFour.toNumber()).to.gte(6000-3);
     })
