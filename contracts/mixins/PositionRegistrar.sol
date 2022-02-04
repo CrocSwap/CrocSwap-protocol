@@ -129,20 +129,15 @@ contract PositionRegistrar is StorageLayout {
 
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
-        // Technically feeMileage should never be less than oldMileage, but we need to
-        // handle it because it can happen due to fixed-point effects.
-        // (See blendMileage() function.)
-        if (feeMileage > oldMileage) {
-            rewards = feeMileage - oldMileage;
-            // No need to adjust the position's mileage checkpoint. Rewards are in per
-            // unit of liquidity, so the pro-rata rewards of the remaining liquidity
-            // (if any) remain unnaffected. 
-        }
+        rewards = deltaRewardsRate(feeMileage, oldMileage);
 
         if (nextLiq > 0) {
             // Partial burn. Check that it's allowed on this position.
             require(pos.atomicLiq_ == false, "OR");
-            pos.liquidity_ = nextLiq;            
+            pos.liquidity_ = nextLiq;
+            // No need to adjust the position's mileage checkpoint. Rewards are in per
+            // unit of liquidity, so the pro-rata rewards of the remaining liquidity
+            // (if any) remain unnaffected. 
         } else {
             // Solidity optimizer should convert this to a single refunded SSTORE
             pos.liquidity_ = 0;
@@ -166,13 +161,28 @@ contract PositionRegistrar is StorageLayout {
         internal returns (uint128 rewards) {        
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint64 oldMileage = pos.feeMileage_;
-        
+
+        // Technically feeMileage should never be less than oldMileage, but we need to
+        // handle it because it can happen due to fixed-point effects.
+        // (See blendMileage() function.)
         if (feeMileage > oldMileage) {
-            uint64 rewardsRate = feeMileage - oldMileage;
+            uint64 rewardsRate = deltaRewardsRate(feeMileage, oldMileage);
             rewards = FixedPoint.mulQ48(pos.liquidity_, rewardsRate).toUint128By144();
             pos.feeMileage_ = feeMileage;
         }
-    }    
+    }
+
+    /* @dev Computes a rounding safe calculation of the accumulated rewards rate based on
+     *      a beggining and end mileage counter. */
+    function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) private pure
+        returns (uint64) {
+        uint64 REWARD_ROUND_DOWN = 2;
+        if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {
+            return feeMileage - oldMileage - REWARD_ROUND_DOWN;
+        } else {
+            return 0;
+        }
+    }
 
     /* @notice Marks a flag on a speciic position that indicates that it's liquidity
      *         is atomic. I.e. the position size cannot be partially reduced, only

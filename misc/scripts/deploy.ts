@@ -3,11 +3,12 @@ import { CrocSwapDexSeed } from '../../typechain/CrocSwapDexSeed';
 import { ethers } from 'hardhat';
 import { ContractFactory, BytesLike, BigNumber } from 'ethers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { toSqrtPrice, fromSqrtPrice, MIN_PRICE, MAX_PRICE } from '../../test/FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, MIN_PRICE, MAX_PRICE, MIN_TICK } from '../../test/FixedPoint';
 import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
 import { CrocSwapDex } from '../../typechain/CrocSwapDex';
 import { IERC20Minimal } from '../../typechain/IERC20Minimal';
+import { MAX_TICK } from './tmpMint';
 
 /* Helper script for deploying a basic mock setup to a localhost or test network.
  * Only for ad-hoc testing purposes. Do NOT use in production. */
@@ -36,6 +37,15 @@ function encodeMintAmbient (base: string, quote: string,
     return abiCoder.encode(
         [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
         [ callCode, base, quote, POOL_IDX, 0, 0, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
+}
+
+function encodeMintConc (base: string, quote: string,
+    liq: BigNumber | number, useSurplus: boolean): BytesLike {
+    let abiCoder = new ethers.utils.AbiCoder()
+    const callCode = 1
+    return abiCoder.encode(
+        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
+        [ callCode, base, quote, POOL_IDX, 665430, 831810, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
 }
 
 function encodeBurnAmbient (base: string, quote: string,
@@ -72,7 +82,7 @@ async function tokenDeflator (token: string): Promise<number> {
     }
 }
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(3), gasLimit: 6000000 }
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 6000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -171,7 +181,12 @@ async function deploy() {
     await usdcErc20.approve(dex.address, BigNumber.from(10).pow(30), override)*/
 
     /*let mintCmd = encodeMintAmbient(ZERO_ADDR, ropstenDai, BigNumber.from(10).pow(18), false)
-    await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
+    let tx = await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))
+    console.log(tx.hash)
+    console.log(tx.wait())*/
+
+    /*let mintCmd = encodeMintConc(ZERO_ADDR, ropstenDai, BigNumber.from(10).pow(18), false)
+    let tx = await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
 
     /*let burnCmd = encodeBurnAmbient(ZERO_ADDR, ropstenWbtc, BigNumber.from(10).pow(4), false)
     await dex.connect(lp).tradeWarm(burnCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
@@ -202,8 +217,12 @@ async function deploy() {
     await describeCurve(query, ropstenUsdc, ropstenDai)
 
     /*let swapTx = await dex.connect(trader)
-        .swap(ZERO_ADDR, ropstenDai, POOL_IDX, true, true, BigNumber.from(10).pow(10), MAX_PRICE, false,
-                Object.assign({value: BigNumber.from(10).pow(15)}, override))*/
+        .swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, true, true, BigNumber.from(10).pow(15), MAX_PRICE, false,
+                Object.assign({value: BigNumber.from(10).pow(15)}, override))
+    
+    await dex.connect(trader)
+        .swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, true, BigNumber.from(10).pow(15), MIN_PRICE, false,
+                override)*/
     
     /*let swapTx = await dex.connect(trader)
         .swap(ZERO_ADDR, ropstenDai, POOL_IDX, false, false, BigNumber.from(10).pow(15), MIN_PRICE, false,
