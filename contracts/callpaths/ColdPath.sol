@@ -77,10 +77,13 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             setNewPoolLiq(value);
         } else if (code == 69) {
             pegPriceImprove(token, value, ticks);
-        } else if (code == 70) {
+            
+        } else if (code == 193) {
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
-        } 
+        } else if (code == 194) {
+            upgradeProxy(sidecar, uint8(ticks));
+        }
     }
 
     /* @notice Sets template parameters for a pool type index.
@@ -121,6 +124,22 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     function pegPriceImprove (address token, uint128 unitTickCollateral,
                               uint16 awayTickTol) private {
         setPriceImprove(token, unitTickCollateral, awayTickTol);
+    }
+
+    function upgradeProxy (address proxy, uint8 proxyIdx) private {
+        emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
+        if (proxyIdx == 0) {
+            coldPath_ = proxy;
+        } else if (proxyIdx == 1) {
+            warmPath_ = proxy;
+        } else if (proxyIdx == 2) {
+            longPath_ = proxy;
+        } else if (proxyIdx == 3) {
+            microPath_ = proxy;
+        } else if (proxyIdx >= 64) {
+            uint8 spillIdx = proxyIdx - 64;
+            spillPaths_[spillIdx] = proxy;
+        }
     }
 
     /* @notice Pays out the the protocol fees.
