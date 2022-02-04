@@ -137,8 +137,7 @@ describe('PositionRegistrar', () => {
         expect(rewardOne.toNumber()).to.equal(998);
         expect(rewardTwo.toNumber()).to.equal(0);
         expect(rewardThree.toNumber()).to.equal(2300 - REWARD_ROUND_DOWN);
-        expect(rewardFour.toNumber()).to.lte(6000);
-        expect(rewardFour.toNumber()).to.gte(6000-3);
+        expect(rewardFour.toNumber()).to.eq(6000 - REWARD_ROUND_DOWN*2);
     })
 
     it("transfer position", async() => {
