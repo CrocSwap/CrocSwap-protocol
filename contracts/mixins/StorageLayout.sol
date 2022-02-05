@@ -20,13 +20,14 @@ import '../libraries/PriceGrid.sol';
 contract StorageLayout {
 
     // Generic general-purpose storage slots
-    bool public reEntrantLocked_;
+    bool internal reEntrantLocked_;
+    bool internal forceHotProxy_;
     address public authority_;
-    address internal hotProxy_;    
     address internal coldPath_;
     address internal warmPath_;
     address internal longPath_;
     address internal microPath_;
+    address internal hotProxy_;
 
     address[64] internal spillPaths_;
 
@@ -60,24 +61,24 @@ contract StorageLayout {
     /**************************************************************/
     // TickCensus
     /**************************************************************/
-    mapping(bytes32 => uint256) public mezzanine_;
-    mapping(bytes32 => uint256) public terminus_;
+    mapping(bytes32 => uint256) internal mezzanine_;
+    mapping(bytes32 => uint256) internal terminus_;
     /**************************************************************/
     
 
     /**************************************************************/
     // PoolRegistry
-    mapping(uint24 => PoolSpecs.Pool) public templates_;
+    mapping(uint24 => PoolSpecs.Pool) internal templates_;
     mapping(bytes32 => PoolSpecs.Pool) public pools_;
-    mapping(address => PriceGrid.ImproveSettings) public improves_;
-    uint128 public newPoolLiq_;
+    mapping(address => PriceGrid.ImproveSettings) internal improves_;
+    uint128 internal newPoolLiq_;
     /**************************************************************/
 
     
     /**************************************************************/
     // ProtocolAccount
     /**************************************************************/
-    mapping(address => uint128) public feesAccum_;
+    mapping(address => uint128) internal feesAccum_;
     /**************************************************************/
 
 
@@ -107,7 +108,7 @@ contract StorageLayout {
         bool burn_;
         bool debit_;
     }
-    mapping(bytes32 => AgentApproval) public agents_;
+    mapping(bytes32 => AgentApproval) internal agents_;
     /**************************************************************/
 
     

@@ -128,7 +128,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
 
     function upgradeProxy (address proxy, uint8 proxyIdx) private {
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
-        if (proxyIdx == 0) {
+        if (proxyIdx == 0) {            
             coldPath_ = proxy;
         } else if (proxyIdx == 1) {
             warmPath_ = proxy;
@@ -136,6 +136,11 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             longPath_ = proxy;
         } else if (proxyIdx == 3) {
             microPath_ = proxy;
+        } else if (proxyIdx == 4) {
+            hotProxy_ = proxy;
+        } else if (proxyIdx == 5) {
+            hotProxy_ = proxy;
+            forceHotProxy_ = true;
         } else if (proxyIdx >= 64) {
             uint8 spillIdx = proxyIdx - 64;
             spillPaths_[spillIdx] = proxy;

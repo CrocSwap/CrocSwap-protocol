@@ -1,7 +1,11 @@
-// SPDX-License-Identifier: Unlicensed                                                     
+// SPDX-License-Identifier: GPL-3
+
 pragma solidity >=0.8.4;
 
+import "../libraries/SlotLocations.sol";
 import "../CrocSwapDex.sol";
+
+import "hardhat/console.sol";
 
 contract QueryHelper {
     using CurveMath for CurveMath.CurveState;
@@ -39,7 +43,16 @@ contract QueryHelper {
     function queryRouterApproved (address router, address origin)
         public view returns (bool burn, bool debit) {
         bytes32 key = keccak256(abi.encode(router, origin));
-        (burn, debit) = CrocSwapDex(dex_).agents_(key);
+        bytes32 slot = keccak256(abi.encode(key, CrocSlots.AGENT_MAP_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        burn = uint256(val) & CrocSlots.AGENT_BURN_OFFSET > 0;
+        debit = uint256(val) & CrocSlots.AGENT_DEBIT_OFFSET > 0;
     }
 
+    function queryProtocolAccum (address token) public view returns (uint128) {
+        bytes32 key = bytes32(uint256(uint160(token)));
+        bytes32 slot = keccak256(abi.encode(key, CrocSlots.FEE_MAP_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        return uint128(val);
+    }
 }

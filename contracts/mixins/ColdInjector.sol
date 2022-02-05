@@ -68,11 +68,11 @@ contract ColdPathInjector is StorageLayout {
         require(success);
     }
 
-    /*function callSwapProxy (bytes calldata input) internal {
-        (bool success, ) = hotPath_.delegatecall(
+    function callSwapProxy (bytes calldata input) internal {
+        (bool success, ) = hotProxy_.delegatecall(
             abi.encodeWithSignature("swap(bytes)", input));
         require(success);
-        }*/
+    }
 
     /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
     function callSpillPath (uint8 spillIdx, bytes calldata input) internal {

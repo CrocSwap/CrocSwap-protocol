@@ -62,6 +62,36 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callTradePath(input);
     }
 
+    /* @notice Swaps between two tokens within a single liquidity pool.
+     * @param base The base-side token of the pair. (For native Ethereum use 0x0)
+     * @param quote The quote-side token of the pair.
+     * @param poolIdx The index of the pool type to execute on.
+     * @param isBuy If true the direction of the swap is for the user to send base tokens
+     *              and receive back quote tokens.
+     * @param inBaseQty If true the quantity is denominated in base-side tokens. If not
+     *                  use quote-side tokens.
+     * @param qty The quantity of tokens to swap. End result could be less if reaches
+     *            limitPrice.
+     * @param limitPrice The worse price the user is willing to pay on the margin. Swap
+     *                   will execute up to this price, but not any worse. Average fill 
+     *                   price will always be equal or better, because this is calculated
+     *                   at the marginal unit of quantity.
+     * @param useSurplus If true, settlement is first attempted with the user's surplus
+     *                   collateral balance held at the exchange. (Reduces gas cost 
+     *                   associated with an explicit transfer.) */
+    function swap (address base, address quote,
+                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                   uint128 limitPrice, uint128 limitStart,
+                   uint8 reserveFlags) reEntrantLock public payable {
+        require(!forceHotProxy_, "HP");
+        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty,
+                    limitPrice, limitStart, reserveFlags);
+    }
+
+    function swapProxy (bytes calldata input) reEntrantLock public payable {
+        callSwapProxy(input);
+    }
+    
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    See the same method's documentation in WarmPath.sol for more details.
      * @param input The encoded LP action. The calling user should abi.pack the 
@@ -134,12 +164,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callSpillPath(spillIdx, input);
     }
 
-    function sidecarProxies() public view returns (address cold, address warm,
-                                                   address long, address micro) {
-        cold = coldPath_;
-        warm = warmPath_;
-        long = longPath_;
-        micro = microPath_;
+    function readSlot (uint256 slot) public view returns (uint256 data) {
+        assembly {
+        data := sload(slot)
+        }
     }
 }
 
