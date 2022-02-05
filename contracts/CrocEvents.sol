@@ -13,4 +13,6 @@ library CrocEvents {
     event CrocDeploy (address indexed dex, address indexed master);
 
     event ProtocolDividend (address indexed token, address recv);
+
+    event UpgradeProxy (address indexed proxy, uint8 proxyIdx);
 }

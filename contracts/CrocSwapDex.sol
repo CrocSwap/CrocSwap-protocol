@@ -129,6 +129,11 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callProtocolCmd(input);
     }
 
+    function spillPathCmd (uint8 spillIdx, bytes calldata input) reEntrantLock
+        public payable {
+        callSpillPath(spillIdx, input);
+    }
+
     function sidecarProxies() public view returns (address cold, address warm,
                                                    address long, address micro) {
         cold = coldPath_;
