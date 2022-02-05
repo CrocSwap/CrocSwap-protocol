@@ -52,18 +52,20 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                    uint128 limitPrice, uint128 limitStart,
                    uint8 reserveFlags) reEntrantLock public payable {
-        Directives.SwapDirective memory dir;
-        dir.isBuy_ = isBuy;
-        dir.inBaseQty_ = inBaseQty;
-        dir.qty_ = qty;
-        dir.limitPrice_ = limitPrice;
-
-        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
-        verifyPermitSwap(pool, base, quote, isBuy, inBaseQty, qty);
-        
-        Chaining.PairFlow memory flow = swapOverPool(dir, pool, limitStart);
-
-        settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
-        accumProtocolFees(flow, base, quote);
+        if (hotProxy_ == address(0)) {
+            Directives.SwapDirective memory dir;
+            dir.isBuy_ = isBuy;
+            dir.inBaseQty_ = inBaseQty;
+            dir.qty_ = qty;
+            dir.limitPrice_ = limitPrice;
+            
+            PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+            verifyPermitSwap(pool, base, quote, isBuy, inBaseQty, qty);
+            
+            Chaining.PairFlow memory flow = swapOverPool(dir, pool, limitStart);
+            
+            settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
+            accumProtocolFees(flow, base, quote);
+        }
     }
 }
