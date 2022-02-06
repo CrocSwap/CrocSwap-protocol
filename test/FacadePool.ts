@@ -145,6 +145,7 @@ export class TestPool {
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
+    useSwapProxy: { optimal: boolean, base: boolean }
     lpConduit: string
     startLimit: BigNumber
     overrides: PayableOverrides
@@ -177,6 +178,7 @@ export class TestPool {
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
         this.useHotPath = false;
+        this.useSwapProxy = { optimal: false, base: false }
         this.lpConduit = ZERO_ADDR
         this.startLimit = BigNumber.from(0)
 
@@ -245,6 +247,16 @@ export class TestPool {
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint24", "uint24", "uint8", "uint16", "uint128" ], 
             [ code, token, sidecar, poolIdx, feeRate, protoTake, ticks, value ]);
+    }
+
+    async encodeSwap (isBuy: boolean, inBase: boolean, qty: BigNumber, limitLow: BigNumber, limitHigh: BigNumber,
+        useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        return abiCoder.encode(
+            [ "address", "address", "uint24", "bool",    "bool",   "uint128", "uint128", "uint128", "uint8"], 
+            [ base,      quote,     POOL_IDX, isBuy,     inBase,    qty,       limitLow, limitHigh, useSurplus]);
     }
 
     async encodeMintPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
@@ -415,10 +427,17 @@ export class TestPool {
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
         useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
-        if (this.useHotPath) {
-            return (await this.dex).connect(from).swap((await this.base).address,
-                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price, this.startLimit, 
-                useSurplus, this.overrides)
+        if (this.useSwapProxy.base) {
+            let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, this.startLimit, useSurplus)
+            if (this.useSwapProxy.optimal) {
+                return (await this.dex).connect(from).swapOptimal(encoded, this.overrides)
+            } else {
+                return (await this.dex).connect(from).swapProxy(encoded, this.overrides)
+            }
+        } else if (this.useHotPath) {
+            //let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, this.startLimit, useSurplus)
+            return (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address, 
+                POOL_IDX, isBuy, inBaseQty, qty, price, this.startLimit, useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
@@ -460,6 +479,13 @@ export class TestPool {
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(69, (await this.quote).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
+    }
+
+    async testUpgradeHotProxy (address: string, disableEmbedded: boolean = true): Promise<ContractTransaction> {
+        return (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(21, ZERO_ADDR, address,
+                0, 0, disableEmbedded ? 95 : 94, 0, 0))
     }
 
     async snapBaseOwed(): Promise<BigNumber> {
