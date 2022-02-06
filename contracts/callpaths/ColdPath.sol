@@ -53,13 +53,13 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * 
      * @param code The command code corresponding to the actual method being called.
      *             Code types are as follows:
-     *                  65 - Collect protocol fees
+     *                  20 - Transfer protocol authority 
+     *                  21 - Upgrade proxy contract.
+     *                  65 - Collect protocol fees.
      *                  66 - Set pool template parameters
      *                  67 - Set parameters on pre-existing pools.
      *                  68 - Set the size for liquidity locking on pool initialization.
-     *                  69 - Set off-grid price improve settings.
-     *                  193 - Transfer protocol authority 
-     *                  194 - Upgrade proxy contract. */
+     *                  69 - Set off-grid price improve settings. */
     function protocolCmd (bytes calldata input) public {
         (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
          uint8 protocolTake, uint16 ticks, uint128 value) =
@@ -78,10 +78,10 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             setNewPoolLiq(value);
         } else if (code == 69) {
             pegPriceImprove(token, value, ticks);
-        } else if (code == 193) {
+        } else if (code == 20) {
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
-        } else if (code == 194) {
+        } else if (code == 21) {
             upgradeProxy(sidecar, protocolTake);
         }
     }
