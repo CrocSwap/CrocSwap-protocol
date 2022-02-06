@@ -83,15 +83,33 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                    uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                    uint128 limitPrice, uint128 limitStart,
                    uint8 reserveFlags) reEntrantLock public payable {
+        // By default the embedded hot-path is enabled, but protocol governance can
+        // disable by toggling the force proxy flag. If so, users should point to
+        // swapProxy.
         require(!forceHotProxy_, "HP");
         swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty,
-                    limitPrice, limitStart, reserveFlags);
+                        limitPrice, limitStart, reserveFlags);
     }
 
+    /* @notice Equality to swap(), but uses the proxy sidecar contract. Less gas 
+     *         efficient but clients may want to use if 1) there are upgraded features
+     *         in the proxy or 2) forceHotProxy_ has been turned on by protocol 
+     *         authority. */
     function swapProxy (bytes calldata input) reEntrantLock public payable {
         callSwapProxy(input);
     }
-    
+
+    /* @notice Like swap(), but if force hot proxy is turned on, will fallback to the
+     *         proxy swap() call. Makes the call future-proof, at the expense of 
+     *         slightly higher gas. */
+    function swapOptimal (bytes calldata input) reEntrantLock public payable {
+        if (forceHotProxy_) {
+            callSwapProxy(input);
+        } else {
+            swapEncoded(input);
+        }
+    }
+
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    See the same method's documentation in WarmPath.sol for more details.
      * @param input The encoded LP action. The calling user should abi.pack the 
