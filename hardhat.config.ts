@@ -6,6 +6,8 @@ import "hardhat-typechain";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer"
 
+require("hardhat-storage-layout");
+
 module.exports = {
     solidity: {
       compilers: [{
@@ -14,11 +16,17 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 1000000
-          }
+          },
+          outputSelection: {
+        "*": {
+            "*": ["storageLayout"],
+        },
+      },
         }
       }],
       overrides: {
       },
+      
     },
 
     networks: {
