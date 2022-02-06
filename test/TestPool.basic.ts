@@ -104,8 +104,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10000)
 
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(24)
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(24)
     })
 
     it("swap sell", async() => {
@@ -148,8 +148,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-10000*1024)
 
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(25*1024 + 210)
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(25*1024 + 210)
     })
 
     it("swap wrong direction", async() => {
@@ -322,8 +322,8 @@ describe('Pool', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(limitFlow)
 
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(0)
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(21211)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(21211)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
     })
 
     it("burn payout full", async() => {

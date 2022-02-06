@@ -11,7 +11,7 @@ import { ContractFactory } from 'ethers';
 
 chai.use(solidity);
 
-describe('Pool', () => {
+describe('Pool Conduit', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token
