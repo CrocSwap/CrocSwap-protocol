@@ -82,7 +82,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
         } else if (code == 194) {
-            upgradeProxy(sidecar, uint8(ticks));
+            upgradeProxy(sidecar, protocolTake);
         }
     }
 
@@ -131,31 +131,31 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *         cold path contract, since that contains the upgrade code itself.
      * @param proxy The address of the new proxy smart contract
      * @param proxyIdx Determines which proxy is upgraded on this call with convention:
-     *                       0 - ColdPath proxy contract
-     *                       1 - WarmPath proxy contract
-     *                       2 - LongPath proxy contract
-     *                       3 - MicroPath proxy contract
-     *                       4 - HotProxy proxy contract (embedded HotPath still enabled)
-     *                       5 - HotProxy proxy contract (embedded HotPath disabled)
-     *                       64-127 - Spillover proxy slots. */
+     *                       90 - ColdPath proxy contract
+     *                       91 - WarmPath proxy contract
+     *                       92 - LongPath proxy contract
+     *                       93 - MicroPath proxy contract
+     *                       94 - HotProxy proxy contract (embedded HotPath enabled)
+     *                       95 - HotProxy proxy contract (embedded HotPath disabled)
+     *                       128-191 - Spillover proxy slots. */
     function upgradeProxy (address proxy, uint8 proxyIdx) private {
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
-        if (proxyIdx == 0) {            
+        if (proxyIdx == 90) {            
             coldPath_ = proxy;
-        } else if (proxyIdx == 1) {
+        } else if (proxyIdx == 91) {
             warmPath_ = proxy;
-        } else if (proxyIdx == 2) {
+        } else if (proxyIdx == 92) {
             longPath_ = proxy;
-        } else if (proxyIdx == 3) {
+        } else if (proxyIdx == 93) {
             microPath_ = proxy;
-        } else if (proxyIdx == 4) {
+        } else if (proxyIdx == 94) {
             hotProxy_ = proxy;
             forceHotProxy_ = false;
-        } else if (proxyIdx == 5) {
+        } else if (proxyIdx == 95) {
             hotProxy_ = proxy;
             forceHotProxy_ = true;
-        } else if (proxyIdx >= 64) {
-            uint8 spillIdx = proxyIdx - 64;
+        } else if (proxyIdx >= 128) {
+            uint8 spillIdx = proxyIdx - 128;
             spillPaths_[spillIdx] = proxy;
         }
     }
