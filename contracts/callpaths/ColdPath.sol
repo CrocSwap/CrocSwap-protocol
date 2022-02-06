@@ -58,7 +58,8 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *                  67 - Set parameters on pre-existing pools.
      *                  68 - Set the size for liquidity locking on pool initialization.
      *                  69 - Set off-grid price improve settings.
-     *                  70 - Transfer protocol authority */
+     *                  193 - Transfer protocol authority 
+     *                  194 - Upgrade proxy contract. */
     function protocolCmd (bytes calldata input) public {
         (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
          uint8 protocolTake, uint16 ticks, uint128 value) =
@@ -77,7 +78,6 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             setNewPoolLiq(value);
         } else if (code == 69) {
             pegPriceImprove(token, value, ticks);
-            
         } else if (code == 193) {
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
@@ -126,6 +126,18 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         setPriceImprove(token, unitTickCollateral, awayTickTol);
     }
 
+    /* @notice Upgrades one of the existing proxy sidecar contracts.
+     * @dev    Be extremely careful calling this, particularly when upgrading the
+     *         cold path contract, since that contains the upgrade code itself.
+     * @param proxy The address of the new proxy smart contract
+     * @param proxyIdx Determines which proxy is upgraded on this call with convention:
+     *                       0 - ColdPath proxy contract
+     *                       1 - WarmPath proxy contract
+     *                       2 - LongPath proxy contract
+     *                       3 - MicroPath proxy contract
+     *                       4 - HotProxy proxy contract (embedded HotPath still enabled)
+     *                       5 - HotProxy proxy contract (embedded HotPath disabled)
+     *                       64-127 - Spillover proxy slots. */
     function upgradeProxy (address proxy, uint8 proxyIdx) private {
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
         if (proxyIdx == 0) {            
@@ -138,6 +150,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             microPath_ = proxy;
         } else if (proxyIdx == 4) {
             hotProxy_ = proxy;
+            forceHotProxy_ = false;
         } else if (proxyIdx == 5) {
             hotProxy_ = proxy;
             forceHotProxy_ = true;
