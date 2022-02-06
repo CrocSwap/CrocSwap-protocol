@@ -159,11 +159,23 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callProtocolCmd(input);
     }
 
+    /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
+     *         none are in use (all slots are set to 0 and therefore calls will fail).
+     *         But this lets protocol governance add new functionality in additional 
+     *         sidecars, which can then be accessed by users through this command.
+     *
+     * @param spillIdx The index (0-63) of the spill sidecar the command is being sent to
+     * @param input The arbitrary call data the client is calling the spill proxy 
+     *              sidecar with */
     function spillPathCmd (uint8 spillIdx, bytes calldata input) reEntrantLock
         public payable {
         callSpillPath(spillIdx, input);
     }
 
+    /* @notice General purpose query fuction for reading arbitrary data from the dex.
+     * @dev    This function is bare bones, because we're trying to keep the size 
+     *         footprint of CrocSwapDex down. See SlotLocations.sol and QueryHelper.sol 
+     *         for syntactic sugar around accessing/parsing specific data. */
     function readSlot (uint256 slot) public view returns (uint256 data) {
         assembly {
         data := sload(slot)
