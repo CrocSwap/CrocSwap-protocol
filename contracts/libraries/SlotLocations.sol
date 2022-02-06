@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3
 
+pragma solidity >=0.8.4;
+
 library CrocSlots {
     uint constant public AUTHORITY_SLOT = 0;
     uint constant public FEE_MAP_SLOT = 77;
