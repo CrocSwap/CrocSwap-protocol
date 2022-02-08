@@ -177,7 +177,6 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 
-        curve.dirtyPrice();
         Chaining.PairFlow memory swapFlow;
         (swapFlow, curve.curve_.priceRoot_,
          curve.curve_.liq_.ambientSeed_,
@@ -187,6 +186,9 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint128,
                                 uint64, uint64));
 
+        // swap() is the only operation that can change curve price, so have to mark
+        // the tick cache as dirty.
+        curve.dirtyPrice();
         accum.foldFlow(swapFlow);
     }
 
