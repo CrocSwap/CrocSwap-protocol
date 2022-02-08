@@ -138,7 +138,7 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
               bidTick, askTick, liq, poolHash));
         require(success);
-        
+
         (basePaid, quotePaid,
          curve.curve_.liq_.ambientSeed_,
          curve.curve_.liq_.concentrated_) = 
@@ -177,6 +177,7 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 
+        curve.dirtyPrice();
         Chaining.PairFlow memory swapFlow;
         (swapFlow, curve.curve_.priceRoot_,
          curve.curve_.liq_.ambientSeed_,
