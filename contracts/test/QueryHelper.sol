@@ -55,4 +55,11 @@ contract QueryHelper {
         uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
         return uint128(val);
     }
+
+    function queryLevel (address base, address quote, uint24 poolIdx, int24 tick)
+        public view returns (uint96 bidLots, uint96 askLots, uint64 odometer) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 lvlKey = keccak256(abi.encodePacked(poolHash, tick));
+        (bidLots, askLots, odometer) = CrocSwapDex(dex_).levels_(lvlKey);
+    }
 }
