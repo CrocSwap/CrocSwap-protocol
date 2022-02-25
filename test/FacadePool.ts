@@ -207,7 +207,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
+                110, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
                 tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, poolIdx, 
@@ -227,7 +227,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, (await this.permit).address, (await this.permit).address, POOL_IDX, 
+                110, (await this.permit).address, (await this.permit).address, POOL_IDX, 
                 feeRate, protoTake, tickSize, 0))
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
@@ -238,7 +238,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                68, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
+                112, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
     }    
 
     encodeProtocolCmd (code: number, token: string, sidecar: string, poolIdx: number, 
@@ -456,28 +456,28 @@ export class TestPool {
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
+            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, jit))
     }
 
     async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
+            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, idx, feeRate, protoTake, tickSize, jit))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(69, (await this.base).address, ZERO_ADDR,
+            .protocolCmd(this.encodeProtocolCmd(113, (await this.base).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
     async testPegPriceImproveQuote (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(69, (await this.quote).address, ZERO_ADDR,
+            .protocolCmd(this.encodeProtocolCmd(113, (await this.quote).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
