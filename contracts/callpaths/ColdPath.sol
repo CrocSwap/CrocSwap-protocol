@@ -6,6 +6,7 @@ import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
 import '../libraries/TokenFlow.sol';
 import '../libraries/PriceGrid.sol';
+import '../libraries/ProtocolCmd.sol';
 import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/OracleHist.sol';
@@ -32,6 +33,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
+    using ProtocolCmd for bytes;
 
     /* @notice Initializes the pool type for the pair.
      * @param base The base token in the pair.
@@ -52,37 +54,34 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called.
-     *             Code types are as follows:
-     *                  20 - Transfer protocol authority 
-     *                  21 - Upgrade proxy contract.
-     *                  65 - Collect protocol fees.
-     *                  66 - Set pool template parameters
-     *                  67 - Set parameters on pre-existing pools.
-     *                  68 - Set the size for liquidity locking on pool initialization.
-     *                  69 - Set off-grid price improve settings. */
+     *             See ProtocolCmd.sol for outline of protocol command codes. */
     function protocolCmd (bytes calldata input) public {
         (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
-         uint8 protocolTake, uint16 ticks, uint128 value) =
-            abi.decode(input, (uint8, address, address, uint24, uint24,
-                               uint8, uint16, uint128));
+         uint8 protocolTake, uint16 ticks, uint128 value) = input.decodeProtocolCmd();
 
-        if (code == 65) {
+        if (code == ProtocolCmd.COLLECT_TREASURY_CODE) {
             collectProtocol(token, sidecar);
-        } else if (code == 66) {
-            uint8 jit = value.toUint8();
-            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
-        } else if (code == 67) {
-            uint8 jit = value.toUint8();
-            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
-        } else if (code == 68) {
-            setNewPoolLiq(value);
-        } else if (code == 69) {
-            pegPriceImprove(token, value, ticks);
-        } else if (code == 20) {
+            
+        } else if (code == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
-        } else if (code == 21) {
+            
+        } else if (code == ProtocolCmd.UPGRADE_DEX_CODE) {
             upgradeProxy(sidecar, protocolTake);
+            
+        } else if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
+            uint8 jit = value.toUint8();
+            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
+            
+        } else if (code == ProtocolCmd.POOL_REVISE_CODE) {
+            uint8 jit = value.toUint8();
+            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
+            
+        } else if (code == ProtocolCmd.INIT_POOL_LIQ_CODE) {
+            setNewPoolLiq(value);
+            
+        } else if (code == ProtocolCmd.OFF_GRID_CODE) {
+            pegPriceImprove(token, value, ticks);
         }
     }
 
