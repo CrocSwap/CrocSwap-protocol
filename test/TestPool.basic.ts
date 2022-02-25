@@ -2,7 +2,7 @@ import { TestPool, makeTokenPool, Token } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
@@ -21,7 +21,7 @@ describe('Pool', () => {
        quoteToken = await test.quote
 
        await test.initPool(feeRate, 0, 1, 1.5)
-       test.useHotPath = false
+       test.useHotPath = false;
     })
 
     const MINT_BUFFER = 4;
