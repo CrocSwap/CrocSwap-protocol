@@ -20,17 +20,17 @@ import '../libraries/PriceGrid.sol';
 contract StorageLayout {
 
     // Re-entant lock. Should always be false at rest.
-    bool internal reEntrantLocked_;
+    address internal lockHolder_;
 
     // If set to true, than the embedded hot-path (swap()) is not enabled and
     // users must use the hot proxy for the hot-path. By default set to false.
     bool internal forceHotProxy_;
 
     // Address of the current dex protocol authority. Can be transfered
-    address public authority_;
+    address internal authority_;
 
     // Slots for sidecar proxy contracts
-    address[65536] proxyPaths_;
+    address[65536] internal proxyPaths_;
     
     // The slots of the currently attached sidecar proxy contracts. Can be upgraded
     // over time.
@@ -41,17 +41,17 @@ contract StorageLayout {
     uint8 constant HOT_PROXY_IDX = 4;
 
     modifier reEntrantLock() {
-        require(reEntrantLocked_ == false);
-        reEntrantLocked_ = true;
+        require(lockHolder_ == address(0));
+        lockHolder_ = msg.sender;
         _;
-        reEntrantLocked_ = false;
+        lockHolder_ = address(0);
     }
 
     modifier protocolOnly() {
-        require(msg.sender == authority_ && reEntrantLocked_ == false);
-        reEntrantLocked_ = true;
+        require(msg.sender == authority_ && lockHolder_ == address(0));
+        lockHolder_ = msg.sender;
         _;
-        reEntrantLocked_ = false;        
+        lockHolder_ = address(0);        
     }
 
     
