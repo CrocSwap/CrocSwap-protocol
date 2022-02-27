@@ -3,6 +3,7 @@ pragma solidity >=0.8.4;
 
 import '../libraries/ProtocolCmd.sol';
 import '../interfaces/ICrocMinion.sol';
+import '../mixins/StorageLayout.sol';
 
 /* @title CrocPolicy
  * @notice Intermediates between the dex mechanism inside CrocSwapDex and the top-level
@@ -147,13 +148,13 @@ contract CrocPolicy {
     function emergencyHalt (address minion, string calldata reason)
         emergencyAuth public {
         emit CrocEmergencyHalt(minion, reason);
-        
-        nukeProxy(minion, ProtocolCmd.HOT_PROXY_FORCE_UPGRADE);
-        nukeProxy(minion, ProtocolCmd.LONG_PATH_UPGRADE);
-        nukeProxy(minion, ProtocolCmd.MICRO_PATH_UPGRADE);
-        for (uint8 i = 0; i < 64; ++i) {
-            nukeProxy(minion, ProtocolCmd.SPILL_PATH_UPGRADE_OFFSET + i);
+
+        uint NUKE_EMERGENCY_RANGE = 2;
+        for (uint i = NUKE_EMERGENCY_RANGE; i < 256; ++i) {
+            nukeProxy(minion, uint8(i));
         }
+
+        ICrocMinion(minion).protocolCmd(ProtocolCmd.encodeForceProxy(true));
     }
 
     /* @notice Disables a given proxy on the underlying CrocSwapDex contract. */

@@ -29,17 +29,16 @@ contract StorageLayout {
     // Address of the current dex protocol authority. Can be transfered
     address public authority_;
 
-    // The address of the currently attached sidecar proxy contracts. Can be upgraded
+    // Slots for sidecar proxy contracts
+    address[65536] proxyPaths_;
+    
+    // The slots of the currently attached sidecar proxy contracts. Can be upgraded
     // over time.
-    address internal coldPath_;
-    address internal warmPath_;
-    address internal longPath_;
-    address internal microPath_;
-    address internal hotProxy_;
-
-    // Additional slots for sidecar proxies. Not currently used but allows for upgraded
-    // and new functionality in the future.
-    address[64] internal spillPaths_;
+    uint8 constant COLD_PROXY_IDX = 0;
+    uint8 constant WARM_PROXY_IDX = 1;
+    uint8 constant LONG_PROXY_IDX = 2;
+    uint8 constant MICRO_PROXY_IDX = 3;
+    uint8 constant HOT_PROXY_IDX = 4;
 
     modifier reEntrantLock() {
         require(reEntrantLocked_ == false);

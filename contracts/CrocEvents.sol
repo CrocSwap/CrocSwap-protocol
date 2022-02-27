@@ -15,4 +15,5 @@ library CrocEvents {
     event ProtocolDividend (address indexed token, address recv);
 
     event UpgradeProxy (address indexed proxy, uint8 proxyIdx);
+    event ForceHotProxy (bool isForced);
 }

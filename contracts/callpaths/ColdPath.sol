@@ -69,6 +69,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         } else if (code == ProtocolCmd.UPGRADE_DEX_CODE) {
             upgradeProxy(sidecar, protocolTake);
             
+        } else if (code == ProtocolCmd.FORCE_HOT_CODE) {
+            forceHotProxy(protocolTake > 0);
+          
         } else if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
             uint8 jit = value.toUint8();
             setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
@@ -129,34 +132,21 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @dev    Be extremely careful calling this, particularly when upgrading the
      *         cold path contract, since that contains the upgrade code itself.
      * @param proxy The address of the new proxy smart contract
-     * @param proxyIdx Determines which proxy is upgraded on this call with convention:
-     *                       90 - ColdPath proxy contract
-     *                       91 - WarmPath proxy contract
-     *                       92 - LongPath proxy contract
-     *                       93 - MicroPath proxy contract
-     *                       94 - HotProxy proxy contract (embedded HotPath enabled)
-     *                       95 - HotProxy proxy contract (embedded HotPath disabled)
-     *                       128-191 - Spillover proxy slots. */
+     * @param proxyIdx Determines which proxy is upgraded on this call */
     function upgradeProxy (address proxy, uint8 proxyIdx) private {
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
-        if (proxyIdx == 90) {            
-            coldPath_ = proxy;
-        } else if (proxyIdx == 91) {
-            warmPath_ = proxy;
-        } else if (proxyIdx == 92) {
-            longPath_ = proxy;
-        } else if (proxyIdx == 93) {
-            microPath_ = proxy;
-        } else if (proxyIdx == 94) {
-            hotProxy_ = proxy;
-            forceHotProxy_ = false;
-        } else if (proxyIdx == 95) {
-            hotProxy_ = proxy;
-            forceHotProxy_ = true;
-        } else if (proxyIdx >= 128) {
-            uint8 spillIdx = proxyIdx - 128;
-            spillPaths_[spillIdx] = proxy;
-        }
+        proxyPaths_[proxyIdx] = proxy;        
+    }
+
+    /* @notice Upgrades one of the existing proxy sidecar contracts.
+     * @dev    Be extremely careful calling this, particularly when upgrading the
+     *         cold path contract, since that contains the upgrade code itself.
+     * @param proxy The address of the new proxy smart contract
+     * @param proxyIdx Determines which proxy is upgraded on this call */
+    function forceHotProxy (bool force) private {
+        emit CrocEvents.ForceHotProxy(force);
+        forceHotProxy_ = force;
+        
     }
 
     /* @notice Pays out the the protocol fees.

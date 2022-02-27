@@ -23,7 +23,7 @@ contract ColdPathInjector is StorageLayout {
     /* @notice Passes through the initPool call in ColdPath sidecar. */
     function callInitPool (address base, address quote, uint24 poolIdx,  
                            uint128 price) internal {
-        (bool success, ) = coldPath_.delegatecall(
+        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
             abi.encodeWithSignature
             ("initPool(address,address,uint24,uint128)",
              base, quote, poolIdx, price));
@@ -32,7 +32,7 @@ contract ColdPathInjector is StorageLayout {
 
     /* @notice Passes through the protocolCmd call in ColdPath sidecar. */
     function callProtocolCmd (bytes calldata input) internal {
-        (bool success, ) = coldPath_.delegatecall(
+        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
     }
@@ -40,7 +40,7 @@ contract ColdPathInjector is StorageLayout {
     /* @notice Passes through the collectSurplus call in ColdPath sidecar. */
     function callCollectSurplus (address recv, int128 value, address token,
                                  bool move) internal {
-        (bool success, ) = coldPath_.delegatecall(
+        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
             abi.encodeWithSignature
             ("collectSurplus(address,int128,address,bool)", recv, value, token, move));
         require(success);
@@ -48,7 +48,7 @@ contract ColdPathInjector is StorageLayout {
 
     /* @notice Passes through the approveRouter call in ColdPath sidecar. */
     function callApproveRouter (address router, bool forDebit, bool forBurn) internal {
-        (bool success, ) = coldPath_.delegatecall(
+        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
             abi.encodeWithSignature
             ("approveRouter(address,bool,bool)", router, forDebit, forBurn));
         require(success);
@@ -56,28 +56,28 @@ contract ColdPathInjector is StorageLayout {
 
     /* @notice Passes through the trade() call in LongPath sidecar. */
     function callTradePath (bytes calldata input) internal {
-        (bool success, ) = longPath_.delegatecall(
+        (bool success, ) = proxyPaths_[LONG_PROXY_IDX].delegatecall(
             abi.encodeWithSignature("trade(bytes)", input));
         require(success);
     }
 
     /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
     function callWarmPath (bytes calldata input) internal {
-        (bool success, ) = warmPath_.delegatecall(
+        (bool success, ) = proxyPaths_[WARM_PROXY_IDX].delegatecall(
             abi.encodeWithSignature("tradeWarm(bytes)", input));
         require(success);
     }
 
     function callSwapProxy (bytes calldata input) internal {
-        require(hotProxy_ != address(0));
-        (bool success, ) = hotProxy_.delegatecall(
+        require(proxyPaths_[HOT_PROXY_IDX] != address(0));
+        (bool success, ) = proxyPaths_[HOT_PROXY_IDX].delegatecall(
             abi.encodeWithSignature("swap(bytes)", input));
         require(success);
     }
 
     /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
     function callSpillPath (uint8 spillIdx, bytes calldata input) internal {
-        (bool success, ) = spillPaths_[spillIdx].delegatecall(
+        (bool success, ) = proxyPaths_[spillIdx].delegatecall(
             abi.encodeWithSignature("spillCmd(bytes)", input));
         require(success);
     }
@@ -86,7 +86,7 @@ contract ColdPathInjector is StorageLayout {
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
-        (bool success, bytes memory output) = microPath_.delegatecall
+        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("mintAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
@@ -107,7 +107,7 @@ contract ColdPathInjector is StorageLayout {
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
 
-        (bool success, bytes memory output) = microPath_.delegatecall
+        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("burnAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
@@ -129,7 +129,7 @@ contract ColdPathInjector is StorageLayout {
                             bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
 
-        (bool success, bytes memory output) = microPath_.delegatecall
+        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("mintRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
@@ -151,7 +151,7 @@ contract ColdPathInjector is StorageLayout {
                             bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
         
-        (bool success, bytes memory output) = microPath_.delegatecall
+        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("burnRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
@@ -171,7 +171,7 @@ contract ColdPathInjector is StorageLayout {
                        CurveCache.Cache memory curve,
                        Directives.SwapDirective memory swap,
                        PoolSpecs.PoolCursor memory pool) internal {
-        (bool success, bytes memory output) = microPath_.delegatecall
+        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("sweepSwap((uint128,(uint128,uint128),(uint64,uint64)),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
               curve.curve_, curve.pullPriceTick(), swap, pool));

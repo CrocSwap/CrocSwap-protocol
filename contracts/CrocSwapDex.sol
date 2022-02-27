@@ -45,10 +45,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     constructor (address authority, address coldPath, address warmPath,
                  address longPath, address microPath) {
         authority_ = authority;
-        coldPath_ = coldPath;
-        warmPath_ = warmPath;
-        longPath_ = longPath;
-        microPath_ = microPath;
+        proxyPaths_[COLD_PROXY_IDX] = coldPath;
+        proxyPaths_[WARM_PROXY_IDX] = warmPath;
+        proxyPaths_[LONG_PROXY_IDX] = longPath;
+        proxyPaths_[MICRO_PROXY_IDX] = microPath;
     }
 
     /* @notice Executes the user-defined compound order, constitutiin an arbitrary

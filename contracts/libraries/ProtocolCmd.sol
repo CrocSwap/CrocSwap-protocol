@@ -18,6 +18,8 @@ library ProtocolCmd {
     uint8 constant AUTHORITY_TRANSFER_CODE = 20;
     // Code to upgrade one of the sidecar proxy contracts on CrocSwapDex.
     uint8 constant UPGRADE_DEX_CODE = 21;
+    // Code to force hot path to use the proxy contract
+    uint8 constant FORCE_HOT_CODE = 22;
     // Code to collect accumulated protocol fees for the treasury.
     uint8 constant COLLECT_TREASURY_CODE = 40;
     ////////////////////////////////////////////////////////////////////////////
@@ -36,18 +38,6 @@ library ProtocolCmd {
     uint8 constant OFF_GRID_CODE = 113;
     ////////////////////////////////////////////////////////////////////////////
 
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Upgrade codes (not to be confused with policy commands)
-    ////////////////////////////////////////////////////////////////////////////
-    uint8 constant COLD_PATH_UPGRADE = 90;
-    uint8 constant WARM_PATH_UPGRADE = 91;
-    uint8 constant LONG_PATH_UPGRADE = 92;
-    uint8 constant MICRO_PATH_UPGRADE = 93;
-    uint8 constant HOT_PROXY_UPGRADE = 94;
-    uint8 constant HOT_PROXY_FORCE_UPGRADE = 95;
-    uint8 constant SPILL_PATH_UPGRADE_OFFSET = 128;
-    ////////////////////////////////////////////////////////////////////////////
 
     
     function isPrivilegedCmd (bytes calldata input) internal pure returns (bool) {
@@ -74,9 +64,16 @@ library ProtocolCmd {
         return abi.encode(code, addrA, addrB, idxA, idxB, idxM, idxZ, value);
     }
 
-    function encodeUpgrade (address proxy, uint8 upgradeCode)
+    function encodeUpgrade (address proxy, uint8 proxySlot)
         internal pure returns (bytes memory) {
         return encodeProtocolCmd(UPGRADE_DEX_CODE, address(0), address(proxy),
-                          0, 0, upgradeCode, 0, 0);
+                                 0, 0, proxySlot, 0, 0);
     }
+
+    function encodeForceProxy (bool forceProxy)
+        internal pure returns (bytes memory) {
+        return encodeProtocolCmd(FORCE_HOT_CODE, address(0), address(0),
+                                 0, 0, forceProxy ? 1 : 0, 0, 0);
+    }
+
 }
