@@ -26,8 +26,7 @@ describe('Roll Surplus', () => {
        sender = await (await test.trader).getAddress() 
 
        await test.initPool(feeRate, 0, 1, 1.5)
-       await (await test.dex).collectSurplus(sender, -100000, baseToken.address, false) 
-       await (await test.dex).collectSurplus(sender, -250000, quoteToken.address, false) 
+       await test.collectSurplus(sender, -100000, -250000)
     })
 
     it("roll surplus", async() => {
@@ -117,7 +116,7 @@ describe('Roll Surplus', () => {
 
       let owner = await (await test.trader).getAddress();
       // Top up the balance to 500,000
-      await (await test.dex).collectSurplus(owner, -400000, test.base.address, false);
+      await test.testCollectSurplus(await test.trader, owner, -400000, baseToken.address, false)
 
       order.open.useSurplus = true
       order.hops[0].pools[0].chain.swapDefer = false

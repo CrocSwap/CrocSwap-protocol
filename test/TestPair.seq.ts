@@ -73,8 +73,8 @@ describe('Sequence Pair', () => {
         let order3 = await test3.prototypeOrder();
         
         let owner = await (await test.trader).getAddress();
-        await (await test.dex).collectSurplus(owner, -25000, test.base.address, false);
-        await (await test.dex).collectSurplus(owner, -15000, test2.quote.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -25000, test.base.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test2.quote.address, false)
 
         order.hops.push(order2.hops[0])
 
@@ -115,9 +115,9 @@ describe('Sequence Pair', () => {
         let order3 = await test3.prototypeOrder();
         
         let owner = await (await test.trader).getAddress();
-        await (await test.dex).collectSurplus(owner, -15000, test.base.address, false);
-        await (await test.dex).collectSurplus(owner, -10000, test.quote.address, false)
-        await (await test.dex).collectSurplus(owner, -15000, test2.quote.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test.base.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -10000, test.quote.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test2.quote.address, false)
 
         order.hops.push(order2.hops[0])
 

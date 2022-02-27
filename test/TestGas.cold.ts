@@ -232,8 +232,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("swap surplus", async() => {
         let sender = await (await test.trader).getAddress() 
-        await (await test.dex).collectSurplus(sender, -100000, (await test.base).address, false) 
-        await (await test.dex).collectSurplus(sender, -250000, (await test.quote).address, false) 
+        await test.collectSurplus(sender, -100000, -2500000)
 
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
@@ -245,8 +244,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("mint surplus", async() => {
         let sender = await (await test.trader).getAddress() 
-        await (await test.dex).collectSurplus(sender, -100000, (await test.base).address, false) 
-        await (await test.dex).collectSurplus(sender, -250000, (await test.quote).address, false) 
+        await test.collectSurplus(sender, -100000, -2500000)
 
         await test.testMintOther(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
@@ -255,8 +253,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("burn surplus", async() => {
         let sender = await (await test.trader).getAddress() 
-        await (await test.dex).collectSurplus(sender, -100000, (await test.base).address, false) 
-        await (await test.dex).collectSurplus(sender, -250000, (await test.quote).address, false) 
+        await test.collectSurplus(sender, -100000, -2500000)
 
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)

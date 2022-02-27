@@ -30,9 +30,8 @@ describe('Pool Surplus', () => {
        sender = await (await test.trader).getAddress() 
 
        await test.initPool(feeRate, 0, 1, 1.5)
-       await (await test.dex).collectSurplus(sender, -100000, baseToken.address, false) 
-       await (await test.dex).collectSurplus(sender, -250000, quoteToken.address, false) 
-
+       await test.testCollectSurplus(await test.trader, sender, -100000, baseToken.address, false)
+       await test.testCollectSurplus(await test.trader, sender, -250000, quoteToken.address, false)
     })
 
     it("balance and withdraw", async() => {
@@ -42,10 +41,8 @@ describe('Pool Surplus', () => {
         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(100000)
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(250000);
 
-        await (await test.dex).connect(await test.trader)
-            .collectSurplus(sender, 40000, baseToken.address, false);
-        await (await test.dex).connect(await test.trader)
-            .collectSurplus(sender, 75000, quoteToken.address, false)
+        await test.testCollectSurplus(await test.trader, sender, 40000, baseToken.address, false)
+        await test.testCollectSurplus(await test.trader, sender, 75000, quoteToken.address, false)
         expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(60000)
         expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(175000)
 
@@ -304,9 +301,9 @@ describe('Pool Surplus Ether', () => {
       sender = await (await test.trader).getAddress() 
 
       await test.initPool(feeRate, 0, 1, 1000000000)
-      await (await test.dex).collectSurplus(sender, -1000000000000, baseToken.address, 
-         false, {value: 1000000000000 }) 
-      await (await test.dex).collectSurplus(sender, -2500, quoteToken.address, false) 
+      await test.testCollectSurplus(await test.trader, sender, -1000000000000, baseToken.address, false,
+         {value: 1000000000000})
+      await test.testCollectSurplus(await test.trader, sender, -2500, quoteToken.address, false)
    })
 
    it("balance and withdraw", async() => {
@@ -316,10 +313,8 @@ describe('Pool Surplus Ether', () => {
       expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(1000000000000)
       expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(2500);
 
-      await (await test.dex).connect(await test.trader)
-          .collectSurplus(sender, 200000000000, baseToken.address, false);
-      await (await test.dex).connect(await test.trader)
-          .collectSurplus(sender, 1000, quoteToken.address, false)
+      await test.testCollectSurplus(await test.trader, sender, 200000000000, baseToken.address, false)
+      await test.testCollectSurplus(await test.trader, sender, 1000, quoteToken.address, false)
       expect(await (await test.query).querySurplus(sender, baseToken.address)).to.equal(800000000000)
       expect(await (await test.query).querySurplus(sender, quoteToken.address)).to.equal(1500)
   })

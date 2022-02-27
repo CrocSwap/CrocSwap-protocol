@@ -33,14 +33,14 @@ describe('Pool Settle', () => {
         expect(results.debit).to.be.eq(false);
         
         // Set for tx.origin other
-        await (await test.dex).connect(await test.other).approveRouter(router, true, false)
+        await test.testApproveRouter(await test.other, router, true, false)
 
         // tx.origin trader shoudl still be turned off
         results = await (await test.query).queryRouterApproved(router, await (await test.trader).getAddress())
         expect(results.burn).to.be.eq(false)
         expect(results.debit).to.be.eq(false);
 
-        await (await test.dex).connect(await test.trader).approveRouter(router, true, false)        
+        await test.testApproveRouter(await test.trader, router, true, false)
         results = await (await test.query).queryRouterApproved(router, await (await test.trader).getAddress())
         expect(results.debit).to.be.eq(true)
         expect(results.burn).to.be.eq(false);
@@ -51,19 +51,19 @@ describe('Pool Settle', () => {
         expect(results.burn).to.be.eq(false);
 
         // Flip permissions
-        await (await test.dex).connect(await test.trader).approveRouter(router, false, true)        
+        await test.testApproveRouter(await test.trader, router, false, true)
         results = await (await test.query).queryRouterApproved(router, await (await test.trader).getAddress())
         expect(results.debit).to.be.eq(false)
         expect(results.burn).to.be.eq(true);
 
         // Permit both types
-        await (await test.dex).connect(await test.trader).approveRouter(router, true, true)        
+        await test.testApproveRouter(await test.trader, router, true, true)
         results = await (await test.query).queryRouterApproved(router, await (await test.trader).getAddress())
         expect(results.debit).to.be.eq(true)
         expect(results.burn).to.be.eq(true);
 
         // Turn off
-        await (await test.dex).connect(await test.trader).approveRouter(router, false, false)        
+        await test.testApproveRouter(await test.trader, router, false, false)
         results = await (await test.query).queryRouterApproved(router, await (await test.trader).getAddress())
         expect(results.debit).to.be.eq(false)
         expect(results.burn).to.be.eq(false);

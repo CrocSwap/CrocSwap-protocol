@@ -7,7 +7,7 @@ import chai from "chai";
 import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides } from 'ethers';
+import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides, Bytes } from 'ethers';
 import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools, doubleHop } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
@@ -206,16 +206,21 @@ export class TestPool {
 
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(
+            .protocolCmd(0, this.encodeProtocolCmd(
                 110, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
                 tickSize, 0))
         let gasTx = await (await this.dex)
-            .initPool((await this.base).address, (await this.quote).address, poolIdx, 
-                this.toCrocPrice(price), overrides)
+            .userCmd(0, await this.encodeInitPool(poolIdx, price), overrides)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
+    }
+
+    async encodeInitPool (poolIdx: number, price:number | BigNumber): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        return abiCoder.encode(["uint8", "address", "address", "uint24", "uint128"],
+                [1, (await this.base).address, (await this.quote).address, poolIdx, this.toCrocPrice(price)])
     }
 
     toCrocPrice (price: number | BigNumber): BigNumber {
@@ -226,18 +231,18 @@ export class TestPool {
         price: number) {
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(
+            .protocolCmd(0, this.encodeProtocolCmd(
                 110, (await this.permit).address, (await this.permit).address, POOL_IDX, 
                 feeRate, protoTake, tickSize, 0))
+
         await (await this.dex)
-            .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
-                toSqrtPrice(price), this.overrides)
+            .userCmd(0, await this.encodeInitPool(POOL_IDX, price), this.overrides)
     }
 
     async testSetInitLiq (initLiq: number) {
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(
+            .protocolCmd(0, this.encodeProtocolCmd(
                 112, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
     }    
 
@@ -357,16 +362,21 @@ export class TestPool {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
 
+    readonly COLD_PROXY: number = 0;
+    readonly WARM_PROXY: number = 1;
+    readonly LONG_PROXY: number = 2;
+    readonly HOT_PROXY: number = 4;
+
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
     }
 
@@ -374,31 +384,31 @@ export class TestPool {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMint(POOL_IDX, lower, upper, -liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
     }
 
     async testHarvestFrom (from: Signer, lower: number, upper: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeHarvest(lower, upper, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-        return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+        return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
     }
 
     async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMintAmbient(POOL_IDX, -liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
     }
 
@@ -408,19 +418,19 @@ export class TestPool {
         (await this.quote).address, simpleMintAmbient(POOL_IDX, liq*1024))
         directive.hops[0].pools[0].poolIdx = poolIdx
         let inputBytes = encodeOrderDirective(directive);
-        return (await this.dex).connect(await this.trader).trade(inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
     }
 
     async testMintAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-            return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
             (await this.quote).address, simpleMintAmbient(POOL_IDX, liq*1024))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
     }
 
@@ -442,7 +452,7 @@ export class TestPool {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).trade(inputBytes, this.overrides)
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
     }
 
@@ -450,46 +460,67 @@ export class TestPool {
         let override = noOverrides ? {} : this.overrides
         await this.snapStart();
         return (await this.dex).connect(await this.trader)
-            .trade(encodeOrderDirective(order), override)
+            .userCmd(this.LONG_PROXY, encodeOrderDirective(order), override)
     }
 
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
+            .protocolCmd(0, this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, jit))
     }
 
     async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
+            .protocolCmd(0, this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, idx, feeRate, protoTake, tickSize, jit))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(113, (await this.base).address, ZERO_ADDR,
+            .protocolCmd(0, this.encodeProtocolCmd(113, (await this.base).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
     async testPegPriceImproveQuote (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(113, (await this.quote).address, ZERO_ADDR,
+            .protocolCmd(0, this.encodeProtocolCmd(113, (await this.quote).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
     async testUpgradeHotProxy (address: string, disableEmbedded: boolean = true): Promise<ContractTransaction> {
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(22, ZERO_ADDR, ZERO_ADDR, 0, 0, 
+            .protocolCmd(0, this.encodeProtocolCmd(22, ZERO_ADDR, ZERO_ADDR, 0, 0, 
                 disableEmbedded ? 1 : 0, 0, 0));
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(21, ZERO_ADDR, address,
+            .protocolCmd(0, this.encodeProtocolCmd(21, ZERO_ADDR, address,
                 0, 0, 4, 0, 0))
+    }
+
+    async testCollectSurplus (from: Signer, recv: string, value: number | BigNumber, token: string, isTransfer: boolean,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        const cmd = abiCoder.encode(["uint8", "address", "int128", "address", "bool"],
+                [3, recv, value, token, isTransfer])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testApproveRouter (from: Signer, router: string, forDebit: boolean, forBurn: boolean): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        const cmd = abiCoder.encode(["uint8", "address", "bool", "bool"],
+                [2, router, forDebit, forBurn])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
+    }
+
+    async collectSurplus (recv: string, base: number | BigNumber, quote: number | BigNumber) {
+        await this.testCollectSurplus(await this.trader, recv, base, (await this.base).address, false)
+        await this.testCollectSurplus(await this.trader, recv, quote, (await this.quote).address, false)
     }
 
     async snapBaseOwed(): Promise<BigNumber> {
