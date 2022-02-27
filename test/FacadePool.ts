@@ -482,10 +482,14 @@ export class TestPool {
     }
 
     async testUpgradeHotProxy (address: string, disableEmbedded: boolean = true): Promise<ContractTransaction> {
+        await (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(22, ZERO_ADDR, ZERO_ADDR, 0, 0, 
+                disableEmbedded ? 1 : 0, 0, 0));
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(21, ZERO_ADDR, address,
-                0, 0, disableEmbedded ? 95 : 94, 0, 0))
+                0, 0, 4, 0, 0))
     }
 
     async snapBaseOwed(): Promise<BigNumber> {
