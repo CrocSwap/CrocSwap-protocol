@@ -22,6 +22,7 @@ contract ColdPathInjector is StorageLayout {
 
     /* @notice Passes through the protocolCmd call to a sidecar proxy. */
     function callProtocolCmd (uint8 proxyIdx, bytes calldata input) internal {
+        require(proxyPaths_[proxyIdx] != address(0));
         (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
@@ -29,6 +30,7 @@ contract ColdPathInjector is StorageLayout {
 
     /* @notice Passes through the userCmd call to a sidecar proxy. */
     function callUserCmd (uint8 proxyIdx, bytes calldata input) internal {
+        require(proxyPaths_[proxyIdx] != address(0));
         (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
         require(success);
