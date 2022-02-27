@@ -43,7 +43,8 @@ contract CrocDeployer {
         // Transfers protocol authority to the newly created CrocMaster contract.
         //require(CrocSwapDex(dex).authority_() == address(this), "No authority");
         bytes memory handoffCmd = encodeAuthHandoff(master);
-        CrocSwapDex(dex).protocolCmd(handoffCmd);
+        uint8 CMD_PROXY = 0;
+        CrocSwapDex(dex).protocolCmd(CMD_PROXY, handoffCmd);
 
         dex_ = dex;
         master_ = master;

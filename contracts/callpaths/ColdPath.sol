@@ -35,20 +35,6 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using Chaining for Chaining.PairFlow;
     using ProtocolCmd for bytes;
 
-    /* @notice Initializes the pool type for the pair.
-     * @param base The base token in the pair.
-     * @param quote The quote token in the pair.
-     * @param poolIdx The index of the pool type to initialiaze.
-     * @param price The price to initialize the pool. Represented as square root price in
-     *              Q64.64 notation. */
-    function initPool (address base, address quote, uint24 poolIdx,
-                       uint128 price) public payable {
-        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
-            registerPool(base, quote, poolIdx);
-        (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
-        settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
-    }
-
     /* @notice Consolidated method for protocol control related commands.
      * @dev    We consolidate multiple protocol control types into a single method to 
      *         reduce the contract size in the main contract by paring down methods.
@@ -86,6 +72,33 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         } else if (code == ProtocolCmd.OFF_GRID_CODE) {
             pegPriceImprove(token, value, ticks);
         }
+    }
+
+    function userCmd (bytes calldata cmd) public payable {
+        uint8 cmdCode = uint8(cmd[31]);
+        
+        if (cmdCode == 1) {
+            initPool(cmd);
+        } else if (cmdCode == 2) {
+            approveRouter(cmd);
+        } else if (cmdCode == 3) {
+            collectSurplus(cmd);
+        }
+    }
+    
+    /* @notice Initializes the pool type for the pair.
+     * @param base The base token in the pair.
+     * @param quote The quote token in the pair.
+     * @param poolIdx The index of the pool type to initialiaze.
+     * @param price The price to initialize the pool. Represented as square root price in
+     *              Q64.64 notation. */
+    function initPool (bytes calldata cmd) private {
+        (, address base, address quote, uint24 poolIdx, uint128 price) =
+            abi.decode(cmd, (uint8, address,address,uint24,uint128));
+        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
+            registerPool(base, quote, poolIdx);
+        (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
+        settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
 
     /* @notice Sets template parameters for a pool type index.
@@ -152,7 +165,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     /* @notice Pays out the the protocol fees.
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
-    function collectProtocol (address token, address recv) public {
+    function collectProtocol (address token, address recv) private {
         disburseProtocolFees(recv, token);
         emit CrocEvents.ProtocolDividend(token, recv);
     }
@@ -166,8 +179,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *              native Ethereum)
      * @param isTransfer If set to true, disburse calls will transfer the surplus 
      *                   collateral balance to the recv address instead of paying. */
-    function collectSurplus (address recv, int128 value, address token,
-                             bool isTransfer) public payable {
+    function collectSurplus (bytes calldata cmd) private {
+        (, address recv, int128 value, address token, bool isTransfer) =
+            abi.decode(cmd, (uint8, address, int128, address, bool));
         if (value < 0) {
             depositSurplus(recv, uint128(-value), token);
         } else if (isTransfer) {
@@ -184,7 +198,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *                  debits on its behalf.
      * @notice forBurn If true, the user is authorizing the router to burn liquidity
      *                 positions belongining to the user. */
-    function approveRouter (address router, bool forDebit, bool forBurn) public {
+    function approveRouter (bytes calldata cmd) private {
+        (, address router, bool forDebit, bool forBurn) =
+            abi.decode(cmd, (uint8, address, bool, bool));
         approveAgent(router, forDebit, forBurn);
     }
 

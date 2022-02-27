@@ -66,7 +66,7 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
  *         this contract would be attached to hotProxy_ in the main dex contract. */
 contract HotProxy is HotPath {
 
-    function swap (bytes calldata input) public payable {
+    function userCmd (bytes calldata input) public payable {
         swapEncoded(input);
     }
 }

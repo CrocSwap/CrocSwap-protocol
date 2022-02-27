@@ -39,12 +39,12 @@ contract LongPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @input  The encoded byte data associated with the user's order directive. See
      *         Encoding.sol and Directives.sol library for information on how to encode
      *         order directives as byte data. */
-    function trade (bytes calldata input) public payable {
+    function userCmd (bytes calldata input) public payable {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
         int128 ethBalance = 0;
-        
+
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
 

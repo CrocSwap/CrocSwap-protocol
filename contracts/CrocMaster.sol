@@ -153,9 +153,10 @@ contract CrocMaster {
             // Enforces the timelock minimum delay and expiration.
             require(proposalAge(decree) < maxDelay_, "Expired");
             require(proposalAge(decree) >= minDelay_, "Time Lock");
-                    
+
+            uint8 CMD_PROXY = 0;
             decree.executedTime_ = block.timestamp;
-            ICrocMinion(dex_).protocolCmd(decree.proposal_);
+            ICrocMinion(dex_).protocolCmd(CMD_PROXY, decree.proposal_);
             emit Execute(propNums[i], msg.sender);
         }
     }

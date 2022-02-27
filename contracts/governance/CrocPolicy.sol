@@ -116,10 +116,11 @@ contract CrocPolicy {
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
      * @param cmd    The content of the command passed to the protocolCmd() method. */
-    function opsResolution (address minion, bytes calldata cmd) opsAuth public {
+    function opsResolution (address minion, uint8 proxyPath,
+                            bytes calldata cmd) opsAuth public {
         require(!cmd.isPrivilegedCmd(), "Ops Privilege");
         emit CrocResolutionOps(minion, cmd);
-        ICrocMinion(minion).protocolCmd(cmd);
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
     }
 
     /* @notice Resolution from the treasury authority which calls protocolCmd() on the 
@@ -128,10 +129,11 @@ contract CrocPolicy {
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
      * @param cmd    The content of the command passed to the protocolCmd() method. */
-    function treasuryResolution (address minion, bytes calldata cmd)
+    function treasuryResolution (address minion, uint8 proxyPath,
+                                 bytes calldata cmd)
         treasuryAuth public {
         emit CrocResolutionTreasury(minion, cmd);
-        ICrocMinion(minion).protocolCmd(cmd);
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
     }
 
     /* @notice An out-of-band emergency measure to protect funds in the CrocSwapDex 
@@ -149,18 +151,17 @@ contract CrocPolicy {
         emergencyAuth public {
         emit CrocEmergencyHalt(minion, reason);
 
+        uint8 UPGRADE_PROXY = 0;
         uint NUKE_EMERGENCY_RANGE = 2;
+
+        bytes memory cmd = ProtocolCmd.encodeForceProxy(true);
+        ICrocMinion(minion).protocolCmd(UPGRADE_PROXY, cmd);
+        
         for (uint i = NUKE_EMERGENCY_RANGE; i < 256; ++i) {
-            nukeProxy(minion, uint8(i));
+            cmd = ProtocolCmd.encodeUpgrade(address(0), uint8(i));
+            ICrocMinion(minion).protocolCmd(UPGRADE_PROXY, cmd);
         }
 
-        ICrocMinion(minion).protocolCmd(ProtocolCmd.encodeForceProxy(true));
-    }
-
-    /* @notice Disables a given proxy on the underlying CrocSwapDex contract. */
-    function nukeProxy (address minion, uint8 proxyCode) private {
-        bytes memory cmd = ProtocolCmd.encodeUpgrade(address(0), proxyCode);
-        ICrocMinion(minion).protocolCmd(cmd);
     }
 
     /* @notice Croc policy rules are set on a per address basis. Each address 
@@ -188,7 +189,7 @@ contract CrocPolicy {
 
     /* @notice The set of extant policy rules mapped by originating policy conduit oracle
      *         address. */
-    mapping(address => PolicyRule) public rules_;
+    mapping(bytes32 => PolicyRule) public rules_;
 
     /* @notice Called by policy oracle to invoke protocolCmd on the underlying 
      *         CrocSwapDex. Authority for the specific protocol command is checked 
@@ -197,10 +198,11 @@ contract CrocPolicy {
      *
      * @param minion The address of the underlying CrocSwapDex contract
      * @param cmd    The content of the command passed to protocolCmd() */
-    function invokePolicy (address minion, bytes calldata cmd) public {
-        PolicyRule memory policy = rules_[msg.sender];
+    function invokePolicy (address minion, uint8 proxyPath, bytes calldata cmd) public {
+        bytes32 ruleKey = keccak256(abi.encode(msg.sender, proxyPath));
+        PolicyRule memory policy = rules_[ruleKey];
         require(passesPolicy(policy, cmd), "Policy authority");
-        ICrocMinion(minion).protocolCmd(cmd);
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
     }
 
     /* @notice Called by ops authority to set or update a new policy rules. The only
@@ -211,11 +213,19 @@ contract CrocPolicy {
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule (if any), assuming the transition is legal
      *                relative to the mandate. */    
-    function setPolicy (address conduit, PolicyRule calldata policy) opsAuth public {
-        PolicyRule storage prev = rules_[conduit];
+    function setPolicy (address conduit, uint8 proxyPath,
+                        PolicyRule calldata policy) opsAuth public {
+        bytes32 key = rulesKey(conduit, proxyPath);
+        
+        PolicyRule storage prev = rules_[key];
         require(isLegal(prev, policy), "Illegal policy update");
-        rules_[conduit] = policy;
+
+        rules_[key] = policy;
         emit CrocPolicySet(conduit, policy);
+    }
+
+    function rulesKey (address conduit, uint8 proxyPath) private pure returns (bytes32) {
+        return keccak256(abi.encode(conduit, proxyPath));
     }
 
     /* @notice Called by treasury authority to set or update a new policy rules. Only
@@ -225,9 +235,10 @@ contract CrocPolicy {
      * @param conduit The address of the conduit oracle this policy rule applies to.
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
-    function forcePolicy (address conduit, PolicyRule calldata policy)
+    function forcePolicy (address conduit, uint8 proxyPath, PolicyRule calldata policy)
         treasuryAuth public {
-        rules_[conduit] = policy;
+        bytes32 key = rulesKey(conduit, proxyPath);
+        rules_[key] = policy;
         emit CrocPolicyForce(conduit, policy);
     }
 
@@ -238,11 +249,12 @@ contract CrocPolicy {
      * @param conduit The address of the conduit oracle this policy rule applies to.
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
-    function emergencyReset (address conduit,
+    function emergencyReset (address conduit, uint8 proxyPath,
                              string calldata reason) emergencyAuth public {
-        rules_[conduit].cmdFlags_ = bytes24(0);
-        rules_[conduit].mandateTime_ = 0;
-        rules_[conduit].expiryOffset_ = 0;
+        bytes32 key = rulesKey(conduit, proxyPath);
+        rules_[key].cmdFlags_ = bytes24(0);
+        rules_[key].mandateTime_ = 0;
+        rules_[key].expiryOffset_ = 0;
         emit CrocPolicyEmergency(conduit, reason);
     }
 

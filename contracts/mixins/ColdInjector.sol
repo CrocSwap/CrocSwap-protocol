@@ -20,65 +20,17 @@ contract ColdPathInjector is StorageLayout {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    /* @notice Passes through the initPool call in ColdPath sidecar. */
-    function callInitPool (address base, address quote, uint24 poolIdx,  
-                           uint128 price) internal {
-        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature
-            ("initPool(address,address,uint24,uint128)",
-             base, quote, poolIdx, price));
-        require(success);
-    }
-
-    /* @notice Passes through the protocolCmd call in ColdPath sidecar. */
-    function callProtocolCmd (bytes calldata input) internal {
-        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
+    /* @notice Passes through the protocolCmd call to a sidecar proxy. */
+    function callProtocolCmd (uint8 proxyIdx, bytes calldata input) internal {
+        (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
     }
 
-    /* @notice Passes through the collectSurplus call in ColdPath sidecar. */
-    function callCollectSurplus (address recv, int128 value, address token,
-                                 bool move) internal {
-        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature
-            ("collectSurplus(address,int128,address,bool)", recv, value, token, move));
-        require(success);
-    }
-
-    /* @notice Passes through the approveRouter call in ColdPath sidecar. */
-    function callApproveRouter (address router, bool forDebit, bool forBurn) internal {
-        (bool success, ) = proxyPaths_[COLD_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature
-            ("approveRouter(address,bool,bool)", router, forDebit, forBurn));
-        require(success);
-    }
-
-    /* @notice Passes through the trade() call in LongPath sidecar. */
-    function callTradePath (bytes calldata input) internal {
-        (bool success, ) = proxyPaths_[LONG_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature("trade(bytes)", input));
-        require(success);
-    }
-
-    /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
-    function callWarmPath (bytes calldata input) internal {
-        (bool success, ) = proxyPaths_[WARM_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature("tradeWarm(bytes)", input));
-        require(success);
-    }
-
-    function callSwapProxy (bytes calldata input) internal {
-        require(proxyPaths_[HOT_PROXY_IDX] != address(0));
-        (bool success, ) = proxyPaths_[HOT_PROXY_IDX].delegatecall(
-            abi.encodeWithSignature("swap(bytes)", input));
-        require(success);
-    }
-
-    /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
-    function callSpillPath (uint8 spillIdx, bytes calldata input) internal {
-        (bool success, ) = proxyPaths_[spillIdx].delegatecall(
-            abi.encodeWithSignature("spillCmd(bytes)", input));
+    /* @notice Passes through the userCmd call to a sidecar proxy. */
+    function callUserCmd (uint8 proxyIdx, bytes calldata input) internal {
+        (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
+            abi.encodeWithSignature("userCmd(bytes)", input));
         require(success);
     }
 

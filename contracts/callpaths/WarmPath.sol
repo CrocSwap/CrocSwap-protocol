@@ -46,7 +46,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *         contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function tradeWarm (bytes calldata input) public payable {
+    function userCmd (bytes calldata input) public payable {
         (uint8 code, address base, address quote, uint24 poolIdx,
          int24 bidTick, int24 askTick, uint128 liq,
          uint128 limitLower, uint128 limitHigher,
@@ -90,7 +90,8 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   collateral (if any) that the user holds at the exchange. */    
     function mint (address base, address quote, uint24 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
-                   uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
+                   uint128 limitLower, uint128 limitHigher,
+                   uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitMint(pool, base, quote, bidTick, askTick, liq);
 
