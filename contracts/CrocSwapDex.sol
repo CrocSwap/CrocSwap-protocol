@@ -105,7 +105,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * 
      * @param code The command code corresponding to the actual method being called. */
     function protocolCmd (uint8 proxyIdx, bytes calldata input) protocolOnly
-        public override {
+        public payable override {
         callProtocolCmd(proxyIdx, input);
     }
 
@@ -118,7 +118,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param input The arbitrary call data the client is calling the spill proxy 
      *              sidecar with */
     function userCmd (uint8 proxyIdx, bytes calldata input) reEntrantLock
-        public override {
+        public payable override {
         callUserCmd(proxyIdx, input);
     }
 

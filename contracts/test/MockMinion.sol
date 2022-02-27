@@ -10,11 +10,11 @@ contract MockMinion is ICrocMinion {
     uint8[] public paths_;
     address[] public callers_;
 
-    function protocolCmd (uint8 proxyPath, bytes calldata cmd) public override {
+    function protocolCmd (uint8 proxyPath, bytes calldata cmd) public payable override {
         paths_.push(proxyPath);
         cmds_.push(cmd);
         callers_.push(tx.origin);
     }
 
-    function userCmd (uint8, bytes calldata) public override { }
+    function userCmd (uint8, bytes calldata) public payable override { }
 }
