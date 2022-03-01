@@ -19,6 +19,27 @@ contract UserBursar is StorageLayout {
         bal.nonce_++;
     }
 
+    function tipRelayer (bytes memory tipCmd) internal {
+        if (tipCmd.length > 0) {
+            (bytes32 innerKey, uint128 tip, address recv) =
+                abi.decode(tipCmd, (bytes32, uint128, address));
+
+            if (recv == address(256)) {
+                recv = msg.sender;
+            } else if (recv == address(512)) {
+                recv = tx.origin;
+            } else if (recv == address(1024)) {
+                recv = block.coinbase;
+            }
+            
+            bytes32 fromKey = balanceKey(lockHolder_, innerKey);
+            bytes32 toKey = balanceKey(recv, innerKey);
+            require(userBals_[fromKey].surplusCollateral_ >= tip);
+            userBals_[fromKey].surplusCollateral_ -= tip;
+            userBals_[toKey].surplusCollateral_ += tip;
+        }
+    }
+
     function balanceKey (address user, address token,
                          uint256 userDim, uint256 tokenDim) pure
         internal returns (bytes32) {

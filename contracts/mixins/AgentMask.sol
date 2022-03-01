@@ -59,35 +59,28 @@ contract AgentMask is UserBursar {
         lockHolder_ = address(0);
     }
 
-    modifier reEntrantAgent (bytes calldata signature, uint32 nonce,
-                             bytes32 nonceDim, uint48 deadline, bytes32 payload) {
-        lockSigner(signature, nonce, nonceDim, deadline, payload);
+    modifier reEntrantAgent (bytes calldata signature, 
+                             bytes32 payload) {
+        lockSigner(signature, payload);
         _;
         lockHolder_ = address(0);
     }
 
-    function lockSigner (bytes calldata signature, uint32 nonce,
-                         bytes32 nonceDim, uint48 deadline, bytes32 payload) private {
+    function lockSigner (bytes calldata signature, bytes32 payload) private {
+        (uint8 v, bytes32 r, bytes32 s, uint48 deadline, uint32 nonce, bytes32 nonceDim)
+            = abi.decode(signature, (uint8, bytes32, bytes32, uint48, uint32, bytes32));
         require(lockHolder_ == address(0));
         require(deadline == 0 || block.timestamp <= deadline);
         casNonce(nonceDim, nonce);
-        address client = recoverSigner(signature, nonce, nonceDim, deadline, payload);
-        require(client != address(0));        
-        lockHolder_ = client;        
-    }
-
-    function recoverSigner (bytes calldata signature, uint32 nonce,
-                            bytes32 nonceDim, uint48 deadline,
-                            bytes32 payload) view private
-        returns (address) {
-        (uint8 v, bytes32 r, bytes32 s) =
-            abi.decode(signature, (uint8, bytes32, bytes32));
         bytes32 checksum = keccak256(abi.encodePacked
                                      (nonce, nonceDim, deadline, block.chainid,
                                       address(this), payload));
-        return ecrecover(checksum, v, r, s);        
+        
+        address client = ecrecover(checksum, v, r, s);
+        require(client != address(0));        
+        lockHolder_ = client;        
     }
-
+    
     /* @notice Returns the owner key that any LP position resulting from a mint action
      *         should be associated with. */
     function agentMintKey() internal view returns (bytes32) {

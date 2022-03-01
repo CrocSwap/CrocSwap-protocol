@@ -92,19 +92,25 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *         proxy swap() call. Makes the call future-proof, at the expense of 
      *         slightly higher gas. */
     function swapOptimal (bytes calldata input) reEntrantLock public payable {
-        swapCmd(input);
+        if (forceHotProxy_) {
+            callUserCmd(HOT_PROXY_IDX, input);
+        } else {
+            swapEncoded(input);
+        }
     }
 
-    function swapAgent (bytes calldata input, address client)
+    /*function swapAgent (bytes calldata input, address client)
         reEntrantApproved(client) public payable {
         swapCmd(input);
     }
     
     function swapAgent (bytes calldata input, bytes calldata signature,
-                        uint32 nonce, bytes32 nonceDim, uint48 deadline)
+                        uint32 nonce, bytes32 nonceDim, uint48 deadline,
+                        bytes32 tipKey, uint128 tip)
         reEntrantAgent(signature, nonce, nonceDim, deadline,
                        keccak256(input)) public payable {
         swapCmd(input);
+        tipRelayer(tipKey, tip);
     }
 
     function swapCmd (bytes calldata input) private {
@@ -113,7 +119,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         } else {
             swapEncoded(input);
         }
-    }
+        }*/
 
     /* @notice Consolidated method for protocol control related commands.
      * @dev    We consolidate multiple protocol control types into a single method to 
@@ -140,11 +146,11 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 
     function userCmdAgent (uint8 proxyIdx, bytes calldata input,
                            bytes calldata signature,
-                           uint32 nonce, bytes32 nonceDim, uint48 deadline)
-        reEntrantAgent(signature, nonce, nonceDim, deadline,
-                       keccak256(abi.encode(proxyIdx, input)))
+                           bytes calldata relayerTip)
+        reEntrantAgent(signature, keccak256(abi.encode(proxyIdx, input, relayerTip)))
         public payable {
         callUserCmd(proxyIdx, input);
+        tipRelayer(relayerTip);
     }
 
     function userCmdAgent (uint8 proxyIdx, bytes calldata input, address client)
