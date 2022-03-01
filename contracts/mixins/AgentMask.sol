@@ -42,6 +42,18 @@ contract AgentMask is StorageLayout {
         return agentMintKey(msg.sender, tx.origin);
     }
 
+    /* @notice Returns the owner key that any LP position resulting from a mint action
+     *         should be associated with.
+     * @param lpConduit The address of the ICrocLpConduit the user is depositing the
+     *                  LP position at. (If zero, uses the standard mint key). */
+    function agentMintKey (address lpConduit) internal view returns (bytes32) {
+        if (lpConduit == address(0)) {
+            return agentMintKey(msg.sender, tx.origin);
+        } else {
+            return bytes32(uint256(uint160(lpConduit)));
+        }
+    }
+
     /* @notice Returns the position owner key that we should use when burning any LP 
      *         position. */
     function agentBurnKey() internal view returns (bytes32) {

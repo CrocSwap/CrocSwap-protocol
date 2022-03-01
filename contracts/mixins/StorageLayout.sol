@@ -19,13 +19,27 @@ import '../libraries/PriceGrid.sol';
  *    contracts. */
 contract StorageLayout {
 
-    // Generic general-purpose storage slots
-    bool public reEntrantLocked_;
+    // Re-entant lock. Should always be false at rest.
+    bool internal reEntrantLocked_;
+
+    // If set to true, than the embedded hot-path (swap()) is not enabled and
+    // users must use the hot proxy for the hot-path. By default set to false.
+    bool internal forceHotProxy_;
+
+    // Address of the current dex protocol authority. Can be transfered
     address public authority_;
+
+    // The address of the currently attached sidecar proxy contracts. Can be upgraded
+    // over time.
     address internal coldPath_;
     address internal warmPath_;
     address internal longPath_;
     address internal microPath_;
+    address internal hotProxy_;
+
+    // Additional slots for sidecar proxies. Not currently used but allows for upgraded
+    // and new functionality in the future.
+    address[64] internal spillPaths_;
 
     modifier reEntrantLock() {
         require(reEntrantLocked_ == false);
@@ -57,24 +71,24 @@ contract StorageLayout {
     /**************************************************************/
     // TickCensus
     /**************************************************************/
-    mapping(bytes32 => uint256) public mezzanine_;
-    mapping(bytes32 => uint256) public terminus_;
+    mapping(bytes32 => uint256) internal mezzanine_;
+    mapping(bytes32 => uint256) internal terminus_;
     /**************************************************************/
     
 
     /**************************************************************/
     // PoolRegistry
-    mapping(uint24 => PoolSpecs.Pool) public templates_;
+    mapping(uint24 => PoolSpecs.Pool) internal templates_;
     mapping(bytes32 => PoolSpecs.Pool) public pools_;
-    mapping(address => PriceGrid.ImproveSettings) public improves_;
-    uint128 public newPoolLiq_;
+    mapping(address => PriceGrid.ImproveSettings) internal improves_;
+    uint128 internal newPoolLiq_;
     /**************************************************************/
 
     
     /**************************************************************/
     // ProtocolAccount
     /**************************************************************/
-    mapping(address => uint128) public feesAccum_;
+    mapping(address => uint128) internal feesAccum_;
     /**************************************************************/
 
 
@@ -104,7 +118,7 @@ contract StorageLayout {
         bool burn_;
         bool debit_;
     }
-    mapping(bytes32 => AgentApproval) public agents_;
+    mapping(bytes32 => AgentApproval) internal agents_;
     /**************************************************************/
 
     

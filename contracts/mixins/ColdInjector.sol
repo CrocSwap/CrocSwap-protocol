@@ -38,10 +38,11 @@ contract ColdPathInjector is StorageLayout {
     }
 
     /* @notice Passes through the collectSurplus call in ColdPath sidecar. */
-    function callCollectSurplus (address recv, int128 value, address token) internal {
+    function callCollectSurplus (address recv, int128 value, address token,
+                                 bool move) internal {
         (bool success, ) = coldPath_.delegatecall(
             abi.encodeWithSignature
-            ("collectSurplus(address,int128,address)", recv, value, token));
+            ("collectSurplus(address,int128,address,bool)", recv, value, token, move));
         require(success);
     }
 
@@ -64,6 +65,20 @@ contract ColdPathInjector is StorageLayout {
     function callWarmPath (bytes calldata input) internal {
         (bool success, ) = warmPath_.delegatecall(
             abi.encodeWithSignature("tradeWarm(bytes)", input));
+        require(success);
+    }
+
+    function callSwapProxy (bytes calldata input) internal {
+        require(hotProxy_ != address(0));
+        (bool success, ) = hotProxy_.delegatecall(
+            abi.encodeWithSignature("swap(bytes)", input));
+        require(success);
+    }
+
+    /* @notice Passes through the tradeWarm() call in WarmPath sidecar. */
+    function callSpillPath (uint8 spillIdx, bytes calldata input) internal {
+        (bool success, ) = spillPaths_[spillIdx].delegatecall(
+            abi.encodeWithSignature("spillCmd(bytes)", input));
         require(success);
     }
 
@@ -123,7 +138,7 @@ contract ColdPathInjector is StorageLayout {
               curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
               bidTick, askTick, liq, poolHash));
         require(success);
-        
+
         (basePaid, quotePaid,
          curve.curve_.liq_.ambientSeed_,
          curve.curve_.liq_.concentrated_) = 
@@ -171,6 +186,9 @@ contract ColdPathInjector is StorageLayout {
             abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint128,
                                 uint64, uint64));
 
+        // swap() is the only operation that can change curve price, so have to mark
+        // the tick cache as dirty.
+        curve.dirtyPrice();
         accum.foldFlow(swapFlow);
     }
 

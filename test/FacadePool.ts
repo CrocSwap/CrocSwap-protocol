@@ -8,7 +8,7 @@ import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, Concent
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides } from 'ethers';
-import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools } from './EncodeSimple';
+import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools, doubleHop } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
@@ -112,7 +112,7 @@ class ERC20Token implements Token {
     }
 }
 
-class NativeEther implements Token {
+export class NativeEther implements Token {
     address: string
     balanceFinder: Promise<TestSettleLayer>
     sendEth: boolean
@@ -133,7 +133,6 @@ class NativeEther implements Token {
     }
 }
 
-
 export class TestPool {
     dex: Promise<CrocSwapDex>
     query: Promise<QueryHelper>
@@ -146,6 +145,9 @@ export class TestPool {
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
+    useSwapProxy: { optimal: boolean, base: boolean }
+    lpConduit: string
+    startLimit: BigNumber
     overrides: PayableOverrides
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
@@ -176,6 +178,9 @@ export class TestPool {
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
         this.useHotPath = false;
+        this.useSwapProxy = { optimal: false, base: false }
+        this.lpConduit = ZERO_ADDR
+        this.startLimit = BigNumber.from(0)
 
         this.overrides = base.sendEth || quote.sendEth ?
             { value: BigNumber.from(1000000000).mul(1000000000) } : { }
@@ -202,7 +207,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
+                110, ZERO_ADDR, ZERO_ADDR, poolIdx, feeRate, protoTake, 
                 tickSize, 0))
         let gasTx = await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, poolIdx, 
@@ -222,7 +227,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                66, (await this.permit).address, (await this.permit).address, POOL_IDX, 
+                110, (await this.permit).address, (await this.permit).address, POOL_IDX, 
                 feeRate, protoTake, tickSize, 0))
         await (await this.dex)
             .initPool((await this.base).address, (await this.quote).address, POOL_IDX, 
@@ -233,7 +238,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.encodeProtocolCmd(
-                68, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
+                112, ZERO_ADDR, ZERO_ADDR, POOL_IDX, 0, 0, 0, initLiq)) 
     }    
 
     encodeProtocolCmd (code: number, token: string, sidecar: string, poolIdx: number, 
@@ -244,67 +249,92 @@ export class TestPool {
             [ code, token, sidecar, poolIdx, feeRate, protoTake, ticks, value ]);
     }
 
+    async encodeSwap (isBuy: boolean, inBase: boolean, qty: BigNumber, limitLow: BigNumber, limitHigh: BigNumber,
+        useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        return abiCoder.encode(
+            [ "address", "address", "uint24", "bool",    "bool",   "uint128", "uint128", "uint128", "uint8"], 
+            [ base,      quote,     POOL_IDX, isBuy,     inBase,    qty,       limitLow, limitHigh, useSurplus]);
+    }
+
     async encodeMintPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 1
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 2
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+    }
+
+    async encodeHarvest(lower: number, upper: number, limitLow: BigNumber, limitHigh: BigNumber,
+        useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 5
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ callCode, base, quote, POOL_IDX, lower, upper, 0, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
     async encodeMintAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 3
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeBurnAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber, 
-        useSurplus: boolean): Promise<BytesLike> {
+        useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 4
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus  ]);
+            [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"], 
+            [ callCode, base, quote, POOL_IDX, 0, 0, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
     }
 
-    async testMint (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
-    async testMintAmbient (liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMintAmbient (liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintAmbientFrom(await this.trader, liq, useSurplus)
     }
 
-    async testMintOther (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testMintOther (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.other, lower, upper, liq, useSurplus)
     }
 
-    async testBurn (lower: number, upper: number, liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testBurn (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testBurnFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
-    async testBurnAmbient (liq: number, useSurplus?: boolean): Promise<ContractTransaction> {
+    async testHarvest (lower: number, upper: number, useSurplus?: number): Promise<ContractTransaction> {
+        return this.testHarvestFrom(await this.trader, lower, upper, useSurplus)
+    }
+
+    async testBurnAmbient (liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testBurnAmbientFrom(await this.trader, liq, useSurplus)
     }
 
@@ -317,9 +347,9 @@ export class TestPool {
         return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price)
     }
 
-    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
-        Promise<ContractTransaction> {
-        return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price, true)
+    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber, 
+        surplusFlag: number = 1 + 2): Promise<ContractTransaction> {
+        return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price, surplusFlag)
     }
 
     async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
@@ -327,7 +357,7 @@ export class TestPool {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
 
-    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -340,7 +370,7 @@ export class TestPool {
         }
     }
 
-    async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -353,7 +383,13 @@ export class TestPool {
         }
     }
 
-    async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testHarvestFrom (from: Signer, lower: number, upper: number, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeHarvest(lower, upper, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+        return (await this.dex).connect(from).tradeWarm(await inputBytes, this.overrides)
+    }
+
+    async testBurnAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeBurnAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -375,7 +411,7 @@ export class TestPool {
         return (await this.dex).connect(await this.trader).trade(inputBytes, this.overrides)
     }
 
-    async testMintAmbientFrom (from: Signer, liq: number, useSurplus: boolean = false): Promise<ContractTransaction> {
+    async testMintAmbientFrom (from: Signer, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
             let inputBytes = this.encodeMintAmbientPath(liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
@@ -389,11 +425,19 @@ export class TestPool {
     }
 
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
-        useSurplus: boolean = false): Promise<ContractTransaction> {
+        useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
-        if (this.useHotPath) {
-            return (await this.dex).connect(from).swap((await this.base).address,
-                (await this.quote).address, POOL_IDX, isBuy, inBaseQty, qty, price, useSurplus, this.overrides)
+        if (this.useSwapProxy.base) {
+            let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, this.startLimit, useSurplus)
+            if (this.useSwapProxy.optimal) {
+                return (await this.dex).connect(from).swapOptimal(encoded, this.overrides)
+            } else {
+                return (await this.dex).connect(from).swapProxy(encoded, this.overrides)
+            }
+        } else if (this.useHotPath) {
+            //let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, this.startLimit, useSurplus)
+            return (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address, 
+                POOL_IDX, isBuy, inBaseQty, qty, price, this.startLimit, useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(POOL_IDX, isBuy, inBaseQty, Math.abs(qty), price))
@@ -412,29 +456,36 @@ export class TestPool {
     async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
+            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, POOL_IDX, feeRate, protoTake, tickSize, jit))
     }
 
     async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(67, (await this.base).address, 
+            .protocolCmd(this.encodeProtocolCmd(111, (await this.base).address, 
                 (await this.quote).address, idx, feeRate, protoTake, tickSize, jit))
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(69, (await this.base).address, ZERO_ADDR,
+            .protocolCmd(this.encodeProtocolCmd(113, (await this.base).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
     }
 
     async testPegPriceImproveQuote (collateral: number, awayTick: number): Promise<ContractTransaction> {
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(this.encodeProtocolCmd(69, (await this.quote).address, ZERO_ADDR,
+            .protocolCmd(this.encodeProtocolCmd(113, (await this.quote).address, ZERO_ADDR,
                 POOL_IDX, 0, 0, awayTick, collateral))
+    }
+
+    async testUpgradeHotProxy (address: string, disableEmbedded: boolean = true): Promise<ContractTransaction> {
+        return (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.encodeProtocolCmd(21, ZERO_ADDR, address,
+                0, 0, disableEmbedded ? 95 : 94, 0, 0))
     }
 
     async snapBaseOwed(): Promise<BigNumber> {

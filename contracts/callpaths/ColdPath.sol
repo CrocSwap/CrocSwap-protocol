@@ -6,6 +6,7 @@ import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
 import '../libraries/TokenFlow.sol';
 import '../libraries/PriceGrid.sol';
+import '../libraries/ProtocolCmd.sol';
 import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/OracleHist.sol';
@@ -32,6 +33,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
+    using ProtocolCmd for bytes;
 
     /* @notice Initializes the pool type for the pair.
      * @param base The base token in the pair.
@@ -52,35 +54,35 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called.
-     *             Code types are as follows:
-     *                  65 - Collect protocol fees
-     *                  66 - Set pool template parameters
-     *                  67 - Set parameters on pre-existing pools.
-     *                  68 - Set the size for liquidity locking on pool initialization.
-     *                  69 - Set off-grid price improve settings.
-     *                  70 - Transfer protocol authority */
+     *             See ProtocolCmd.sol for outline of protocol command codes. */
     function protocolCmd (bytes calldata input) public {
         (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
-         uint8 protocolTake, uint16 ticks, uint128 value) =
-            abi.decode(input, (uint8, address, address, uint24, uint24,
-                               uint8, uint16, uint128));
+         uint8 protocolTake, uint16 ticks, uint128 value) = input.decodeProtocolCmd();
 
-        if (code == 65) {
+        if (code == ProtocolCmd.COLLECT_TREASURY_CODE) {
             collectProtocol(token, sidecar);
-        } else if (code == 66) {
-            uint8 jit = value.toUint8();
-            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
-        } else if (code == 67) {
-            uint8 jit = value.toUint8();
-            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
-        } else if (code == 68) {
-            setNewPoolLiq(value);
-        } else if (code == 69) {
-            pegPriceImprove(token, value, ticks);
-        } else if (code == 70) {
+            
+        } else if (code == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             emit CrocEvents.AuthorityTransfer(authority_);
             authority_ = sidecar;
-        } 
+            
+        } else if (code == ProtocolCmd.UPGRADE_DEX_CODE) {
+            upgradeProxy(sidecar, protocolTake);
+            
+        } else if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
+            uint8 jit = value.toUint8();
+            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
+            
+        } else if (code == ProtocolCmd.POOL_REVISE_CODE) {
+            uint8 jit = value.toUint8();
+            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
+            
+        } else if (code == ProtocolCmd.INIT_POOL_LIQ_CODE) {
+            setNewPoolLiq(value);
+            
+        } else if (code == ProtocolCmd.OFF_GRID_CODE) {
+            pegPriceImprove(token, value, ticks);
+        }
     }
 
     /* @notice Sets template parameters for a pool type index.
@@ -123,6 +125,40 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         setPriceImprove(token, unitTickCollateral, awayTickTol);
     }
 
+    /* @notice Upgrades one of the existing proxy sidecar contracts.
+     * @dev    Be extremely careful calling this, particularly when upgrading the
+     *         cold path contract, since that contains the upgrade code itself.
+     * @param proxy The address of the new proxy smart contract
+     * @param proxyIdx Determines which proxy is upgraded on this call with convention:
+     *                       90 - ColdPath proxy contract
+     *                       91 - WarmPath proxy contract
+     *                       92 - LongPath proxy contract
+     *                       93 - MicroPath proxy contract
+     *                       94 - HotProxy proxy contract (embedded HotPath enabled)
+     *                       95 - HotProxy proxy contract (embedded HotPath disabled)
+     *                       128-191 - Spillover proxy slots. */
+    function upgradeProxy (address proxy, uint8 proxyIdx) private {
+        emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
+        if (proxyIdx == 90) {            
+            coldPath_ = proxy;
+        } else if (proxyIdx == 91) {
+            warmPath_ = proxy;
+        } else if (proxyIdx == 92) {
+            longPath_ = proxy;
+        } else if (proxyIdx == 93) {
+            microPath_ = proxy;
+        } else if (proxyIdx == 94) {
+            hotProxy_ = proxy;
+            forceHotProxy_ = false;
+        } else if (proxyIdx == 95) {
+            hotProxy_ = proxy;
+            forceHotProxy_ = true;
+        } else if (proxyIdx >= 128) {
+            uint8 spillIdx = proxyIdx - 128;
+            spillPaths_[spillIdx] = proxy;
+        }
+    }
+
     /* @notice Pays out the the protocol fees.
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
@@ -137,10 +173,15 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param value The amount of surplus collateral being paid or received. If negative
      *              paid from the user into the pool, increasing their balance.
      * @param token The token to which the surplus collateral is applied. (If 0x0, then
-     *              native Ethereum) */
-    function collectSurplus (address recv, int128 value, address token) public payable {
+     *              native Ethereum)
+     * @param isTransfer If set to true, disburse calls will transfer the surplus 
+     *                   collateral balance to the recv address instead of paying. */
+    function collectSurplus (address recv, int128 value, address token,
+                             bool isTransfer) public payable {
         if (value < 0) {
-            depositSurplus(msg.sender, uint128(-value), token);
+            depositSurplus(recv, uint128(-value), token);
+        } else if (isTransfer) {
+            moveSurplus(msg.sender, recv, uint128(value), token);
         } else {
             disburseSurplus(msg.sender, recv, uint128(value), token);
         }

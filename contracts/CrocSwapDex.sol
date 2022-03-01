@@ -62,6 +62,54 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callTradePath(input);
     }
 
+    /* @notice Swaps between two tokens within a single liquidity pool.
+     * @param base The base-side token of the pair. (For native Ethereum use 0x0)
+     * @param quote The quote-side token of the pair.
+     * @param poolIdx The index of the pool type to execute on.
+     * @param isBuy If true the direction of the swap is for the user to send base tokens
+     *              and receive back quote tokens.
+     * @param inBaseQty If true the quantity is denominated in base-side tokens. If not
+     *                  use quote-side tokens.
+     * @param qty The quantity of tokens to swap. End result could be less if reaches
+     *            limitPrice.
+     * @param limitPrice The worse price the user is willing to pay on the margin. Swap
+     *                   will execute up to this price, but not any worse. Average fill 
+     *                   price will always be equal or better, because this is calculated
+     *                   at the marginal unit of quantity.
+     * @param useSurplus If true, settlement is first attempted with the user's surplus
+     *                   collateral balance held at the exchange. (Reduces gas cost 
+     *                   associated with an explicit transfer.) */
+    function swap (address base, address quote,
+                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                   uint128 limitPrice, uint128 limitStart,
+                   uint8 reserveFlags) reEntrantLock public payable {
+        // By default the embedded hot-path is enabled, but protocol governance can
+        // disable by toggling the force proxy flag. If so, users should point to
+        // swapProxy.
+        require(!forceHotProxy_, "HP");
+        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty,
+                        limitPrice, limitStart, reserveFlags);
+    }
+
+    /* @notice Equality to swap(), but uses the proxy sidecar contract. Less gas 
+     *         efficient but clients may want to use if 1) there are upgraded features
+     *         in the proxy or 2) forceHotProxy_ has been turned on by protocol 
+     *         authority. */
+    function swapProxy (bytes calldata input) reEntrantLock public payable {
+        callSwapProxy(input);
+    }
+
+    /* @notice Like swap(), but if force hot proxy is turned on, will fallback to the
+     *         proxy swap() call. Makes the call future-proof, at the expense of 
+     *         slightly higher gas. */
+    function swapOptimal (bytes calldata input) reEntrantLock public payable {
+        if (forceHotProxy_) {
+            callSwapProxy(input);
+        } else {
+            swapEncoded(input);
+        }
+    }
+
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    See the same method's documentation in WarmPath.sol for more details.
      * @param input The encoded LP action. The calling user should abi.pack the 
@@ -103,9 +151,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     /* @notice Adds or returns surplus collateral held at the exchange
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
-    function collect (address recv, int128 value, address token)
+    function collectSurplus (address recv, int128 value, address token, bool isTransfer)
         reEntrantLock public payable {
-        callCollectSurplus(recv, value, token);
+        callCollectSurplus(recv, value, token, isTransfer);
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.
@@ -129,12 +177,27 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callProtocolCmd(input);
     }
 
-    function sidecarProxies() public view returns (address cold, address warm,
-                                                   address long, address micro) {
-        cold = coldPath_;
-        warm = warmPath_;
-        long = longPath_;
-        micro = microPath_;
+    /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
+     *         none are in use (all slots are set to 0 and therefore calls will fail).
+     *         But this lets protocol governance add new functionality in additional 
+     *         sidecars, which can then be accessed by users through this command.
+     *
+     * @param spillIdx The index (0-63) of the spill sidecar the command is being sent to
+     * @param input The arbitrary call data the client is calling the spill proxy 
+     *              sidecar with */
+    function spillPathCmd (uint8 spillIdx, bytes calldata input) reEntrantLock
+        public payable {
+        callSpillPath(spillIdx, input);
+    }
+
+    /* @notice General purpose query fuction for reading arbitrary data from the dex.
+     * @dev    This function is bare bones, because we're trying to keep the size 
+     *         footprint of CrocSwapDex down. See SlotLocations.sol and QueryHelper.sol 
+     *         for syntactic sugar around accessing/parsing specific data. */
+    function readSlot (uint256 slot) public view returns (uint256 data) {
+        assembly {
+        data := sload(slot)
+        }
     }
 }
 

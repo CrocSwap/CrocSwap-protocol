@@ -13,7 +13,7 @@ chai.use(solidity);
 // If set to true, every test will fail and therefore print the actual gas spend. 
 const METRIC_PROFILE = false
 
-describe('Gas Benchmarks Coldpath', () => {
+describe('Gas Benchmarks Compound', () => {
     let test: TestPool
     let initTx: Promise<ContractTransaction>
     const feeRate = 225 * 100

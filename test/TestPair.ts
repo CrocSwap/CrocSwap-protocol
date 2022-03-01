@@ -153,8 +153,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
     })
 
     it("protocol fee stack both sides", async() => {
@@ -182,8 +182,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
     })
 
     it("protocol fee stack base", async() => {
@@ -217,8 +217,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(283)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(283)
     })
 
     it("protocol fee stack quote", async() => {
@@ -252,8 +252,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(934)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(934)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
     })
 
     it("pool settings individual", async() => {
