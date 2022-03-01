@@ -92,6 +92,22 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *         proxy swap() call. Makes the call future-proof, at the expense of 
      *         slightly higher gas. */
     function swapOptimal (bytes calldata input) reEntrantLock public payable {
+        swapCmd(input);
+    }
+
+    function swapAgent (bytes calldata input, address client)
+        reEntrantApproved(client) public payable {
+        swapCmd(input);
+    }
+    
+    function swapAgent (bytes calldata input, bytes calldata signature,
+                        uint32 nonce, bytes32 nonceDim, uint48 deadline)
+        reEntrantAgent(signature, nonce, nonceDim, deadline,
+                       keccak256(input)) public payable {
+        swapCmd(input);
+    }
+
+    function swapCmd (bytes calldata input) private {
         if (forceHotProxy_) {
             callUserCmd(HOT_PROXY_IDX, input);
         } else {
@@ -122,6 +138,20 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         callUserCmd(proxyIdx, input);
     }
 
+    function userCmdAgent (uint8 proxyIdx, bytes calldata input,
+                           bytes calldata signature,
+                           uint32 nonce, bytes32 nonceDim, uint48 deadline)
+        reEntrantAgent(signature, nonce, nonceDim, deadline,
+                       keccak256(abi.encode(proxyIdx, input)))
+        public payable {
+        callUserCmd(proxyIdx, input);
+    }
+
+    function userCmdAgent (uint8 proxyIdx, bytes calldata input, address client)
+        reEntrantApproved(client) public payable {
+        callUserCmd(proxyIdx, input);
+    }
+        
     /* @notice General purpose query fuction for reading arbitrary data from the dex.
      * @dev    This function is bare bones, because we're trying to keep the size 
      *         footprint of CrocSwapDex down. See SlotLocations.sol and QueryHelper.sol 

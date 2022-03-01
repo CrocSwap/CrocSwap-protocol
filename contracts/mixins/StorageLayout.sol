@@ -40,20 +40,6 @@ contract StorageLayout {
     uint8 constant MICRO_PROXY_IDX = 3;
     uint8 constant HOT_PROXY_IDX = 4;
 
-    modifier reEntrantLock() {
-        require(lockHolder_ == address(0));
-        lockHolder_ = msg.sender;
-        _;
-        lockHolder_ = address(0);
-    }
-
-    modifier protocolOnly() {
-        require(msg.sender == authority_ && lockHolder_ == address(0));
-        lockHolder_ = msg.sender;
-        _;
-        lockHolder_ = address(0);        
-    }
-
     
     /**************************************************************/
     // LevelBook
@@ -148,11 +134,15 @@ contract StorageLayout {
     mapping(bytes32 => History) internal hists_;
     /**************************************************************/
 
+    struct UserBalance {
+        uint128 surplusCollateral_;
+        uint32 nonce_;
+    }
     
     /**************************************************************/
-    // SettleLayer
+    // SettleLayer and AgentMask Nonce
     /**************************************************************/
-    mapping(bytes32 => uint128) public surplusCollateral_;
+    mapping(bytes32 => UserBalance) internal userBals_;
     /**************************************************************/
 }
 

@@ -31,8 +31,7 @@ contract TestProtocolAccount is ProtocolAccount {
         return feesAccum_[token];
     }
 
-    function disburseProtocol (address recv, address token)
-        public protocolOnly {
+    function disburseProtocol (address recv, address token) public {
         disburseProtocolFees(recv, token);
     }
 }

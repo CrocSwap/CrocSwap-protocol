@@ -35,9 +35,10 @@ contract QueryHelper {
     }
 
     function querySurplus (address owner, address token)
-        public view returns (uint128) {
-        bytes32 key = keccak256(abi.encode(owner, token));
-        return CrocSwapDex(dex_).surplusCollateral_(key);
+        public view returns (uint128 surplus) {
+        bytes32 innerKey = keccak256(abi.encode(0, token, 0));
+        bytes32 key = keccak256(abi.encode(owner, innerKey));
+        //(, surplus) = CrocSwapDex(dex_).userBals_(key);
     }
 
     function queryRouterApproved (address router, address origin)

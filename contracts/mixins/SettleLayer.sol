@@ -206,15 +206,6 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    /* @notice Returns the user's surplus collateral balance at the exchange.
-     * @param user The address corresponding to the user holding the surplus collateral.
-     * @param token The address for the token, whose balance we're checking 
-     *              (0x0 for native Ether). */
-    function querySurplus (address user, address token) internal view returns (uint128) {
-        bytes32 key = encodeSurplusKey(user, token);
-        return surplusCollateral_[key];
-    }
-
     /* @notice Directly deposits a certain amount of surplus collateral to a user's
      *         account.
      *
@@ -227,10 +218,10 @@ contract SettleLayer is AgentMask {
      * @param value The amount to be collected from owner and deposited.
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              deposited. */
-    function depositSurplus (address owner, uint128 value, address token) internal {
-        debitTransfer(owner, value, token, msg.value.toUint128());
-        bytes32 key = encodeSurplusKey(owner, token);
-        surplusCollateral_[key] += value;
+    function depositSurplus (address recv, uint128 value, address token) internal {
+        debitTransfer(lockHolder_, value, token, msg.value.toUint128());
+        bytes32 key = balanceKey(recv, token);
+        userBals_[key].surplusCollateral_ += value;
     }
 
     /* @notice Pays out surplus collateral held by the owner at the exchange.
@@ -245,10 +236,9 @@ contract SettleLayer is AgentMask {
      *              accordingly.
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              disbursed. */
-    function disburseSurplus (address owner, address recv,
-                              uint128 value, address token) internal {
-        bytes32 key = encodeSurplusKey(owner, token);
-        uint128 balance = surplusCollateral_[key];
+    function disburseSurplus (address recv, uint128 value, address token) internal {
+        bytes32 key = balanceKey(token);
+        uint128 balance = userBals_[key].surplusCollateral_;
 
         if (value == 0) { value = balance; }
         require(balance > 0 && value <= balance, "SC");
@@ -256,20 +246,25 @@ contract SettleLayer is AgentMask {
         // No need to use msg.value, because unlike trading there's no logical reason
         // we'd expect it to be set on this call.
         creditTransfer(recv, value, token, 0);
-        surplusCollateral_[key] -= value;
+        userBals_[key].surplusCollateral_ -= value;
     }
 
-    function moveSurplus (address from, address to, uint128 value, address token)
+    function moveSurplus (address to, uint128 value, address token)
         internal {
-        bytes32 fromKey = encodeSurplusKey(from, token);
-        bytes32 toKey = encodeSurplusKey(to, token);
-        uint128 balance = surplusCollateral_[fromKey];
+        bytes32 fromKey = balanceKey(token);
+        bytes32 toKey = balanceKey(to, token);
+        uint128 balance = userBals_[fromKey].surplusCollateral_;
 
         if (value == 0) { value = balance; }
         require(balance > 0 && value <= balance, "SC");
 
-        surplusCollateral_[fromKey] -= value;
-        surplusCollateral_[toKey] += value;
+        userBals_[fromKey].surplusCollateral_ -= value;
+        userBals_[toKey].surplusCollateral_ += value;
+    }
+
+    function querySurplus (address user, address token) internal view returns (uint128) {
+        bytes32 key = balanceKey(user, token);
+        return userBals_[key].surplusCollateral_;
     }
 
     /* @notice Returns true if the flow represents a debit owed from the user to the
@@ -443,8 +438,8 @@ contract SettleLayer is AgentMask {
     /* @notice Credits a user's surplus collateral account at the exchange (instead of
      *         directly sending the tokens to their address) */
     function creditSurplus (address recv, uint128 value, address token) private {
-        bytes32 key = encodeSurplusKey(recv, token);
-        surplusCollateral_[key] += value;
+        bytes32 key = balanceKey(recv, token);
+        userBals_[key].surplusCollateral_ += value;
     }
 
     /* @notice Debits the tokens owed from the user's pre-existing surplus collateral
@@ -453,13 +448,14 @@ contract SettleLayer is AgentMask {
      *                   collateral alone (0 othersize). */
     function debitSurplus (address recv, uint128 value, address token) private
         returns (uint128 remainder) {
-        bytes32 key = encodeSurplusKey(recv, token);
-        uint128 balance = surplusCollateral_[key];
-
+        bytes32 key = balanceKey(recv, token);
+        UserBalance storage bal = userBals_[key];
+        uint128 balance = bal.surplusCollateral_;
+        
         if (balance > value) {
-            surplusCollateral_[key] -= value;
+            bal.surplusCollateral_ -= value;
         } else {
-            surplusCollateral_[key] = 0;
+            bal.surplusCollateral_ = 0;
             remainder = value - balance;
         }
     }
@@ -482,11 +478,5 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    /* @notice Returns the keccak256 hash associated with the surplus collateral 
-     *         position for a given user on a given token. */
-    function encodeSurplusKey (address owner, address token) internal
-        pure returns (bytes32) {
-        return keccak256(abi.encode(owner, token));
-    }
 }
 

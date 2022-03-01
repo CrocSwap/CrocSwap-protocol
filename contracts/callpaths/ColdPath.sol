@@ -185,9 +185,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
         if (value < 0) {
             depositSurplus(recv, uint128(-value), token);
         } else if (isTransfer) {
-            moveSurplus(msg.sender, recv, uint128(value), token);
+            moveSurplus(recv, uint128(value), token);
         } else {
-            disburseSurplus(msg.sender, recv, uint128(value), token);
+            disburseSurplus(recv, uint128(value), token);
         }
     }
 
