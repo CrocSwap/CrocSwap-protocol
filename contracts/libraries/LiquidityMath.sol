@@ -45,15 +45,19 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function minusDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
+        unchecked {
         require(y <= x, 'LS');
         z = x - y;
+        }
     }
 
     /* @notice Same as minusDelta, but operates on lots of liquidity rather than outright
      *         liquiidty. */
     function minusLots(uint96 x, uint96 y) internal pure returns (uint96 z) {
+        unchecked {
         require(y <= x, 'LS');
         z = x - y;
+        }
     }
 
     /* In certain contexts we need to represent liquidity, but don't have the full 128 
