@@ -2,6 +2,7 @@
 pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
+import '../interfaces/IERC20Minimal.sol';
 import '../libraries/Directives.sol';
 import '../libraries/TransferHelper.sol';
 import '../libraries/TokenFlow.sol';

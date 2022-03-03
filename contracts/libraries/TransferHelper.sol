@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.4;
 
-import '../interfaces/IERC20Minimal.sol';
-
 /// @title TransferHelper
 /// @notice Contains helper methods for interacting with ERC20 tokens that do not consistently return true/false
 /// @notice inspired by https://github.com/Rari-Capital/solmate/blob/main/src/utils/SafeTransferLib.sol
