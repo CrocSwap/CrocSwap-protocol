@@ -140,7 +140,7 @@ library CurveRoll {
     function setShaveUp (CurveMath.CurveState memory curve, bool inBaseQty,
                          uint128 burnDown) private pure
         returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
-        if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO - 1) {
+        if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO_LESS_ONE) {
             curve.priceRoot_ += 1;
         }
         return (burnDown.toInt128Sign(), 0, inBaseQty ? burnDown : 0);
@@ -251,8 +251,7 @@ library CurveRoll {
         uint128 curvePrice = inBaseQty ?
             calcBaseFlowPrice(price, liq, flow, isBuy) :
             calcQuoteFlowPrice(price, liq, flow, isBuy);
-
-        if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO - 1;}
+        if (curvePrice >= TickMath.MAX_SQRT_RATIO) { return TickMath.MAX_SQRT_RATIO_LESS_ONE; }
         if (curvePrice < TickMath.MIN_SQRT_RATIO) { return TickMath.MIN_SQRT_RATIO; }
         return curvePrice;
     }
@@ -273,12 +272,16 @@ library CurveRoll {
         uint192 deltaCalc = FixedPoint.divQ64(flow, liq);
         if (deltaCalc > type(uint128).max) { return type(uint128).max; }
         uint128 priceDelta = uint128(deltaCalc);
-        
+
         if (isBuy) {
             return price + priceDelta;
         } else {
-            if (priceDelta >= price) { return 0; }
-            return price - (priceDelta + 1);
+            // unchecked is safe since if priceDelta == price - 1
+            // price - (priceDelta + 1) == price - (price - 1 + 1) == 0 
+            unchecked {
+                if (priceDelta >= price) { return 0; }
+                return price - (priceDelta + 1);
+            }
         }
     }
 

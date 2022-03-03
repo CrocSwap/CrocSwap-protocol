@@ -14,6 +14,8 @@ library TickMath {
     uint128 internal constant MIN_SQRT_RATIO = 65538;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint128 internal constant MAX_SQRT_RATIO = 21267430153580247136652501917186561138;
+    /// @dev The second highest value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK) - 1
+    uint128 internal constant MAX_SQRT_RATIO_LESS_ONE = 21267430153580247136652501917186561137;
 
     /// @notice Calculates sqrt(1.0001^tick) * 2^96
     /// @dev Throws if |tick| > max tick
