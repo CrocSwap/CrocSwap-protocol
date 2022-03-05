@@ -4,7 +4,6 @@ pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "./StorageLayout.sol";
-import "../interfaces/ICrocRelayGate.sol";
 
 /* @title Agent mask mixin.
  * @notice Maps and manages surplus balances, nonces, and external router approvals
