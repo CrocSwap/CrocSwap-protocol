@@ -2,7 +2,6 @@
 
 pragma solidity >=0.8.4;
 
-import "../libraries/SlotLocations.sol";
 import "../CrocSwapDex.sol";
 
 import "hardhat/console.sol";
