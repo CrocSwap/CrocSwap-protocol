@@ -27,7 +27,7 @@ import "hardhat/console.sol";
  *           4) Burn range liquidity
  *           5) Swap                                                     */
 contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
-    AgentMask, ColdPathInjector {
+    AgentMask {
 
     using SafeCast for int256;
     using SafeCast for int128;

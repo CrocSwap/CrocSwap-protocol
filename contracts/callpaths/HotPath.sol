@@ -32,32 +32,63 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
     
     function swapExecute (address base, address quote,
                           uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                          uint128 limitPrice, uint128 limitStart,
-                          uint8 reserveFlags) internal {
+                          uint24 poolTip,
+                          uint128 limitPrice, uint128 minOutput,
+                          uint8 reserveFlags) internal
+        returns (int128){
+        
+        PoolSpecs.PoolCursor memory pool = preparePoolCntx
+            (base, quote, poolIdx, poolTip, isBuy, inBaseQty, qty);
+        Chaining.PairFlow memory flow = swapDir(pool, isBuy, inBaseQty, qty, limitPrice);
+
+        int128 outFlow = pivotOutFlow(flow, minOutput, isBuy, inBaseQty);        
+        settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
+        accumProtocolFees(flow, base, quote);
+        return outFlow;
+    }
+
+    function pivotOutFlow (Chaining.PairFlow memory flow, uint128 minOutput,
+                           bool isBuy, bool inBaseQty) private pure
+        returns (int128 outFlow) {
+        outFlow = inBaseQty ? flow.quoteFlow_ : flow.baseFlow_;
+        bool isOutPaid = (isBuy == inBaseQty);
+        int128 thresh = isOutPaid ? -int128(minOutput) : int128(minOutput);
+        require(outFlow <= thresh || minOutput == 0, "SL");
+    }
+
+    function swapDir (PoolSpecs.PoolCursor memory pool, bool isBuy,
+                      bool inBaseQty, uint128 qty, uint128 limitPrice) private
+        returns (Chaining.PairFlow memory) {
         Directives.SwapDirective memory dir;
         dir.isBuy_ = isBuy;
         dir.inBaseQty_ = inBaseQty;
         dir.qty_ = qty;
         dir.limitPrice_ = limitPrice;
+        return swapOverPool(dir, pool);
         
+    }
+    
+    function preparePoolCntx (address base, address quote,
+                              uint24 poolIdx, uint24 poolTip,
+                              bool isBuy, bool inBaseQty, uint128 qty) private
+        returns (PoolSpecs.PoolCursor memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        if (poolTip > pool.head_.feeRate_) {
+            pool.head_.feeRate_ = poolTip;
+        }
         verifyPermitSwap(pool, base, quote, isBuy, inBaseQty, qty);
-        
-        Chaining.PairFlow memory flow = swapOverPool(dir, pool, limitStart);
-        
-        settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
-        accumProtocolFees(flow, base, quote);
+        return pool;
     }
 
-    function swapEncoded (bytes calldata input) internal {
+    function swapEncoded (bytes calldata input) internal returns (int128 outFlow) {
         (address base, address quote,
-         uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-         uint128 limitPrice, uint128 limitStart, uint8 reserveFlags) =
+         uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 poolTip,
+         uint128 limitPrice, uint128 minOutput, uint8 reserveFlags) =
             abi.decode(input, (address, address, uint24, bool, bool,
-                               uint128, uint128, uint128, uint8));
+                               uint128, uint24, uint128, uint128, uint8));
         
-        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty,
-                    limitPrice, limitStart, reserveFlags);
+        return swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip,
+                           limitPrice, minOutput, reserveFlags);
     }
 }
 
