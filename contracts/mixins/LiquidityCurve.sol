@@ -273,9 +273,9 @@ contract LiquidityCurve is StorageLayout {
     /* @notice Converts a price tick index range into a range of prices. */
     function translateTickRange (int24 lowerTick, int24 upperTick)
         private pure returns (uint128 bidPrice, uint128 askPrice) {
-        require(upperTick > lowerTick, "O");
-        require(lowerTick >= TickMath.MIN_TICK, "I");
-        require(upperTick <= TickMath.MAX_TICK, "X");
+        require(upperTick > lowerTick);
+        require(lowerTick >= TickMath.MIN_TICK);
+        require(upperTick <= TickMath.MAX_TICK);
         bidPrice = TickMath.getSqrtRatioAtTick(lowerTick);
         askPrice = TickMath.getSqrtRatioAtTick(upperTick);
     }
