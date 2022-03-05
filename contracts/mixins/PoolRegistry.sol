@@ -29,10 +29,12 @@ contract PoolRegistry is StorageLayout {
                                address base, address quote,
                                bool isBuy, bool inBaseQty, uint128 qty) internal {
         if (pool.head_.permitOracle_ != address(0)) {
-            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .checkApprovedForCrocSwap(msg.sender, base, quote,
-                                          isBuy, inBaseQty, qty);
-            require(approved, "Z");
+            uint24 discount =
+                ICrocSwapPermitOracle(pool.head_.permitOracle_)
+                .checkApprovedForCrocSwap(lockHolder_, msg.sender, base, quote,
+                                          isBuy, inBaseQty, qty, pool.head_.feeRate_);
+            require(discount > 0, "Z");
+            pool.head_.feeRate_ -= discount;
         }
     }
 
@@ -44,7 +46,7 @@ contract PoolRegistry is StorageLayout {
                                int24 bidTick, int24 askTick, uint128 liq) internal {
         if (pool.head_.permitOracle_ != address(0)) {
             bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .checkApprovedForCrocMint(msg.sender, base, quote,
+                .checkApprovedForCrocMint(lockHolder_, msg.sender, base, quote,
                                           bidTick, askTick, liq);
             require(approved, "Z");
         }
@@ -58,7 +60,7 @@ contract PoolRegistry is StorageLayout {
                                int24 bidTick, int24 askTick, uint128 liq) internal {
         if (pool.head_.permitOracle_ != address(0)) {
             bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .checkApprovedForCrocBurn(msg.sender, base, quote,
+                .checkApprovedForCrocBurn(lockHolder_, msg.sender, base, quote,
                                           bidTick, askTick, liq);
             require(approved, "Z");
         }
@@ -73,9 +75,12 @@ contract PoolRegistry is StorageLayout {
                            Directives.SwapDirective memory swap,
                            Directives.ConcentratedDirective[] memory concs) internal {
         if (pool.head_.permitOracle_ != address(0)) {
-            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .checkApprovedForCrocPool(msg.sender, base, quote, ambient, swap, concs);
-            require(approved, "Z");
+            uint24 discount =
+                ICrocSwapPermitOracle(pool.head_.permitOracle_)
+                .checkApprovedForCrocPool(lockHolder_, msg.sender, base, quote, ambient,
+                                          swap, concs, pool.head_.feeRate_);
+            require(discount > 0, "Z");
+            pool.head_.feeRate_ -= discount;
         }
     }
 

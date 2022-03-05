@@ -19,11 +19,13 @@ interface ICrocSwapPermitOracle {
      *
      * @returns       Returns true if action is permitted. If false, CrocSwap will revert
      *                the transaction. */
-    function checkApprovedForCrocPool (address user, address base, address quote,
+    function checkApprovedForCrocPool (address user, address sender,
+                                       address base, address quote,
                                        Directives.AmbientDirective calldata ambient,
                                        Directives.SwapDirective calldata swap,
-                                       Directives.ConcentratedDirective[] calldata concs)
-        external returns (bool);
+                                       Directives.ConcentratedDirective[] calldata concs,
+                                       uint24 poolFee)
+        external returns (uint24);
 
     /* @notice Verifies whether a given user is permissioned to perform a swap on the pool
      *
@@ -37,9 +39,11 @@ interface ICrocSwapPermitOracle {
      *
      * @returns       Returns true if action is permitted. If false, CrocSwap will revert
      *                the transaction. */
-    function checkApprovedForCrocSwap (address user, address base, address quote,
-                                       bool isBuy, bool inBaseQty, uint128 qty)
-        external returns (bool);
+    function checkApprovedForCrocSwap (address user, address sender,
+                                       address base, address quote,
+                                       bool isBuy, bool inBaseQty, uint128 qty,
+                                       uint24 poolFee)
+        external returns (uint24);
 
     /* @notice Verifies whether a given user is permissioned to mint liquidity
      *         on the pool.
@@ -54,7 +58,8 @@ interface ICrocSwapPermitOracle {
      *
      * @returns       Returns true if action is permitted. If false, CrocSwap will revert
      *                the transaction. */
-    function checkApprovedForCrocMint (address user, address base, address quote,
+    function checkApprovedForCrocMint (address user, address sender,
+                                       address base, address quote,
                                        int24 bidTick, int24 askTick, uint128 liq)
         external returns (bool);
 
@@ -71,7 +76,8 @@ interface ICrocSwapPermitOracle {
      *
      * @returns       Returns true if action is permitted. If false, CrocSwap will revert
      *                the transaction. */
-    function checkApprovedForCrocBurn (address user, address base, address quote,
+    function checkApprovedForCrocBurn (address user, address sender,
+                                       address base, address quote,
                                        int24 bidTick, int24 askTick, uint128 liq)
         external returns (bool);
 }
