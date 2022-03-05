@@ -18,7 +18,7 @@ library CurveAssimilate {
     using CompoundMath for uint64;
     using SafeCast for uint256;
     using FixedPoint for uint128;
-    using CurveMath for CurveMath.CurveLiquidity;
+    using CurveMath for CurveMath.CurveState;
 
     /* @notice Converts token-based fees into ambient liquidity on the curve,
      *         adjusting the price accordingly.
@@ -147,7 +147,7 @@ library CurveAssimilate {
         //       = S * (1 + G) * (1 + I)
         //   (where A' is the post transaction ambient liquidity, and I is the liquidity
         //    inflator for this transaction)
-        curve.accum_.ambientGrowth_ = curve.accum_.ambientGrowth_
+        curve.seedDeflator_ = curve.seedDeflator_
             .compoundStack(inflator);
 
         // Now compute the increase in ambient seed rewards to concentrated liquidity.
@@ -160,13 +160,13 @@ library CurveAssimilate {
         // Note that there's a minor difference from using the post-inflated cumulative
         // ambient growth (G) calculated in the previous step. This rounds the rewards
         // growth down, which increases numerical over-collateralization.
-        uint64 concInflator = inflator.compoundShrink(curve.accum_.ambientGrowth_);
-        uint128 ambientInject = uint256(curve.liq_.concentrated_.mulQ48(concInflator))
+        uint64 concInflator = inflator.compoundShrink(curve.seedDeflator_);
+        uint128 ambientInject = uint256(curve.concLiq_.mulQ48(concInflator))
             .toUint128();
         uint64 concRewards = adjustConcRewards(concInflator, ambientInject);
 
-        curve.liq_.ambientSeed_ += ambientInject;
-        curve.accum_.concTokenGrowth_ += concRewards;
+        curve.ambientSeeds_ += ambientInject;
+        curve.concGrowth_ += concRewards;
     }
 
     /* @notice To avoid over-promising rewards, we need to make sure that fixed-point

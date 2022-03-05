@@ -21,17 +21,17 @@ contract QueryHelper {
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
         uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
         uint256 valTwo = CrocSwapDex(dex_).readSlot(uint256(slot)+1);
-        uint256 valThree = CrocSwapDex(dex_).readSlot(uint256(slot)+2);
-
+        
         curve.priceRoot_ = uint128((valOne << 128) >> 128);
-        curve.liq_.ambientSeed_ = uint64((valTwo << 128) >> 128);
-        curve.liq_.concentrated_ = uint128(valTwo >> 128);
-        curve.accum_.concTokenGrowth_ = uint64((valThree << 128) >> 192);
-        curve.accum_.ambientGrowth_ = uint64((valThree << 192) >> 192);
+        curve.ambientSeeds_ = uint128(valOne >> 128);
+        curve.concLiq_ = uint128((valTwo << 128) >> 128);
+        curve.seedDeflator_ = uint64((valTwo << 64) >> 192);
+        curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
     function queryLiquidity (address base, address quote, uint24 poolIdx)
         public view returns (uint128) {
+        
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 

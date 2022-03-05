@@ -44,15 +44,15 @@ contract ColdPathInjector is StorageLayout {
             (abi.encodeWithSignature
              ("mintAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
-              curve.curve_.liq_.ambientSeed_,
-              curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_,
-              curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.ambientSeeds_,
+              curve.curve_.concLiq_,
+              curve.curve_.seedDeflator_,
+              curve.curve_.concGrowth_,
               liq, poolHash));
         require(success);
         
         (basePaid, quotePaid,
-         curve.curve_.liq_.ambientSeed_) = 
+         curve.curve_.ambientSeeds_) = 
             abi.decode(output, (int128, int128, uint128));
     }
 
@@ -65,15 +65,15 @@ contract ColdPathInjector is StorageLayout {
             (abi.encodeWithSignature
              ("burnAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
-              curve.curve_.liq_.ambientSeed_,
-              curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_,
-              curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.ambientSeeds_,
+              curve.curve_.concLiq_,
+              curve.curve_.seedDeflator_,
+              curve.curve_.concGrowth_,
               liq, poolHash));
         require(success);
         
         (basePaid, quotePaid,
-         curve.curve_.liq_.ambientSeed_) = 
+         curve.curve_.ambientSeeds_) = 
             abi.decode(output, (int128, int128, uint128));
     }
 
@@ -87,15 +87,16 @@ contract ColdPathInjector is StorageLayout {
             (abi.encodeWithSignature
              ("mintRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
-              curve.curve_.liq_.ambientSeed_,
-              curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.ambientSeeds_,
+              curve.curve_.concLiq_,
+              curve.curve_.seedDeflator_,
+              curve.curve_.concGrowth_,
               bidTick, askTick, liq, poolHash));
         require(success);
 
         (basePaid, quotePaid,
-         curve.curve_.liq_.ambientSeed_,
-         curve.curve_.liq_.concentrated_) = 
+         curve.curve_.ambientSeeds_,
+         curve.curve_.concLiq_) = 
             abi.decode(output, (int128, int128, uint128, uint128));
     }
     
@@ -109,14 +110,14 @@ contract ColdPathInjector is StorageLayout {
             (abi.encodeWithSignature
              ("burnRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
-              curve.curve_.liq_.ambientSeed_, curve.curve_.liq_.concentrated_,
-              curve.curve_.accum_.ambientGrowth_, curve.curve_.accum_.concTokenGrowth_,
+              curve.curve_.ambientSeeds_, curve.curve_.concLiq_,
+              curve.curve_.seedDeflator_, curve.curve_.concGrowth_,
               bidTick, askTick, liq, poolHash));
         require(success);
         
         (basePaid, quotePaid,
-         curve.curve_.liq_.ambientSeed_,
-         curve.curve_.liq_.concentrated_) = 
+         curve.curve_.ambientSeeds_,
+         curve.curve_.concLiq_) = 
             abi.decode(output, (int128, int128, uint128, uint128));
     }
 
@@ -127,16 +128,16 @@ contract ColdPathInjector is StorageLayout {
                        PoolSpecs.PoolCursor memory pool) internal {
         (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
-             ("sweepSwap((uint128,(uint128,uint128),(uint64,uint64)),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
+             ("sweepSwap((uint128,uint128,uint128,uint64,uint64),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 
         Chaining.PairFlow memory swapFlow;
         (swapFlow, curve.curve_.priceRoot_,
-         curve.curve_.liq_.ambientSeed_,
-         curve.curve_.liq_.concentrated_,
-         curve.curve_.accum_.ambientGrowth_,
-         curve.curve_.accum_.concTokenGrowth_) = 
+         curve.curve_.ambientSeeds_,
+         curve.curve_.concLiq_,
+         curve.curve_.seedDeflator_,
+         curve.curve_.concGrowth_) = 
             abi.decode(output, (Chaining.PairFlow, uint128, uint128, uint128,
                                 uint64, uint64));
 

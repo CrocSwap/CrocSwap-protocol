@@ -34,6 +34,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     using SafeCast for uint256;
     using SafeCast for uint128;
     using TickMath for uint128;
+    using LiquidityMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
@@ -79,7 +80,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                             bytes32 poolHash, bytes32 lpKey)
         private returns (int128 baseFlow, int128 quoteFlow, uint128 liqSeeds) {
         liqSeeds = mintPosLiq(lpKey, poolHash, liqAdded,
-                              curve.accum_.ambientGrowth_);
+                              curve.seedDeflator_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqSeeds);
         (baseFlow, quoteFlow) = signMintFlow(base, quote);
     }
@@ -111,7 +112,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           bytes32 poolHash)
         internal returns (int128, int128) {
         uint128 liqSeeds = burnPosLiq(agentBurnKey(), poolHash,
-                                      liqBurned, curve.accum_.ambientGrowth_);
+                                      liqBurned, curve.seedDeflator_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqSeeds);
         return signBurnFlow(base, quote);
     }
@@ -162,7 +163,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           bytes32 poolHash, bytes32 lpKey)
         private returns (int128 baseFlow, int128 quoteFlow, uint64 feeMileage) {
         feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
-                                liquidity, curve.accum_.concTokenGrowth_);
+                                liquidity, curve.concGrowth_);
         mintPosLiq(lpKey, poolHash, lowTick, highTick,
                    liquidity, feeMileage);
 
@@ -212,7 +213,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                         bytes32 poolHash)
         internal returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
-                                          liquidity, curve.accum_.concTokenGrowth_);
+                                          liquidity, curve.concGrowth_);
         uint64 rewards = burnPosLiq(agentBurnKey(), poolHash,
                                     lowTick, highTick, liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liquidity, rewards,
@@ -240,7 +241,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                            bytes32 poolHash)
         internal returns (int128, int128) {
         uint64 feeMileage = clockFeeOdometer(poolHash, priceTick, lowTick, highTick,
-                                             curve.accum_.concTokenGrowth_);
+                                             curve.concGrowth_);
         uint128 rewards = harvestPosLiq(agentBurnKey(), poolHash,
                                        lowTick, highTick, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, rewards);
@@ -397,8 +398,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function bumpLiquidity (CurveMath.CurveState memory curve,
                             int24 bumpTick, bool isBuy, bytes32 poolHash) private {
         int128 liqDelta = crossLevel(poolHash, bumpTick, isBuy,
-                                     curve.accum_.concTokenGrowth_);
-        curve.liq_.concentrated_ = LiquidityMath.addDelta
-            (curve.liq_.concentrated_, liqDelta);
+                                     curve.concGrowth_);
+        curve.concLiq_ = curve.concLiq_.addDelta(liqDelta);
     }    
 }

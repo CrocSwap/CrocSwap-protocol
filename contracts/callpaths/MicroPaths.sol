@@ -53,16 +53,16 @@ contract MicroPaths is MarketSequencer {
                         uint128 seedOut, uint128 concOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
-        curve.liq_.ambientSeed_ = seed;
-        curve.liq_.concentrated_ = conc;
-        curve.accum_.ambientGrowth_ = seedGrowth;
-        curve.accum_.concTokenGrowth_ = concGrowth;
+        curve.ambientSeeds_ = seed;
+        curve.concLiq_ = conc;
+        curve.seedDeflator_ = seedGrowth;
+        curve.concGrowth_ = concGrowth;
         
         (baseFlow, quoteFlow) = burnRange(curve, priceTick,
                                           lowTick, highTick, liq, poolHash);
 
-        concOut = curve.liq_.concentrated_;
-        seedOut = curve.liq_.ambientSeed_;
+        concOut = curve.concLiq_;
+        seedOut = curve.ambientSeeds_;
     }
 
 
@@ -93,16 +93,16 @@ contract MicroPaths is MarketSequencer {
                         uint128 seedOut, uint128 concOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
-        curve.liq_.ambientSeed_ = seed;
-        curve.liq_.concentrated_ = conc;
-        curve.accum_.ambientGrowth_ = seedGrowth;
-        curve.accum_.concTokenGrowth_ = concGrowth;
+        curve.ambientSeeds_ = seed;
+        curve.concLiq_ = conc;
+        curve.seedDeflator_ = seedGrowth;
+        curve.concGrowth_ = concGrowth;
         
         (baseFlow, quoteFlow) = mintRange(curve, priceTick,
                                           lowTick, highTick, liq, poolHash);
 
-        concOut = curve.liq_.concentrated_;
-        seedOut = curve.liq_.ambientSeed_;
+        concOut = curve.concLiq_;
+        seedOut = curve.ambientSeeds_;
     }
     
     /* @notice Burns liquidity from an ambient liquidity position on a single curve.
@@ -128,14 +128,14 @@ contract MicroPaths is MarketSequencer {
         public payable returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
-        curve.liq_.ambientSeed_ = seed;
-        curve.liq_.concentrated_ = conc;
-        curve.accum_.ambientGrowth_ = seedGrowth;
-        curve.accum_.concTokenGrowth_ = concGrowth;
+        curve.ambientSeeds_ = seed;
+        curve.concLiq_ = conc;
+        curve.seedDeflator_ = seedGrowth;
+        curve.concGrowth_ = concGrowth;
         
         (baseFlow, quoteFlow) = burnAmbient(curve, liq, poolHash);
-
-        seedOut = curve.liq_.ambientSeed_;
+        
+        seedOut = curve.ambientSeeds_;
     }
 
     /* @notice Mints liquidity from an ambient liquidity position on a single curve.
@@ -161,14 +161,14 @@ contract MicroPaths is MarketSequencer {
         public payable returns (int128 baseFlow, int128 quoteFlow, uint128 seedOut) {
         CurveMath.CurveState memory curve;
         curve.priceRoot_ = price;
-        curve.liq_.ambientSeed_ = seed;
-        curve.liq_.concentrated_ = conc;
-        curve.accum_.ambientGrowth_ = seedGrowth;
-        curve.accum_.concTokenGrowth_ = concGrowth;
+        curve.ambientSeeds_ = seed;
+        curve.concLiq_ = conc;
+        curve.seedDeflator_ = seedGrowth;
+        curve.concGrowth_ = concGrowth;
         
         (baseFlow, quoteFlow) = mintAmbient(curve, liq, poolHash);
 
-        seedOut = curve.liq_.ambientSeed_;
+        seedOut = curve.ambientSeeds_;
     }
 
     /* @notice Executes a user-directed swap through a single liquidity curve.
@@ -196,10 +196,10 @@ contract MicroPaths is MarketSequencer {
         sweepSwapLiq(accum, curve, midTick, swap, pool);
         
         priceOut = curve.priceRoot_;
-        seedOut = curve.liq_.ambientSeed_;
-        concOut = curve.liq_.concentrated_;
-        ambientOut = curve.accum_.ambientGrowth_;
-        concGrowthOut = curve.accum_.concTokenGrowth_;
+        seedOut = curve.ambientSeeds_;
+        concOut = curve.concLiq_;
+        ambientOut = curve.seedDeflator_;
+        concGrowthOut = curve.concGrowth_;
     }
 }
 

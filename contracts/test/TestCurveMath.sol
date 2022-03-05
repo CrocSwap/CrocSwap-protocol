@@ -147,9 +147,9 @@ contract TestCurveMath {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
         CurveAssimilate.assimilateLiq(curve, feesPaid, inBase);
         
-        (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.liq_.ambientSeed_);
-        (shiftGrowth, concGrowth) = (curve.accum_.ambientGrowth_,
-                                     curve.accum_.concTokenGrowth_);
+        (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.ambientSeeds_);
+        (shiftGrowth, concGrowth) = (curve.ambientSeeds_,
+                                     curve.concGrowth_);
     }
 
     function testDeriveImpact (uint128 price, uint128 seed, uint64 growth,
@@ -162,8 +162,6 @@ contract TestCurveMath {
     
     function buildCurve (uint128 seed, uint64 growth, uint128 conc, uint128 price)
         private pure returns (CurveMath.CurveState memory) {
-        CurveMath.CurveLiquidity memory liq = CurveMath.CurveLiquidity(seed, conc);
-        CurveMath.CurveFeeAccum memory fee = CurveMath.CurveFeeAccum(growth, 0);
-        return CurveMath.CurveState(price, liq, fee);        
+        return CurveMath.CurveState(price, seed, conc, growth, 0);
     }
 }
