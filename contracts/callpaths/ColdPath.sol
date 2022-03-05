@@ -198,9 +198,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @notice forBurn If true, the user is authorizing the router to burn liquidity
      *                 positions belongining to the user. */
     function approveRouter (bytes calldata cmd) private {
-        (, address router, bool forDebit, bool forBurn) =
-            abi.decode(cmd, (uint8, address, bool, bool));
-        approveAgent(router, forDebit, forBurn);
+        (, address router, uint32 nCalls, uint256 userSalt, uint256 routerSalt) =
+            abi.decode(cmd, (uint8, address, uint32, uint256, uint256));
+        approveAgent(router, nCalls, userSalt, routerSalt);
     }
 
 }
