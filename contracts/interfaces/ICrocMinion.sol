@@ -8,6 +8,6 @@ import '../libraries/CurveCache.sol';
  *         itself and protocol governance. All governance is executed through
  *         the protocolCmd() method. */
 interface ICrocMinion {
-    function userCmd (uint8 proxyPath, bytes calldata cmd) payable external;
+    function userCmd (uint8 proxyPath, bytes calldata cmd) payable external returns (bytes memory);
     function protocolCmd (uint8 proxyPath, bytes calldata cmd) payable external;
 }
