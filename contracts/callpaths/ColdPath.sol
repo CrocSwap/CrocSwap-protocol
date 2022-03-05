@@ -9,7 +9,6 @@ import '../libraries/PriceGrid.sol';
 import '../libraries/ProtocolCmd.sol';
 import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
-import '../mixins/OracleHist.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
