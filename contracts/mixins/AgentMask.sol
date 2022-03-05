@@ -4,38 +4,20 @@ pragma solidity >=0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "./StorageLayout.sol";
-import "./UserBursar.sol";
-import "hardhat/console.sol";
-
-/* Provides special handling for external routers and aggregators, with regards to
- * ownership of positions and settlement of payments. Default behavior (based on
- * msg.sender at call time) is enabled *unless*: 
- *    1) The CrocSwap contract is being called by another smart contract
- *    2) The calling contract's address begins with a magic prefix (0xCC)
- *
- * This allows external routers and aggregators to implement custom logic in a way that
- * imposes no gas burden on the hot-path. The magic prefix makes the behavior easily
- * identifiable, and unlikely (1/256 chance) for random contracts to have magic behavior.
- * (Still proper CrocSwap usage recommends that any external calling contract verifies
- * that it doesn't start with a magic prefix.)
- *
- * Based on the third byte in the address, the following magic behavior can each 
- * independently be toggled on:
- *    1) Debit flows are collected from tx.origin instead of msg.sender. (Note this 
- *       requires the tx.origin caller to approve the smart contract before.)
- *    2) Crdit flows are paid out to tx.origin instead of msg.sender.
- *    3) Liquidity positions are directly owned by tx.origin instead of msg.sender.
- *       To burn positions requires tx.origin to approve the smart contract before.)
- *    4) Liquidity positions are tracked independently in terms of the (msg.sender,
- *       tx.origin) pair. They can only be burned by the same calling pair. This can
- *       create gas efficiency for certain external contracts as they no longer have
- *       to externally track users. */
+import "../interfaces/ICrocRelayGate.sol";
 
 /* @title Agent mask mixin.
- * @notice Contains logic for toggling behavior related to settlement and position
- *         ownership for transactions that come through external smart contracts
- *         (rather than direct user accounts). */
-contract AgentMask is UserBursar {
+ * @notice Maps and manages surplus balances, nonces, and external router approvals
+ *         based on the wallet addresses of end-users. */
+contract AgentMask is StorageLayout {
+
+
+    modifier reEntrantLock() {
+        require(lockHolder_ == address(0));
+        lockHolder_ = msg.sender;
+        _;
+        lockHolder_ = address(0);
+    }
 
     modifier protocolOnly() {
         require(msg.sender == authority_ && lockHolder_ == address(0));
@@ -44,41 +26,41 @@ contract AgentMask is UserBursar {
         lockHolder_ = address(0);        
     }
     
-    modifier reEntrantLock() {
+    modifier reEntrantApproved (address client, uint256 clientSalt, uint256 agentSalt) {
+        casAgent(client, msg.sender, clientSalt, agentSalt);
         require(lockHolder_ == address(0));
-        lockHolder_ = msg.sender;
-        _;
-        lockHolder_ = address(0);
-    }
-
-    modifier reEntrantApproved (address client) {
-        require(lockHolder_ == address(0));
-        assertDebitApproved(msg.sender, client);
         lockHolder_ = client;
         _;
         lockHolder_ = address(0);
     }
 
-    modifier reEntrantAgent (bytes calldata signature, 
-                             bytes32 payload) {
-        lockSigner(signature, payload);
+    modifier reEntrantAgent (bytes calldata signature,
+                             bytes calldata conds,
+                             bytes memory payload) {
+        require(lockHolder_ == address(0));
+        lockHolder_ = lockSigner(signature, conds, payload);
         _;
         lockHolder_ = address(0);
     }
 
-    function lockSigner (bytes calldata signature, bytes32 payload) private {
-        (uint8 v, bytes32 r, bytes32 s, uint48 deadline, uint32 nonce, bytes32 nonceDim)
-            = abi.decode(signature, (uint8, bytes32, bytes32, uint48, uint32, bytes32));
-        require(lockHolder_ == address(0));
-        require(deadline == 0 || block.timestamp <= deadline);
-        casNonce(nonceDim, nonce);
-        bytes32 checksum = keccak256(abi.encodePacked
-                                     (nonce, nonceDim, deadline, block.chainid,
-                                      address(this), payload));
+    function lockSigner (bytes calldata signature, bytes calldata conds,
+                         bytes memory payload) private returns (address client) {
+        (uint8 v, bytes32 r, bytes32 s) =
+            abi.decode(signature, (uint8, bytes32, bytes32));
         
-        address client = ecrecover(checksum, v, r, s);
-        require(client != address(0));        
-        lockHolder_ = client;        
+        (uint48 deadline, uint48 alive, bytes32 salt, uint32 nonce,
+         address relayer)
+            = abi.decode(signature, (uint48, uint48, bytes32, uint32, address));
+        
+        require(deadline == 0 || block.timestamp <= deadline);
+        require(block.timestamp >= alive);
+        require(relayer == address(0) || relayer == msg.sender || relayer == tx.origin);
+        
+        bytes32 checksum = keccak256(abi.encode(conds, payload));
+        client = ecrecover(checksum, v, r, s);
+        require(client != address(0));
+
+        casNonce(client, salt, nonce);
     }
     
     /* @notice Returns the owner key that any LP position resulting from a mint action
@@ -112,54 +94,71 @@ contract AgentMask is UserBursar {
         (debit, credit) = (lockHolder_, lockHolder_);
     }
 
-    /* @notice For security reasons we want to restrict the ability of third-party
-     *         smart contracts to collect debits or burn LP positions for arbitrary
-     *         users. (Credit and mints don't have to be restricted, because they
-     *         can only benefit users.) Therefore either of these actions require
-     *         the user to explicitly authorize the external smart contract beforehand
-     *         using this function.
-     *
-     * @dev    This authorizes for the address from msg.sender-- not tx.origin. That
-     *         requires that the authorizing user directly calls this method directly
-     *         on CrocSwap before using the external smart contract for any actions
-     *         requiring authorization. (Don't use tx.origin, because otherwise it could
-     *         allow malicious contracts to sneak in an authorization the user doesn't
-     *         want.)
-     *
-     * @param router The address of the external smart contract being authorized to
-     *               act on the user's behalf.
-     * @param forDebit If true authorizes the smart contract to debit the user for 
-     *                 collateral settlement. If false, revokes authorization (if ever 
-     *                 previously authorized).
-     * @param forBurn If true authorizes the smart contract to burn LP positions owned
-     *                by the user. If false, revokes authorization. */
-    function approveAgent (address router, bool forDebit, bool forBurn) internal {
-        approveAgent(router, msg.sender, forDebit, forBurn);
+    function approveAgent (address router, uint32 nCalls, uint256 userSalt,
+                           uint256 routerSalt) internal {
+        bytes32 key = bridgeKey(lockHolder_, router, userSalt, routerSalt);
+        UserBalance storage bal = userBals_[key];
+        bal.agentCallsLeft_ = nCalls;
     }
 
-    /* @notice Verifies that the msg.sender is authorized to burn LP positions owned
-     *         by tx.origin, and reverts the transaction otherwise. */
-    function assertBurnApproved (address sender, address origin,
-                                 bool isBurn) private view {
-        if (isBurn) {
-            bytes32 key = keccak256(abi.encode(sender, origin));
-            require(agents_[key].burn_, "BA");
+    function resetNonce (bytes32 nonceSalt, uint32 nonce) internal {
+        UserBalance storage bal = userBals_[bridgeKey(lockHolder_, nonceSalt)];
+        bal.nonce_ = nonce;
+    }
+
+    function casAgent (address client, address agent,
+                       uint256 clientSalt, uint256 agentSalt) internal {
+        bytes32 key = bridgeKey(client, agent, clientSalt, agentSalt);
+        UserBalance storage bal = userBals_[key];
+        if (bal.agentCallsLeft_ < type(uint32).max) {
+            require(bal.agentCallsLeft_ > 0);
+            bal.agentCallsLeft_--;
         }
     }
 
-    /* @notice Verifies that the msg.sender is authorized to debit the tx.origin and
-     *         reverts the transaction otherwise. */
-    function assertDebitApproved (address sender, address origin) private view {
-        bytes32 key = keccak256(abi.encode(sender, origin));
-        require(agents_[key].debit_, "DA");
+    function casNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
+        UserBalance storage bal = userBals_[bridgeKey(client, nonceSalt)];
+        require(bal.nonce_ == nonce);
+        bal.nonce_++;
     }
 
-    /* @params Sets external burning and debit permissions for an external smart contract
-     *         for a given user address. */
-    function approveAgent (address router, address origin,
-                            bool forDebit, bool forBurn) internal {
-        bytes32 key = keccak256(abi.encode(router, origin));
-        agents_[key].burn_ = forBurn;
-        agents_[key].debit_ = forDebit;
+    function tipRelayer (bytes memory tipCmd) internal {
+        if (tipCmd.length > 0) {
+            (bytes32 innerKey, uint128 tip, address recv) =
+                abi.decode(tipCmd, (bytes32, uint128, address));
+
+            if (recv == address(256)) {
+                recv = msg.sender;
+            } else if (recv == address(512)) {
+                recv = tx.origin;
+            } else if (recv == address(1024)) {
+                recv = block.coinbase;
+            }
+            
+            bytes32 fromKey = bridgeKey(lockHolder_, innerKey);
+            bytes32 toKey = bridgeKey(recv, innerKey);
+            require(userBals_[fromKey].surplusCollateral_ >= tip);
+            userBals_[fromKey].surplusCollateral_ -= tip;
+            userBals_[toKey].surplusCollateral_ += tip;
+        }
+    }
+
+    function bridgeKey (address user, address token,
+                        uint256 userSalt, uint256 tokenSalt) pure
+        internal returns (bytes32) {
+        bytes32 innerKey = keccak256(abi.encode(userSalt, token, tokenSalt));
+        return bridgeKey(user, innerKey);
+    }
+
+    function bridgeKey (address user, bytes32 innerKey) pure internal returns (bytes32) {
+        return keccak256(abi.encode(user, innerKey));
+    }
+
+    function bridgeKey (address user, address token) pure internal returns (bytes32) {
+        return bridgeKey(user, token, 0, 0);
+    }
+
+    function bridgeKey (address token) view internal returns (bytes32) {
+        return bridgeKey(lockHolder_, token, 0, 0);
     }
 }

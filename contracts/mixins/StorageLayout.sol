@@ -49,7 +49,18 @@ contract StorageLayout {
         uint96 askLots_;
         uint64 feeOdometer_;
     }
-    mapping(bytes32 => BookLevel) public levels_;
+    mapping(bytes32 => BookLevel) internal levels_;
+    /**************************************************************/
+
+    
+    /**************************************************************/
+    // Knockout Counters
+    /**************************************************************/
+    struct KnockoutCntr {
+        uint96 lots_;
+        uint128 crossCnt_;
+    }
+    mapping(bytes32 => KnockoutCntr) internal knockouts_;
     /**************************************************************/
 
     
@@ -64,7 +75,7 @@ contract StorageLayout {
     /**************************************************************/
     // PoolRegistry
     mapping(uint24 => PoolSpecs.Pool) internal templates_;
-    mapping(bytes32 => PoolSpecs.Pool) public pools_;
+    mapping(bytes32 => PoolSpecs.Pool) internal pools_;
     mapping(address => PriceGrid.ImproveSettings) internal improves_;
     uint128 internal newPoolLiq_;
     /**************************************************************/
@@ -91,58 +102,39 @@ contract StorageLayout {
         uint128 seeds_;
         uint32 timestamp_;
     }
-    mapping(bytes32 => RangePosition) public positions_;
-    mapping(bytes32 => AmbientPosition) public ambPositions_;
-    /**************************************************************/
-
-
-    /**************************************************************/
-    // AgentMask
-    /**************************************************************/
-    struct AgentApproval {
-        bool burn_;
-        bool debit_;
-    }
-    mapping(bytes32 => AgentApproval) internal agents_;
-    /**************************************************************/
-
     
+    mapping(bytes32 => RangePosition) internal positions_;
+    mapping(bytes32 => AmbientPosition) internal ambPositions_;
+    /**************************************************************/
+
+
     /**************************************************************/
     // LiquidityCurve
     /**************************************************************/
-    mapping(bytes32 => CurveMath.CurveState) public curves_;
+    mapping(bytes32 => CurveMath.CurveState) internal curves_;
     /**************************************************************/
 
     
     /**************************************************************/
-    // OracleHistorian    
+    // UserBalance settings
     /**************************************************************/
-    struct Checkpoint {
-        uint32 time_;
-        uint32 ambientGrowth_;
-        int56 twapPriceSum_;
-        int56 vwapPriceSum_;
-        uint80 liqLots_;
-    }
-    
-    struct History {
-        uint64 nextIndex_;
-        int24 lastTick_;
-        Checkpoint[4294967296] series_;
-    }
-
-    mapping(bytes32 => History) internal hists_;
-    /**************************************************************/
-
     struct UserBalance {
+        // Multiple loosely related fields are grouped together to minimize
+        // SLOAD reads in certain scenario.
         uint128 surplusCollateral_;
         uint32 nonce_;
+        uint32 agentCallsLeft_;
     }
     
-    /**************************************************************/
-    // SettleLayer and AgentMask Nonce
-    /**************************************************************/
     mapping(bytes32 => UserBalance) internal userBals_;
     /**************************************************************/
 }
 
+
+contract StoragePrototypes is StorageLayout {
+    UserBalance bal_;
+    CurveMath.CurveState curve_;
+    RangePosition pos_;
+    AmbientPosition amb_;
+    BookLevel lvl_;
+}

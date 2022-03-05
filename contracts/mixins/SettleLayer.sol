@@ -220,7 +220,7 @@ contract SettleLayer is AgentMask {
      *              deposited. */
     function depositSurplus (address recv, uint128 value, address token) internal {
         debitTransfer(lockHolder_, value, token, msg.value.toUint128());
-        bytes32 key = balanceKey(recv, token);
+        bytes32 key = bridgeKey(recv, token);
         userBals_[key].surplusCollateral_ += value;
     }
 
@@ -237,7 +237,7 @@ contract SettleLayer is AgentMask {
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              disbursed. */
     function disburseSurplus (address recv, uint128 value, address token) internal {
-        bytes32 key = balanceKey(token);
+        bytes32 key = bridgeKey(token);
         uint128 balance = userBals_[key].surplusCollateral_;
 
         if (value == 0) { value = balance; }
@@ -251,8 +251,8 @@ contract SettleLayer is AgentMask {
 
     function moveSurplus (address to, uint128 value, address token)
         internal {
-        bytes32 fromKey = balanceKey(token);
-        bytes32 toKey = balanceKey(to, token);
+        bytes32 fromKey = bridgeKey(token);
+        bytes32 toKey = bridgeKey(to, token);
         uint128 balance = userBals_[fromKey].surplusCollateral_;
 
         if (value == 0) { value = balance; }
@@ -263,7 +263,7 @@ contract SettleLayer is AgentMask {
     }
 
     function querySurplus (address user, address token) internal view returns (uint128) {
-        bytes32 key = balanceKey(user, token);
+        bytes32 key = bridgeKey(user, token);
         return userBals_[key].surplusCollateral_;
     }
 
@@ -438,7 +438,7 @@ contract SettleLayer is AgentMask {
     /* @notice Credits a user's surplus collateral account at the exchange (instead of
      *         directly sending the tokens to their address) */
     function creditSurplus (address recv, uint128 value, address token) private {
-        bytes32 key = balanceKey(recv, token);
+        bytes32 key = bridgeKey(recv, token);
         userBals_[key].surplusCollateral_ += value;
     }
 
@@ -448,7 +448,7 @@ contract SettleLayer is AgentMask {
      *                   collateral alone (0 othersize). */
     function debitSurplus (address recv, uint128 value, address token) private
         returns (uint128 remainder) {
-        bytes32 key = balanceKey(recv, token);
+        bytes32 key = bridgeKey(recv, token);
         UserBalance storage bal = userBals_[key];
         uint128 balance = bal.surplusCollateral_;
         
