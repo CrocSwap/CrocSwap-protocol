@@ -16,5 +16,6 @@ contract MockMinion is ICrocMinion {
         callers_.push(tx.origin);
     }
 
-    function userCmd (uint8, bytes calldata) public payable override { }
+    function userCmd (uint8, bytes calldata) public payable override returns
+        (bytes memory) { }
 }
