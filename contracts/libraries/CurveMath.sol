@@ -255,7 +255,7 @@ library CurveMath {
                        FixedPoint.mulQ64(liq, price) :
                        FixedPoint.divQ64(liq, price)).toUint128();
     }
-    
+
     /* @notice Calculated the amount of concentrated liquidity within a price range
      *         supported by a fixed amount of collateral. Note that this calculates the 
      *         collateral only needed by one side of the pair.

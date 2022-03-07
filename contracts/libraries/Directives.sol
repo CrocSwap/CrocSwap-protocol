@@ -18,7 +18,6 @@ library Directives {
      *      zero. qty=0 alone will indicate the use of a flxeible back-filled rolling 
      *      quantity. 
      *
-     * @param liqMask_ Not currently used.
      * @param isBuy_ If true, swap converts base-side token to quote-side token.
      *               Vice-versa if false.
      * @param inBaseQty_ If true, swap quantity is denominated in base-side token. 
@@ -29,9 +28,9 @@ library Directives {
      *           reaches this price (or exhausts the specified quantity.) Represented
      *           as the square root of the pool's price ratio in Q64.64 fixed-point. */
     struct SwapDirective {
-        uint8 liqMask_;
         bool isBuy_;
         bool inBaseQty_;
+        uint8 rollType_;
         uint128 qty_;
         uint128 limitPrice_;
     }
@@ -59,6 +58,7 @@ library Directives {
     struct ConcenBookend {
         int24 closeTick_;
         bool isAdd_;
+        uint8 rollType_;
         uint128 liquidity_;
     }
 
@@ -76,6 +76,7 @@ library Directives {
      *                   constant-product AMM curve. (If zero, this is a non-action.) */
     struct AmbientDirective {
         bool isAdd_;
+        uint8 rollType_;
         uint128 liquidity_;
     }
 
@@ -192,11 +193,10 @@ library Directives {
      *    order. */
     function sliceBookend (ConcentratedDirective memory dir, uint idx)
         internal pure returns (int24 lowTick, int24 highTick,
-                               bool isAdd, uint128 liq) {
-        ConcenBookend memory bend = dir.bookends_[idx];
+                               ConcenBookend memory bend) {
+        bend = dir.bookends_[idx];
         (lowTick, highTick) =
             pinLowerUpper(dir.openTick_, bend.closeTick_);
-        (isAdd, liq) = (bend.isAdd_, bend.liquidity_);
     }
 
     /* @notice Sorts an arbitrary open and closed tick boundary to a lower and upper tick

@@ -282,19 +282,10 @@ contract MarketSequencer is TradeMatcher {
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
-        if (isRoll(dir)) {
-            cntx.roll_.plugSwapGap(dir, flow);
-        }
+        cntx.roll_.plugSwapGap(dir, flow);
         if (dir.qty_ != 0) {
             callSwap(flow, curve, dir, cntx.pool_);            
         }
-    }
-
-    /* @notice Returns true if the swap directive indicates that it wants to use a 
-     *         rolling gap-filled plugged into quantity instead of a pre-specified 
-     *         quantity. */
-    function isRoll (Directives.SwapDirective memory dir) private pure returns (bool) {
-        return dir.limitPrice_ > 0 && dir.qty_ == 0;
     }
 
     /* @notice Applies an ambient liquidity directive to a pre-loaded liquidity curve. */
@@ -302,16 +293,12 @@ contract MarketSequencer is TradeMatcher {
                            Directives.AmbientDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        (uint128 liq, bool isAdd) = (dir.liquidity_, dir.isAdd_);
-
-        if (isRoll(liq, isAdd)) {
-            (liq, isAdd) = cntx.roll_.plugLiquidity(curve.curve_, flow);
-        }
+        cntx.roll_.plugLiquidity(dir, curve.curve_, flow);
         
-        if (liq > 0) {
-            (int128 base, int128 quote) = isAdd ?
-                callMintAmbient(curve, liq, cntx.pool_.hash_) :
-                callBurnAmbient(curve, liq, cntx.pool_.hash_);
+        if (dir.liquidity_ > 0) {
+            (int128 base, int128 quote) = dir.isAdd_ ?
+                callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
+                callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
         
             flow.accumFlow(base, quote);
         }
@@ -325,11 +312,10 @@ contract MarketSequencer is TradeMatcher {
                                  Chaining.ExecCntx memory cntx) private {
         for (uint i = 0; i < dirs.length; ++i) {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
-                (int24 lowTick, int24 highTick, bool isAdd, uint128 liquidity) =
+                (int24 lowTick, int24 highTick, Directives.ConcenBookend memory bend) = 
                     dirs[i].sliceBookend(j);
-
                 (int128 nextBase, int128 nextQuote) = applyConcentrated
-                    (curve, flow, cntx, lowTick, highTick, isAdd, liquidity);
+                    (curve, flow, cntx, lowTick, highTick, bend);
                 flow.accumFlow(nextBase, nextQuote);
             }
         }
@@ -339,15 +325,13 @@ contract MarketSequencer is TradeMatcher {
     function applyConcentrated (CurveCache.Cache memory curve,
                                 Chaining.PairFlow memory flow,
                                 Chaining.ExecCntx memory cntx,
-                                int24 lowTick, int24 highTick, bool isAdd, uint128 liq)
+                                int24 lowTick, int24 highTick,
+                                Directives.ConcenBookend memory bend)
         private returns (int128, int128) {
-        if (isRoll(liq, isAdd)) {
-            (liq, isAdd) = Chaining.plugLiquidity(cntx.roll_, curve.curve_,
-                                                  flow, lowTick, highTick);
-        }
+        cntx.roll_.plugLiquidity(bend, curve.curve_, lowTick, highTick, flow);
 
-        if (isAdd) {
-            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, liq,
+        if (bend.isAdd_) {
+            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, bend.liquidity_,
                                                    cntx.pool_.head_.tickSize_,
                                                    curve.pullPriceTick());
             if (offGrid) {
@@ -359,17 +343,10 @@ contract MarketSequencer is TradeMatcher {
             }
         }
 
-        if (liq == 0) { return (0, 0); }
-        return isAdd ?
-            callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_) :
-            callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
-    }
-
-    /* @notice Returns true if the liquidity directive fields indicates that it wants to 
-     *         use a rolling gap-filled plugged into quantity instead of a pre-specified 
-     *         quantity. */
-    function isRoll (uint128 liq, bool isAdd) private pure returns (bool) {
-        return liq == 0 && isAdd == true;
+        if (bend.liquidity_ == 0) { return (0, 0); }
+        return bend.isAdd_ ?
+            callMintRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_) :
+            callBurnRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_);
     }
 
 }
