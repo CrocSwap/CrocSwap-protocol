@@ -41,9 +41,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param code The command code corresponding to the actual method being called.
      *             See ProtocolCmd.sol for outline of protocol command codes. */
     function protocolCmd (bytes calldata input) public {
-        (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
+        (uint8 code, address token, address sidecar, uint256 poolIdx, uint24 feeRate,
          uint8 protocolTake, uint16 ticks, uint128 value) =
-            abi.decode(input, (uint8, address, address, uint24, uint24,
+            abi.decode(input, (uint8, address, address, uint256, uint24,
                                uint8, uint16, uint128));
 
         if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
@@ -101,7 +101,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param price The price to initialize the pool. Represented as square root price in
      *              Q64.64 notation. */
     function initPool (bytes calldata cmd) private {
-        (, address base, address quote, uint24 poolIdx, uint128 price) =
+        (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint24,uint128));
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
@@ -117,7 +117,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param permitOracle The external oracle that permissions pool users (or if set to
      *                     0x0 address pool type is permissionless).
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs. */
-    function setTemplate (uint24 poolIdx, uint24 feeRate,
+    function setTemplate (uint256 poolIdx, uint24 feeRate,
                           uint8 protocolTake, uint16 tickSize,
                           address permitOracle, uint8 jitThresh) private {
         setPoolTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle,
@@ -133,7 +133,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param tickSize The pool's grid size in ticks.
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs in
      *                  in the pool. */
-    function revisePool (address base, address quote, uint24 poolIdx,
+    function revisePool (address base, address quote, uint256 poolIdx,
                          uint24 feeRate, uint8 protocolTake, uint16 tickSize,
                          uint8 jitThresh) private {
         setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize, jitThresh);

@@ -31,7 +31,7 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
 
     
     function swapExecute (address base, address quote,
-                          uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                          uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                           uint24 poolTip,
                           uint128 limitPrice, uint128 minOutput,
                           uint8 reserveFlags) internal
@@ -69,7 +69,7 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
     }
     
     function preparePoolCntx (address base, address quote,
-                              uint24 poolIdx, uint24 poolTip,
+                              uint256 poolIdx, uint24 poolTip,
                               bool isBuy, bool inBaseQty, uint128 qty) private
         returns (PoolSpecs.PoolCursor memory) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
@@ -82,9 +82,9 @@ contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount 
 
     function swapEncoded (bytes calldata input) internal returns (int128 outFlow) {
         (address base, address quote,
-         uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 poolTip,
+         uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 poolTip,
          uint128 limitPrice, uint128 minOutput, uint8 reserveFlags) =
-            abi.decode(input, (address, address, uint24, bool, bool,
+            abi.decode(input, (address, address, uint256, bool, bool,
                                uint128, uint24, uint128, uint128, uint8));
         
         return swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip,

@@ -112,7 +112,7 @@ library Directives {
      * @param chain_ Flags related to chaining order of the directive actions and how
      *               rolling back fill is calculated. */
     struct PoolDirective {
-        uint24 poolIdx_;
+        uint256 poolIdx_;
         AmbientDirective ambient_;
         ConcentratedDirective[] conc_;
         SwapDirective swap_;

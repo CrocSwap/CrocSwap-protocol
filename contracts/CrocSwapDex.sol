@@ -70,7 +70,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                   collateral balance held at the exchange. (Reduces gas cost 
      *                   associated with an explicit transfer.) */
     function swap (address base, address quote,
-                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 tip,
+                   uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 tip,
                    uint128 limitPrice, uint128 limitOut,
                    uint8 reserveFlags) reEntrantLock public payable {
         // By default the embedded hot-path is enabled, but protocol governance can

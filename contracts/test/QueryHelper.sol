@@ -15,7 +15,7 @@ contract QueryHelper {
         dex_ = dex;
     }
     
-    function queryCurve (address base, address quote, uint24 poolIdx)
+    function queryCurve (address base, address quote, uint256 poolIdx)
         public view returns (CurveMath.CurveState memory curve) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
@@ -29,13 +29,13 @@ contract QueryHelper {
         curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
-    function queryLiquidity (address base, address quote, uint24 poolIdx)
+    function queryLiquidity (address base, address quote, uint256 poolIdx)
         public view returns (uint128) {
         
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
-    function queryPrice (address base, address quote, uint24 poolIdx)
+    function queryPrice (address base, address quote, uint256 poolIdx)
         public view returns (uint128) {
         return queryCurve(base, quote, poolIdx).priceRoot_;
     }
@@ -56,7 +56,7 @@ contract QueryHelper {
         return uint128(val);
     }
 
-    function queryLevel (address base, address quote, uint24 poolIdx, int24 tick)
+    function queryLevel (address base, address quote, uint256 poolIdx, int24 tick)
         public view returns (uint96 bidLots, uint96 askLots, uint64 odometer) {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 key = keccak256(abi.encodePacked(poolHash, tick));

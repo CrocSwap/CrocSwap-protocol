@@ -108,7 +108,7 @@ contract PoolRegistry is StorageLayout {
      *                permissionless.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
      *                  rest before it can be burned. */
-    function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
+    function setPoolTemplate (uint256 poolIdx, uint24 feeRate,
                               uint8 protocolTake, uint16 tickSize,
                               address permitOracle, uint8 jitThresh) internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
@@ -135,7 +135,7 @@ contract PoolRegistry is StorageLayout {
      * @param tickSize The tick grid size for range orders in the pool.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
      *                  rest before it can be burned. */
-    function setPoolSpecs (address base, address quote, uint24 poolIdx,
+    function setPoolSpecs (address base, address quote, uint256 poolIdx,
                            uint24 feeRate, uint8 protocolTake,
                            uint16 tickSize, uint8 jitThresh) internal {
         PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
@@ -190,7 +190,7 @@ contract PoolRegistry is StorageLayout {
      * @return pool The pool specs associated with the newly created pool.
      * @return liqAnte The required amount of liquidity that the user must permanetely
      *                 lock to create the pool. (See setNewPoolLiq() above) */
-    function registerPool (address base, address quote, uint24 poolIdx) internal
+    function registerPool (address base, address quote, uint256 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory, uint128) {
         PoolSpecs.Pool memory template = queryTemplate(poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
@@ -222,13 +222,14 @@ contract PoolRegistry is StorageLayout {
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index. */
-    function queryPool (address base, address quote, uint24 poolIdx)
+    function queryPool (address base, address quote, uint256 poolIdx)
         internal view returns (PoolSpecs.PoolCursor memory pool) {
         pool = PoolSpecs.queryPool(pools_, base, quote, poolIdx);
         require(isPoolInit(pool), "PI");
     }
 
-    function assertPoolFresh (address base, address quote, uint24 poolIdx) internal view {
+    function assertPoolFresh (address base, address quote,
+                              uint256 poolIdx) internal view {
         PoolSpecs.PoolCursor memory pool =
             PoolSpecs.queryPool(pools_, base, quote, poolIdx);
         require(!isPoolInit(pool), "PF");
@@ -240,7 +241,7 @@ contract PoolRegistry is StorageLayout {
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index. */
-    function selectPool (address base, address quote, uint24 poolIdx)
+    function selectPool (address base, address quote, uint256 poolIdx)
         private view returns (PoolSpecs.Pool storage pool) {
         pool = PoolSpecs.selectPool(pools_, base, quote, poolIdx);
         require(isPoolInit(pool), "PI");
@@ -249,7 +250,7 @@ contract PoolRegistry is StorageLayout {
     /* @notice Looks up and returns the pool template associated with the pool type 
      *         index. If no template exists (or it was disabled after initialization)
      *         this call reverts the transaction. */
-    function queryTemplate (uint24 poolIdx)
+    function queryTemplate (uint256 poolIdx)
         private view returns (PoolSpecs.Pool memory template) {
         template = templates_[poolIdx];
         require(isPoolInit(template), "PT");

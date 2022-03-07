@@ -46,11 +46,11 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      * 
      * @param code The command code corresponding to the actual method being called. */
     function userCmd (bytes calldata input) public payable {
-        (uint8 code, address base, address quote, uint24 poolIdx,
+        (uint8 code, address base, address quote, uint256 poolIdx,
          int24 bidTick, int24 askTick, uint128 liq,
          uint128 limitLower, uint128 limitHigher,
          uint8 reserveFlags, address lpConduit) =
-            abi.decode(input, (uint8,address,address,uint24,int24,int24,
+            abi.decode(input, (uint8,address,address,uint256,int24,int24,
                                uint128,uint128,uint128,uint8,address));
         
         if (code == 1) {
@@ -115,7 +115,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   threshold.
      * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */    
-    function mint (address base, address quote, uint24 poolIdx,
+    function mint (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher,
                    uint8 reserveFlags) internal {
@@ -143,7 +143,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   threshold. 
      * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
-    function burn (address base, address quote, uint24 poolIdx,
+    function burn (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
@@ -167,7 +167,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   threshold. 
      * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
-    function harvest (address base, address quote, uint24 poolIdx,
+    function harvest (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, 
                       uint128 limitLower, uint128 limitHigher, uint8 reserveFlags)
         internal {
@@ -198,7 +198,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   threshold. 
      * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
-    function mint (address base, address quote, uint24 poolIdx, uint128 liq,
+    function mint (address base, address quote, uint256 poolIdx, uint128 liq,
                    address lpConduit, uint128 limitLower, uint128 limitHigher,
                    uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
@@ -209,7 +209,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 
-    function mintQty (address base, address quote, uint24 poolIdx, bool inBase,
+    function mintQty (address base, address quote, uint256 poolIdx, bool inBase,
                       uint128 qty, address lpConduit, uint128 limitLower,
                       uint128 limitHigher, uint8 reserveFlags) internal {
         bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
@@ -218,7 +218,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher, reserveFlags);
     }
 
-    function mintQty (address base, address quote, uint24 poolIdx,
+    function mintQty (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, bool inBase,
                       uint128 qty, address lpConduit, uint128 limitLower,
                       uint128 limitHigher, uint8 reserveFlags) internal {
@@ -244,7 +244,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
      *                   threshold. 
      * @param reserveFlags If true, settlement is first attempted with the surplus 
      *                   collateral (if any) that the user holds at the exchange. */
-    function burn (address base, address quote, uint24 poolIdx, uint128 liq,
+    function burn (address base, address quote, uint256 poolIdx, uint128 liq,
                    uint128 limitLower, uint128 limitHigher, uint8 reserveFlags) internal {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         verifyPermitBurn(pool, base, quote, 0, 0, liq);
@@ -254,7 +254,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 
-    function burnQty (address base, address quote, uint24 poolIdx, bool inBase,
+    function burnQty (address base, address quote, uint256 poolIdx, bool inBase,
                       uint128 qty, uint128 limitLower, uint128 limitHigher,
                       uint8 reserveFlags) internal {
         bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
@@ -263,7 +263,7 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         burn(base, quote, poolIdx, liq, limitLower, limitHigher, reserveFlags);
     }
 
-    function burnQty (address base, address quote, uint24 poolIdx,
+    function burnQty (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, bool inBase,
                       uint128 qty, uint128 limitLower,
                       uint128 limitHigher, uint8 reserveFlags) internal {
