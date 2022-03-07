@@ -42,22 +42,11 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *             See ProtocolCmd.sol for outline of protocol command codes. */
     function protocolCmd (bytes calldata input) public {
         (uint8 code, address token, address sidecar, uint24 poolIdx, uint24 feeRate,
-         uint8 protocolTake, uint16 ticks, uint128 value) = input.decodeProtocolCmd();
+         uint8 protocolTake, uint16 ticks, uint128 value) =
+            abi.decode(input, (uint8, address, address, uint24, uint24,
+                               uint8, uint16, uint128));
 
-        if (code == ProtocolCmd.COLLECT_TREASURY_CODE) {
-            collectProtocol(token, sidecar);
-            
-        } else if (code == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
-            emit CrocEvents.AuthorityTransfer(authority_);
-            authority_ = sidecar;
-            
-        } else if (code == ProtocolCmd.UPGRADE_DEX_CODE) {
-            upgradeProxy(sidecar, protocolTake);
-            
-        } else if (code == ProtocolCmd.FORCE_HOT_CODE) {
-            forceHotProxy(protocolTake > 0);
-          
-        } else if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
+        if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
             uint8 jit = value.toUint8();
             setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
             
@@ -70,6 +59,26 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             
         } else if (code == ProtocolCmd.OFF_GRID_CODE) {
             pegPriceImprove(token, value, ticks);
+        }
+    }
+
+    function sudoCmd (bytes calldata cmd) public {
+        uint8 cmdCode = uint8(cmd[31]);
+        
+        if (cmdCode == ProtocolCmd.COLLECT_TREASURY_CODE) {
+            collectProtocol(cmd);
+            
+        } else if (cmdCode == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
+            transferAuthority(cmd);
+            
+        } else if (cmdCode == ProtocolCmd.UPGRADE_DEX_CODE) {
+            upgradeProxy(cmd);
+            
+        } else if (cmdCode == ProtocolCmd.HOT_OPEN_CODE) {
+            setHotPathOpen(cmd);
+
+        } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {
+            setSafeMode(cmd);
         }
     }
 
@@ -145,28 +154,40 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *         cold path contract, since that contains the upgrade code itself.
      * @param proxy The address of the new proxy smart contract
      * @param proxyIdx Determines which proxy is upgraded on this call */
-    function upgradeProxy (address proxy, uint8 proxyIdx) private {
+    function upgradeProxy (bytes calldata cmd) private {
+        (, address proxy, uint16 proxyIdx) =
+            abi.decode(cmd, (uint8, address, uint16));
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
         proxyPaths_[proxyIdx] = proxy;        
     }
 
-    /* @notice Upgrades one of the existing proxy sidecar contracts.
-     * @dev    Be extremely careful calling this, particularly when upgrading the
-     *         cold path contract, since that contains the upgrade code itself.
-     * @param proxy The address of the new proxy smart contract
-     * @param proxyIdx Determines which proxy is upgraded on this call */
-    function forceHotProxy (bool force) private {
-        emit CrocEvents.ForceHotProxy(force);
-        forceHotProxy_ = force;
-        
+    function setHotPathOpen (bytes calldata cmd) private {
+        (, bool open) = abi.decode(cmd, (uint8, bool));
+        emit CrocEvents.HotPathOpen(open);
+        hotPathOpen_ = open;        
+    }
+
+    function setSafeMode (bytes calldata cmd) private {
+        (, bool inSafeMode) = abi.decode(cmd, (uint8, bool));
+        emit CrocEvents.SafeMode(inSafeMode);
+        inSafeMode_ = inSafeMode;        
     }
 
     /* @notice Pays out the the protocol fees.
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
-    function collectProtocol (address token, address recv) private {
-        disburseProtocolFees(recv, token);
+    function collectProtocol (bytes calldata cmd) private {
+        (, address recv, address token) =
+            abi.decode(cmd, (uint8, address, address));
         emit CrocEvents.ProtocolDividend(token, recv);
+        disburseProtocolFees(recv, token);
+    }
+
+    function transferAuthority (bytes calldata cmd) private {
+        (, address auth) =
+            abi.decode(cmd, (uint8, address));
+        emit CrocEvents.AuthorityTransfer(authority_);
+        authority_ = auth;
     }
 
     /* @notice Used to directly pay out or pay in surplus collateral.

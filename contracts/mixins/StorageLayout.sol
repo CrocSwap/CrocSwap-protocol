@@ -24,23 +24,15 @@ contract StorageLayout {
 
     // If set to true, than the embedded hot-path (swap()) is not enabled and
     // users must use the hot proxy for the hot-path. By default set to false.
-    bool internal forceHotProxy_;
-
-    // Address of the current dex protocol authority. Can be transfered
-    address internal authority_;
+    bool internal hotPathOpen_;
+    bool internal inSafeMode_;
 
     // Slots for sidecar proxy contracts
     address[65536] internal proxyPaths_;
-    
-    // The slots of the currently attached sidecar proxy contracts. Can be upgraded
-    // over time.
-    uint8 constant COLD_PROXY_IDX = 0;
-    uint8 constant WARM_PROXY_IDX = 1;
-    uint8 constant LONG_PROXY_IDX = 2;
-    uint8 constant MICRO_PROXY_IDX = 3;
-    uint8 constant HOT_PROXY_IDX = 4;
+        
+    // Address of the current dex protocol authority. Can be transfered
+    address internal authority_;
 
-    
     /**************************************************************/
     // LevelBook
     /**************************************************************/
@@ -130,7 +122,6 @@ contract StorageLayout {
     /**************************************************************/
 }
 
-
 contract StoragePrototypes is StorageLayout {
     UserBalance bal_;
     CurveMath.CurveState curve_;
@@ -150,4 +141,17 @@ library CrocSlots {
 
     uint constant public AGENT_DEBIT_OFFSET = 0x100;
     uint constant public AGENT_BURN_OFFSET = 0x1;
+
+        
+    // The slots of the currently attached sidecar proxy contracts. Can be upgraded
+    // over time.
+    uint16 constant ADMIN_PROXY_IDX = 0;
+    uint16 constant SWAP_PROXY_IDX = 1;
+    uint16 constant LP_PROXY_IDX = 2;
+    uint16 constant BAL_PROXY_IDX = 3;
+    uint16 constant LONG_PROXY_IDX = 4;
+    uint16 constant MICRO_PROXY_IDX = 5;
+    uint16 constant LIMIT_PROXY_IDX = 6;
+
+    uint16 constant SAFE_MODE_PROXY_PATH = 9999;
 }

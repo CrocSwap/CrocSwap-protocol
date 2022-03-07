@@ -31,7 +31,7 @@ contract CrocPolicy {
      * @param minion The underlying receiver of the protocol command (i.e. the 
      *               CrocSwapDex contract).
      * @param cmd The command being called on the minion's protocolCmd() function. */
-    event CrocResolutionTreasury (address minion, bytes cmd);
+    event CrocResolutionTreasury (address minion, bool sudo, bytes cmd);
 
     /* @notice Emitted when an emergency halt is invoked.
      * @param minion The underlying receiver of the protocol commands to disable the
@@ -43,7 +43,7 @@ contract CrocPolicy {
      * @param conduit The policy conduit the rule applies to
      * @param PolicyRule The policy rules set for this conduit (see PolicyRule comments
      *                   below). */
-    event CrocPolicySet (address conduit, PolicyRule);
+    event CrocPolicySet (address conduit, uint16 proxyPath, PolicyRule);
 
     /* @notice Emitted when a new policy rule is force updated. This has the same outcome
      *         but can override a policy mandate time. Should not be called in normal
@@ -51,7 +51,7 @@ contract CrocPolicy {
      * @param conduit The policy conduit the rule applies to
      * @param PolicyRule The policy rules set for this conduit (see PolicyRule comments
      *                   below). */
-    event CrocPolicyForce (address conduit, PolicyRule);
+    event CrocPolicyForce (address conduit, uint16 proxyPath, PolicyRule);
 
     /* @notice Invoked by emergency authority to revoke all authority vested to a policy
      *         conduit oracle. 
@@ -118,7 +118,6 @@ contract CrocPolicy {
      * @param cmd    The content of the command passed to the protocolCmd() method. */
     function opsResolution (address minion, uint8 proxyPath,
                             bytes calldata cmd) opsAuth public {
-        require(!cmd.isPrivilegedCmd(), "Ops Privilege");
         emit CrocResolutionOps(minion, cmd);
         ICrocMinion(minion).protocolCmd(proxyPath, cmd);
     }
@@ -130,10 +129,14 @@ contract CrocPolicy {
      *               called on.
      * @param cmd    The content of the command passed to the protocolCmd() method. */
     function treasuryResolution (address minion, uint8 proxyPath,
-                                 bytes calldata cmd)
+                                 bytes calldata cmd, bool sudo)
         treasuryAuth public {
-        emit CrocResolutionTreasury(minion, cmd);
-        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
+        emit CrocResolutionTreasury(minion, sudo, cmd);
+        if (sudo) {
+            ICrocMinion(minion).sudoCmd(proxyPath, cmd);
+        } else {
+            ICrocMinion(minion).protocolCmd(proxyPath, cmd);
+        }
     }
 
     /* @notice An out-of-band emergency measure to protect funds in the CrocSwapDex 
@@ -151,17 +154,11 @@ contract CrocPolicy {
         emergencyAuth public {
         emit CrocEmergencyHalt(minion, reason);
 
-        uint8 UPGRADE_PROXY = 0;
-        uint NUKE_EMERGENCY_RANGE = 2;
-
-        bytes memory cmd = ProtocolCmd.encodeForceProxy(true);
-        ICrocMinion(minion).protocolCmd(UPGRADE_PROXY, cmd);
+        bytes memory cmd = ProtocolCmd.encodeHotPath(false);
+        ICrocMinion(minion).sudoCmd(CrocSlots.ADMIN_PROXY_IDX, cmd);
         
-        for (uint i = NUKE_EMERGENCY_RANGE; i < 256; ++i) {
-            cmd = ProtocolCmd.encodeUpgrade(address(0), uint8(i));
-            ICrocMinion(minion).protocolCmd(UPGRADE_PROXY, cmd);
-        }
-
+        cmd = ProtocolCmd.encodeSafeMode(true);
+        ICrocMinion(minion).sudoCmd(CrocSlots.ADMIN_PROXY_IDX, cmd);
     }
 
     /* @notice Croc policy rules are set on a per address basis. Each address 
@@ -170,8 +167,7 @@ contract CrocPolicy {
      * 
      * @param cmdFlags_ A vector of boolean flags. true entry at index X indicates
      *                  that the policy conduit is authorized to invoke protocol
-     *                  command code X+32 (the first 32 protocol commands are 
-     *                  reserved for governance only).
+     *                  command code X (192 possible codes).
      * @param mandateTime_ A pre-commited time that the policy will remain in place. Zero
      *                     indicates no mandata and can be changed by ops governance at
      *                     any time. Policy can be strengthened in a mandate, but only
@@ -213,7 +209,7 @@ contract CrocPolicy {
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule (if any), assuming the transition is legal
      *                relative to the mandate. */    
-    function setPolicy (address conduit, uint8 proxyPath,
+    function setPolicy (address conduit, uint16 proxyPath,
                         PolicyRule calldata policy) opsAuth public {
         bytes32 key = rulesKey(conduit, proxyPath);
         
@@ -221,10 +217,11 @@ contract CrocPolicy {
         require(isLegal(prev, policy), "Illegal policy update");
 
         rules_[key] = policy;
-        emit CrocPolicySet(conduit, policy);
+        emit CrocPolicySet(conduit, proxyPath, policy);
     }
 
-    function rulesKey (address conduit, uint8 proxyPath) private pure returns (bytes32) {
+    function rulesKey (address conduit, uint16 proxyPath)
+        private pure returns (bytes32) {
         return keccak256(abi.encode(conduit, proxyPath));
     }
 
@@ -235,11 +232,11 @@ contract CrocPolicy {
      * @param conduit The address of the conduit oracle this policy rule applies to.
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
-    function forcePolicy (address conduit, uint8 proxyPath, PolicyRule calldata policy)
+    function forcePolicy (address conduit, uint16 proxyPath, PolicyRule calldata policy)
         treasuryAuth public {
         bytes32 key = rulesKey(conduit, proxyPath);
         rules_[key] = policy;
-        emit CrocPolicyForce(conduit, policy);
+        emit CrocPolicyForce(conduit, proxyPath, policy);
     }
 
     /* @notice Called by emergency authority to set or update a new policy rules. Only
@@ -297,14 +294,8 @@ contract CrocPolicy {
         if (SafeCast.timeUint32() >= expireTime(policy)) {
             return false;
         }
-        uint8 flagIdx = protocolCmd.parseProtocolCmdCode();
+        uint8 flagIdx = uint8(protocolCmd[31]);
         return isFlagSet(policy.cmdFlags_, flagIdx);
-    }
-
-    function determineCmdFlag (bytes calldata protocolCmd) private pure returns (uint8) {
-        uint8 code = protocolCmd.parseProtocolCmdCode();
-        require(code >= ProtocolCmd.PRIVILEGE_CMD_SPACE, "Privileged policy rule");
-        return code - ProtocolCmd.PRIVILEGE_CMD_SPACE;
     }
 
     function expireTime (PolicyRule memory policy) private pure returns (uint32) {

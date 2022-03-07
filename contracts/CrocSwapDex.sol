@@ -9,7 +9,6 @@ import './libraries/PriceGrid.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
-import './mixins/OracleHist.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
 import './interfaces/ICrocSwapHistRecv.sol';
@@ -45,10 +44,12 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     constructor (address authority, address coldPath, address warmPath,
                  address longPath, address microPath) {
         authority_ = authority;
-        proxyPaths_[COLD_PROXY_IDX] = coldPath;
-        proxyPaths_[WARM_PROXY_IDX] = warmPath;
-        proxyPaths_[LONG_PROXY_IDX] = longPath;
-        proxyPaths_[MICRO_PROXY_IDX] = microPath;
+        hotPathOpen_ = true;
+        proxyPaths_[CrocSlots.ADMIN_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.BAL_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = warmPath;
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = longPath;
+        proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = microPath;
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -69,66 +70,30 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                   collateral balance held at the exchange. (Reduces gas cost 
      *                   associated with an explicit transfer.) */
     function swap (address base, address quote,
-                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                   uint128 limitPrice, uint128 limitStart,
+                   uint24 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint24 tip,
+                   uint128 limitPrice, uint128 limitOut,
                    uint8 reserveFlags) reEntrantLock public payable {
         // By default the embedded hot-path is enabled, but protocol governance can
         // disable by toggling the force proxy flag. If so, users should point to
         // swapProxy.
-        require(!forceHotProxy_, "HP");
-        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty,
-                        limitPrice, limitStart, reserveFlags);
+        require(hotPathOpen_);
+        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
+                    limitPrice, limitOut, reserveFlags);
     }
-
-    /* @notice Equality to swap(), but uses the proxy sidecar contract. Less gas 
-     *         efficient but clients may want to use if 1) there are upgraded features
-     *         in the proxy or 2) forceHotProxy_ has been turned on by protocol 
-     *         authority. */
-    function swapProxy (bytes calldata input) reEntrantLock public payable {
-        callUserCmd(HOT_PROXY_IDX, input);
-    }
-
-    /* @notice Like swap(), but if force hot proxy is turned on, will fallback to the
-     *         proxy swap() call. Makes the call future-proof, at the expense of 
-     *         slightly higher gas. */
-    function swapOptimal (bytes calldata input) reEntrantLock public payable {
-        if (forceHotProxy_) {
-            callUserCmd(HOT_PROXY_IDX, input);
-        } else {
-            swapEncoded(input);
-        }
-    }
-
-    /*function swapAgent (bytes calldata input, address client)
-        reEntrantApproved(client) public payable {
-        swapCmd(input);
-    }
-    
-    function swapAgent (bytes calldata input, bytes calldata signature,
-                        uint32 nonce, bytes32 nonceDim, uint48 deadline,
-                        bytes32 tipKey, uint128 tip)
-        reEntrantAgent(signature, nonce, nonceDim, deadline,
-                       keccak256(input)) public payable {
-        swapCmd(input);
-        tipRelayer(tipKey, tip);
-    }
-
-    function swapCmd (bytes calldata input) private {
-        if (forceHotProxy_) {
-            callUserCmd(HOT_PROXY_IDX, input);
-        } else {
-            swapEncoded(input);
-        }
-        }*/
 
     /* @notice Consolidated method for protocol control related commands.
      * @dev    We consolidate multiple protocol control types into a single method to 
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function protocolCmd (uint8 proxyIdx, bytes calldata input) protocolOnly
-        public payable override {
-        callProtocolCmd(proxyIdx, input);
+    function protocolCmd (uint16 proxyIdx, bytes calldata input) protocolOnly
+        public payable override returns (bytes memory) {
+        return callProtocolCmd(proxyIdx, input);
+    }
+
+    function sudoCmd (uint16 proxyIdx, bytes calldata input) protocolOnly
+        public payable override returns (bytes memory) {
+        return callSudoCmd(proxyIdx, input);
     }
 
     /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
@@ -139,23 +104,25 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param spillIdx The index (0-63) of the spill sidecar the command is being sent to
      * @param input The arbitrary call data the client is calling the spill proxy 
      *              sidecar with */
-    function userCmd (uint8 proxyIdx, bytes calldata input) reEntrantLock
-        public payable override {
-        callUserCmd(proxyIdx, input);
+    function userCmd (uint16 proxyIdx, bytes calldata input) reEntrantLock
+        public payable override returns (bytes memory) {
+        return callUserCmd(proxyIdx, input);
     }
 
-    function userCmdAgent (uint8 proxyIdx, bytes calldata input,
-                           bytes calldata signature,
+    function userCmdAgent (uint16 proxyIdx, bytes calldata input,
+                           bytes calldata signature, bytes calldata conds,
                            bytes calldata relayerTip)
-        reEntrantAgent(signature, keccak256(abi.encode(proxyIdx, input, relayerTip)))
-        public payable {
-        callUserCmd(proxyIdx, input);
+        reEntrantAgent(signature, conds, abi.encode(proxyIdx, input, relayerTip))
+        public payable returns (bytes memory output) {
+        output = callUserCmd(proxyIdx, input);
         tipRelayer(relayerTip);
     }
 
-    function userCmdAgent (uint8 proxyIdx, bytes calldata input, address client)
-        reEntrantApproved(client) public payable {
-        callUserCmd(proxyIdx, input);
+    function userCmdAgent (uint16 proxyIdx, bytes calldata input, address client,
+                           uint256 clientSalt, uint256 agentSalt)
+        reEntrantApproved(client, clientSalt, agentSalt) public payable
+        returns (bytes memory) {
+        return callUserCmd(proxyIdx, input);
     }
         
     /* @notice General purpose query fuction for reading arbitrary data from the dex.

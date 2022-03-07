@@ -19,7 +19,9 @@ library ProtocolCmd {
     // Code to upgrade one of the sidecar proxy contracts on CrocSwapDex.
     uint8 constant UPGRADE_DEX_CODE = 21;
     // Code to force hot path to use the proxy contract
-    uint8 constant FORCE_HOT_CODE = 22;
+    uint8 constant HOT_OPEN_CODE = 22;
+    // Code to force hot path to use the proxy contract
+    uint8 constant SAFE_MODE_CODE = 23;
     // Code to collect accumulated protocol fees for the treasury.
     uint8 constant COLLECT_TREASURY_CODE = 40;
     ////////////////////////////////////////////////////////////////////////////
@@ -39,41 +41,19 @@ library ProtocolCmd {
     ////////////////////////////////////////////////////////////////////////////
 
 
-    
-    function isPrivilegedCmd (bytes calldata input) internal pure returns (bool) {
-        return parseProtocolCmdCode(input) <  PRIVILEGE_CMD_SPACE;
-    }
-    
-    function decodeProtocolCmd (bytes calldata input) internal pure
-        returns (uint8, address, address, uint24,
-                 uint24, uint8, uint16, uint128) {
-        return abi.decode(input, (uint8, address, address, uint24, uint24,
-                                  uint8, uint16, uint128));
-    }
-
-    function parseProtocolCmdCode (bytes calldata input) internal pure returns (uint8) {
-        // ABI encode packs uint8 fields with 31 leading 0 bytes.
-        uint8 codeIdx = 31;
-        return uint8(input[codeIdx]);
-    }
-
-    function encodeProtocolCmd (uint8 code, address addrA, address addrB,
-                                uint24 idxA, uint24 idxB, uint8 idxM,
-                                uint16 idxZ, uint128 value) internal pure
-        returns (bytes memory) {
-        return abi.encode(code, addrA, addrB, idxA, idxB, idxM, idxZ, value);
-    }
-
-    function encodeUpgrade (address proxy, uint8 proxySlot)
+    function encodeUpgrade (address proxy, uint16 proxySlot)
         internal pure returns (bytes memory) {
-        return encodeProtocolCmd(UPGRADE_DEX_CODE, address(0), address(proxy),
-                                 0, 0, proxySlot, 0, 0);
+        return abi.encode(UPGRADE_DEX_CODE, proxy, proxySlot);
     }
 
-    function encodeForceProxy (bool forceProxy)
+    function encodeHotPath (bool open)
         internal pure returns (bytes memory) {
-        return encodeProtocolCmd(FORCE_HOT_CODE, address(0), address(0),
-                                 0, 0, forceProxy ? 1 : 0, 0, 0);
+        return abi.encode(HOT_OPEN_CODE, open);
+    }
+
+    function encodeSafeMode (bool safeMode)
+        internal pure returns (bytes memory) {
+        return abi.encode(SAFE_MODE_CODE, safeMode);
     }
 
 }

@@ -21,26 +21,43 @@ contract ColdPathInjector is StorageLayout {
     using Chaining for Chaining.PairFlow;
 
     /* @notice Passes through the protocolCmd call to a sidecar proxy. */
-    function callProtocolCmd (uint8 proxyIdx, bytes calldata input) internal {
+    function callSudoCmd (uint16 proxyIdx, bytes calldata input) internal
+        returns (bytes memory) {
         require(proxyPaths_[proxyIdx] != address(0));
-        (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
+        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
+            abi.encodeWithSignature("sudoCmd(bytes)", input));
+        require(success);
+        return output;
+    }
+
+    /* @notice Passes through the protocolCmd call to a sidecar proxy. */
+    function callProtocolCmd (uint16 proxyIdx, bytes calldata input) internal
+        returns (bytes memory) {
+        require(proxyPaths_[proxyIdx] != address(0));
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
+        return output;
     }
 
     /* @notice Passes through the userCmd call to a sidecar proxy. */
-    function callUserCmd (uint8 proxyIdx, bytes calldata input) internal {
+    function callUserCmd (uint16 proxyIdx, bytes calldata input)
+        internal returns (bytes memory) {
         require(proxyPaths_[proxyIdx] != address(0));
-        (bool success, ) = proxyPaths_[proxyIdx].delegatecall(
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
         require(success);
+        return output;
     }
 
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
-        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
+        (bool success, bytes memory output) =
+            proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("mintAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
@@ -61,7 +78,8 @@ contract ColdPathInjector is StorageLayout {
                               bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
 
-        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
+        (bool success, bytes memory output) =
+            proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("burnAmbient(uint128,uint128,uint128,uint64,uint64,uint128,bytes32)",
               curve.curve_.priceRoot_, 
@@ -83,7 +101,8 @@ contract ColdPathInjector is StorageLayout {
                             bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
 
-        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
+        (bool success, bytes memory output) =
+            proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("mintRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
@@ -106,7 +125,8 @@ contract ColdPathInjector is StorageLayout {
                             bytes32 poolHash) internal
         returns (int128 basePaid, int128 quotePaid) {
         
-        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
+        (bool success, bytes memory output) =
+            proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("burnRange(uint128,int24,uint128,uint128,uint64,uint64,int24,int24,uint128,bytes32)",
               curve.curve_.priceRoot_, curve.pullPriceTick(),
@@ -126,7 +146,8 @@ contract ColdPathInjector is StorageLayout {
                        CurveCache.Cache memory curve,
                        Directives.SwapDirective memory swap,
                        PoolSpecs.PoolCursor memory pool) internal {
-        (bool success, bytes memory output) = proxyPaths_[MICRO_PROXY_IDX].delegatecall
+        (bool success, bytes memory output) =
+            proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("sweepSwap((uint128,uint128,uint128,uint64,uint64),int24,(uint8,bool,bool,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
               curve.curve_, curve.pullPriceTick(), swap, pool));
