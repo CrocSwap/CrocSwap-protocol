@@ -193,10 +193,16 @@ library Chaining {
         (bend.liquidity_, bend.isAdd_) = (liq, isAdd);
     }
 
+    function sizeAmbientLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
+                             bool inBaseQty) internal pure returns (uint128) {
+        uint128 liq = collateral.liquiditySupported
+            (inBaseQty, priceRoot);
+        return isAdd ? liq : (liq + 1);
+    }
+    
     function sizeConcLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
                           int24 lowTick, int24 highTick, bool inBaseQty)
         internal pure returns (uint128) {
-        
         (uint128 bidPrice, uint128 askPrice) =
             determinePriceRange(priceRoot, lowTick, highTick, inBaseQty);
         

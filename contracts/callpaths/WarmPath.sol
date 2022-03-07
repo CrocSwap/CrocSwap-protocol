@@ -56,14 +56,42 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         if (code == 1) {
             mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                  limitLower, limitHigher, reserveFlags);
+        } else if (code == 11) {
+            mintQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
+                 limitLower, limitHigher, reserveFlags);
+        } else if (code == 12) {
+            mintQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
+                 limitLower, limitHigher, reserveFlags);
+            
         } else if (code == 2) {
             burn(base, quote, poolIdx, bidTick, askTick, liq,
                  limitLower, limitHigher, reserveFlags);
+        } else if (code == 11) {
+            burnQty(base, quote, poolIdx, bidTick, askTick, true, liq,
+                 limitLower, limitHigher, reserveFlags);
+        } else if (code == 12) {
+            burnQty(base, quote, poolIdx, bidTick, askTick, false, liq,
+                 limitLower, limitHigher, reserveFlags);
+            
         } else if (code == 3) {
             mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher,
                  reserveFlags);
+        } else if (code == 31) {
+            mintQty(base, quote, poolIdx, true, liq, lpConduit, limitLower, limitHigher,
+                    reserveFlags);
+        } else if (code == 32) {
+            mintQty(base, quote, poolIdx, false, liq, lpConduit, limitLower, limitHigher,
+                    reserveFlags);
+            
         } else if (code == 4) {
             burn(base, quote, poolIdx, liq, limitLower, limitHigher, reserveFlags);
+        } else if (code == 41) {
+            burnQty(base, quote, poolIdx, true, liq, limitLower, limitHigher,
+                    reserveFlags);
+        } else if (code == 42) {
+            burnQty(base, quote, poolIdx, false, liq, limitLower, limitHigher,
+                    reserveFlags);
+            
         } else if (code == 5) {
             harvest(base, quote, poolIdx, bidTick, askTick, limitLower, limitHigher,
                     reserveFlags);            
@@ -181,6 +209,28 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
     }
 
+    function mintQty (address base, address quote, uint24 poolIdx, bool inBase,
+                      uint128 qty, address lpConduit, uint128 limitLower,
+                      uint128 limitHigher, uint8 reserveFlags) internal {
+        bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
+        CurveMath.CurveState memory curve = snapCurve(poolKey);
+        uint128 liq = Chaining.sizeAmbientLiq(qty, true, curve.priceRoot_, inBase);
+        mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher, reserveFlags);
+    }
+
+    function mintQty (address base, address quote, uint24 poolIdx,
+                      int24 bidTick, int24 askTick, bool inBase,
+                      uint128 qty, address lpConduit, uint128 limitLower,
+                      uint128 limitHigher, uint8 reserveFlags) internal {
+        bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
+        CurveMath.CurveState memory curve = snapCurve(poolKey);
+        uint128 liq = Chaining.sizeConcLiq(qty, true, curve.priceRoot_,
+                                           bidTick, askTick, inBase);
+        mint(base, quote, poolIdx, bidTick, askTick,
+             liq, lpConduit, limitLower, limitHigher, reserveFlags);
+    }
+
+    
     /* @notice Burns ambient liquidity that's active at every price.
      * @param base The base-side token in the pair.
      * @param quote The quote-side token in the par.
@@ -202,5 +252,26 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         (int128 baseFlow, int128 quoteFlow) =
             burnOverPool(liq, pool, limitLower, limitHigher);
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
+    }
+
+    function burnQty (address base, address quote, uint24 poolIdx, bool inBase,
+                      uint128 qty, uint128 limitLower, uint128 limitHigher,
+                      uint8 reserveFlags) internal {
+        bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
+        CurveMath.CurveState memory curve = snapCurve(poolKey);
+        uint128 liq = Chaining.sizeAmbientLiq(qty, false, curve.priceRoot_, inBase);
+        burn(base, quote, poolIdx, liq, limitLower, limitHigher, reserveFlags);
+    }
+
+    function burnQty (address base, address quote, uint24 poolIdx,
+                      int24 bidTick, int24 askTick, bool inBase,
+                      uint128 qty, uint128 limitLower,
+                      uint128 limitHigher, uint8 reserveFlags) internal {
+        bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
+        CurveMath.CurveState memory curve = snapCurve(poolKey);
+        uint128 liq = Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
+                                           bidTick, askTick, inBase);
+        burn(base, quote, poolIdx, bidTick, askTick,
+             liq, limitLower, limitHigher, reserveFlags);
     }
 }
