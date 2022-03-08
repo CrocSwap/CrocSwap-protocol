@@ -119,7 +119,7 @@ contract CrocPolicy {
     function opsResolution (address minion, uint8 proxyPath,
                             bytes calldata cmd) opsAuth public {
         emit CrocResolutionOps(minion, cmd);
-        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd, false);
     }
 
     /* @notice Resolution from the treasury authority which calls protocolCmd() on the 
@@ -132,11 +132,7 @@ contract CrocPolicy {
                                  bytes calldata cmd, bool sudo)
         treasuryAuth public {
         emit CrocResolutionTreasury(minion, sudo, cmd);
-        if (sudo) {
-            ICrocMinion(minion).sudoCmd(proxyPath, cmd);
-        } else {
-            ICrocMinion(minion).protocolCmd(proxyPath, cmd);
-        }
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd, sudo);
     }
 
     /* @notice An out-of-band emergency measure to protect funds in the CrocSwapDex 
@@ -155,10 +151,10 @@ contract CrocPolicy {
         emit CrocEmergencyHalt(minion, reason);
 
         bytes memory cmd = ProtocolCmd.encodeHotPath(false);
-        ICrocMinion(minion).sudoCmd(CrocSlots.ADMIN_PROXY_IDX, cmd);
+        ICrocMinion(minion).protocolCmd(CrocSlots.ADMIN_PROXY_IDX, cmd, true);
         
         cmd = ProtocolCmd.encodeSafeMode(true);
-        ICrocMinion(minion).sudoCmd(CrocSlots.ADMIN_PROXY_IDX, cmd);
+        ICrocMinion(minion).protocolCmd(CrocSlots.ADMIN_PROXY_IDX, cmd, true);
     }
 
     /* @notice Croc policy rules are set on a per address basis. Each address 
@@ -198,7 +194,7 @@ contract CrocPolicy {
         bytes32 ruleKey = keccak256(abi.encode(msg.sender, proxyPath));
         PolicyRule memory policy = rules_[ruleKey];
         require(passesPolicy(policy, cmd), "Policy authority");
-        ICrocMinion(minion).protocolCmd(proxyPath, cmd);
+        ICrocMinion(minion).protocolCmd(proxyPath, cmd, false);
     }
 
     /* @notice Called by ops authority to set or update a new policy rules. The only

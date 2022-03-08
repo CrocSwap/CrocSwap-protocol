@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.5.0;
     
-import "../mixins/SettleLayer.sol";
+import "../mixins/DepositDesk.sol";
 
-contract TestSettleLayer is SettleLayer {
+contract TestSettleLayer is DepositDesk {
 
     address private recv_;
     address private send_;

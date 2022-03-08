@@ -19,8 +19,9 @@ import '../libraries/PriceGrid.sol';
  *    contracts. */
 contract StorageLayout {
 
-    // Re-entant lock. Should always be false at rest.
+    // Re-entant lock. Should always be 0x0 at rest
     address internal lockHolder_;
+    bool internal sudoMode_;
 
     // If set to true, than the embedded hot-path (swap()) is not enabled and
     // users must use the hot proxy for the hot-path. By default set to false.

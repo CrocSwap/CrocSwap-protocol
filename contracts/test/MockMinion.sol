@@ -9,20 +9,14 @@ contract MockMinion is ICrocMinion {
     bytes[] public cmds_;
     uint16[] public paths_;
     address[] public callers_;
+    bool[] public sudos_;
 
-    function protocolCmd (uint16 proxyPath, bytes calldata cmd) public payable
+    function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable
         override returns (bytes memory) {
         paths_.push(proxyPath);
         cmds_.push(cmd);
         callers_.push(tx.origin);
-        return abi.encode();
-    }
-
-    function sudoCmd (uint16 proxyPath, bytes calldata cmd) public payable
-        override returns (bytes memory) {
-        paths_.push(proxyPath);
-        cmds_.push(cmd);
-        callers_.push(tx.origin);
+        sudos_.push(sudo);
         return abi.encode();
     }
 

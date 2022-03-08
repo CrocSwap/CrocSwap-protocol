@@ -21,16 +21,6 @@ contract ColdPathInjector is StorageLayout {
     using Chaining for Chaining.PairFlow;
 
     /* @notice Passes through the protocolCmd call to a sidecar proxy. */
-    function callSudoCmd (uint16 proxyIdx, bytes calldata input) internal
-        returns (bytes memory) {
-        require(proxyPaths_[proxyIdx] != address(0));
-        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
-            abi.encodeWithSignature("sudoCmd(bytes)", input));
-        require(success);
-        return output;
-    }
-
-    /* @notice Passes through the protocolCmd call to a sidecar proxy. */
     function callProtocolCmd (uint16 proxyIdx, bytes calldata input) internal
         returns (bytes memory) {
         require(proxyPaths_[proxyIdx] != address(0));

@@ -86,14 +86,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function protocolCmd (uint16 proxyIdx, bytes calldata input) protocolOnly
+    function protocolCmd (uint16 proxyIdx, bytes calldata input, bool sudo)
+        protocolOnly(sudo)
         public payable override returns (bytes memory) {
         return callProtocolCmd(proxyIdx, input);
-    }
-
-    function sudoCmd (uint16 proxyIdx, bytes calldata input) protocolOnly
-        public payable override returns (bytes memory) {
-        return callSudoCmd(proxyIdx, input);
     }
 
     /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
@@ -119,8 +115,8 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     }
 
     function userCmdAgent (uint16 proxyIdx, bytes calldata input, address client,
-                           uint256 clientSalt, uint256 agentSalt)
-        reEntrantApproved(client, clientSalt, agentSalt) public payable
+                           uint256 salt)
+        reEntrantApproved(client, salt) public payable
         returns (bytes memory) {
         return callUserCmd(proxyIdx, input);
     }
