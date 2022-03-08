@@ -42,6 +42,7 @@ library ProtocolCmd {
     uint8 constant SET_TAKE_CODE = 114;
     // Code to resync the protocol take rate on an extant pool
     uint8 constant RESYNC_TAKE_CODE = 115;
+    uint8 constant RELAYER_TAKE_CODE = 116;
     ////////////////////////////////////////////////////////////////////////////
 
 

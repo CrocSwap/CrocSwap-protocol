@@ -50,6 +50,8 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
             revisePool(cmd);
         } else if (code == ProtocolCmd.SET_TAKE_CODE) {
             setTakeRate(cmd);
+        } else if (code == ProtocolCmd.RELAYER_TAKE_CODE) {
+            setRelayerTakeRate(cmd);
         } else if (code == ProtocolCmd.RESYNC_TAKE_CODE) {
             resyncTakeRate(cmd);
         } else if (code == ProtocolCmd.INIT_POOL_LIQ_CODE) {
@@ -148,6 +150,14 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
         
         emit CrocEvents.SetTakeRate(takeRate);
         setProtocolTakeRate(takeRate);
+    }
+
+    function setRelayerTakeRate (bytes calldata input) private {
+        (, uint8 takeRate) = 
+            abi.decode(input, (uint8, uint8));
+        
+        emit CrocEvents.SetRelayerTakeRate(takeRate);
+        relayerTakeRate_ = takeRate;
     }
 
     function setNewPoolLiq (bytes calldata input) private {

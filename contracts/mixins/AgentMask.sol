@@ -149,8 +149,14 @@ contract AgentMask is StorageLayout {
             }
             require(userBals_[fromKey].surplusCollateral_ >= tip);
 
+            uint128 protoFee = tip * relayerTakeRate_ / 256;
+            uint128 relayerTip = tip - protoFee;
+            
             userBals_[fromKey].surplusCollateral_ -= tip;
-            userBals_[toKey].surplusCollateral_ += tip;
+            userBals_[toKey].surplusCollateral_ += relayerTip;
+            if (protoFee > 0) {
+                feesAccum_[token] += protoFee;
+            }
         }
     }
 

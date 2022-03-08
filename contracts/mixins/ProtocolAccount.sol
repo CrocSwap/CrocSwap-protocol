@@ -34,18 +34,21 @@ contract ProtocolAccount is StorageLayout  {
         }
     }
 
+    function accumProtocolFees (address token, uint128 collected) internal {
+        if (collected > 0) {
+            feesAccum_[token] += collected;
+        }
+    }
+
     /* @notice Pays out the earned, but unclaimed protocol fees in the pool.
      * @param receipient - The receiver of the protocol fees.
      * @param token - The token address of the quote token. */
-    function disburseProtocolFees (address recipient, address token) internal {
-        uint256 collected = feesAccum_[token];
+    function disburseProtocolFees (address recv, address token) internal {
+        uint128 collected = feesAccum_[token];
         feesAccum_[token] = 0;
         if (collected > 0) {
-            if (token.isEtherNative()) {
-                TransferHelper.safeEtherSend(recipient, collected);
-            } else {
-                TransferHelper.safeTransfer(token, recipient, collected);
-            }
-        }  
+            bytes32 payoutKey = keccak256(abi.encode(recv, token));
+            userBals_[payoutKey].surplusCollateral_ += collected;
+        }
     }
 }

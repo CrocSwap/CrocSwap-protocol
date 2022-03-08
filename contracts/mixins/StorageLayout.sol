@@ -28,6 +28,8 @@ contract StorageLayout {
     bool internal hotPathOpen_;
     bool internal inSafeMode_;
 
+    uint8 internal relayerTakeRate_;
+
     // Slots for sidecar proxy contracts
     address[65536] internal proxyPaths_;
         

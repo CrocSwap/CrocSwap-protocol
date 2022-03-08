@@ -14,6 +14,7 @@ library CrocEvents {
 
     event SetNewPoolLiq (uint128 liq);
     event SetTakeRate (uint8 takeRate);
+    event SetRelayerTakeRate (uint8 takeRate);
     event SetPoolTemplate (uint256 indexed poolIdx, uint16 feeRate, uint16 tickSize,
                            uint8 jitThresh, uint8 knockoutGap, uint8 oracleFlags);
     event ResyncTakeRate (address indexed base, address indexed quote,
