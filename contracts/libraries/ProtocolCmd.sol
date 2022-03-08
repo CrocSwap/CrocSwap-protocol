@@ -59,5 +59,22 @@ library ProtocolCmd {
         internal pure returns (bytes memory) {
         return abi.encode(SAFE_MODE_CODE, safeMode);
     }
+}
 
+
+library UserCmd {
+
+    ////////////////////////////////////////////////////////////////////////////
+    // General purpose cold path codes
+    ////////////////////////////////////////////////////////////////////////////
+    uint8 constant INIT_POOL_CODE = 71;
+    uint8 constant APPROVE_ROUTER_CODE = 72;
+    uint8 constant DEPOSIT_SURPLUS_CODE = 73;
+    uint8 constant DISBURSE_SURPLUS_CODE = 74;
+    uint8 constant TRANSFER_SURPLUS_CODE = 75;
+    uint8 constant SIDE_POCKET_CODE = 76;
+    uint8 constant DEPOSIT_VIRTUAL_CODE = 77;
+    uint8 constant DISBURSE_VIRTUAL_CODE = 78;
+    uint8 constant RESET_NONCE = 80;
+    uint8 constant RESET_NONCE_COND = 81;
 }

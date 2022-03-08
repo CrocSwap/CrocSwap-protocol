@@ -12,6 +12,7 @@ import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
+import '../mixins/DepositDesk.sol';
 import '../interfaces/ICrocSwapHistRecv.sol';
 import '../CrocEvents.sol';
 
@@ -27,7 +28,7 @@ import "hardhat/console.sol";
  *         not state. As such it should never be called directly or externally, and should
  *         only be invoked with DELEGATECALL so that it operates on the contract state
  *         within the primary CrocSwap contract. */
-contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount {
+contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount {
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;
@@ -45,54 +46,64 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
 
         if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
             setTemplate(cmd);
-            
         } else if (code == ProtocolCmd.POOL_REVISE_CODE) {
             revisePool(cmd);
-
         } else if (code == ProtocolCmd.SET_TAKE_CODE) {
             setTakeRate(cmd);
-
         } else if (code == ProtocolCmd.RESYNC_TAKE_CODE) {
             resyncTakeRate(cmd);
-            
         } else if (code == ProtocolCmd.INIT_POOL_LIQ_CODE) {
             setNewPoolLiq(cmd);
-            
         } else if (code == ProtocolCmd.OFF_GRID_CODE) {
             pegPriceImprove(cmd);
+        } else {
+            sudoCmd(cmd);
         }
     }
 
-    function sudoCmd (bytes calldata cmd) public {
+    
+    function sudoCmd (bytes calldata cmd) private {
+        require(sudoMode_ = true, "Sudo");
         uint8 cmdCode = uint8(cmd[31]);
         
         if (cmdCode == ProtocolCmd.COLLECT_TREASURY_CODE) {
             collectProtocol(cmd);
-            
         } else if (cmdCode == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             transferAuthority(cmd);
-            
         } else if (cmdCode == ProtocolCmd.UPGRADE_DEX_CODE) {
             upgradeProxy(cmd);
-            
         } else if (cmdCode == ProtocolCmd.HOT_OPEN_CODE) {
             setHotPathOpen(cmd);
-
         } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {
             setSafeMode(cmd);
         }
     }
-
+    
     function userCmd (bytes calldata cmd) public payable {
         uint8 cmdCode = uint8(cmd[31]);
         
-        if (cmdCode == 1) {
+        if (cmdCode == UserCmd.INIT_POOL_CODE) {
             initPool(cmd);
-        } else if (cmdCode == 2) {
+        } else if (cmdCode == UserCmd.APPROVE_ROUTER_CODE) {
             approveRouter(cmd);
-        } else if (cmdCode == 3) {
-            collectSurplus(cmd);
+        } else if (cmdCode == UserCmd.DEPOSIT_SURPLUS_CODE) {
+            depositSurplus(cmd);
+        } else if (cmdCode == UserCmd.DISBURSE_SURPLUS_CODE) {
+            disburseSurplus(cmd);
+        } else if (cmdCode == UserCmd.TRANSFER_SURPLUS_CODE) {
+            transferSurplus(cmd);
+        } else if (cmdCode == UserCmd.SIDE_POCKET_CODE) {
+            sidePocketSurplus(cmd);
+        } else if (cmdCode == UserCmd.DEPOSIT_VIRTUAL_CODE) {
+            depositVirtual(cmd);
+        } else if (cmdCode == UserCmd.DISBURSE_VIRTUAL_CODE) {
+            disburseVirtual(cmd);
+        } else if (cmdCode == UserCmd.RESET_NONCE) {
+            resetNonce(cmd);
+        } else if (cmdCode == UserCmd.RESET_NONCE_COND) {
+            resetNonceCond(cmd);
         }
+
     }
     
     /* @notice Initializes the pool type for the pair.
@@ -233,16 +244,52 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      *              native Ethereum)
      * @param isTransfer If set to true, disburse calls will transfer the surplus 
      *                   collateral balance to the recv address instead of paying. */
-    function collectSurplus (bytes calldata cmd) private {
-        (, address recv, int128 value, address token, bool isTransfer) =
-            abi.decode(cmd, (uint8, address, int128, address, bool));
-        if (value < 0) {
-            depositSurplus(recv, uint128(-value), token);
-        } else if (isTransfer) {
-            moveSurplus(recv, uint128(value), token);
-        } else {
-            disburseSurplus(recv, uint128(value), token);
-        }
+    function depositSurplus (bytes calldata cmd) private {
+        (, address recv, uint128 value, address token) =
+            abi.decode(cmd, (uint8, address, uint128, address));
+        depositSurplus(recv, value, token);
+    }
+
+    function disburseSurplus (bytes calldata cmd) private {
+        (, address recv, uint128 value, address token) =
+            abi.decode(cmd, (uint8, address, uint128, address));
+        depositSurplus(recv, value, token);
+    }
+
+    function transferSurplus (bytes calldata cmd) private {
+        (, address recv, uint128 value, address token) =
+            abi.decode(cmd, (uint8, address, uint128, address));
+        transferSurplus(recv, value, token);
+    }
+
+    function sidePocketSurplus (bytes calldata cmd) private {
+        (, uint256 fromSalt, uint256 toSalt, uint128 value, address token) =
+            abi.decode(cmd, (uint8, uint256, uint256, uint128, address));
+        sidePocketSurplus(fromSalt, toSalt, value, token);
+    }
+
+    function depositVirtual (bytes calldata cmd) private {
+        (, address recv, uint256 salt, uint128 value) = 
+            abi.decode(cmd, (uint8, address, uint256, uint128));
+        depositVirtual(recv, salt, value);
+    }
+
+    function disburseVirtual (bytes calldata cmd) private {
+        (, address tracker, uint256 salt, uint128 value, bytes memory args) =
+            abi.decode(cmd, (uint8, address, uint256, uint128, bytes));
+        disburseVirtual(tracker, salt, value, args);
+    }
+
+    function resetNonce (bytes calldata cmd) private {
+        (, bytes32 salt, uint32 nonce) = 
+            abi.decode(cmd, (uint8, bytes32, uint32));
+        resetNonce(salt, nonce);
+    }
+    
+    function resetNonceCond (bytes calldata cmd) private {
+        (, bytes32 salt, uint32 nonce, address oracle, bytes memory args) = 
+            abi.decode(cmd, (uint8,bytes32,uint32,address,bytes));
+        resetNonceCond(salt, nonce, oracle, args);
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.
@@ -253,10 +300,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @notice forBurn If true, the user is authorizing the router to burn liquidity
      *                 positions belongining to the user. */
     function approveRouter (bytes calldata cmd) private {
-        (, address router, uint32 nCalls, uint256 userSalt, uint256 routerSalt) =
-            abi.decode(cmd, (uint8, address, uint32, uint256, uint256));
-        approveAgent(router, nCalls, userSalt, routerSalt);
+        (, address router, uint32 nCalls, uint256 salt) =
+            abi.decode(cmd, (uint8, address, uint32, uint256));
+        approveAgent(router, nCalls, salt);
     }
-
 }
 
