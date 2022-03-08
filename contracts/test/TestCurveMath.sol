@@ -15,7 +15,7 @@ contract TestCurveMath {
             buildCurve(seed, growth, concentrated, 0));
     }
 
-    function testVig (uint128 liq, uint128 swapQty, uint24 feeRate, uint8 protoCut,
+    function testVig (uint128 liq, uint128 swapQty, uint16 feeRate, uint8 protoCut,
                       bool, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
@@ -23,7 +23,7 @@ contract TestCurveMath {
                                      limitPrice);
     }
 
-    function testVigMin (uint128 liq, uint24 feeRate, uint8 protoCut,
+    function testVigMin (uint128 liq, uint16 feeRate, uint8 protoCut,
                          bool inBase, uint128 curvePrice)
         public pure returns (uint128, uint128) {
         uint128 swapQty = type(uint128).max;
@@ -32,7 +32,7 @@ contract TestCurveMath {
                        TickMath.MIN_SQRT_RATIO);
     }
 
-    function testVigMax (uint128 liq, uint24 feeRate, uint8 protoCut,
+    function testVigMax (uint128 liq, uint16 feeRate, uint8 protoCut,
                          bool inBase, uint128 curvePrice)
         public pure returns (uint128, uint128) {
         uint128 swapQty = type(uint128).max;

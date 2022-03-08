@@ -15,7 +15,7 @@ contract TestLiquidityCurve is LiquidityCurve {
     struct SwapFrame {
         bool isBuy_;
         bool inBaseQty_;
-        uint24 feeRate_;
+        uint16 feeRate_;
         uint8 protoCut_;
     }
 
