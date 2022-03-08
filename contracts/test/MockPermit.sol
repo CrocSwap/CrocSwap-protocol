@@ -2,9 +2,9 @@
 
 pragma solidity >=0.5.0;
 
-import "../interfaces/ICrocSwapPermitOracle.sol";
+import "../interfaces/ICrocPermitOracle.sol";
 
-contract MockPermit is ICrocSwapPermitOracle {
+contract MockPermit is ICrocPermitOracle {
 
     address public user_;
     address public base_;
@@ -19,7 +19,8 @@ contract MockPermit is ICrocSwapPermitOracle {
     int24 public askTickSnap_;
     uint128 public liqSnap_;
     uint8 public codeSnap_;
-    uint24 public poolFee_;
+    uint16 public poolFee_;
+    uint256 public poolIdx_;
     
     function setMatching (address user, address base, address quote) public {
         user_ = user;
@@ -37,8 +38,8 @@ contract MockPermit is ICrocSwapPermitOracle {
                                        Directives.AmbientDirective calldata,
                                        Directives.SwapDirective calldata,
                                        Directives.ConcentratedDirective[] calldata,
-                                       uint24 poolFee)
-        external override returns (uint24 discount) {
+                                       uint16 poolFee)
+        external override returns (uint16 discount) {
         if (passThru_) { return 1; }
         codeSnap_ = 1;
         sender_ = sender;
@@ -49,8 +50,8 @@ contract MockPermit is ICrocSwapPermitOracle {
     function checkApprovedForCrocSwap (address user, address sender,
                                        address base, address quote,
                                        bool isBuy, bool inBaseQty, uint128 qty,
-                                       uint24 poolFee)
-        external override returns (uint24 discount) {
+                                       uint16 poolFee)
+        external override returns (uint16 discount) {
         if (passThru_) { return 1; }
         sender_ = sender;
         codeSnap_ = 2;
@@ -84,6 +85,16 @@ contract MockPermit is ICrocSwapPermitOracle {
          askTickSnap_ = askTick;
          liqSnap_ = liq;
          codeSnap_ = 4;                 
+         return user == user_ && base == base_ && quote_ == quote;
+     }
+
+    function checkApprovedForCrocInit (address user, address sender,
+                                       address base, address quote, uint256 poolIdx)
+         external override returns (bool) {
+         if (passThru_) { return true; }
+         sender_ = sender;
+         codeSnap_ = 5;
+         poolIdx_ = poolIdx;
          return user == user_ && base == base_ && quote_ == quote;
      }
 }

@@ -5,7 +5,7 @@ pragma solidity >=0.8.4;
 import '../libraries/Directives.sol';
 
 /* @notice Standard interface for a permit oracle to be used by a permissioned pool. */
-interface ICrocSwapPermitOracle {
+interface ICrocPermitOracle {
 
     /* @notice Verifies whether a given user is permissioned to perform an arbitrary 
      *          action on the pool.
@@ -24,8 +24,8 @@ interface ICrocSwapPermitOracle {
                                        Directives.AmbientDirective calldata ambient,
                                        Directives.SwapDirective calldata swap,
                                        Directives.ConcentratedDirective[] calldata concs,
-                                       uint24 poolFee)
-        external returns (uint24);
+                                       uint16 poolFee)
+        external returns (uint16);
 
     /* @notice Verifies whether a given user is permissioned to perform a swap on the pool
      *
@@ -42,8 +42,8 @@ interface ICrocSwapPermitOracle {
     function checkApprovedForCrocSwap (address user, address sender,
                                        address base, address quote,
                                        bool isBuy, bool inBaseQty, uint128 qty,
-                                       uint24 poolFee)
-        external returns (uint24);
+                                       uint16 poolFee)
+        external returns (uint16);
 
     /* @notice Verifies whether a given user is permissioned to mint liquidity
      *         on the pool.
@@ -79,5 +79,9 @@ interface ICrocSwapPermitOracle {
     function checkApprovedForCrocBurn (address user, address sender,
                                        address base, address quote,
                                        int24 bidTick, int24 askTick, uint128 liq)
+        external returns (bool);
+
+    function checkApprovedForCrocInit (address user, address sender,
+                                       address base, address quote, uint256 poolIdx)
         external returns (bool);
 }
