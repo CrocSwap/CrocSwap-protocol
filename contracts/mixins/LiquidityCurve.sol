@@ -34,7 +34,7 @@ contract LiquidityCurve is StorageLayout {
     function snapCurve (bytes32 poolIdx) view internal returns
         (CurveMath.CurveState memory curve) {
         curve = curves_[poolIdx];
-        require(curve.priceRoot_ > 0, "J");
+        require(curve.priceRoot_ > 0);
     }
 
     /* @notice Snapshots the curve for pool initialization operation.
