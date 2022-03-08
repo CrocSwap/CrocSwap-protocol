@@ -38,6 +38,10 @@ library ProtocolCmd {
     uint8 constant INIT_POOL_LIQ_CODE = 112;
     // Code to set/reset the off-grid liquidity threshold.
     uint8 constant OFF_GRID_CODE = 113;
+    // Code to set the protocol take rate
+    uint8 constant SET_TAKE_CODE = 114;
+    // Code to resync the protocol take rate on an extant pool
+    uint8 constant RESYNC_TAKE_CODE = 115;
     ////////////////////////////////////////////////////////////////////////////
 
 

@@ -91,7 +91,7 @@ library SwapCurve {
      *                the swap denomination).
      * @return protoFee The total fee accumulated as CrocSwap protocol fees. */
     function vigOverSwap (CurveMath.CurveState memory curve, uint128 swapQty,
-                          uint24 feeRate, uint8 protoTake,
+                          uint16 feeRate, uint8 protoTake,
                           bool inBaseQty, uint128 limitPrice)
         internal pure returns (uint128 liqFee, uint128 protoFee) {
         uint128 flow = curve.calcLimitCounter(swapQty, inBaseQty, limitPrice);
@@ -250,14 +250,14 @@ library SwapCurve {
 
     /* @notice Given a fixed flow and a fee rate, calculates the owed liquidty and 
      *         protocol fees. */
-    function vigOverFlow (uint128 flow, uint24 feeRate, uint8 protoProp)
+    function vigOverFlow (uint128 flow, uint16 feeRate, uint8 protoProp)
         private pure returns (uint128 liqFee, uint128 protoFee) {
         // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
         // because fees will neveer be larger than the underlying flow.
-        uint24 FEE_BP_MULT = 100 * 100 * 100;
+        uint256 FEE_BP_MULT = 100 * 100 * 100;
         uint128 totalFee = uint128((uint256(flow) * feeRate) / FEE_BP_MULT);
-        
-        protoFee = protoProp == 0 ? 0 : totalFee / protoProp;
+
+        protoFee = protoProp > 0 ? totalFee / protoProp : 0;
         liqFee = totalFee - protoFee;
     }
 }

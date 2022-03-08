@@ -149,7 +149,7 @@ contract ColdPathInjector is StorageLayout {
         (bool success, bytes memory output) =
             proxyPaths_[CrocSlots.MICRO_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
-             ("sweepSwap((uint128,uint128,uint128,uint64,uint64),int24,(bool,bool,uint8,uint128,uint128),((uint24,uint8,uint16,uint8,address),bytes32))",
+             ("sweepSwap((uint128,uint128,uint128,uint64,uint64),int24,(bool,bool,uint8,uint128,uint128),((bool,uint16,uint8,uint16,uint8,uint8,uint8),bytes32,address))",
               curve.curve_, curve.pullPriceTick(), swap, pool));
         require(success);
 

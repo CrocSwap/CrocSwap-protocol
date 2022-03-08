@@ -40,25 +40,26 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * 
      * @param code The command code corresponding to the actual method being called.
      *             See ProtocolCmd.sol for outline of protocol command codes. */
-    function protocolCmd (bytes calldata input) public {
-        (uint8 code, address token, address sidecar, uint256 poolIdx, uint24 feeRate,
-         uint8 protocolTake, uint16 ticks, uint128 value) =
-            abi.decode(input, (uint8, address, address, uint256, uint24,
-                               uint8, uint16, uint128));
+    function protocolCmd (bytes calldata cmd) public {
+        uint8 code = uint8(cmd[31]);
 
         if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
-            uint8 jit = value.toUint8();
-            setTemplate(poolIdx, feeRate, protocolTake, ticks, sidecar, jit);
+            setTemplate(cmd);
             
         } else if (code == ProtocolCmd.POOL_REVISE_CODE) {
-            uint8 jit = value.toUint8();
-            revisePool(token, sidecar, poolIdx, feeRate, protocolTake, ticks, jit);
+            revisePool(cmd);
+
+        } else if (code == ProtocolCmd.SET_TAKE_CODE) {
+            setTakeRate(cmd);
+
+        } else if (code == ProtocolCmd.RESYNC_TAKE_CODE) {
+            resyncTakeRate(cmd);
             
         } else if (code == ProtocolCmd.INIT_POOL_LIQ_CODE) {
-            setNewPoolLiq(value);
+            setNewPoolLiq(cmd);
             
         } else if (code == ProtocolCmd.OFF_GRID_CODE) {
-            pegPriceImprove(token, value, ticks);
+            pegPriceImprove(cmd);
         }
     }
 
@@ -105,6 +106,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
             abi.decode(cmd, (uint8, address,address,uint24,uint128));
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
+                                                   
+        verifyPermitInit(pool, base, quote, poolIdx);
+        
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
         settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
     }
@@ -117,11 +121,38 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param permitOracle The external oracle that permissions pool users (or if set to
      *                     0x0 address pool type is permissionless).
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs. */
-    function setTemplate (uint256 poolIdx, uint24 feeRate,
-                          uint8 protocolTake, uint16 tickSize,
-                          address permitOracle, uint8 jitThresh) private {
-        setPoolTemplate(poolIdx, feeRate, protocolTake, tickSize, permitOracle,
-                        jitThresh);
+    function setTemplate (bytes calldata input) private {
+        (, uint256 poolIdx, uint16 feeRate, uint16 tickSize, uint8 jitThresh,
+         uint8 knockout, uint8 oracleFlags) =
+            abi.decode(input, (uint8, uint256, uint16, uint16, uint8, uint8, uint8));
+        
+        emit CrocEvents.SetPoolTemplate(poolIdx, feeRate, tickSize, jitThresh, knockout,
+                                        oracleFlags);
+        setPoolTemplate(poolIdx, feeRate, tickSize, jitThresh, knockout, oracleFlags);
+    }
+
+    function setTakeRate (bytes calldata input) private {
+        (, uint8 takeRate) = 
+            abi.decode(input, (uint8, uint8));
+        
+        emit CrocEvents.SetTakeRate(takeRate);
+        setProtocolTakeRate(takeRate);
+    }
+
+    function setNewPoolLiq (bytes calldata input) private {
+        (, uint128 liq) = 
+            abi.decode(input, (uint8, uint128));
+        
+        emit CrocEvents.SetNewPoolLiq(liq);
+        setNewPoolLiq(liq);
+    }
+
+    function resyncTakeRate (bytes calldata input) private {
+        (, address base, address quote, uint256 poolIdx) = 
+            abi.decode(input, (uint8, address, address, uint256));
+        
+        emit CrocEvents.ResyncTakeRate(base, quote, poolIdx, protocolTakeRate_);
+        resyncProtocolTake(base, quote, poolIdx);
     }
 
     /* @notice Update parameters for a pre-existing pool.
@@ -133,10 +164,11 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param tickSize The pool's grid size in ticks.
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs in
      *                  in the pool. */
-    function revisePool (address base, address quote, uint256 poolIdx,
-                         uint24 feeRate, uint8 protocolTake, uint16 tickSize,
-                         uint8 jitThresh) private {
-        setPoolSpecs(base, quote, poolIdx, feeRate, protocolTake, tickSize, jitThresh);
+    function revisePool (bytes calldata cmd) private {
+        (, address base, address quote, uint256 poolIdx,
+         uint16 feeRate, uint16 tickSize, uint8 jitThresh) =
+            abi.decode(cmd, (uint8,address,address,uint256,uint16,uint16,uint8));
+        setPoolSpecs(base, quote, poolIdx, feeRate, tickSize, jitThresh);
     }
 
     /* @notice Set off-grid price improvement.
@@ -144,8 +176,10 @@ contract ColdPath is MarketSequencer, PoolRegistry, SettleLayer, ProtocolAccount
      * @param unitTickCollateral The collateral threshold for off-grid price improvement.
      * @param awayTickTol The maximum tick distance from current price that off-grid
      *                    quotes are allowed for. */
-    function pegPriceImprove (address token, uint128 unitTickCollateral,
-                              uint16 awayTickTol) private {
+    function pegPriceImprove (bytes calldata cmd) private {
+        (, address token, uint128 unitTickCollateral, uint16 awayTickTol) =
+            abi.decode(cmd, (uint8, address, uint128, uint16));
+        emit CrocEvents.PriceImproveThresh(token, unitTickCollateral, awayTickTol);
         setPriceImprove(token, unitTickCollateral, awayTickTol);
     }
 
