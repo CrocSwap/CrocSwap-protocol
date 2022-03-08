@@ -35,33 +35,68 @@ contract AgentMask is StorageLayout {
         lockHolder_ = address(0);
     }
 
-    modifier reEntrantAgent (bytes calldata signature,
+    modifier reEntrantAgent (bytes memory cmd,
                              bytes calldata conds,
-                             bytes memory payload) {
+                             bytes calldata signature) {
         require(lockHolder_ == address(0));
-        lockHolder_ = lockSigner(signature, conds, payload);
+        lockHolder_ = lockSigner(cmd, conds, signature);
         _;
         lockHolder_ = address(0);
     }
 
-    function lockSigner (bytes calldata signature, bytes calldata conds,
-                         bytes memory payload) private returns (address client) {
-        (uint8 v, bytes32 r, bytes32 s) =
-            abi.decode(signature, (uint8, bytes32, bytes32));
-        
+    function lockSigner (bytes memory cmd,
+                         bytes calldata conds,
+                         bytes calldata signature) private returns (address client) {
+        client = verifySignature(cmd, conds, signature);
+        checkRelayConditions(client, conds);
+    }
+
+    function checkRelayConditions (address client, bytes calldata conds) private {
         (uint48 deadline, uint48 alive, bytes32 salt, uint32 nonce,
          address relayer)
-            = abi.decode(signature, (uint48, uint48, bytes32, uint32, address));
+            = abi.decode(conds, (uint48, uint48, bytes32, uint32, address));
         
         require(deadline == 0 || block.timestamp <= deadline);
         require(block.timestamp >= alive);
         require(relayer == address(0) || relayer == msg.sender || relayer == tx.origin);
-        
-        bytes32 checksum = keccak256(abi.encode(conds, payload));
+        casNonce(client, salt, nonce);
+    }
+
+    function verifySignature (bytes memory cmd,
+                              bytes calldata conds,
+                              bytes calldata signature)
+        private view returns (address client) {
+        (uint8 v, bytes32 r, bytes32 s) =
+            abi.decode(signature, (uint8, bytes32, bytes32));
+        bytes32 checksum = checksumHash(cmd, conds);
         client = ecrecover(checksum, v, r, s);
         require(client != address(0));
+    }
+    
 
-        casNonce(client, salt, nonce);
+    function checksumHash (bytes memory cmd, bytes calldata conds)
+        private view returns (bytes32) {
+        bytes32 digest = contentHash(cmd, conds);
+        return keccak256(abi.encodePacked
+                         ("\x19\x01", domainHash(), digest));
+    }
+
+    function contentHash (bytes memory metaCmd, bytes calldata conds)
+        private pure returns (bytes32) {
+        return keccak256(
+            abi.encode
+            (keccak256
+             ("CrocRelayerCall(bytes cmd,bytes conds)"), metaCmd, conds));
+    }
+
+    function domainHash() private view returns (bytes32) {
+        return keccak256(
+            abi.encode
+            (keccak256(
+                "EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
+             keccak256("CrocSwap"),
+             block.chainid, address(this)));
+        
     }
     
     /* @notice Returns the owner key that any LP position resulting from a mint action

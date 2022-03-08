@@ -105,12 +105,13 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         return callUserCmd(proxyIdx, input);
     }
 
-    function userCmdAgent (uint16 proxyIdx, bytes calldata input,
-                           bytes calldata signature, bytes calldata conds,
-                           bytes calldata relayerTip)
-        reEntrantAgent(signature, conds, abi.encode(proxyIdx, input, relayerTip))
+    function userCmdAgent (uint16 proxyIdx, bytes calldata cmd,
+                           bytes calldata conds, bytes calldata relayerTip, 
+                           bytes calldata signature)
+        reEntrantAgent(abi.encode(proxyIdx, cmd, relayerTip),
+                       conds, signature)
         public payable returns (bytes memory output) {
-        output = callUserCmd(proxyIdx, input);
+        output = callUserCmd(proxyIdx, cmd);
         tipRelayer(relayerTip);
     }
 
