@@ -28,21 +28,27 @@ library PoolSpecs {
      *          the permissioned access to the pool. If zero, access to the pool is 
      *          permissionless. */
     struct Pool {
-        uint24 feeRate_;
+        bool enabled_;
+        uint16 feeRate_;
         uint8 protocolTake_;
         uint16 tickSize_;
         uint8 jitThresh_;
-        address permitOracle_;
+        uint8 knockoutSpace_;
+        uint8 oracleFlags_;
     }
+
 
     /* @notice Convenience struct that's used to gather all useful context about on a 
      *         specific pool.
      * @param head_ The full specification for the pool. (See struct Pool comments above.)
-     * @param hash_ The keccak256 hash used to encode the full pool location. */
+     * @param hash_ The keccak256 hash used to encode the full pool location.
+     * @param poolIdx_ The pool type index. */
     struct PoolCursor {
         Pool head_;
         bytes32 hash_;
+        address oracle_;
     }
+
 
     /* @notice Given a mapping of pools, a base/quote token pair and a pool type index,
      *         copies the pool specification to memory. */
@@ -51,7 +57,9 @@ library PoolSpecs {
         internal view returns (PoolCursor memory specs) {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
         Pool memory pool = pools[key];
-        return PoolCursor ({head_: pool, hash_: key});
+        address oracle = (gateOracleTrades(pool.oracleFlags_)) ?
+            oracleForPool(poolIdx) : address(0);
+        return PoolCursor ({head_: pool, hash_: key, oracle_: oracle});
     }
 
     /* @notice Given a mapping of pools, a base/quote token pair and a pool type index,
@@ -79,4 +87,15 @@ library PoolSpecs {
         return keccak256(abi.encode(tokenX, tokenY, poolIdx));
     }
 
+    /* @notice A pool's canonical oracle is the last 20 bytes of the poolIdx value.
+     *         (Of course this doesn't mean the pool actually uses an oracle, the
+     *          user must check the oracle flags) */
+    function oracleForPool (uint256 poolIdx) internal pure returns (address) {
+        return address(uint160(poolIdx << 96) >> 96);
+    }
+
+    function gateOracleTrades (uint8 oracleFlags) internal pure returns (bool) {
+        return oracleFlags & 0x1 != 0;
+    }
+    
 }

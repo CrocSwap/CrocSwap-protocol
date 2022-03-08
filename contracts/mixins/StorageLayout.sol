@@ -66,10 +66,12 @@ contract StorageLayout {
 
     /**************************************************************/
     // PoolRegistry
+    /**************************************************************/
     mapping(uint256 => PoolSpecs.Pool) internal templates_;
     mapping(bytes32 => PoolSpecs.Pool) internal pools_;
     mapping(address => PriceGrid.ImproveSettings) internal improves_;
     uint128 internal newPoolLiq_;
+    uint8 internal protocolTakeRate_;
     /**************************************************************/
 
     
