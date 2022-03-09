@@ -23,14 +23,41 @@ library Chaining {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
+    /* Used as an indicator code by long-form orders to indicate how a given sub-
+     * directive should size relative to some pre-existing cumulative collateral flow
+     * from all the actions on the pool.
+     * evaluation of the long form order. Types supported:
+     * 
+     *    NO_ROLL_TYPE - No rolling fill. Evaluation will treat the set quantity as a 
+     *        pre-fixed value in the native domain (i.e. tokens for swaps and liquidity 
+     *        units for LP actions).
+     *    
+     *    ROLL_PASS_POS_TYPE - Rolling fill, but against a fixed token collateral target.
+     *        Difference with NO_ROLL_TYPE, is the set quantity will denoinate as the unit
+     *        of the rolling quantity. I.e. represents token collateral instead of 
+     *        liquidity units on LP actions.
+     *
+     *    ROLL_PASS_NEG_TYPE - Same as ROLL_PASS_POS_TYPE, but rolling quantity will be
+     *                         negative.
+     *
+     *    ROLL_FRAC_TYPE - Fills a fixed-point fraction of the cumulatve rolling flow.
+     *                     E.g. can swap 50% of the tokens returned from previous LP burn.
+     *                     Denominated in fixed point basis points (1/10,000).
+     *
+     *    ROLL_DEBIT_TYPE - Fills the cumulative rolling flow with a fixed offset in the 
+     *                      direction of user debit. E.g. can swap-buy all the tokens 
+     *                      needed, plus slightly more.
+     *
+     *    ROLL_CREDIT_TYPE - Same as above, but offset in the direction of user credit.
+     *                       E.g. can swap-sell all but X tokens from a previous burn 
+     *                       operation.*/
     uint8 constant NO_ROLL_TYPE = 0;
     uint8 constant ROLL_PASS_POS_TYPE = 1;
     uint8 constant ROLL_PASS_NEG_TYPE = 2;
-    uint8 constant ROLL_ZERO_TYPE = 3;
     uint8 constant ROLL_FRAC_TYPE = 4;
     uint8 constant ROLL_DEBIT_TYPE = 5;
     uint8 constant ROLL_CREDIT_TYPE = 6;
-    
+
     /* @notice Common convention that defines the full execution context for 
      *   any arbitrary sequence of tradable actions (swap/mint/burn) within
      *   a single pool.
@@ -296,12 +323,6 @@ library Chaining {
             bidPrice = curvePrice;
         }
     }
-    
-    function scaleRoll (RollTarget memory roll, PairFlow memory flow,
-                        uint8 rollType, uint128 nextQty) internal pure returns (int128) {
-        int128 rollGap = totalBalance(roll, flow);
-        return scalePlug(rollGap, rollType, nextQty);
-    }
 
     /* @notice Sums the total rolling balance that should be targeted to be neutralized.
      *   Includes both the accumulated flow in the pair and the pre-pair starting balance
@@ -311,14 +332,36 @@ library Chaining {
         int128 pairFlow = (roll.inBaseQty_ ? flow.baseFlow_ : flow.quoteFlow_);
         return roll.prePairBal_ + pairFlow;
     }
+    
+    /* @notice Given a cumulative rolling flow, calculates a gap-fill quantity based on
+     *         rolling target parameters.
+     *
+     * @param roll The rolling target schematic, set at the beggining of the pair hop.
+     * @param flow The cumulative collateral flow accumulated in this pair hop so far.
+     * @param rollType The type of rolling gap-fill to target (see indicator comments 
+     *                 above)
+     * @param target   The rolling gap-fill target, contextualized by rollType value.
+     * @return         The size optimally scaled to match the rolling gap-fill target. */
+    function scaleRoll (RollTarget memory roll, PairFlow memory flow,
+                        uint8 rollType, uint128 target) private pure returns (int128) {
+        int128 rollGap = totalBalance(roll, flow);
+        return scalePlug(rollGap, rollType, nextQty);
+    }
 
-    function scalePlug (int128 rollGap, uint8 rollType, uint128 scaleArg)
+    /* @notice Given a fixed rolling gap, scales the next incremental size to achieve
+     *         a specific user-defined target.
+     *
+     * @param roll The rolling gap that exists prior to this leg of the long-form order.
+     * @param rollType The type of rolling gap-fill to target (see indicator comments 
+     *                 above)
+     * @param target   The rolling gap-fill target, contextualized by rollType value.
+     * @return         The size optimally scaled to match the rolling gap-fill target. */
+    function scalePlug (int128 rollGap, uint8 rollType, uint128 target)
         private pure returns (int128) {
         if (rollType == ROLL_PASS_POS_TYPE) { return int128(scaleArg); }
         else if (rollType == ROLL_PASS_NEG_TYPE) { return -int128(scaleArg); }
-        else if (rollType == ROLL_ZERO_TYPE) { return rollGap; }
         else if (rollType == ROLL_FRAC_TYPE) {
-            return int128(int256(rollGap) * int256(int128(scaleArg)) / 100000);
+            return int128(int256(rollGap) * int256(int128(scaleArg)) / 10000);
         } else if (rollType == ROLL_DEBIT_TYPE) {
             return rollGap + int128(scaleArg);
         } else {
