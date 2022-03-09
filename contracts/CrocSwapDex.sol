@@ -101,7 +101,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param input The arbitrary call data the client is calling the spill proxy 
      *              sidecar with */
     function userCmd (uint16 proxyIdx, bytes calldata input) reEntrantLock
-        public payable override returns (bytes memory) {
+        public payable returns (bytes memory) {
         return callUserCmd(proxyIdx, input);
     }
 

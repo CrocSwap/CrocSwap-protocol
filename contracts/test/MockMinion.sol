@@ -20,7 +20,7 @@ contract MockMinion is ICrocMinion {
         return abi.encode();
     }
 
-    function userCmd (uint16, bytes calldata) public payable override returns
+    function userCmd (uint16, bytes calldata) public payable returns
         (bytes memory) {
         return abi.encode();
     }
