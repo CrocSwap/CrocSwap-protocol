@@ -91,7 +91,7 @@ library PoolSpecs {
      *         (Of course this doesn't mean the pool actually uses an oracle, the
      *          user must check the oracle flags) */
     function oracleForPool (uint256 poolIdx) internal pure returns (address) {
-        return address(uint160(poolIdx << 96) >> 96);
+        return address(uint160(poolIdx >> 96));
     }
 
     function gateOracleTrades (uint8 oracleFlags) internal pure returns (bool) {
