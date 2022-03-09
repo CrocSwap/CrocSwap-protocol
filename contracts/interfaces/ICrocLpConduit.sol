@@ -15,7 +15,7 @@ interface ICrocLpConduit {
      *         conduit contract (e.g. to perform tracking), and the LP position will be
      *         held in the name of the conduit.
      *
-     * @param sender The msg.sender value of the user that minted the position.
+     * @param sender The address of the user that owns the newly minted the position.
      * @param poolHash The hash (see PoolRegistry.sol) of the AMM pool the liquidity is
      *                 minted on.
      * @param lowerTick The tick index of the lower range (0 if ambient liquidity)
