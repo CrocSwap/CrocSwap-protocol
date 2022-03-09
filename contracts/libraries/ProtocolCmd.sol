@@ -5,10 +5,6 @@ pragma solidity >=0.8.4;
 import './SafeCast.sol';
 
 library ProtocolCmd {
-     
-    // The first 64 protocol command codes are reserved for direct governance and can
-    // never be implemented in automated policy. 
-    uint8 constant PRIVILEGE_CMD_SPACE = 64;
     
     
     ////////////////////////////////////////////////////////////////////////////
