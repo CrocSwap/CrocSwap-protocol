@@ -33,7 +33,7 @@ library PoolSpecs {
         uint8 protocolTake_;
         uint16 tickSize_;
         uint8 jitThresh_;
-        uint8 knockoutSpace_;
+        uint8 knockoutBits_;
         uint8 oracleFlags_;
     }
 

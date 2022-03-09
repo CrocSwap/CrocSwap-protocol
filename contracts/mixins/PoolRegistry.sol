@@ -129,7 +129,7 @@ contract PoolRegistry is StorageLayout {
         templ.feeRate_ = feeRate;
         templ.tickSize_ = tickSize;
         templ.jitThresh_ = jitThresh;
-        templ.knockoutSpace_ = knockout;
+        templ.knockoutBits_ = knockout;
         templ.oracleFlags_ = oracleFlags;
     }
 
@@ -155,11 +155,13 @@ contract PoolRegistry is StorageLayout {
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
      *                  rest before it can be burned. */
     function setPoolSpecs (address base, address quote, uint256 poolIdx,
-                           uint16 feeRate, uint16 tickSize, uint8 jitThresh) internal {
+                           uint16 feeRate, uint16 tickSize, uint8 jitThresh,
+                           uint8 knockoutBits) internal {
         PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
         pool.feeRate_ = feeRate;
         pool.tickSize_ = tickSize;
         pool.jitThresh_ = jitThresh;
+        pool.knockoutBits_ = knockoutBits;
     }
 
     /* @notice The creation of every new pool requires the pool initializer to 

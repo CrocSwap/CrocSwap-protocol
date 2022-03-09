@@ -187,9 +187,9 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
      *                  in the pool. */
     function revisePool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx,
-         uint16 feeRate, uint16 tickSize, uint8 jitThresh) =
-            abi.decode(cmd, (uint8,address,address,uint256,uint16,uint16,uint8));
-        setPoolSpecs(base, quote, poolIdx, feeRate, tickSize, jitThresh);
+         uint16 feeRate, uint16 tickSize, uint8 jitThresh, uint8 knockout) =
+            abi.decode(cmd, (uint8,address,address,uint256,uint16,uint16,uint8,uint8));
+        setPoolSpecs(base, quote, poolIdx, feeRate, tickSize, jitThresh, knockout);
     }
 
     /* @notice Set off-grid price improvement.
