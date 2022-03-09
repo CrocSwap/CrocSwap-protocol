@@ -263,7 +263,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
     function disburseSurplus (bytes calldata cmd) private {
         (, address recv, uint128 value, address token) =
             abi.decode(cmd, (uint8, address, uint128, address));
-        depositSurplus(recv, value, token);
+        disburseSurplus(recv, value, token);
     }
 
     function transferSurplus (bytes calldata cmd) private {
