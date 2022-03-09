@@ -1,12 +1,14 @@
-import { BigNumber, BytesLike, ethers } from 'ethers';
+import { BigNumber, BytesLike, ethers, BigNumberish } from 'ethers';
 
 export function encodeOrderDirective (directive: OrderDirective): BytesLike {
+    let schema = encodeWord(directive.schemaType)
     let open = encodeSettlement(directive.open)
     let hops = listEncoding(directive.hops, encodeHop)
-    return ethers.utils.concat([open, hops])
+    return ethers.utils.concat([schema, open, hops])
 }
 
 export interface OrderDirective {
+    schemaType: 1
     open: SettlementDirective
     hops: HopDirective[]
 }
@@ -36,17 +38,17 @@ export interface HopDirective {
 }
 
 export interface PoolDirective {
-    poolIdx: number
+    poolIdx: BigNumberish
     passive: PassiveDirective,
     swap: SwapDirective
     chain: ChainingDirective
 }
 
 export interface SwapDirective {
-    liqMask: number
     isBuy: boolean,
     inBaseQty: boolean,
-    qty: BigNumber
+    qty: BigNumber,
+    rollType?: number,
     limitPrice: BigNumber
 }
 
@@ -56,7 +58,8 @@ export interface PassiveDirective {
 }
 
 export interface AmbientDirective {
-    isAdd: boolean
+    isAdd: boolean,
+    rollType?: number,
     liquidity: BigNumber
 }
 
@@ -68,6 +71,7 @@ export interface ConcentratedDirective {
 export interface ConcentratedBookend {
     closeTick: number,
     isAdd: boolean,
+    rollType?: number,
     liquidity: BigNumber
 }
 
@@ -99,7 +103,7 @@ function encodeChain (chain: ChainingDirective): BytesLike {
 }
 
 function encodePool (pool: PoolDirective): BytesLike {
-    let poolIdx = encodeJsNum(pool.poolIdx, 3)
+    let poolIdx = encodeFull(pool.poolIdx)
     let passive = encodePassive(pool.passive)
     let swap = encodeSwap(pool.swap)
     let chain = encodeChain(pool.chain)
@@ -107,18 +111,19 @@ function encodePool (pool: PoolDirective): BytesLike {
 }
 
 function encodeSwap (swap: SwapDirective): BytesLike {
-    let liqMask = encodeWord(swap.liqMask)
     let dirFlags = encodeWord((swap.isBuy ? 2 : 0) + (swap.inBaseQty ? 1 : 0))
+    let rollType = encodeWord(swap.rollType ? swap.rollType : 0)
     let qty = encodeFull(swap.qty)
     let limit = encodeFull(swap.limitPrice)
-    return ethers.utils.concat([liqMask, dirFlags, qty, limit])
+    return ethers.utils.concat([dirFlags, rollType, qty, limit])
 }
 
 function encodePassive (passive: PassiveDirective): BytesLike {
     let ambAdd = encodeBool(passive.ambient.isAdd)
+    let rollType = encodeWord(passive.ambient.rollType ? passive.ambient.rollType : 0)
     let ambLiq = encodeFull(passive.ambient.liquidity)
     let conc = listEncoding(passive.concentrated, encodeConc)
-    return ethers.utils.concat([ambAdd, ambLiq, conc])
+    return ethers.utils.concat([ambAdd, rollType, ambLiq, conc])
 }
 
 function encodeConc (conc: ConcentratedDirective): BytesLike {
@@ -130,8 +135,9 @@ function encodeConc (conc: ConcentratedDirective): BytesLike {
 function encodeBookend (bookend: ConcentratedBookend): BytesLike {
     let closeTick = encodeJsSigned(bookend.closeTick, 3)
     let isAdd = encodeBool(bookend.isAdd)
+    let rollType = encodeWord(bookend.rollType ? bookend.rollType : 0)
     let liq = encodeFull(bookend.liquidity)
-    return ethers.utils.concat([closeTick, isAdd, liq])
+    return ethers.utils.concat([closeTick, isAdd, rollType, liq])
 }
 
 function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike {
@@ -144,7 +150,7 @@ function encodeToken (tokenAddr: BytesLike): BytesLike {
     return ethers.utils.hexZeroPad(tokenAddr, 32)
 }
 
-function encodeFull (val: BigNumber): BytesLike {
+function encodeFull (val: BigNumberish): BytesLike {
     return encodeNum(val, 32)
 }
 
@@ -166,7 +172,7 @@ function encodeSigned (val: BigNumber, nWords: number): BytesLike {
     return ethers.utils.concat([sign, magn])
 }
 
-function encodeNum (val: BigNumber, nWords: number): BytesLike {
+function encodeNum (val: BigNumberish, nWords: number): BytesLike {
     let hex = ethers.utils.hexValue(val)
     return ethers.utils.hexZeroPad(hex, nWords)
 }

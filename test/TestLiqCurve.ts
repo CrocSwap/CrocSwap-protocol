@@ -29,10 +29,10 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(1);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(7500)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(7500)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("liquidity pay ambient", async () => {
@@ -46,10 +46,10 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(0);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(4500)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(4500)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("liquidity receive concentrated", async () => {
@@ -63,10 +63,10 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(5);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(11500);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(11500);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("liquidity pay concentrated", async () => {
@@ -80,10 +80,10 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(3);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(8500);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(8500);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("multiple pools", async () => {
@@ -104,17 +104,17 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(2);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(1.5625)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(4000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(2000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(1.5);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(3.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(4000)
+      expect(state.concLiq_.toNumber()).to.equal(2000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(1.5);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(3.5);
 
       state = await curve.pullCurve(3);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(8500);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(8500);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("liquidity below range", async () => {
@@ -133,8 +133,8 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(6);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
    })
 
    it("liquidity above range", async () => {
@@ -153,8 +153,8 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(8);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
    })
 
 
@@ -174,8 +174,8 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(0);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
    })
 
    it("liquidity on lower bump", async () => {
@@ -267,8 +267,8 @@ describe('LiquidityCurve', () => {
 
       let state = await curve.pullCurve(6);
       expect(fromSqrtPrice(state.priceRoot_)).to.equal(2.25)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(4801)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000);
+      expect(state.ambientSeeds_.toNumber()).to.equal(4801)
+      expect(state.concLiq_.toNumber()).to.equal(10000);
    })
 
 })

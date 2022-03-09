@@ -112,7 +112,7 @@ describe('Pool Compound', () => {
 
         let concen: ConcentratedDirective = {
             openTick: 4000,
-            bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(1024*100)}]
+            bookends: [{closeTick: 8000, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100)}]
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         
@@ -139,13 +139,13 @@ describe('Pool Compound', () => {
 
         let concens: ConcentratedDirective[] = [{
             openTick: 8000,
-            bookends: [{closeTick: -5000, isAdd: false, liquidity: BigNumber.from(200*1024)},
-                {closeTick: 10000, isAdd: true, liquidity: BigNumber.from(2000*1024) }]
+            bookends: [{closeTick: -5000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
+                {closeTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024) }]
             },
         {
             openTick: -5000,
-            bookends: [{closeTick: 10000, isAdd: false, liquidity: BigNumber.from(500*1024)},
-                {closeTick: 0, isAdd: true, liquidity: BigNumber.from(400*1024)}]
+            bookends: [{closeTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
+                {closeTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)}]
 
         }]
 
@@ -161,7 +161,7 @@ describe('Pool Compound', () => {
      })
 })
 
-describe('Pool Compound', () => {
+describe('Pool Compound Curve Cache', () => {
       let test: TestPool
       const feeRate = 250 * 100
   
@@ -173,7 +173,7 @@ describe('Pool Compound', () => {
    })
   
    // Tests for relatively bespoke corner case. In the long-form path, we need to make sure that
-   // a swap updates the CurveCache tick before calling any operations.
+   // a swap updates the CurveCache tick in the ColdInjector before calling any operations.
    it("swap curve cache", async() => {
       await test.testMintAmbient(100000)
       await test.testMint(-25000, 25000, 100000)
@@ -188,7 +188,7 @@ describe('Pool Compound', () => {
 
       let concen: ConcentratedDirective = {
          openTick: 4100,
-         bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(1024*100000)}]
+         bookends: [{closeTick: 4200, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100000)}]
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
      
