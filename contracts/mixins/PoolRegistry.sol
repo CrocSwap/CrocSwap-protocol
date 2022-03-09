@@ -210,7 +210,7 @@ contract PoolRegistry is StorageLayout {
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index for the newly created pool. The pool specs will
      *                be created from the current template for this index. (If no 
-     *                template exists, this call will rever the transaction.)
+     *                template exists, this call will revert the transaction.)
      *
      * @return pool The pool specs associated with the newly created pool.
      * @return liqAnte The required amount of liquidity that the user must permanetely

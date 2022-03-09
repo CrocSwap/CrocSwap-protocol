@@ -139,7 +139,7 @@ contract SettleLayer is AgentMask {
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
-        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, NO_RESERVE_FLAGS);
+        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, BOTH_RESERVE_FLAGS);
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
@@ -173,6 +173,7 @@ contract SettleLayer is AgentMask {
     }
 
     uint8 constant NO_RESERVE_FLAGS = 0x0;
+    uint8 constant BOTH_RESERVE_FLAGS = 0x3;
 
     /* @notice Performs check to make sure the new balance matches the expected 
      * transfer amount. */
