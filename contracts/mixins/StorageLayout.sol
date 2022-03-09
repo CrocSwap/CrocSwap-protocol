@@ -156,7 +156,7 @@ library CrocSlots {
     uint16 constant BAL_PROXY_IDX = 3;
     uint16 constant LONG_PROXY_IDX = 4;
     uint16 constant MICRO_PROXY_IDX = 5;
-    uint16 constant LIMIT_PROXY_IDX = 6;
+    uint16 constant KNOCKOUT_PROXY_IDX = 3575;
 
     uint16 constant SAFE_MODE_PROXY_PATH = 9999;
 }
