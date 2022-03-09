@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3
 
 pragma solidity >=0.8.4;
-
 import "../CrocSwapDex.sol";
 
 import "hardhat/console.sol";
@@ -42,8 +41,7 @@ contract QueryHelper {
 
     function querySurplus (address owner, address token)
         public view returns (uint128 surplus) {
-        bytes32 innerKey = keccak256(abi.encode(0, token, 0));
-        bytes32 key = keccak256(abi.encode(owner, innerKey));
+        bytes32 key = keccak256(abi.encode(owner, token));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.BAL_MAP_SLOT));
         uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
         surplus = uint128((val << 128) >> 128);
