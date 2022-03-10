@@ -303,7 +303,8 @@ contract CrocPolicy {
     function isFlagSet (bytes24 cmdFlags, uint8 flagIdx) private pure returns (bool) {
         return (bytes24(uint192(1)) << flagIdx) & cmdFlags > 0;         
     }
-    
+
+    /* @notice Permissions gate for normal day-to-day operations. */
     modifier opsAuth() {
         require(msg.sender == opsAuthority_ ||
                 msg.sender == treasuryAuthority_ ||
@@ -311,11 +312,16 @@ contract CrocPolicy {
         _;
     }
 
+    /* @notice Permissions gate for more serious operations. Treasury authority should
+     *         require more governance controls (e.g. larger multisig, longer timelock)
+     *         than operations. */
     modifier treasuryAuth() {
         require(msg.sender == treasuryAuthority_, "Treasury Authority");
         _;
     }
 
+    /* @notice Permissions gate for emergency operations that should only be called
+     *         during periods when the security of the protocol is in threat. */
     modifier emergencyAuth() {
         require(msg.sender == emergencyAuthority_, "Emergency Authority");
         _;
