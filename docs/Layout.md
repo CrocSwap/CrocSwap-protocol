@@ -5,6 +5,14 @@ This doc outlines the layout of the repository and highlights important source f
 
 * CrocSwap.sol - The top level smart contract for the entire decentralized exchange protocol. One contract
 instances manages every pair and the protocol and serves as a single point of entry for end-users.
+* CrocEvents.sol - Defines top-level Ethereum log events inside the protocol
+
+# ./contracts/governance
+
+* CrocPolicy.sol - Middle-layer contract sitting between top-level governance and the underlying CrocSwapDex mechanism
+contract. Allows for either straight pass through of governance resolutions or for rules governing what external 
+policy oracles can invoke on the underlying CrocSwapDex contract.
+
 
 # ./contracts/libraries
 
