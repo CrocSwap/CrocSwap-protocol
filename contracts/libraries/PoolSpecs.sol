@@ -12,21 +12,35 @@ library PoolSpecs {
      *         may have many different pool types, each of which may operate as segmented
      *         markts with different underlying behavior to the AMM. 
      *
+     * @param enabled_ Simple placeholder in storage slot to indicate whether a pool has
+     *                 been previously initialized.
+     *
      * @param feeRate_ The overall fee (liquidity fees + protocol fees inclusive) that
      *            swappers pay to the pool as a fraction of notional. Represented as an 
      *            integer representing hundredeths of a basis point. I.e. a 0.25% fee 
      *            would be 250000
+     *
      * @param protocolTake_ The fraction of the fee rate that goes to the protocol fee 
      *             (the rest accumulates as a liquidity fee to LPs). Represented as 1/n. 
      *             Special case of zero, means the protocol take is 0%.
+     *
      * @param tickSize The minimum granularity of price ticks defining a grid, on which 
      *          range orders may be placed. (Outside off-grid price improvement facility.)
      *          For example a value of 50 would mean that range order bounds could only
      *          be placed on every 50th price tick, guaranteeing a minimum separation of
      *          0.005% (50 one basis point ticks) between bump points.
-     * @param permitOracle Address pointing to an external smart contract that controls
-     *          the permissioned access to the pool. If zero, access to the pool is 
-     *          permissionless. */
+     *
+     * @param jitThresh_ Sets the minimum TTL for concentrated LP positions in the pool.
+     *                   Attempts to burn or partially burn an LP position in less than
+     *                   N seconds (as measured in block.timestamp) after a position was
+     *                   minted (or had its liquidity increased) will revent. If set to
+     *                   0, atomically flashed liquidity that mints->burns in the same
+     *                   block is enabled.
+     *
+     * @param oracleFlags_ Bitmap flags to indicate the pool's oracle permission 
+     *                     requirements. Current implementation only uses the least 
+     *                     significant bit, which if on checks oracle permission on every
+     *                     pool related call. Otherwise pool is permissionless. */
     struct Pool {
         bool enabled_;
         uint16 feeRate_;
@@ -42,7 +56,8 @@ library PoolSpecs {
      *         specific pool.
      * @param head_ The full specification for the pool. (See struct Pool comments above.)
      * @param hash_ The keccak256 hash used to encode the full pool location.
-     * @param poolIdx_ The pool type index. */
+     * @param oracle_ The permission oracle associated with this pool (0 if pool is 
+     *                permissionless.) */
     struct PoolCursor {
         Pool head_;
         bytes32 hash_;
@@ -57,8 +72,7 @@ library PoolSpecs {
         internal view returns (PoolCursor memory specs) {
         bytes32 key = encodeKey(tokenX, tokenY, poolIdx);
         Pool memory pool = pools[key];
-        address oracle = (gateOracleTrades(pool.oracleFlags_)) ?
-            oracleForPool(poolIdx) : address(0);
+        address oracle = oracleForPool(poolIdx, pool.oracleFlags_);
         return PoolCursor ({head_: pool, hash_: key, oracle_: oracle});
     }
 
@@ -87,15 +101,18 @@ library PoolSpecs {
         return keccak256(abi.encode(tokenX, tokenY, poolIdx));
     }
 
-    /* @notice A pool's canonical oracle is the last 20 bytes of the poolIdx value.
-     *         (Of course this doesn't mean the pool actually uses an oracle, the
-     *          user must check the oracle flags) */
-    function oracleForPool (uint256 poolIdx) internal pure returns (address) {
-        return address(uint160(poolIdx >> 96));
+    /* @notice Returns the permission oracle associated with the pool (or 0 if pool is
+     *         permissionless. 
+     *
+     * @dev    The oracle (if enabled on pool settings) is always deterministically based
+     *         on the first 160-bits of the pool type value. This means users can know 
+     *         ahead of time if a pool is can be oracled by checking the bits in the pool
+     *         index. */
+    function oracleForPool (uint256 poolIdx, uint8 oracleFlags)
+        private pure returns (address) {
+        bool oracleEnabled = (oracleFlags & 0x1 == 1);
+        return oracleEnabled ?
+            address(uint160(poolIdx >> 96)) :
+            address(0);
     }
-
-    function gateOracleTrades (uint8 oracleFlags) internal pure returns (bool) {
-        return oracleFlags & 0x1 != 0;
-    }
-    
 }

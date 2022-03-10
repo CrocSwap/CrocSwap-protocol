@@ -345,7 +345,7 @@ library Chaining {
     function scaleRoll (RollTarget memory roll, PairFlow memory flow,
                         uint8 rollType, uint128 target) private pure returns (int128) {
         int128 rollGap = totalBalance(roll, flow);
-        return scalePlug(rollGap, rollType, nextQty);
+        return scalePlug(rollGap, rollType, target);
     }
 
     /* @notice Given a fixed rolling gap, scales the next incremental size to achieve
@@ -358,14 +358,14 @@ library Chaining {
      * @return         The size optimally scaled to match the rolling gap-fill target. */
     function scalePlug (int128 rollGap, uint8 rollType, uint128 target)
         private pure returns (int128) {
-        if (rollType == ROLL_PASS_POS_TYPE) { return int128(scaleArg); }
-        else if (rollType == ROLL_PASS_NEG_TYPE) { return -int128(scaleArg); }
+        if (rollType == ROLL_PASS_POS_TYPE) { return int128(target); }
+        else if (rollType == ROLL_PASS_NEG_TYPE) { return -int128(target); }
         else if (rollType == ROLL_FRAC_TYPE) {
-            return int128(int256(rollGap) * int256(int128(scaleArg)) / 10000);
+            return int128(int256(rollGap) * int256(int128(target)) / 10000);
         } else if (rollType == ROLL_DEBIT_TYPE) {
-            return rollGap + int128(scaleArg);
+            return rollGap + int128(target);
         } else {
-            return rollGap - int128(scaleArg);
+            return rollGap - int128(target);
         }
     }
 }

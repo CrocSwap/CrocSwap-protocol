@@ -8,8 +8,6 @@ import '../libraries/TokenFlow.sol';
 import './StorageLayout.sol';
 import './AgentMask.sol';
 
-import "hardhat/console.sol";
-
 /* @title Settle layer mixin
  * @notice Provides facilities for settling, previously determined, collateral flows
  *         between the user and the exchange. Supports both ERC20 tokens as well as

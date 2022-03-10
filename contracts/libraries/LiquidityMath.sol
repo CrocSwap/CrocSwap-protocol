@@ -60,12 +60,21 @@ library LiquidityMath {
      * 2^96 (equivalent to 2^108 of liquidity.) */
     uint16 constant LOT_SIZE = 1024;
     uint8 constant LOT_SIZE_BITS = 10;
+
+    /* By utilizing the least significant digit of the liquidity lots value, we can 
+     * support special types of "knockout" liquidity, that when crossed trigger specific
+     * calls. The aggregate knockout liquidity will always sum to an odd number of lots
+     * whereas all vanilla resting liquidity will have an even number of lots. That
+     * means we can test whether any level has knockout liquidity simply by seeing if the
+     * the total sum is an odd number. */
     uint8 constant RESTING_LOT_BITS = 11;
 
-    /* @notice Converts raw liquidity to lots of liquidity. (See comment above defining
-     *         lots. */
+    /* @notice Converts raw liquidity to lots of resting liquidity. (See comment above 
+     *         defining lots. */
     function liquidityToLots (uint128 liq) internal pure returns (uint96) {
         unchecked {
+            // Resting liquidity must be an even number of lots (i.e. a multiple of 2048
+            // liquidity units.
             uint256 resting = (liq >> RESTING_LOT_BITS);
             require(resting << RESTING_LOT_BITS == liq, "OD");
             
@@ -75,6 +84,12 @@ library LiquidityMath {
         }
     }
 
+    /* @notice Checks if an aggergate lots counter contains a knockout liquidity component
+     *         by checking the least significant bit.
+     *
+     * @dev    Note that it's critical that the sum *total* of knockout lots on any
+     *         given level be an odd number. Don't add two odd knockout lots together
+     *         without renormalzing, because they'll sum to an even lot quantity. */
     function hasKnockoutLiq (uint96 lots) internal pure returns (bool) {
         return lots & 0x1 == 0x1;
     }

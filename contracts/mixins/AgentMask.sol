@@ -11,6 +11,8 @@ import "../interfaces/ICrocCondOracle.sol";
  *         based on the wallet addresses of end-users. */
 contract AgentMask is StorageLayout {
 
+    /* @notice Standard re-entrant gate for an unprivileged order called directly
+     *         by the user. */
     modifier reEntrantLock() {
         require(lockHolder_ == address(0));
         lockHolder_ = msg.sender;
@@ -18,6 +20,7 @@ contract AgentMask is StorageLayout {
         lockHolder_ = address(0);
     }
 
+    /* @notice Re-entrant gate for privileged protocol authority commands. */
     modifier protocolOnly (bool sudo) {
         require(msg.sender == authority_ && lockHolder_ == address(0));
         lockHolder_ = msg.sender;
@@ -26,7 +29,14 @@ contract AgentMask is StorageLayout {
         lockHolder_ = address(0);
         sudoMode_ = false;
     }
-    
+
+    /* @notice Re-entrant gate for an order called by external router on behalf of a
+     *         third party client. Requires the user to have previously approved the 
+     *         router.
+     *
+     * @param client The client who's order the router is calling on behalf of.
+     * @param salt   The approval slot salt to check the user's approval. Allows for a
+     *               user to approve the same router with diferent command sub-types. */
     modifier reEntrantApproved (address client, uint256 salt) {
         casAgent(client, msg.sender, salt);
         require(lockHolder_ == address(0));
@@ -35,6 +45,8 @@ contract AgentMask is StorageLayout {
         lockHolder_ = address(0);
     }
 
+    /* @notice Re-entrant gate for a relayer calling an order that was signed off-chain
+     *         using the EIP-712 standard. */
     modifier reEntrantAgent (bytes memory cmd,
                              bytes calldata conds,
                              bytes calldata signature) {
@@ -44,6 +56,8 @@ contract AgentMask is StorageLayout {
         lockHolder_ = address(0);
     }
 
+    /* @notice Given the order, evaluation conditionals, and off-chain signature, recovers
+     *         the client address if valid or reverts the transactions. */
     function lockSigner (bytes memory cmd,
                          bytes calldata conds,
                          bytes calldata signature) private returns (address client) {
@@ -51,6 +65,23 @@ contract AgentMask is StorageLayout {
         checkRelayConditions(client, conds);
     }
 
+    /* @notice Verifies that the conditions signed by the user are met at evaluation time,
+     *         and if necessary increments the nonce. 
+     *
+     * @param client The client who's order is being evaluated on behalf of.
+     * @param deadline The deadline (in block time) that the order must be evaluated by.
+     * @param alive    The live time (in block time) that the order cannot be evaluated
+     *                 before.
+     * @param salt     A salt to apply when checking the nonce. Allows users to sign
+     *                 an arbitrary number of multiple nonce tracks, so they don't have
+     *                 to wait for unrelated orders.
+     * @param nonce    The replay-attack prevention nonce. Two orders with the same salt
+     *                 and nonce cannot be evaluated (unless the user explicitly resets
+     *                 the nonce). A nonce cannot be evaluated until prior orders at
+     *                 lower nonces haven been successfully evaluated.
+     * @param relayer  Address of the relayer the user requires to evaluate the order.
+     *                 Must match either msg.sender or tx.origin. If zero, the order
+     *                 does not require a specific relayer. */
     function checkRelayConditions (address client, bytes calldata conds) private {
         (uint48 deadline, uint48 alive, bytes32 salt, uint32 nonce,
          address relayer)
@@ -62,6 +93,7 @@ contract AgentMask is StorageLayout {
         casNonce(client, salt, nonce);
     }
 
+    /* @notice Verifies the supplied signature matches the EIP-712 compatible data. */
     function verifySignature (bytes memory cmd,
                               bytes calldata conds,
                               bytes calldata signature)
@@ -73,7 +105,7 @@ contract AgentMask is StorageLayout {
         require(client != address(0));
     }
     
-
+    /* @notice Calculates the EIP-712 hash to check the signature against. */
     function checksumHash (bytes memory cmd, bytes calldata conds)
         private view returns (bytes32) {
         bytes32 digest = contentHash(cmd, conds);
@@ -81,6 +113,7 @@ contract AgentMask is StorageLayout {
                          ("\x19\x01", domainHash(), digest));
     }
 
+    /* @notice Calculates the EIP-712 typedStruct hash. */
     function contentHash (bytes memory metaCmd, bytes calldata conds)
         private pure returns (bytes32) {
         return keccak256(
@@ -89,6 +122,7 @@ contract AgentMask is StorageLayout {
              ("CrocRelayerCall(bytes cmd,bytes conds)"), metaCmd, conds));
     }
 
+    /* @notice Calculates the EIP-712 domain hash. */
     function domainHash() private view returns (bytes32) {
         return keccak256(
             abi.encode
@@ -130,6 +164,7 @@ contract AgentMask is StorageLayout {
         (debit, credit) = (lockHolder_, lockHolder_);
     }
 
+    
     function approveAgent (address router, uint32 nCalls, uint256 salt) internal {
         bytes32 key = agentKey(lockHolder_, router, salt);
         UserBalance storage bal = userBals_[key];
@@ -153,45 +188,49 @@ contract AgentMask is StorageLayout {
         UserBalance storage bal = userBals_[agentKey(client, agent, salt)];
         if (bal.agentCallsLeft_ < type(uint32).max) {
             require(bal.agentCallsLeft_ > 0);
-            bal.agentCallsLeft_--;
+            --bal.agentCallsLeft_;
         }
     }
 
     function casNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
         UserBalance storage bal = userBals_[nonceKey(client, nonceSalt)];
         require(bal.nonce_ == nonce);
-        bal.nonce_++;
+        ++bal.nonce_;
     }
 
+    address constant MAGIC_SENDER_TIP = address(256);
+    address constant MAGIC_ORIGIN_TIP = address(512);
+    address constant MAGIC_COINBASE_TIP = address(1024);
+    
     function tipRelayer (bytes memory tipCmd) internal {
-        if (tipCmd.length > 0) {
-            (address token, uint128 tip, address recv) =
-                abi.decode(tipCmd, (address, uint128, address));
-
-            if (recv == address(256)) {
-                recv = msg.sender;
-            } else if (recv == address(512)) {
-                recv = tx.origin;
-            } else if (recv == address(1024)) {
-                recv = block.coinbase;
-            }
-            
-            bytes32 fromKey = tokenKey(lockHolder_, token);
-            bytes32 toKey = tokenKey(recv, token);
-            
-            if (tip == type(uint128).max) {
-                tip = userBals_[fromKey].surplusCollateral_;
-            }
-            require(userBals_[fromKey].surplusCollateral_ >= tip);
-
-            uint128 protoFee = tip * relayerTakeRate_ / 256;
-            uint128 relayerTip = tip - protoFee;
-            
-            userBals_[fromKey].surplusCollateral_ -= tip;
-            userBals_[toKey].surplusCollateral_ += relayerTip;
-            if (protoFee > 0) {
-                feesAccum_[token] += protoFee;
-            }
+        if (tipCmd.length == 0) { return; }
+        
+        (address token, uint128 tip, address recv) =
+            abi.decode(tipCmd, (address, uint128, address));
+        
+        if (recv == address(256)) {
+            recv = msg.sender;
+        } else if (recv == address(512)) {
+            recv = tx.origin;
+        } else if (recv == address(1024)) {
+            recv = block.coinbase;
+        }
+        
+        bytes32 fromKey = tokenKey(lockHolder_, token);
+        bytes32 toKey = tokenKey(recv, token);
+        
+        if (tip == type(uint128).max) {
+            tip = userBals_[fromKey].surplusCollateral_;
+        }
+        require(userBals_[fromKey].surplusCollateral_ >= tip);
+        
+        uint128 protoFee = tip * relayerTakeRate_ / 256;
+        uint128 relayerTip = tip - protoFee;
+        
+        userBals_[fromKey].surplusCollateral_ -= tip;
+        userBals_[toKey].surplusCollateral_ += relayerTip;
+        if (protoFee > 0) {
+            feesAccum_[token] += protoFee;
         }
     }
 

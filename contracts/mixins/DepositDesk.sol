@@ -93,6 +93,9 @@ contract DepositDesk is SettleLayer {
         require(success, "VF");   
     }
 
+    /* @notice Converts an encoded trasnfer argument to the actual quantity to transfer.
+     *         Checks that the balance supports the requested value, and treats an 
+     *         argument of zero as a special case to transfer the entire balance. */
     function castTransVal (uint128 value, uint128 balance) private pure
         returns (uint128) {
         if (value == 0) { value = balance; }

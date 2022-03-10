@@ -16,10 +16,6 @@ import './LevelBook.sol';
 import './ColdInjector.sol';
 import './TradeMatcher.sol';
 
-import '../interfaces/ICrocSwapHistRecv.sol';
-
-import "hardhat/console.sol";
-
 /* @title Market sequencer.
  * @notice Mixin class that's responsibile for coordinating one or multiple sequetial
  *         trade actions within a single liqudity pool. */

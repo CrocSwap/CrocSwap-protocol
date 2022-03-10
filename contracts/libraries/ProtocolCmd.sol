@@ -4,6 +4,9 @@ pragma solidity >=0.8.4;
 
 import './SafeCast.sol';
 
+/* @title Protocol Command library.
+ * @notice To allow for flexibility and upgradeability the top-level interface to the Croc
+ *         dex contract contains a general purpose */
 library ProtocolCmd {
     
     

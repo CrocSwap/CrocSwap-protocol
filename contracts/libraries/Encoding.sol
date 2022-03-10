@@ -12,6 +12,9 @@ import "hardhat/console.sol";
  *    structures to/from raw transaction bytes. */
 library OrderEncoding {
 
+    // Preamble code that begins at the start of long-form orders. Allows us to support
+    // alternative message schemas in the future. To start all encoded long-form orders
+    // must start with this code in the first character position.
     uint8 constant LONG_FORM_SCHEMA = 1;
 
     /* @notice Parses raw bytes into an OrderDirective struct in memory. */
@@ -65,7 +68,7 @@ library OrderEncoding {
         private pure returns (uint32 next) {
         uint concCnt;
 
-        (pair.poolIdx_, next) = eatUInt24(input, offset);
+        (pair.poolIdx_, next) = eatUInt256(input, offset);
 
         (pair.ambient_.isAdd_, next) = eatBool(input, next);
         (pair.ambient_.rollType_, next) = eatUInt8(input, next);
