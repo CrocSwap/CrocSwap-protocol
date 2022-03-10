@@ -208,11 +208,11 @@ contract AgentMask is StorageLayout {
         (address token, uint128 tip, address recv) =
             abi.decode(tipCmd, (address, uint128, address));
         
-        if (recv == address(256)) {
+        if (recv == MAGIC_SENDER_TIP) {
             recv = msg.sender;
-        } else if (recv == address(512)) {
+        } else if (recv == MAGIC_ORIGIN_TIP) {
             recv = tx.origin;
-        } else if (recv == address(1024)) {
+        } else if (recv == MAGIC_COINBASE_TIP) {
             recv = block.coinbase;
         }
         
