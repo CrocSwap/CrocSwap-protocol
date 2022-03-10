@@ -13,7 +13,6 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
-import '../interfaces/ICrocSwapHistRecv.sol';
 import '../CrocEvents.sol';
 
 import "hardhat/console.sol";
@@ -116,7 +115,7 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
      *              Q64.64 notation. */
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
-            abi.decode(cmd, (uint8, address,address,uint24,uint128));
+            abi.decode(cmd, (uint8, address,address,uint256,uint128));
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
                                                    
