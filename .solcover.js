@@ -1,5 +1,5 @@
 
 module.exports = {
-    skipFiles: ['contracts/test/'],
+    skipFiles: ['test/'],
     configureYulOptimizer: true
 };
