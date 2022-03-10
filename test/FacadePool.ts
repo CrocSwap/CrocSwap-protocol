@@ -151,6 +151,8 @@ export class TestPool {
     overrides: PayableOverrides
     knockoutBits: number
     poolIdx: BigNumberish
+    liqQty: boolean
+    liqBase: boolean
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
         this.base = base
@@ -164,6 +166,8 @@ export class TestPool {
         this.trader = accts.then(a => a[0])
         this.auth = accts.then(a => a[1])
         this.other = accts.then(a => a[2])
+        this.liqQty = false
+        this.liqBase = true
 
         factory = ethers.getContractFactory("CrocSwapDexSeed")
         if (dex) {
@@ -272,7 +276,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
-        const callCode = 1
+        const callCode = this.lpCallCode(1, 11, 12);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
@@ -283,7 +287,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
-        const callCode = 2
+        const callCode = this.lpCallCode(2, 21, 22);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
@@ -305,7 +309,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
-        const callCode = 3
+        const callCode = this.lpCallCode(3, 31, 32);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
             [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
@@ -316,10 +320,19 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
-        const callCode = 4
+        const callCode = this.lpCallCode(4, 41, 42);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"], 
             [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+    }
+
+    lpCallCode (liqCode: number, baseCode: number, quoteCode: number): number {
+        if (this.liqQty) { 
+            return this.liqBase ? 
+                baseCode : quoteCode
+        } else {
+            return liqCode
+        }
     }
 
     async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {

@@ -177,9 +177,9 @@ library Chaining {
         if (dir.rollType_ != NO_ROLL_TYPE) {
             (uint128 collateral, bool isAdd) =
                 collateralDemand(roll, flow, dir.rollType_, dir.liquidity_);
-            
-            uint128 liq = collateral.liquiditySupported
-                (roll.inBaseQty_, curve.priceRoot_);
+
+            uint128 liq = sizeAmbientLiq
+                (collateral, isAdd, curve.priceRoot_, roll.inBaseQty_);
             (dir.liquidity_, dir.isAdd_) = (liq, isAdd);
         }
     }
@@ -220,24 +220,71 @@ library Chaining {
         (bend.liquidity_, bend.isAdd_) = (liq, isAdd);
     }
 
+    /* @notice Calculates the amount of ambient liquidity that a fixed amount of token
+     *         collateral maps to into the the pool.
+     *
+     * @dev Will always round liquidity conservatively. That is when being used in an add
+     *      liquidity context, user can be assured that the liquidity requires slightly
+     *      less than their collateral commitment. And when liquidity is being removed
+     *      collateral will be slightly higher for the amount of removed liquidity.
+     * 
+     * @param collateral The amount of collateral (either base of quote) tokens that we
+     *                   want to size liquidity for.
+     * @param isAdd Indicates whether the liquidity is being added or removed. Necessary
+     *              to make sure that we round conservatively.
+     * @param priceRoot The current price in the pool.
+     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     *                  token.
+     * @return The amount of liquidity, in sqrt(X*Y) units, supported by this 
+     *         collateral. */
     function sizeAmbientLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
                              bool inBaseQty) internal pure returns (uint128) {
-        uint128 liq = collateral.liquiditySupported
-            (inBaseQty, priceRoot);
+        uint128 liq = bufferCollateral(collateral, isAdd)
+            .liquiditySupported(inBaseQty, priceRoot);
         return isAdd ? liq : (liq + 1);
     }
-    
+
+    /* @notice Same as sizeAmbientLiq() (see above), but calculates for concentrated 
+     *         liquidity in a given range.
+     * 
+     * @param collateral The amount of collateral (either base of quote) tokens that we
+     *                   want to size liquidity for.
+     * @param isAdd Indicates whether the liquidity is being added or removed. Necessary
+     *              to make sure that we round conservatively.
+     * @param priceRoot The current price in the pool.
+     * @param lowTick The tick index of the lower bound of the concentrated liquidity 
+     *                range.
+     * @param highTick The tick index of the upper bound.
+     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     *                  token.
+     * @return The amount of concentrated liquidity (in sqrt(X*Y) units) supported in
+     *         the given tick range. */
     function sizeConcLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
                           int24 lowTick, int24 highTick, bool inBaseQty)
         internal pure returns (uint128) {
         (uint128 bidPrice, uint128 askPrice) =
             determinePriceRange(priceRoot, lowTick, highTick, inBaseQty);
         
-        uint128 liq = collateral.liquiditySupported(inBaseQty, bidPrice, askPrice);
+        uint128 liq = bufferCollateral(collateral, isAdd)
+            .liquiditySupported(inBaseQty, bidPrice, askPrice);
+
         return isAdd ?
             liq.shaveRoundLots() :
             liq.shaveRoundLotsUp();
-    }                     
+    }
+
+    // Represents a small, economically menaingless amount of token wei that makes sure
+    // we're always leaving the user with a collateral credit.    
+    function bufferCollateral (uint128 collateral, bool isAdd)
+        private pure returns (uint128) {
+        uint128 BUFFER_COLLATERAL = 4;
+        if (isAdd) {
+            return collateral < BUFFER_COLLATERAL ? 0 :
+                collateral - BUFFER_COLLATERAL;
+        } else {
+            return collateral + BUFFER_COLLATERAL;
+        }
+    }
 
     /* @notice Converts a swap that's indicated to be a rolling gap-fill into one
      *   with quantity and direction set to neutralize hitherto accumulated rolling
@@ -283,10 +330,6 @@ library Chaining {
         }
     }
 
-    // Represents a small, economically menaingless amount of token wei that makes sure
-    // we're always leaving the user with a collateral credit.
-    uint128 constant private BUFFER_COLLATERAL = 4;
-
     /* @notice Calculated the total amount of collateral and its direction, that we should
      *   be targeting to neutralize when sizing a liquidity gap-fill. */
     function collateralDemand (RollTarget memory roll, PairFlow memory flow,
@@ -296,12 +339,6 @@ library Chaining {
 
         isAdd = collatFlow < 0;
         collateral = collatFlow > 0 ? uint128(collatFlow) : uint128(-collatFlow);
-
-        if (isAdd) {
-            collateral -= BUFFER_COLLATERAL;
-        } else {
-            collateral += BUFFER_COLLATERAL;
-        }
     }
 
     /* @notice Calculates the effective bid/ask committed collateral range related

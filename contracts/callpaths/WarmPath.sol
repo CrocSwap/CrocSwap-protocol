@@ -66,10 +66,10 @@ contract WarmPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount
         } else if (code == 2) {
             burn(base, quote, poolIdx, bidTick, askTick, liq,
                  limitLower, limitHigher, reserveFlags);
-        } else if (code == 11) {
+        } else if (code == 21) {
             burnQty(base, quote, poolIdx, bidTick, askTick, true, liq,
                  limitLower, limitHigher, reserveFlags);
-        } else if (code == 12) {
+        } else if (code == 22) {
             burnQty(base, quote, poolIdx, bidTick, askTick, false, liq,
                  limitLower, limitHigher, reserveFlags);
             
