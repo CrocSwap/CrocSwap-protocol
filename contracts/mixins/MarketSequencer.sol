@@ -16,10 +16,6 @@ import './LevelBook.sol';
 import './ColdInjector.sol';
 import './TradeMatcher.sol';
 
-import '../interfaces/ICrocSwapHistRecv.sol';
-
-import "hardhat/console.sol";
-
 /* @title Market sequencer.
  * @notice Mixin class that's responsibile for coordinating one or multiple sequetial
  *         trade actions within a single liqudity pool. */
@@ -75,6 +71,16 @@ contract MarketSequencer is TradeMatcher {
         commitCurve(pool.hash_, curve);
     }
 
+    function assertInsidePrice (Directives.SwapDirective memory dir,
+                                CurveMath.CurveState memory curve,
+                                uint128 limitPrice) private pure {
+        if (limitPrice > 0) {
+            require(dir.isBuy_ ?
+                    curve.priceRoot_ <= limitPrice:
+                    curve.priceRoot_ >= limitPrice, "LI");
+        }
+    }
+
     /* @notice Mints concentrated liquidity in the form of a range order on to the pool.
      *
      * @param bidTick The price tick associated with the lower boundary of the range
@@ -88,6 +94,8 @@ contract MarketSequencer is TradeMatcher {
      *                 price falls outside this point, the transaction is reverted.
      * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
      *                 price falls outside this point, the transaction is reverted.
+     * @param lpConduit The address of the ICrocLpConduit that the liquidity will be
+     *                  assigned to (0 for user owned liquidity).
      *
      * @return baseFlow The total amount of base-side token collateral that must be
      *                  committed to the pool as part of the mint. Will always be
@@ -96,13 +104,14 @@ contract MarketSequencer is TradeMatcher {
      *                   committed to the pool as part of the mint. */
     function mintOverPool (int24 bidTick, int24 askTick, uint128 liq,
                            PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice,
+                           address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             mintRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
-                      bidTick, askTick, liq, pool.hash_);
+                      bidTick, askTick, liq, pool.hash_, lpConduit);
         PriceGrid.verifyFit(bidTick, askTick, pool.head_.tickSize_);
         commitCurve(pool.hash_, curve);
     }
@@ -138,6 +147,35 @@ contract MarketSequencer is TradeMatcher {
         commitCurve(pool.hash_, curve);
     }
 
+    /* @notice Harvests rewards from a concentrated liquidity position.
+     *
+     * @param bidTick The price tick associated with the lower boundary of the range
+     *                order.
+     * @param askTick The price tick associated with the upper boundary of the range
+     *                order.
+     * @param pool The pre-loaded speciication and hash of the pool to be swapped against.
+     * @param minPrice The minimum acceptable curve price to mint liquidity. If curve
+     *                 price falls outside this point, the transaction is reverted.
+     * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
+     *                 price falls outside this point, the transaction is reverted.
+     *
+     * @return baseFlow The total amount of base-side token collateral that is returned
+     *                  from the pool as part of the burn. Will always be
+     *                  negative as it's paid from the pool to the user.
+     * @return quoteFlow The total amount of quote-side token collateral that is returned
+     *                   from the pool as part of the burn. */
+    function harvestOverPool (int24 bidTick, int24 askTick,
+                              PoolSpecs.PoolCursor memory pool,
+                              uint128 minPrice, uint128 maxPrice)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        CurveMath.CurveState memory curve = snapCurveInRange
+            (pool.hash_, minPrice, maxPrice);
+        (baseFlow, quoteFlow) =
+            harvestRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
+                         bidTick, askTick, pool.hash_);
+        commitCurve(pool.hash_, curve);
+    }
+
     /* @notice Mints ambient liquidity on to the pool's curve.
      *
      * @param liq The amount of liquidity being minted represented as the equivalent to
@@ -147,6 +185,8 @@ contract MarketSequencer is TradeMatcher {
      *                 price falls outside this point, the transaction is reverted.
      * @param maxPrice The maximum acceptable curve price to mint liquidity. If curve
      *                 price falls outside this point, the transaction is reverted.
+     * @param lpConduit The address of the ICrocLpConduit that the liquidity will be
+     *                  assigned to (0 for user owned liquidity).
      *
      * @return baseFlow The total amount of base-side token collateral that must be
      *                  committed to the pool as part of the mint. Will always be
@@ -154,12 +194,12 @@ contract MarketSequencer is TradeMatcher {
      * @return quoteFlow The total amount of quote-side token collateral that must be
      *                   committed to the pool as part of the mint. */
     function mintOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
-            mintAmbient(curve, liq, pool.hash_);
+            mintAmbient(curve, liq, pool.hash_, lpConduit);
         commitCurve(pool.hash_, curve);
     }
 
@@ -238,19 +278,10 @@ contract MarketSequencer is TradeMatcher {
                         Directives.SwapDirective memory dir,
                         CurveCache.Cache memory curve,
                         Chaining.ExecCntx memory cntx) private {
-        if (isRoll(dir)) {
-            cntx.roll_.plugSwapGap(dir, flow);
-        }
+        cntx.roll_.plugSwapGap(dir, flow);
         if (dir.qty_ != 0) {
             callSwap(flow, curve, dir, cntx.pool_);            
         }
-    }
-
-    /* @notice Returns true if the swap directive indicates that it wants to use a 
-     *         rolling gap-filled plugged into quantity instead of a pre-specified 
-     *         quantity. */
-    function isRoll (Directives.SwapDirective memory dir) private pure returns (bool) {
-        return dir.limitPrice_ > 0 && dir.qty_ == 0;
     }
 
     /* @notice Applies an ambient liquidity directive to a pre-loaded liquidity curve. */
@@ -258,16 +289,12 @@ contract MarketSequencer is TradeMatcher {
                            Directives.AmbientDirective memory dir,
                            CurveCache.Cache memory curve,
                            Chaining.ExecCntx memory cntx) private {
-        (uint128 liq, bool isAdd) = (dir.liquidity_, dir.isAdd_);
-
-        if (isRoll(liq, isAdd)) {
-            (liq, isAdd) = cntx.roll_.plugLiquidity(curve.curve_, flow);
-        }
+        cntx.roll_.plugLiquidity(dir, curve.curve_, flow);
         
-        if (liq > 0) {
-            (int128 base, int128 quote) = isAdd ?
-                callMintAmbient(curve, liq, cntx.pool_.hash_) :
-                callBurnAmbient(curve, liq, cntx.pool_.hash_);
+        if (dir.liquidity_ > 0) {
+            (int128 base, int128 quote) = dir.isAdd_ ?
+                callMintAmbient(curve, dir.liquidity_, cntx.pool_.hash_) :
+                callBurnAmbient(curve, dir.liquidity_, cntx.pool_.hash_);
         
             flow.accumFlow(base, quote);
         }
@@ -281,11 +308,10 @@ contract MarketSequencer is TradeMatcher {
                                  Chaining.ExecCntx memory cntx) private {
         for (uint i = 0; i < dirs.length; ++i) {
             for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
-                (int24 lowTick, int24 highTick, bool isAdd, uint128 liquidity) =
+                (int24 lowTick, int24 highTick, Directives.ConcenBookend memory bend) = 
                     dirs[i].sliceBookend(j);
-
                 (int128 nextBase, int128 nextQuote) = applyConcentrated
-                    (curve, flow, cntx, lowTick, highTick, isAdd, liquidity);
+                    (curve, flow, cntx, lowTick, highTick, bend);
                 flow.accumFlow(nextBase, nextQuote);
             }
         }
@@ -295,15 +321,13 @@ contract MarketSequencer is TradeMatcher {
     function applyConcentrated (CurveCache.Cache memory curve,
                                 Chaining.PairFlow memory flow,
                                 Chaining.ExecCntx memory cntx,
-                                int24 lowTick, int24 highTick, bool isAdd, uint128 liq)
+                                int24 lowTick, int24 highTick,
+                                Directives.ConcenBookend memory bend)
         private returns (int128, int128) {
-        if (isRoll(liq, isAdd)) {
-            (liq, isAdd) = Chaining.plugLiquidity(cntx.roll_, curve.curve_,
-                                                  flow, lowTick, highTick);
-        }
+        cntx.roll_.plugLiquidity(bend, curve.curve_, lowTick, highTick, flow);
 
-        if (isAdd) {
-            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, liq,
+        if (bend.isAdd_) {
+            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, bend.liquidity_,
                                                    cntx.pool_.head_.tickSize_,
                                                    curve.pullPriceTick());
             if (offGrid) {
@@ -315,17 +339,10 @@ contract MarketSequencer is TradeMatcher {
             }
         }
 
-        if (liq == 0) { return (0, 0); }
-        return isAdd ?
-            callMintRange(curve, lowTick, highTick, liq, cntx.pool_.hash_) :
-            callBurnRange(curve, lowTick, highTick, liq, cntx.pool_.hash_);
-    }
-
-    /* @notice Returns true if the liquidity directive fields indicates that it wants to 
-     *         use a rolling gap-filled plugged into quantity instead of a pre-specified 
-     *         quantity. */
-    function isRoll (uint128 liq, bool isAdd) private pure returns (bool) {
-        return liq == 0 && isAdd == true;
+        if (bend.liquidity_ == 0) { return (0, 0); }
+        return bend.isAdd_ ?
+            callMintRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_) :
+            callBurnRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_);
     }
 
 }

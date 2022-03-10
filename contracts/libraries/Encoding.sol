@@ -12,12 +12,21 @@ import "hardhat/console.sol";
  *    structures to/from raw transaction bytes. */
 library OrderEncoding {
 
+    // Preamble code that begins at the start of long-form orders. Allows us to support
+    // alternative message schemas in the future. To start all encoded long-form orders
+    // must start with this code in the first character position.
+    uint8 constant LONG_FORM_SCHEMA = 1;
+
     /* @notice Parses raw bytes into an OrderDirective struct in memory. */
     function decodeOrder (bytes calldata input) internal pure returns
         (Directives.OrderDirective memory dir) {
         uint32 offset = 0;
         uint8 cnt;
+        uint8 schemaType;
 
+        (schemaType, offset) = eatUInt8(input, offset);
+        require(schemaType == LONG_FORM_SCHEMA);
+        
         (dir.open_.token_, offset) = eatToken(input, offset);
         (dir.open_.limitQty_, offset) = eatInt128(input, offset);
         (dir.open_.dustThresh_, offset) = eatUInt128(input, offset);
@@ -59,9 +68,10 @@ library OrderEncoding {
         private pure returns (uint32 next) {
         uint concCnt;
 
-        (pair.poolIdx_, next) = eatUInt24(input, offset);
+        (pair.poolIdx_, next) = eatUInt256(input, offset);
 
         (pair.ambient_.isAdd_, next) = eatBool(input, next);
+        (pair.ambient_.rollType_, next) = eatUInt8(input, next);
         (pair.ambient_.liquidity_, next) = eatUInt128(input, next);
 
         (concCnt, next) = eatUInt8(input, next);
@@ -71,8 +81,8 @@ library OrderEncoding {
             next = parseConcentrated(pair.conc_[i], input, next);
         }
 
-        (pair.swap_.liqMask_, next) = eatUInt8(input, next);
         (pair.swap_.isBuy_, pair.swap_.inBaseQty_, next) = eatBool2(input, next);
+        (pair.swap_.rollType_, next) = eatUInt8(input, next);
         (pair.swap_.qty_, next) = eatUInt128(input, next);
         (pair.swap_.limitPrice_, next) = eatUInt128(input, next);
 
@@ -95,6 +105,7 @@ library OrderEncoding {
         for (uint8 i = 0; i < bookendCnt; ++i) {
             (pass.bookends_[i].closeTick_, next) = eatInt24(input, next);
             (pass.bookends_[i].isAdd_, next) = eatBool(input, next);
+            (pass.bookends_[i].rollType_, next) = eatUInt8(input, next);
             (pass.bookends_[i].liquidity_, next) = eatUInt128(input, next);
         }
     }

@@ -15,7 +15,7 @@ contract TestCurveMath {
             buildCurve(seed, growth, concentrated, 0));
     }
 
-    function testVig (uint128 liq, uint128 swapQty, uint24 feeRate, uint8 protoCut,
+    function testVig (uint128 liq, uint128 swapQty, uint16 feeRate, uint8 protoCut,
                       bool, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
@@ -23,7 +23,7 @@ contract TestCurveMath {
                                      limitPrice);
     }
 
-    function testVigMin (uint128 liq, uint24 feeRate, uint8 protoCut,
+    function testVigMin (uint128 liq, uint16 feeRate, uint8 protoCut,
                          bool inBase, uint128 curvePrice)
         public pure returns (uint128, uint128) {
         uint128 swapQty = type(uint128).max;
@@ -32,7 +32,7 @@ contract TestCurveMath {
                        TickMath.MIN_SQRT_RATIO);
     }
 
-    function testVigMax (uint128 liq, uint24 feeRate, uint8 protoCut,
+    function testVigMax (uint128 liq, uint16 feeRate, uint8 protoCut,
                          bool inBase, uint128 curvePrice)
         public pure returns (uint128, uint128) {
         uint128 swapQty = type(uint128).max;
@@ -147,9 +147,9 @@ contract TestCurveMath {
         CurveMath.CurveState memory curve = buildCurve(seed, growth, conc, price);
         CurveAssimilate.assimilateLiq(curve, feesPaid, inBase);
         
-        (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.liq_.ambientSeed_);
-        (shiftGrowth, concGrowth) = (curve.accum_.ambientGrowth_,
-                                     curve.accum_.concTokenGrowth_);
+        (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.ambientSeeds_);
+        (shiftGrowth, concGrowth) = (curve.seedDeflator_,
+                                     curve.concGrowth_);
     }
 
     function testDeriveImpact (uint128 price, uint128 seed, uint64 growth,
@@ -162,8 +162,6 @@ contract TestCurveMath {
     
     function buildCurve (uint128 seed, uint64 growth, uint128 conc, uint128 price)
         private pure returns (CurveMath.CurveState memory) {
-        CurveMath.CurveLiquidity memory liq = CurveMath.CurveLiquidity(seed, conc);
-        CurveMath.CurveFeeAccum memory fee = CurveMath.CurveFeeAccum(growth, 0);
-        return CurveMath.CurveState(price, liq, fee);        
+        return CurveMath.CurveState(price, seed, conc, growth, 0);
     }
 }

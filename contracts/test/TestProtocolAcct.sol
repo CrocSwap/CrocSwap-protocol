@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import "../libraries/CurveMath.sol";
 import "../mixins/ProtocolAccount.sol";
+import "../mixins/DepositDesk.sol";
 
 contract TestProtocolAccount is ProtocolAccount {
     using TokenFlow for TokenFlow.PairSeq;
@@ -31,8 +32,11 @@ contract TestProtocolAccount is ProtocolAccount {
         return feesAccum_[token];
     }
 
-    function disburseProtocol (address recv, address token)
-        public protocolOnly {
+    function disburseProtocol (address recv, address token) public {
         disburseProtocolFees(recv, token);
+    }
+
+    function getPaidFees (address recv, address token) public view returns (uint128) {
+        return userBals_[keccak256(abi.encode(recv, token))].surplusCollateral_;
     }
 }

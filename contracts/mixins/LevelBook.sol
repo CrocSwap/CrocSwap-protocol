@@ -6,11 +6,12 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 import './StorageLayout.sol';
+import './ColdInjector.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
-contract LevelBook is TickCensus {
+contract LevelBook is TickCensus, ColdPathInjector {
     using SafeCast for uint128;
     using LiquidityMath for uint128;
     using LiquidityMath for uint96;
@@ -56,6 +57,10 @@ contract LevelBook is TickCensus {
         liqDelta = isBuy ? crossDelta : -crossDelta;
         if (feeGlobal != lvl.feeOdometer_) {
             lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
+        }
+
+        if (lvl.bidLots_.hasKnockoutLiq() || lvl.askLots_.hasKnockoutLiq()) {
+            callKnockout(poolIdx, tick, isBuy);
         }
     }
 

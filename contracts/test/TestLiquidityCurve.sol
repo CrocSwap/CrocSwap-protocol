@@ -15,7 +15,7 @@ contract TestLiquidityCurve is LiquidityCurve {
     struct SwapFrame {
         bool isBuy_;
         bool inBaseQty_;
-        uint24 feeRate_;
+        uint16 feeRate_;
         uint8 protoCut_;
     }
 
@@ -156,16 +156,16 @@ contract TestLiquidityCurve is LiquidityCurve {
                        uint128 ambientLiq, uint128 concLiq) public {
         CurveMath.CurveState memory curve = snapCurveInit(bytes32(poolIdx));
         curve.priceRoot_ = price;
-        curve.liq_.ambientSeed_ = ambientLiq;
-        curve.liq_.concentrated_ = concLiq;
+        curve.ambientSeeds_ = ambientLiq;
+        curve.concLiq_ = concLiq;
         curve.priceRoot_ = price;
         commitCurve(bytes32(poolIdx), curve);
     }
 
     function fixAccum (uint256 poolIdx, uint64 ambient, uint64 conc) public {
         CurveMath.CurveState memory curve = snapCurve(bytes32(poolIdx));
-        curve.accum_.ambientGrowth_ = ambient;
-        curve.accum_.concTokenGrowth_ = conc;
+        curve.seedDeflator_ = ambient;
+        curve.concGrowth_ = conc;
         commitCurve(bytes32(poolIdx), curve);
     }
 

@@ -5,7 +5,7 @@ pragma solidity >=0.8.4;
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
-import '../interfaces/ICrocSwapPermitOracle.sol';
+import '../interfaces/ICrocPermitOracle.sol';
 import './StorageLayout.sol';
 
 import "hardhat/console.sol";
@@ -14,7 +14,7 @@ import "hardhat/console.sol";
  * @notice Provides a facility for registering and querying pool types on pairs and
  *         generalized pool templates for pools yet to be initialized. */
 contract PoolRegistry is StorageLayout {
-
+    using PoolSpecs for uint8;
     using PoolSpecs for PoolSpecs.Pool;
 
     uint8 constant SWAP_ACT_CODE = 1;
@@ -22,23 +22,80 @@ contract PoolRegistry is StorageLayout {
     uint8 constant BURN_ACT_CODE = 3;
     uint8 constant COMP_ACT_CODE = 4;
 
-    /* @notice Tests whether the given action by the given user is authorized on this
+    /* @notice Tests whether the given swap by the given user is authorized on this
      *         specific pool. If not, reverts the transaction. If pool is permissionless
-     *         this function will just noop.
-     *
-     * @param pool The specification of the pool being operated on.
-     * @param base The address of the base-side token (or 0x0 if native Eth) in the pair.
-     * @param quote The address of the quote-side token in the pair.
-     * @param actionCode The type of action being executed (see codes above) */
-    function verifyPermit (PoolSpecs.PoolCursor memory pool,
-                           address base, address quote,
-                           uint8 actionCode) view internal {
-        if (pool.head_.permitOracle_ != address(0)) {
-            bool approved = ICrocSwapPermitOracle(pool.head_.permitOracle_)
-                .isApprovedForCrocPool(msg.sender, base, quote, actionCode);
+     *         this function will just noop. */
+    function verifyPermitSwap (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               bool isBuy, bool inBaseQty, uint128 qty) internal {
+        if (pool.oracle_ != address(0)) {
+            uint16 discount =
+                ICrocPermitOracle(pool.oracle_)
+                .checkApprovedForCrocSwap(lockHolder_, msg.sender, base, quote,
+                                          isBuy, inBaseQty, qty, pool.head_.feeRate_);
+            require(discount > 0, "Z");
+            pool.head_.feeRate_ -= discount;
+        }
+    }
+
+    /* @notice Tests whether the given mint by the given user is authorized on this
+     *         specific pool. If not, reverts the transaction. If pool is permissionless
+     *         this function will just noop. */
+    function verifyPermitMint (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               int24 bidTick, int24 askTick, uint128 liq) internal {
+        if (pool.oracle_ != address(0)) {
+            bool approved = ICrocPermitOracle(pool.oracle_)
+                .checkApprovedForCrocMint(lockHolder_, msg.sender, base, quote,
+                                          bidTick, askTick, liq);
             require(approved, "Z");
         }
     }
+
+    /* @notice Tests whether the given burn by the given user is authorized on this
+     *         specific pool. If not, reverts the transaction. If pool is permissionless
+     *         this function will just noop. */
+    function verifyPermitBurn (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote,
+                               int24 bidTick, int24 askTick, uint128 liq) internal {
+        if (pool.oracle_ != address(0)) {
+            bool approved = ICrocPermitOracle(pool.oracle_)
+                .checkApprovedForCrocBurn(lockHolder_, msg.sender, base, quote,
+                                          bidTick, askTick, liq);
+            require(approved, "Z");
+        }
+    }
+
+    /* @notice Tests whether the given pool directive by the given user is authorized on 
+     *         this specific pool. If not, reverts the transaction. If pool is 
+     *         permissionless this function will just noop. */
+    function verifyPermit (PoolSpecs.PoolCursor memory pool,
+                           address base, address quote,
+                           Directives.AmbientDirective memory ambient,
+                           Directives.SwapDirective memory swap,
+                           Directives.ConcentratedDirective[] memory concs) internal {
+        if (pool.oracle_ != address(0)) {
+            uint16 discount = ICrocPermitOracle(pool.oracle_)
+                .checkApprovedForCrocPool(lockHolder_, msg.sender, base, quote, ambient,
+                                          swap, concs, pool.head_.feeRate_);
+            require(discount > 0, "Z");
+            pool.head_.feeRate_ -= discount;
+        }
+    }
+
+    
+    /* @notice Tests whether the given burn by the given user is authorized on this
+     *         specific pool. If not, reverts the transaction. If pool is permissionless
+     *         this function will just noop. */
+    function verifyPermitInit (PoolSpecs.PoolCursor memory pool,
+                               address base, address quote, uint256 poolIdx) internal {
+        if (pool.oracle_ != address(0)) {
+            bool approved = ICrocPermitOracle(pool.oracle_).
+                checkApprovedForCrocInit(lockHolder_, msg.sender, base, quote, poolIdx);
+            require(approved, "Z");
+        }
+    }
+    
 
     /* @notice Creates (or resets if previously existed) a new pool template associated
      *         with an arbitrary pool index. After calling, any pair's pool initialized
@@ -64,15 +121,21 @@ contract PoolRegistry is StorageLayout {
      *                permissionless.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
      *                  rest before it can be burned. */
-    function setPoolTemplate (uint24 poolIdx, uint24 feeRate,
-                              uint8 protocolTake, uint16 tickSize,
-                              address permitOracle, uint8 jitThresh) internal {
+    function setPoolTemplate (uint256 poolIdx, uint16 feeRate, uint16 tickSize,
+                              uint8 jitThresh, uint8 knockout, uint8 oracleFlags)
+        internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
+        templ.enabled_ = true;
         templ.feeRate_ = feeRate;
-        templ.protocolTake_ = protocolTake;
         templ.tickSize_ = tickSize;
         templ.jitThresh_ = jitThresh;
-        templ.permitOracle_ = permitOracle;
+        templ.knockoutBits_ = knockout;
+        templ.oracleFlags_ = oracleFlags;
+    }
+
+    function disablePoolTemplate (uint256 poolIdx) internal {
+        PoolSpecs.Pool storage templ = templates_[poolIdx];
+        templ.enabled_ = false;
     }
 
     /* @notice Resets the parameters on a previously existing pool in a specific pair.
@@ -91,18 +154,14 @@ contract PoolRegistry is StorageLayout {
      * @param tickSize The tick grid size for range orders in the pool.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
      *                  rest before it can be burned. */
-    function setPoolSpecs (address base, address quote, uint24 poolIdx,
-                           uint24 feeRate, uint8 protocolTake,
-                           uint16 tickSize, uint8 jitThresh) internal {
+    function setPoolSpecs (address base, address quote, uint256 poolIdx,
+                           uint16 feeRate, uint16 tickSize, uint8 jitThresh,
+                           uint8 knockoutBits) internal {
         PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
         pool.feeRate_ = feeRate;
-        pool.protocolTake_ = protocolTake;
         pool.tickSize_ = tickSize;
         pool.jitThresh_ = jitThresh;
-        
-        // Even the protocol authority should not be able to lock up an initialized pool,
-        // otherwise LPs could find themselves locked out of their funds. 
-        require(tickSize > 0);
+        pool.knockoutBits_ = knockoutBits;
     }
 
     /* @notice The creation of every new pool requires the pool initializer to 
@@ -114,6 +173,16 @@ contract PoolRegistry is StorageLayout {
      *         initialization time. */
     function setNewPoolLiq (uint128 liqAnte) internal {
         newPoolLiq_ = liqAnte;
+    }
+
+    function setProtocolTakeRate (uint8 takeRate) internal {
+        protocolTakeRate_ = takeRate;
+    }
+
+    function resyncProtocolTake (address base, address quote,
+                                  uint256 poolIdx) internal {
+        PoolSpecs.Pool storage pool = selectPool(base, quote, poolIdx);
+        pool.protocolTake_ = protocolTakeRate_;
     }
 
     /* @notice Sets the off-grid price improvement thresholds for a specific token. Once
@@ -141,15 +210,16 @@ contract PoolRegistry is StorageLayout {
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index for the newly created pool. The pool specs will
      *                be created from the current template for this index. (If no 
-     *                template exists, this call will rever the transaction.)
+     *                template exists, this call will revert the transaction.)
      *
      * @return pool The pool specs associated with the newly created pool.
      * @return liqAnte The required amount of liquidity that the user must permanetely
      *                 lock to create the pool. (See setNewPoolLiq() above) */
-    function registerPool (address base, address quote, uint24 poolIdx) internal
+    function registerPool (address base, address quote, uint256 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory, uint128) {
         PoolSpecs.Pool memory template = queryTemplate(poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
+        template.protocolTake_ = protocolTakeRate_;
         return (queryPool(base, quote, poolIdx), newPoolLiq_);
     }
 
@@ -178,13 +248,14 @@ contract PoolRegistry is StorageLayout {
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index. */
-    function queryPool (address base, address quote, uint24 poolIdx)
+    function queryPool (address base, address quote, uint256 poolIdx)
         internal view returns (PoolSpecs.PoolCursor memory pool) {
         pool = PoolSpecs.queryPool(pools_, base, quote, poolIdx);
         require(isPoolInit(pool), "PI");
     }
 
-    function assertPoolFresh (address base, address quote, uint24 poolIdx) internal view {
+    function assertPoolFresh (address base, address quote,
+                              uint256 poolIdx) internal view {
         PoolSpecs.PoolCursor memory pool =
             PoolSpecs.queryPool(pools_, base, quote, poolIdx);
         require(!isPoolInit(pool), "PF");
@@ -196,7 +267,7 @@ contract PoolRegistry is StorageLayout {
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
      * @param poolIdx The pool type index. */
-    function selectPool (address base, address quote, uint24 poolIdx)
+    function selectPool (address base, address quote, uint256 poolIdx)
         private view returns (PoolSpecs.Pool storage pool) {
         pool = PoolSpecs.selectPool(pools_, base, quote, poolIdx);
         require(isPoolInit(pool), "PI");
@@ -205,7 +276,7 @@ contract PoolRegistry is StorageLayout {
     /* @notice Looks up and returns the pool template associated with the pool type 
      *         index. If no template exists (or it was disabled after initialization)
      *         this call reverts the transaction. */
-    function queryTemplate (uint24 poolIdx)
+    function queryTemplate (uint256 poolIdx)
         private view returns (PoolSpecs.Pool memory template) {
         template = templates_[poolIdx];
         require(isPoolInit(template), "PT");
@@ -215,13 +286,13 @@ contract PoolRegistry is StorageLayout {
      *         that hasn't been disabled. */
     function isPoolInit (PoolSpecs.Pool memory pool)
         private pure returns (bool) {
-        return pool.tickSize_ > 0;
+        return pool.enabled_;
     }
 
     /* @notice Returns true if the pool cursor represents an initailized pool that
      *         hasn't been disabled. */
     function isPoolInit (PoolSpecs.PoolCursor memory pool)
         private pure returns (bool) {
-        return pool.head_.tickSize_ > 0;
+        return pool.head_.enabled_;
     }
 }

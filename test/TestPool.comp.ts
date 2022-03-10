@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -112,7 +112,7 @@ describe('Pool Compound', () => {
 
         let concen: ConcentratedDirective = {
             openTick: 4000,
-            bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(1024*100)}]
+            bookends: [{closeTick: 8000, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100)}]
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         
@@ -139,13 +139,13 @@ describe('Pool Compound', () => {
 
         let concens: ConcentratedDirective[] = [{
             openTick: 8000,
-            bookends: [{closeTick: -5000, isAdd: false, liquidity: BigNumber.from(200*1024)},
-                {closeTick: 10000, isAdd: true, liquidity: BigNumber.from(2000*1024) }]
+            bookends: [{closeTick: -5000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
+                {closeTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024) }]
             },
         {
             openTick: -5000,
-            bookends: [{closeTick: 10000, isAdd: false, liquidity: BigNumber.from(500*1024)},
-                {closeTick: 0, isAdd: true, liquidity: BigNumber.from(400*1024)}]
+            bookends: [{closeTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
+                {closeTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)}]
 
         }]
 
@@ -159,5 +159,60 @@ describe('Pool Compound', () => {
 
         expect(await test.liquidity()).to.equal(2300*1024)
      })
+})
+
+describe('Pool Compound Curve Cache', () => {
+      let test: TestPool
+      const feeRate = 250 * 100
+  
+   beforeEach("deploy",  async () => {
+      test = await makeTokenPool()
+  
+      await test.initPool(feeRate, 0, 1, 1.5)
+      test.useHotPath = true
+   })
+  
+   // Tests for relatively bespoke corner case. In the long-form path, we need to make sure that
+   // a swap updates the CurveCache tick in the ColdInjector before calling any operations.
+   it("swap curve cache", async() => {
+      await test.testMintAmbient(100000)
+      await test.testMint(-25000, 25000, 100000)
+
+      // Pre-populate global fee odometer
+      await test.testSwap(true, true, 100000*1024, toSqrtPrice(2.0))
+      await test.testSwap(false, true, 100000*1024, toSqrtPrice(1.5))
+
+      let order = await test.prototypeOrder()
+
+      order.hops[0].pools[0].chain.swapDefer = false
+
+      let concen: ConcentratedDirective = {
+         openTick: 4100,
+         bookends: [{closeTick: 4200, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100000)}]
+      }
+      order.hops[0].pools[0].passive.concentrated.push(concen)
+     
+      order.hops[0].pools[0].swap.isBuy = true
+      order.hops[0].pools[0].swap.inBaseQty = true
+      order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
+      order.hops[0].pools[0].swap.qty = BigNumber.from(1000000)
+      
+      await test.testOrder(order)
+
+      // Makes sure that the range order odometer was pivoted below the post-swap tick (4133)
+      let bidOdometer = (await (await test.query).queryLevel((await test.base).address,
+         (await test.quote).address, POOL_IDX, 4100)).odometer
+      let askOdometer = (await (await test.query).queryLevel((await test.base).address,
+         (await test.quote).address, POOL_IDX, 4200)).odometer
+      expect(bidOdometer).to.not.eq(askOdometer)
+
+      // Earned fees should be correctly calculated if bid/ask pivot was correctly set at level
+      // initialization time.
+      await test.testSwap(false, true, 1000000, toSqrtPrice(1.5))
+      await test.testSwap(true, true, 1000000, toSqrtPrice(2.0))
+      await test.testHarvest(4100, 4200)
+      expect(await test.snapBaseOwed()).to.equal(-5142)
+      expect(await test.snapQuoteOwed()).to.equal(-3402)
+   })
 
 })

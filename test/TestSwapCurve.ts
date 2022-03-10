@@ -35,10 +35,10 @@ describe('Swap Curve', () => {
       let state = await curve.pullCurve(0);
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.398721)
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.398720)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6000000)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.equal(0.75);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.equal(2.5);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6000000)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
    })
 
    it("swap fee full qty", async() => {
@@ -57,12 +57,12 @@ describe('Swap Curve', () => {
       let state = await curve.pullCurve(1);
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.39490)
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.39495)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6004493)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.gte(0.75 + 0.001377);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.001378);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.0004492);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.0004493);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6004493)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.gte(0.75 + 0.001377);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.001378);
+      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.0004492);
+      expect(fromFixedGrowth(state.concGrowth_)).to.lte(2.5 + 0.0004493);
    })
 
    it("swap fee+proto full qty", async() => {
@@ -81,12 +81,12 @@ describe('Swap Curve', () => {
       let state = await curve.pullCurve(5);
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.3957)
       expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.3958)
-      expect(state.liq_.ambientSeed_.toNumber()).to.equal(6003595)
-      expect(state.liq_.concentrated_.toNumber()).to.equal(10000000);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.00110196);
-      expect(fromFixedGrowth(state.accum_.ambientGrowth_)).to.lte(0.75 + 0.00110197);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.lte(2.5 + 0.00035950);
-      expect(fromFixedGrowth(state.accum_.concTokenGrowth_)).to.gte(2.5 + 0.00035949);
+      expect(state.ambientSeeds_.toNumber()).to.equal(6003595)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110196);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110197);
+      expect(fromFixedGrowth(state.concGrowth_)).to.lte(2.5 + 0.00035950);
+      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.00035949);
    })
 
    it("swap paid cumulative", async() => {

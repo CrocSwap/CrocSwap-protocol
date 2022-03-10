@@ -45,14 +45,12 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function minusDelta(uint128 x, uint128 y) internal pure returns (uint128 z) {
-        require(y <= x, 'LS');
         z = x - y;
     }
 
     /* @notice Same as minusDelta, but operates on lots of liquidity rather than outright
      *         liquiidty. */
     function minusLots(uint96 x, uint96 y) internal pure returns (uint96 z) {
-        require(y <= x, 'LS');
         z = x - y;
     }
 
@@ -63,28 +61,50 @@ library LiquidityMath {
     uint16 constant LOT_SIZE = 1024;
     uint8 constant LOT_SIZE_BITS = 10;
 
-    /* @notice Converts raw liquidity to lots of liquidity. (See comment above defining
-     *         lots. */
+    /* By utilizing the least significant digit of the liquidity lots value, we can 
+     * support special types of "knockout" liquidity, that when crossed trigger specific
+     * calls. The aggregate knockout liquidity will always sum to an odd number of lots
+     * whereas all vanilla resting liquidity will have an even number of lots. That
+     * means we can test whether any level has knockout liquidity simply by seeing if the
+     * the total sum is an odd number. */
+    uint8 constant RESTING_LOT_BITS = 11;
+
+    /* @notice Converts raw liquidity to lots of resting liquidity. (See comment above 
+     *         defining lots. */
     function liquidityToLots (uint128 liq) internal pure returns (uint96) {
         unchecked {
-            uint256 lots = liq >> LOT_SIZE_BITS;
-            require(lots << LOT_SIZE_BITS == liq, "OD");
+            // Resting liquidity must be an even number of lots (i.e. a multiple of 2048
+            // liquidity units.
+            uint256 resting = (liq >> RESTING_LOT_BITS);
+            require(resting << RESTING_LOT_BITS == liq, "OD");
+            
+            uint256 lots = resting << (RESTING_LOT_BITS - LOT_SIZE_BITS);
             require(lots < type(uint96).max, "MQ");
             return uint96(lots);
         }
     }
 
+    /* @notice Checks if an aggergate lots counter contains a knockout liquidity component
+     *         by checking the least significant bit.
+     *
+     * @dev    Note that it's critical that the sum *total* of knockout lots on any
+     *         given level be an odd number. Don't add two odd knockout lots together
+     *         without renormalzing, because they'll sum to an even lot quantity. */
+    function hasKnockoutLiq (uint96 lots) internal pure returns (bool) {
+        return lots & 0x1 == 0x1;
+    }
+
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
-        return (liq >> LOT_SIZE_BITS) << LOT_SIZE_BITS;
+        return (liq >> RESTING_LOT_BITS) << RESTING_LOT_BITS;
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity, but rounds up to the
      *         next multiple. */
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128) {
-        return ((liq >> LOT_SIZE_BITS) + 1) << LOT_SIZE_BITS;
+        return ((liq >> RESTING_LOT_BITS) + 1) << RESTING_LOT_BITS;
     }
 
     /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */

@@ -13,7 +13,7 @@ contract TestEncoding {
     Directives.AmbientDirective public ambientOpen;
     Directives.ConcenBookend public bookend;
     
-    uint24 public poolIdx;
+    uint256 public poolIdx;
     int24 public openTick;
     
     

@@ -23,6 +23,41 @@ library Chaining {
     using CurveMath for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
+    /* Used as an indicator code by long-form orders to indicate how a given sub-
+     * directive should size relative to some pre-existing cumulative collateral flow
+     * from all the actions on the pool.
+     * evaluation of the long form order. Types supported:
+     * 
+     *    NO_ROLL_TYPE - No rolling fill. Evaluation will treat the set quantity as a 
+     *        pre-fixed value in the native domain (i.e. tokens for swaps and liquidity 
+     *        units for LP actions).
+     *    
+     *    ROLL_PASS_POS_TYPE - Rolling fill, but against a fixed token collateral target.
+     *        Difference with NO_ROLL_TYPE, is the set quantity will denoinate as the unit
+     *        of the rolling quantity. I.e. represents token collateral instead of 
+     *        liquidity units on LP actions.
+     *
+     *    ROLL_PASS_NEG_TYPE - Same as ROLL_PASS_POS_TYPE, but rolling quantity will be
+     *                         negative.
+     *
+     *    ROLL_FRAC_TYPE - Fills a fixed-point fraction of the cumulatve rolling flow.
+     *                     E.g. can swap 50% of the tokens returned from previous LP burn.
+     *                     Denominated in fixed point basis points (1/10,000).
+     *
+     *    ROLL_DEBIT_TYPE - Fills the cumulative rolling flow with a fixed offset in the 
+     *                      direction of user debit. E.g. can swap-buy all the tokens 
+     *                      needed, plus slightly more.
+     *
+     *    ROLL_CREDIT_TYPE - Same as above, but offset in the direction of user credit.
+     *                       E.g. can swap-sell all but X tokens from a previous burn 
+     *                       operation.*/
+    uint8 constant NO_ROLL_TYPE = 0;
+    uint8 constant ROLL_PASS_POS_TYPE = 1;
+    uint8 constant ROLL_PASS_NEG_TYPE = 2;
+    uint8 constant ROLL_FRAC_TYPE = 4;
+    uint8 constant ROLL_DEBIT_TYPE = 5;
+    uint8 constant ROLL_CREDIT_TYPE = 6;
+
     /* @notice Common convention that defines the full execution context for 
      *   any arbitrary sequence of tradable actions (swap/mint/burn) within
      *   a single pool.
@@ -136,12 +171,17 @@ library Chaining {
      * @return isAdd If true, then liquidity must be minted to neutralize rolling flow,
      *   If false, then liquidity must be burned. */
     function plugLiquidity (RollTarget memory roll,
+                            Directives.AmbientDirective memory dir,
                             CurveMath.CurveState memory curve,
-                            PairFlow memory flow)
-        internal pure returns (uint128 liq, bool isAdd) {
-        uint128 collateral;
-        (collateral, isAdd) = collateralDemand(roll, flow);
-        liq = collateral.liquiditySupported(roll.inBaseQty_, curve.priceRoot_);
+                            PairFlow memory flow) internal pure {
+        if (dir.rollType_ != NO_ROLL_TYPE) {
+            (uint128 collateral, bool isAdd) =
+                collateralDemand(roll, flow, dir.rollType_, dir.liquidity_);
+            
+            uint128 liq = collateral.liquiditySupported
+                (roll.inBaseQty_, curve.priceRoot_);
+            (dir.liquidity_, dir.isAdd_) = (liq, isAdd);
+        }
     }
     
     /* @notice Computes the amount of concentrated liquidity to mint/burn in order to 
@@ -167,20 +207,37 @@ library Chaining {
      * @return isAdd If true, then liquidity must be minted to neutralize rolling flow,
      *   If false, then liquidity must be burned. */
     function plugLiquidity (RollTarget memory roll,
+                            Directives.ConcenBookend memory bend,
                             CurveMath.CurveState memory curve,
-                            PairFlow memory flow, int24 lowTick, int24 highTick)
-        internal pure returns (uint128 liq, bool isAdd) {
-        uint128 collateral;
-        (collateral, isAdd) = collateralDemand(roll, flow);        
+                            int24 lowTick, int24 highTick, PairFlow memory flow)
+        internal pure {
+        if (bend.rollType_ == NO_ROLL_TYPE) { return; }
 
+        (uint128 collateral, bool isAdd) = collateralDemand(roll, flow, bend.rollType_,
+                                                            bend.liquidity_);
+        uint128 liq = sizeConcLiq(collateral, isAdd, curve.priceRoot_,
+                                  lowTick, highTick, roll.inBaseQty_);
+        (bend.liquidity_, bend.isAdd_) = (liq, isAdd);
+    }
+
+    function sizeAmbientLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
+                             bool inBaseQty) internal pure returns (uint128) {
+        uint128 liq = collateral.liquiditySupported
+            (inBaseQty, priceRoot);
+        return isAdd ? liq : (liq + 1);
+    }
+    
+    function sizeConcLiq (uint128 collateral, bool isAdd, uint128 priceRoot,
+                          int24 lowTick, int24 highTick, bool inBaseQty)
+        internal pure returns (uint128) {
         (uint128 bidPrice, uint128 askPrice) =
-            determinePriceRange(curve.priceRoot_, lowTick, highTick, roll.inBaseQty_);
+            determinePriceRange(priceRoot, lowTick, highTick, inBaseQty);
         
-        liq = collateral.liquiditySupported(roll.inBaseQty_, bidPrice, askPrice);
-        liq = isAdd ?
+        uint128 liq = collateral.liquiditySupported(inBaseQty, bidPrice, askPrice);
+        return isAdd ?
             liq.shaveRoundLots() :
             liq.shaveRoundLotsUp();
-    }
+    }                     
 
     /* @notice Converts a swap that's indicated to be a rolling gap-fill into one
      *   with quantity and direction set to neutralize hitherto accumulated rolling
@@ -197,10 +254,10 @@ library Chaining {
     function plugSwapGap (RollTarget memory roll,
                           Directives.SwapDirective memory swap,
                           PairFlow memory flow) internal pure {
-        // Make sure that the swap and roll are using consistent units
-        require(swap.inBaseQty_ == roll.inBaseQty_, "SR");
-        int128 swapQty = totalBalance(roll, flow);
-        overwriteSwap(swap, swapQty);
+        if (swap.rollType_ != NO_ROLL_TYPE) {
+            int128 plugQty = scaleRoll(roll, flow, swap.rollType_, swap.qty_);
+            overwriteSwap(swap, plugQty);
+        }
     }
 
     /* This function will overwrite the swap directive template to plug the
@@ -232,10 +289,10 @@ library Chaining {
 
     /* @notice Calculated the total amount of collateral and its direction, that we should
      *   be targeting to neutralize when sizing a liquidity gap-fill. */
-    function collateralDemand (RollTarget memory roll,
-                               PairFlow memory flow) private pure
+    function collateralDemand (RollTarget memory roll, PairFlow memory flow,
+                               uint8 rollType, uint128 nextQty) private pure
         returns (uint128 collateral, bool isAdd) {
-        int128 collatFlow = totalBalance(roll, flow);
+        int128 collatFlow = scaleRoll(roll, flow, rollType, nextQty);
 
         isAdd = collatFlow < 0;
         collateral = collatFlow > 0 ? uint128(collatFlow) : uint128(-collatFlow);
@@ -274,5 +331,41 @@ library Chaining {
         private pure returns (int128) {
         int128 pairFlow = (roll.inBaseQty_ ? flow.baseFlow_ : flow.quoteFlow_);
         return roll.prePairBal_ + pairFlow;
+    }
+    
+    /* @notice Given a cumulative rolling flow, calculates a gap-fill quantity based on
+     *         rolling target parameters.
+     *
+     * @param roll The rolling target schematic, set at the beggining of the pair hop.
+     * @param flow The cumulative collateral flow accumulated in this pair hop so far.
+     * @param rollType The type of rolling gap-fill to target (see indicator comments 
+     *                 above)
+     * @param target   The rolling gap-fill target, contextualized by rollType value.
+     * @return         The size optimally scaled to match the rolling gap-fill target. */
+    function scaleRoll (RollTarget memory roll, PairFlow memory flow,
+                        uint8 rollType, uint128 target) private pure returns (int128) {
+        int128 rollGap = totalBalance(roll, flow);
+        return scalePlug(rollGap, rollType, target);
+    }
+
+    /* @notice Given a fixed rolling gap, scales the next incremental size to achieve
+     *         a specific user-defined target.
+     *
+     * @param roll The rolling gap that exists prior to this leg of the long-form order.
+     * @param rollType The type of rolling gap-fill to target (see indicator comments 
+     *                 above)
+     * @param target   The rolling gap-fill target, contextualized by rollType value.
+     * @return         The size optimally scaled to match the rolling gap-fill target. */
+    function scalePlug (int128 rollGap, uint8 rollType, uint128 target)
+        private pure returns (int128) {
+        if (rollType == ROLL_PASS_POS_TYPE) { return int128(target); }
+        else if (rollType == ROLL_PASS_NEG_TYPE) { return -int128(target); }
+        else if (rollType == ROLL_FRAC_TYPE) {
+            return int128(int256(rollGap) * int256(int128(target)) / 10000);
+        } else if (rollType == ROLL_DEBIT_TYPE) {
+            return rollGap + int128(target);
+        } else {
+            return rollGap - int128(target);
+        }
     }
 }

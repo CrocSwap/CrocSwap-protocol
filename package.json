@@ -27,6 +27,7 @@
     "hardhat-ethers": "^1.0.1",
     "hardhat-storage-layout": "^0.1.6",
     "hardhat-typechain": "^0.3.5",
+    "solidity-coverage": "^0.7.20",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.0.0",
     "typechain": "^4.0.1",

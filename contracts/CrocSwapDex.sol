@@ -9,10 +9,8 @@ import './libraries/PriceGrid.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
-import './mixins/OracleHist.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
-import './interfaces/ICrocSwapHistRecv.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/WarmPath.sol';
@@ -45,79 +43,41 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     constructor (address authority, address coldPath, address warmPath,
                  address longPath, address microPath) {
         authority_ = authority;
-        coldPath_ = coldPath;
-        warmPath_ = warmPath;
-        longPath_ = longPath;
-        microPath_ = microPath;
+        hotPathOpen_ = true;
+        proxyPaths_[CrocSlots.ADMIN_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.BAL_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = warmPath;
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = longPath;
+        proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = microPath;
     }
 
-    /* @notice Executes the user-defined compound order, constitutiin an arbitrary
-     *         combination of mints, burns and swaps across an arbitrary set of pools
-     *         across an arbitrary set of pairs.
-     *
-     * @input  The encoded byte data associated with the user's order directive. See
-     *         Encoding.sol and Directives.sol library for information on how to encode
-     *         order directives as byte data. */
-    function trade (bytes calldata input) reEntrantLock public payable {
-        callTradePath(input);
-    }
-
-    /* @notice Consolidated method for all atomic liquidity provider actions.
-     * @dev    See the same method's documentation in WarmPath.sol for more details.
-     * @param input The encoded LP action. The calling user should abi.pack the 
-     *              following parameters into the byte string:
-     (                - code (uint8):
-     *                   1 - Mint concentrated range liquidity position
-     *                   2 - Burn concentrated range liquidity position
-     *                   3 - Mint ambient liquidity position.
-     *                   4 - Burn ambient liquidity position.
-     *                - base (address): Base-side token of the pair. (0x0 for native Eth)
-     *                - quote (address): Quote-side token of the pair
-     *                - poolIdx (uint24): Index of the pool type
-     *                - bidTick (int24): Price tick index of the lower boundary 
-     *                                    (if applicable)
-     *                - askTick (int24): Price tick index of the upper boundary 
-     *                                    (if applicable)
-     *                - liq (uint128): Total liquidity to mint or burn.
-     *                - limitLow (uint128): Price limit below which the transaction will 
-     *                                      not complete
-     *                - limitHigh (uint128): Price limit below which the transaction will 
-     *                                       not complete.
-     *                - useSurplus (bool): If true settle using surplus collateral balance
-     *                                     at the exchange. */
-    function tradeWarm (bytes calldata input) reEntrantLock public payable {
-        callWarmPath(input);
-    }
-
-    /* @notice Initializes the pool type for the pair.
-     * @param base The base token in the pair.
-     * @param quote The quote token in the pair.
-     * @param poolIdx The index of the pool type to initialiaze.
-     * @param price The price to initialize the pool. Represented as square root price in
-     *              Q64.64 notation. */    
-    function initPool (address base, address quote, uint24 poolIdx, uint128 price)
-        reEntrantLock public payable {
-        callInitPool(base, quote, poolIdx, price);
-    }
-
-    /* @notice Adds or returns surplus collateral held at the exchange
-     * @param token The token for which the accumulated fees are being paid out. 
-     *              (Or if 0x0 pays out native Ethereum.) */
-    function collect (address recv, int128 value, address token)
-        reEntrantLock public payable {
-        callCollectSurplus(recv, value, token);
-    }
-
-    /* @notice Called by a user to give permissions to an external smart contract router.
-     * @notice router The address of the external smart contract that the user is giving
-     *                permission to.
-     * @notice forDebit If true, the user is authorizing the router to pay settlement 
-     *                  debits on its behalf.
-     * @notice forBurn If true, the user is authorizing the router to burn liquidity
-     *                 positions belongining to the user. */
-    function approveRouter (address router, bool forDebit, bool forBurn)
-        reEntrantLock public {
-        callApproveRouter(router, forDebit, forBurn);
+    /* @notice Swaps between two tokens within a single liquidity pool.
+     * @param base The base-side token of the pair. (For native Ethereum use 0x0)
+     * @param quote The quote-side token of the pair.
+     * @param poolIdx The index of the pool type to execute on.
+     * @param isBuy If true the direction of the swap is for the user to send base tokens
+     *              and receive back quote tokens.
+     * @param inBaseQty If true the quantity is denominated in base-side tokens. If not
+     *                  use quote-side tokens.
+     * @param qty The quantity of tokens to swap. End result could be less if reaches
+     *            limitPrice.
+     * @param limitPrice The worse price the user is willing to pay on the margin. Swap
+     *                   will execute up to this price, but not any worse. Average fill 
+     *                   price will always be equal or better, because this is calculated
+     *                   at the marginal unit of quantity.
+     * @param useSurplus If true, settlement is first attempted with the user's surplus
+     *                   collateral balance held at the exchange. (Reduces gas cost 
+     *                   associated with an explicit transfer.) */
+    function swap (address base, address quote,
+                   uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint16 tip,
+                   uint128 limitPrice, uint128 limitOut,
+                   uint8 reserveFlags) reEntrantLock public payable {
+        // By default the embedded hot-path is enabled, but protocol governance can
+        // disable by toggling the force proxy flag. If so, users should point to
+        // swapProxy.
+        require(hotPathOpen_);
+        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
+                    limitPrice, limitOut, reserveFlags);
     }
 
     /* @notice Consolidated method for protocol control related commands.
@@ -125,16 +85,50 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function protocolCmd (bytes calldata input) protocolOnly public override {
-        callProtocolCmd(input);
+    function protocolCmd (uint16 proxyIdx, bytes calldata input, bool sudo)
+        protocolOnly(sudo)
+        public payable override returns (bytes memory) {
+        return callProtocolCmd(proxyIdx, input);
     }
 
-    function sidecarProxies() public view returns (address cold, address warm,
-                                                   address long, address micro) {
-        cold = coldPath_;
-        warm = warmPath_;
-        long = longPath_;
-        micro = microPath_;
+    /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
+     *         none are in use (all slots are set to 0 and therefore calls will fail).
+     *         But this lets protocol governance add new functionality in additional 
+     *         sidecars, which can then be accessed by users through this command.
+     *
+     * @param spillIdx The index (0-63) of the spill sidecar the command is being sent to
+     * @param input The arbitrary call data the client is calling the spill proxy 
+     *              sidecar with */
+    function userCmd (uint16 proxyIdx, bytes calldata input) reEntrantLock
+        public payable returns (bytes memory) {
+        return callUserCmd(proxyIdx, input);
+    }
+
+    function userCmdAgent (uint16 proxyIdx, bytes calldata cmd,
+                           bytes calldata conds, bytes calldata relayerTip, 
+                           bytes calldata signature)
+        reEntrantAgent(abi.encode(proxyIdx, cmd, relayerTip),
+                       conds, signature)
+        public payable returns (bytes memory output) {
+        output = callUserCmd(proxyIdx, cmd);
+        tipRelayer(relayerTip);
+    }
+
+    function userCmdAgent (uint16 proxyIdx, bytes calldata input, address client,
+                           uint256 salt)
+        reEntrantApproved(client, salt) public payable
+        returns (bytes memory) {
+        return callUserCmd(proxyIdx, input);
+    }
+        
+    /* @notice General purpose query fuction for reading arbitrary data from the dex.
+     * @dev    This function is bare bones, because we're trying to keep the size 
+     *         footprint of CrocSwapDex down. See SlotLocations.sol and QueryHelper.sol 
+     *         for syntactic sugar around accessing/parsing specific data. */
+    function readSlot (uint256 slot) public view returns (uint256 data) {
+        assembly {
+        data := sload(slot)
+        }
     }
 }
 

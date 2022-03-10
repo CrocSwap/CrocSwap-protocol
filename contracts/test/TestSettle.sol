@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.5.0;
     
-import "../mixins/SettleLayer.sol";
+import "../mixins/DepositDesk.sol";
 
-contract TestSettleLayer is SettleLayer {
+contract TestSettleLayer is DepositDesk {
 
     address private recv_;
     address private send_;
@@ -54,6 +54,17 @@ contract TestSettleLayer is SettleLayer {
         } else {
             ethFlow += settleLeg(recv_, send_, flow, dir);
         }
+    }
+
+    function testDesposit (address owner, uint128 value,
+                           address token) internal {
+        depositSurplus(owner, value, token);
+    }
+
+    function testDisburse (address owner, address recv, uint128 value,
+                           address token) internal {
+        lockHolder_ = owner;
+        disburseSurplus(recv, value, token);
     }
 
     function getMyBalance() public view returns (uint256) {

@@ -12,5 +12,19 @@ library CrocEvents {
 
     event CrocDeploy (address indexed dex, address indexed master);
 
+    event SetNewPoolLiq (uint128 liq);
+    event SetTakeRate (uint8 takeRate);
+    event SetRelayerTakeRate (uint8 takeRate);
+    event SetPoolTemplate (uint256 indexed poolIdx, uint16 feeRate, uint16 tickSize,
+                           uint8 jitThresh, uint8 knockoutGap, uint8 oracleFlags);
+    event ResyncTakeRate (address indexed base, address indexed quote,
+                          uint256 indexed poolIdx, uint8 takeRate);
+    event PriceImproveThresh (address indexed token, uint128 unitTickCollateral,
+                              uint16 awayTickTol);
+    
     event ProtocolDividend (address indexed token, address recv);
+
+    event UpgradeProxy (address indexed proxy, uint16 proxyIdx);
+    event HotPathOpen (bool);
+    event SafeMode (bool);
 }

@@ -18,20 +18,23 @@ library Directives {
      *      zero. qty=0 alone will indicate the use of a flxeible back-filled rolling 
      *      quantity. 
      *
-     * @param liqMask_ Not currently used.
      * @param isBuy_ If true, swap converts base-side token to quote-side token.
      *               Vice-versa if false.
      * @param inBaseQty_ If true, swap quantity is denominated in base-side token. 
      *                   If false in quote side token.
-     * @param qty_ The total amount to be swapped.
+     * @param rollType_  The flavor of rolling gap fill that should be applied (if any)
+     *                   to this leg of the directive. See Chaining.sol for list of
+     *                   rolling type codes.
+     * @param qty_ The total amount to be swapped. (Or rolling target if rollType_ is 
+     *             enabled)
      * @param limitPrice_ The maximum (minimum) *price to pay, if a buy (sell) swap
      *           *at the margin*. I.e. the swap will keep exeucting until the curve
      *           reaches this price (or exhausts the specified quantity.) Represented
      *           as the square root of the pool's price ratio in Q64.64 fixed-point. */
     struct SwapDirective {
-        uint8 liqMask_;
         bool isBuy_;
         bool inBaseQty_;
+        uint8 rollType_;
         uint128 qty_;
         uint128 limitPrice_;
     }
@@ -53,12 +56,17 @@ library Directives {
      *                   order.
      * @param isAdd_ If true, the action mints new concentrated liquidity. If false, it
      *               burns pre-existing concentrated liquidity. 
+     * @param rollType_  The flavor of rolling gap fill that should be applied (if any)
+     *                   to this leg of the directive. See Chaining.sol for list of
+     *                   rolling type codes.
      * @param liquidity_ The total amount of concentrated liquidity to add/remove.
      *                   Represented as the equivalent of sqrt(X*Y) liquidity for the 
-     *                   equivalent constant-product AMM curve. */
+     *                   equivalent constant-product AMM curve. If rolling is turned
+     *                   on, this is instead interpreted as a rolling target value. */
     struct ConcenBookend {
         int24 closeTick_;
         bool isAdd_;
+        uint8 rollType_;
         uint128 liquidity_;
     }
 
@@ -71,11 +79,15 @@ library Directives {
      *
      * @param isAdd_ If true, the action mints new ambient liquidity. If false, burns 
      *               pre-existing liquidity in the curve.
+     * @param rollType_  The flavor of rolling gap fill that should be applied (if any)
+     *                   to this leg of the directive. See Chaining.sol for list of
+     *                   rolling type codes.
      * @param liquidity_ The total amount of ambient liquidity to add/remove.
      *                   Represented as the equivalent of sqrt(X*Y) liquidity for a
      *                   constant-product AMM curve. (If zero, this is a non-action.) */
     struct AmbientDirective {
         bool isAdd_;
+        uint8 rollType_;
         uint128 liquidity_;
     }
 
@@ -111,7 +123,7 @@ library Directives {
      * @param chain_ Flags related to chaining order of the directive actions and how
      *               rolling back fill is calculated. */
     struct PoolDirective {
-        uint24 poolIdx_;
+        uint256 poolIdx_;
         AmbientDirective ambient_;
         ConcentratedDirective[] conc_;
         SwapDirective swap_;
@@ -192,11 +204,10 @@ library Directives {
      *    order. */
     function sliceBookend (ConcentratedDirective memory dir, uint idx)
         internal pure returns (int24 lowTick, int24 highTick,
-                               bool isAdd, uint128 liq) {
-        ConcenBookend memory bend = dir.bookends_[idx];
+                               ConcenBookend memory bend) {
+        bend = dir.bookends_[idx];
         (lowTick, highTick) =
             pinLowerUpper(dir.openTick_, bend.closeTick_);
-        (isAdd, liq) = (bend.isAdd_, bend.liquidity_);
     }
 
     /* @notice Sorts an arbitrary open and closed tick boundary to a lower and upper tick

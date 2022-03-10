@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -20,9 +20,11 @@ describe('Pair', () => {
     beforeEach("deploy",  async () => {
        test = await makeTokenPool()
 
+       let fstPoolIdx = test.poolIdx 
        await test.initPool(feeRate, 0, 1, 1.5)
        await test.initPoolIdx(pool2, feeRate, 0, 10, 1.7)
        await test.initPoolIdx(pool3, feeRate, 0, 6, 1.4)
+       test.poolIdx = fstPoolIdx
     })
 
     it("two pool arbitrage", async() => {
@@ -153,8 +155,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(0)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
     })
 
     it("protocol fee stack both sides", async() => {
@@ -182,8 +184,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
     })
 
     it("protocol fee stack base", async() => {
@@ -217,8 +219,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(759)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(283)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(283)
     })
 
     it("protocol fee stack quote", async() => {
@@ -252,8 +254,8 @@ describe('Pair', () => {
 
         await test.testOrder(order)
 
-        expect(await (await test.dex).feesAccum_((await test.base).address)).to.equal(934)
-        expect(await (await test.dex).feesAccum_((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(934)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
     })
 
     it("pool settings individual", async() => {

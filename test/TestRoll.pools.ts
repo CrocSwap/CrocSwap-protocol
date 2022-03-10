@@ -42,6 +42,7 @@ describe('Roll Pools', () => {
         order.hops[0].pools[1].swap.inBaseQty = true
         order.hops[0].pools[1].swap.limitPrice = minSqrtPrice()
         order.hops[0].pools[1].swap.qty = BigNumber.from(0)  
+        order.hops[0].pools[1].swap.rollType = 5
 
         await test.testOrder(order)
 
@@ -72,6 +73,7 @@ describe('Roll Pools', () => {
         order.hops[0].pools[1].swap.inBaseQty = false
         order.hops[0].pools[1].swap.limitPrice = minSqrtPrice()
         order.hops[0].pools[1].swap.qty = BigNumber.from(0)  
+        order.hops[0].pools[1].swap.rollType = 5
 
         await test.testOrder(order)
 
@@ -102,12 +104,14 @@ describe('Roll Pools', () => {
         order.hops[0].pools[1].chain.rollExit = true
         order.hops[0].pools[1].passive.ambient.isAdd = true
         order.hops[0].pools[1].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[1].passive.ambient.rollType = 5
 
         // On the entry (quote) side, that means rolling will burn liquidity in pool3
         order.hops[0].pools[2].poolIdx = pool3
         order.hops[0].pools[2].chain.rollExit = false
         order.hops[0].pools[2].passive.ambient.isAdd = true
         order.hops[0].pools[2].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[2].passive.ambient.rollType = 5
 
         await test.testOrder(order)
 

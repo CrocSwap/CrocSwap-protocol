@@ -57,7 +57,7 @@ describe('Encoding', () => {
             { isEnabled: false, useBaseSide: true },
             [poolQ, poolR])
 
-        return { open: buildSettle("A25", 512, 128, true),
+        return { schemaType: 1, open: buildSettle("A25", 512, 128, true),
             hops: [hopA, hopB, hopC] }
     }
 
@@ -85,7 +85,7 @@ describe('Encoding', () => {
 
     function buildSwap (liqMask: number, isBuy: boolean, inBaseQty: boolean, 
         qty: number, price: number): SwapDirective {
-        return { liqMask: liqMask, isBuy: isBuy, inBaseQty: inBaseQty,
+        return { isBuy: isBuy, inBaseQty: inBaseQty,
             qty: BigNumber.from(qty), limitPrice: toSqrtPrice(price) }
     }
 
@@ -172,7 +172,6 @@ describe('Encoding', () => {
         let swap = (await encoder.swap())
         expect(swap.isBuy_).to.equal(cmp.isBuy)
         expect(swap.inBaseQty_).to.equal(cmp.inBaseQty)
-        expect(swap.liqMask_).to.equal(cmp.liqMask)
         expect(swap.limitPrice_).to.equal(cmp.limitPrice)
         expect(swap.qty_).to.equal(cmp.qty)                
     })

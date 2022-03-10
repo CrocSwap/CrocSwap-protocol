@@ -6,6 +6,9 @@ import "hardhat-typechain";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer"
 
+require("hardhat-storage-layout");
+require('solidity-coverage')
+
 module.exports = {
     solidity: {
       compilers: [{
@@ -14,11 +17,17 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 1000000
-          }
+          },
+          outputSelection: {
+        "*": {
+            "*": ["storageLayout"],
+        },
+      },
         }
       }],
       overrides: {
       },
+      
     },
 
     networks: {
@@ -28,7 +37,8 @@ module.exports = {
        },
        ropsten: {
          url: 'https://ropsten.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8',
-         chainId: 3
+         chainId: 3,
+         accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]
        },
 
        fuji: {

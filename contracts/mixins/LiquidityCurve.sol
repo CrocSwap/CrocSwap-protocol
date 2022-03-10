@@ -23,6 +23,7 @@ contract LiquidityCurve is StorageLayout {
     using SafeCast for uint128;
     using SafeCast for uint192;
     using SafeCast for uint144;
+    using LiquidityMath for uint128;
     using CurveMath for uint128;
     using CurveMath for CurveMath.CurveState;
 
@@ -33,7 +34,7 @@ contract LiquidityCurve is StorageLayout {
     function snapCurve (bytes32 poolIdx) view internal returns
         (CurveMath.CurveState memory curve) {
         curve = curves_[poolIdx];
-        require(curve.priceRoot_ > 0, "J");
+        require(curve.priceRoot_ > 0);
     }
 
     /* @notice Snapshots the curve for pool initialization operation.
@@ -197,8 +198,7 @@ contract LiquidityCurve is StorageLayout {
     /* @notice Directly increments the ambient liquidity on the curve. */
     function bumpAmbient (CurveMath.CurveState memory curve, int128 seedDelta)
         private pure {
-        curve.liq_.ambientSeed_ =
-            LiquidityMath.addDelta(curve.liq_.ambientSeed_, seedDelta);
+        curve.ambientSeeds_ = curve.ambientSeeds_.addDelta(seedDelta);
     }
 
     /* @notice Directly increments the concentrated liquidity on the curve, depending
@@ -213,8 +213,7 @@ contract LiquidityCurve is StorageLayout {
     function bumpConcentrated (CurveMath.CurveState memory curve,
                                int128 liqDelta, bool inRange) private pure {
         if (inRange) {
-            curve.liq_.concentrated_ =
-                LiquidityMath.addDelta(curve.liq_.concentrated_, liqDelta);
+            curve.concLiq_ = curve.concLiq_.addDelta(liqDelta);
         }
     }
     
@@ -249,8 +248,7 @@ contract LiquidityCurve is StorageLayout {
      *   safety. */
     function liquidityFlows (CurveMath.CurveState memory curve, uint128 seeds)
         private pure returns (uint128 baseDebit, uint128 quoteDebit) {
-        uint128 liq = CompoundMath.inflateLiqSeed
-            (seeds, curve.accum_.ambientGrowth_);
+        uint128 liq = CompoundMath.inflateLiqSeed(seeds, curve.seedDeflator_);
         baseDebit = FixedPoint.mulQ64(liq, curve.priceRoot_).toUint128By192();
         quoteDebit = FixedPoint.divQ64(liq, curve.priceRoot_).toUint128By192();
     }
@@ -273,9 +271,9 @@ contract LiquidityCurve is StorageLayout {
     /* @notice Converts a price tick index range into a range of prices. */
     function translateTickRange (int24 lowerTick, int24 upperTick)
         private pure returns (uint128 bidPrice, uint128 askPrice) {
-        require(upperTick > lowerTick, "O");
-        require(lowerTick >= TickMath.MIN_TICK, "I");
-        require(upperTick <= TickMath.MAX_TICK, "X");
+        require(upperTick > lowerTick);
+        require(lowerTick >= TickMath.MIN_TICK);
+        require(upperTick <= TickMath.MAX_TICK);
         bidPrice = TickMath.getSqrtRatioAtTick(lowerTick);
         askPrice = TickMath.getSqrtRatioAtTick(upperTick);
     }

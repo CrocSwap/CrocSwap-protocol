@@ -9,6 +9,7 @@ import '../libraries/SwapCurve.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
 import '../libraries/Chaining.sol';
+import '../interfaces/ICrocLpConduit.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
@@ -26,13 +27,14 @@ import "hardhat/console.sol";
  *           4) Burn range liquidity
  *           5) Swap                                                     */
 contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
-    AgentMask, ColdPathInjector {
+    AgentMask {
 
     using SafeCast for int256;
     using SafeCast for int128;
     using SafeCast for uint256;
     using SafeCast for uint128;
     using TickMath for uint128;
+    using LiquidityMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using CurveRoll for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
@@ -50,6 +52,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
      *                 sqrt(X*Y) where X,Y are the collateral reserves in a constant-
      *                 product AMM
      * @param poolHash The hash indexing the pool this liquidity curve applies to.
+     * @param lpConduit The address of the ICrocLpConduit the LP position will be 
+     *                  assigned to. (If zero the user will directly own the LP.)
      *
      * @return baseFlow The amount of base-side token collateral required by this
      *                  operations. Will always be positive indicating, a debit from
@@ -57,12 +61,28 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
      * @return quoteFlow The amount of quote-side token collateral required by thhis
      *                   operation. */
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
+                          bytes32 poolHash, address lpConduit)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        uint128 liqSeeds;
+        (baseFlow, quoteFlow, liqSeeds) = mintAmbientAt(curve, liqAdded, poolHash,
+                                                        agentMintKey(lpConduit));
+        depositConduit(poolHash, liqSeeds, lpConduit);
+    }
+
+    function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash)
-        internal returns (int128, int128) {
-        uint128 liqSeeds = mintPosLiq(agentMintKey(), poolHash,
-                                      liqAdded, curve.accum_.ambientGrowth_);
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        (baseFlow, quoteFlow, ) = mintAmbientAt(curve, liqAdded, poolHash,
+                                                agentMintKey());
+    }
+
+    function mintAmbientAt (CurveMath.CurveState memory curve, uint128 liqAdded, 
+                            bytes32 poolHash, bytes32 lpKey)
+        private returns (int128 baseFlow, int128 quoteFlow, uint128 liqSeeds) {
+        liqSeeds = mintPosLiq(lpKey, poolHash, liqAdded,
+                              curve.seedDeflator_);
         (uint128 base, uint128 quote) = liquidityReceivable(curve, liqSeeds);
-        return signMintFlow(base, quote);
+        (baseFlow, quoteFlow) = signMintFlow(base, quote);
     }
 
     /* @notice Like mintAmbient(), but the liquidity is permanetely locked into the pool,
@@ -92,7 +112,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           bytes32 poolHash)
         internal returns (int128, int128) {
         uint128 liqSeeds = burnPosLiq(agentBurnKey(), poolHash,
-                                      liqBurned, curve.accum_.ambientGrowth_);
+                                      liqBurned, curve.seedDeflator_);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liqSeeds);
         return signBurnFlow(base, quote);
     }
@@ -109,6 +129,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
      *                 sqrt(X*Y) where X,Y are the collateral reserves in a constant-
      *                 product AMM
      * @param poolHash The hash indexing the pool this liquidity curve applies to.
+     * @param lpConduit The address of the ICrocLpConduit the LP position will be 
+     *                  assigned to. (If zero the user will directly own the LP.)
      *
      * @return baseFlow The amount of base-side token collateral required by this
      *                  operations. Will always be positive indicating, a debit from
@@ -117,17 +139,56 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
      *                   operation. */
     function mintRange (CurveMath.CurveState memory curve, int24 priceTick,
                         int24 lowTick, int24 highTick, uint128 liquidity,
-                        bytes32 poolHash)
-        internal returns (int128, int128) {
-        uint64 feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
-                                       liquidity, curve.accum_.concTokenGrowth_);
-        mintPosLiq(agentMintKey(), poolHash, lowTick, highTick,
-                   liquidity, feeMileage);
-        (uint128 base, uint128 quote) = liquidityReceivable
-            (curve, liquidity, lowTick, highTick);
-        return signMintFlow(base, quote);
+                        bytes32 poolHash, address lpConduit)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        uint64 mileage;
+
+        (baseFlow, quoteFlow, mileage) = mintRangeAt
+            (curve, priceTick, lowTick, highTick,
+             liquidity, poolHash, agentMintKey(lpConduit));
+
+        depositConduit(poolHash, lowTick, highTick, liquidity, mileage, lpConduit);
     }
 
+    function mintRange (CurveMath.CurveState memory curve, int24 priceTick,
+                        int24 lowTick, int24 highTick, uint128 liquidity,
+                        bytes32 poolHash)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        (baseFlow, quoteFlow, ) = mintRangeAt(curve, priceTick, lowTick, highTick,
+                                              liquidity, poolHash, agentMintKey());
+    }
+
+    function mintRangeAt (CurveMath.CurveState memory curve, int24 priceTick,
+                          int24 lowTick, int24 highTick, uint128 liquidity,
+                          bytes32 poolHash, bytes32 lpKey)
+        private returns (int128 baseFlow, int128 quoteFlow, uint64 feeMileage) {
+        feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
+                                liquidity, curve.concGrowth_);
+        mintPosLiq(lpKey, poolHash, lowTick, highTick,
+                   liquidity, feeMileage);
+
+        (uint128 base, uint128 quote) = liquidityReceivable
+            (curve, liquidity, lowTick, highTick);
+        (baseFlow, quoteFlow) = signMintFlow(base, quote);
+    }
+
+    /* @notice Dispatches the call to the ICrocLpConduit with the ambient liquidity 
+     *         LP position that was minted. */
+    function depositConduit (bytes32 poolHash, uint128 liqSeeds,
+                             address lpConduit) private {
+        depositConduit(poolHash, 0, 0, liqSeeds, 0, lpConduit);
+    }
+
+    /* @notice Dispatches the call to the ICrocLpConduit with the concentrated liquidity 
+     *         LP position that was minted. */
+    function depositConduit (bytes32 poolHash, int24 lowTick, int24 highTick,
+                             uint128 liq, uint64 mileage, address lpConduit) private {
+        if (lpConduit != address(0)) {
+            bool doesAccept = ICrocLpConduit(lpConduit).
+                depositCrocLiq(msg.sender, poolHash, lowTick, highTick, liq, mileage);
+            require(doesAccept, "LP");
+        }
+    }
 
     /* @notice Burns concernated liquidity within a specific range off of the curve.
      * 
@@ -152,7 +213,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                         bytes32 poolHash)
         internal returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
-                                          liquidity, curve.accum_.concTokenGrowth_);
+                                          liquidity, curve.concGrowth_);
         uint64 rewards = burnPosLiq(agentBurnKey(), poolHash,
                                     lowTick, highTick, liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liquidity, rewards,
@@ -160,6 +221,33 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         return signBurnFlow(base, quote);
     }
 
+    /* @notice Harvests the accumulated rewards on a concentrated liquidity position.
+     * 
+     * @param curve The object representing the pre-loaded liquidity curve. Will be
+     *              updated in memory after this call, but it's the caller's 
+     *              responsbility to check it back into storage.
+     * @param prickTick The tick index of the curve's current price.
+     * @param lowTick The tick index of the lower boundary of the range order.
+     * @param highTick The tick index of the upper boundary of the range order.
+     * @param poolHash The hash indexing the pool this liquidity curve applies to.
+     *
+     * @return baseFlow The amount of base-side token collateral returned by this
+     *                  operations. Will always be negative indicating, a credit from
+     *                  the pool to the user.
+     * @return quoteFlow The amount of quote-side token collateral returned by this
+     *                   operation. */
+    function harvestRange (CurveMath.CurveState memory curve, int24 priceTick,
+                           int24 lowTick, int24 highTick, 
+                           bytes32 poolHash)
+        internal returns (int128, int128) {
+        uint64 feeMileage = clockFeeOdometer(poolHash, priceTick, lowTick, highTick,
+                                             curve.concGrowth_);
+        uint128 rewards = harvestPosLiq(agentBurnKey(), poolHash,
+                                       lowTick, highTick, feeMileage);
+        (uint128 base, uint128 quote) = liquidityPayable(curve, rewards);
+        return signBurnFlow(base, quote);
+    }
+    
     /* @notice Converts the unsigned flow associated with a mint operation to a pair
      *         net settlement flow. (Will always be positive because a mint requires use
      *         to pay collateral to the pool.) */
@@ -310,8 +398,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
     function bumpLiquidity (CurveMath.CurveState memory curve,
                             int24 bumpTick, bool isBuy, bytes32 poolHash) private {
         int128 liqDelta = crossLevel(poolHash, bumpTick, isBuy,
-                                     curve.accum_.concTokenGrowth_);
-        curve.liq_.concentrated_ = LiquidityMath.addDelta
-            (curve.liq_.concentrated_, liqDelta);
+                                     curve.concGrowth_);
+        curve.concLiq_ = curve.concLiq_.addDelta(liqDelta);
     }    
 }

@@ -6,7 +6,7 @@ import "../mixins/AgentMask.sol";
 
 contract TestAgentMask is AgentMask {
 
-    function testAgentMintKey (address sender, address origin) public view
+    /*function testAgentMintKey (address sender, address origin) public view
         returns (uint256) {
         return uint256(agentMintKey(sender, origin));
     }
@@ -32,5 +32,5 @@ contract TestAgentMask is AgentMask {
 
     function joinKey (address x, address y) public pure returns (uint256) {
         return uint256(keccak256(abi.encode(x, y)));
-    }
+        }*/
 }

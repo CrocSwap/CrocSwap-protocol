@@ -73,8 +73,8 @@ describe('Sequence Pair', () => {
         let order3 = await test3.prototypeOrder();
         
         let owner = await (await test.trader).getAddress();
-        await (await test.dex).collect(owner, -25000, test.base.address);
-        await (await test.dex).collect(owner, -15000, test2.quote.address)
+        await test.testCollectSurplus(await test.trader, owner, -25000, test.base.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test2.quote.address, false)
 
         order.hops.push(order2.hops[0])
 
@@ -88,6 +88,7 @@ describe('Sequence Pair', () => {
 
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         order.hops[1].settlement.useSurplus = true
@@ -115,9 +116,9 @@ describe('Sequence Pair', () => {
         let order3 = await test3.prototypeOrder();
         
         let owner = await (await test.trader).getAddress();
-        await (await test.dex).collect(owner, -15000, test.base.address);
-        await (await test.dex).collect(owner, -10000, test.quote.address)
-        await (await test.dex).collect(owner, -15000, test2.quote.address)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test.base.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -10000, test.quote.address, false)
+        await test.testCollectSurplus(await test.trader, owner, -15000, test2.quote.address, false)
 
         order.hops.push(order2.hops[0])
 
@@ -133,6 +134,7 @@ describe('Sequence Pair', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         order.hops[1].settlement.useSurplus = true
         

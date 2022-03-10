@@ -8,14 +8,13 @@ import '../libraries/TokenFlow.sol';
 import './StorageLayout.sol';
 import './AgentMask.sol';
 
-import "hardhat/console.sol";
-
 /* @title Settle layer mixin
  * @notice Provides facilities for settling, previously determined, collateral flows
  *         between the user and the exchange. Supports both ERC20 tokens as well as
  *         native Ethereum as asset collateral. */
 contract SettleLayer is AgentMask {
     using SafeCast for uint256;
+    using SafeCast for uint128;
     using TokenFlow for address;
 
     /* @notice Completes the user<->exchange collateral settlement at the final hop
@@ -119,9 +118,9 @@ contract SettleLayer is AgentMask {
      * @param useSurplus If true, first try to settle using the user's exchange-held
      *                   surplus collateral account, rather than external transfer. */
     function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
-                          bool useSurplus) internal {
+                          uint8 reserveFlags) internal {
         (address debitor, address creditor) = agentsSettle();
-        settleFlat(debitor, creditor, base, baseFlow, quote, quoteFlow, useSurplus);
+        settleFlat(debitor, creditor, base, baseFlow, quote, quoteFlow, reserveFlags);
     }
 
     /* @notice Settle the collateral exchange associated with a the initailization of
@@ -137,7 +136,10 @@ contract SettleLayer is AgentMask {
     function settleInitFlow (address recv,
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
-        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, false);
+        (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
+        settleFlat(recv, recv, base, baseFlow, quote, quoteFlow, BOTH_RESERVE_FLAGS);
+        assertCloseMatches(base, baseSnap, baseFlow);
+        assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
 
     /* @notice Settles the collateral exchanged associated with the flow in a single 
@@ -145,17 +147,49 @@ contract SettleLayer is AgentMask {
      * @dev    This must only be used when no other pairs settle in the transaction. */
     function settleFlat (address debitor, address creditor,
                          address base, int128 baseFlow,
-                         address quote, int128 quoteFlow, bool useReserves) private {
+                         address quote, int128 quoteFlow, uint8 reserveFlags) private {
         if (base.isEtherNative()) {
-            transactEther(debitor, creditor, baseFlow, useReserves);
+            transactEther(debitor, creditor, baseFlow, useReservesBase(reserveFlags));
         } else {
-            transactToken(debitor, creditor, baseFlow, base, useReserves);
+            transactToken(debitor, creditor, baseFlow, base,
+                          useReservesBase(reserveFlags));
         }
 
         // Because Ether native trapdoor is 0x0 address, and because base is always
         // smaller of the two addresses, native ETH will always appear on the base
         // side.
-        transactToken(debitor, creditor, quoteFlow, quote, useReserves);
+        transactToken(debitor, creditor, quoteFlow, quote,
+                      useReservesQuote(reserveFlags));
+    }
+
+    function useReservesBase (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & 0x1 > 0;
+    }
+    
+    function useReservesQuote (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & 0x2 > 0;
+    }
+
+    uint8 constant NO_RESERVE_FLAGS = 0x0;
+    uint8 constant BOTH_RESERVE_FLAGS = 0x3;
+
+    /* @notice Performs check to make sure the new balance matches the expected 
+     * transfer amount. */
+    function assertCloseMatches (address token, uint256 open, int128 expected)
+        private view {
+        if (token != address(0)) {            
+            uint256 close = IERC20Minimal(token).balanceOf(address(this));
+            require(close >= open && expected >= 0 &&
+                    close - open >= uint128(expected), "TD");
+        }
+    }
+
+    /* @notice Snapshots the DEX contract's ERC20 token balance at call time. */
+    function snapOpenBalance (address base, address quote) private view returns
+        (uint256 openBase, uint256 openQuote) {
+        openBase = base == address(0) ? 0 :
+            IERC20Minimal(base).balanceOf(address(this));
+        openQuote = IERC20Minimal(quote).balanceOf(address(this));
     }
 
     /* @notice Given a pre-determined amount of flow, settles according to collateral 
@@ -171,57 +205,9 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    /* @notice Returns the user's surplus collateral balance at the exchange.
-     * @param user The address corresponding to the user holding the surplus collateral.
-     * @param token The address for the token, whose balance we're checking 
-     *              (0x0 for native Ether). */
     function querySurplus (address user, address token) internal view returns (uint128) {
-        bytes32 key = encodeSurplusKey(user, token);
-        return surplusCollateral_[key];
-    }
-
-    /* @notice Directly deposits a certain amount of surplus collateral to a user's
-     *         account.
-     *
-     * @dev    This call can be used both for token and native Ether collateral. For the
-     *         lateral the user must set msg.value with the corresponding amount. Because
-     *         it deals with msg.value, this function must *never* be called twice in the
-     *         same transaction, to avoid the risk of double-spend.
-     *
-     * @param owner The address of the owner associated with the account.
-     * @param value The amount to be collected from owner and deposited.
-     * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
-     *              deposited. */
-    function depositSurplus (address owner, uint128 value, address token) internal {
-        debitTransfer(owner, value, token, msg.value.toUint128());
-        bytes32 key = encodeSurplusKey(owner, token);
-        surplusCollateral_[key] += value;
-    }
-
-    /* @notice Pays out surplus collateral held by the owner at the exchange.
-     *
-     * @dev There is no security check associated with this call. It's the caller's 
-     *      responsibility of the caller to make sure the receiver is authorized to
-     *      to collect the owner's balance.
-     *
-     * @param owner The address of the owner associated with the account.
-     * @param recv  The receiver where the collateral will be sent to.
-     * @param value The amount to be paid out. Owner's balance will be decremented 
-     *              accordingly.
-     * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
-     *              disbursed. */
-    function disburseSurplus (address owner, address recv,
-                              uint128 value, address token) internal {
-        bytes32 key = encodeSurplusKey(owner, token);
-        uint128 balance = surplusCollateral_[key];
-
-        if (value == 0) { value = balance; }
-        require(balance > 0 && value < balance, "SC");
-
-        // No need to use msg.value, because unlike trading there's no logical reason
-        // we'd expect it to be set on this call.
-        creditTransfer(recv, value, token, 0);
-        surplusCollateral_[key] -= value;
+        bytes32 key = tokenKey(user, token);
+        return userBals_[key].surplusCollateral_;
     }
 
     /* @notice Returns true if the flow represents a debit owed from the user to the
@@ -333,7 +319,7 @@ contract SettleLayer is AgentMask {
 
     /* @notice Settles a credit with an external transfer to user. */
     function creditTransfer (address recv, uint128 value, address token,
-                             uint128 bookedEth) private {
+                             uint128 bookedEth) internal {
         if (token.isEtherNative()) {
             payEther(recv, value, bookedEth);
         } else {
@@ -343,7 +329,7 @@ contract SettleLayer is AgentMask {
 
     /* @notice Settles a debit with an external transfer from user. */
     function debitTransfer (address recv, uint128 value, address token,
-                            uint128 bookedEth) private {
+                            uint128 bookedEth) internal {
         if (token.isEtherNative()) {
             collectEther(recv, value, bookedEth);
         } else {
@@ -381,22 +367,22 @@ contract SettleLayer is AgentMask {
     }
 
     /* @notice Collects a token debt from a specfic debtor.
+     * @dev    Note that this function does *not* assert that the post-transfer balance
+     *         is correct. CrocSwap is not safe to use for any fee-on-transfer tokens
+     *         or any other tokens that break ERC20 transfer functionality.
+     *
      * @param recv The address of the debtor being collected from.
      * @param value The total amount of tokens being collected.
      * @param token The address of the ERC20 token tracker. */
     function collectToken (address recv, uint128 value, address token) private {
-        uint256 openBal = IERC20Minimal(token).balanceOf(address(this));
         TransferHelper.safeTransferFrom(token, recv, address(this), value);
-        uint256 postBal = IERC20Minimal(token).balanceOf(address(this));
-        require(postBal > openBal &&
-                postBal - openBal >= value, "TD");
     }
 
     /* @notice Credits a user's surplus collateral account at the exchange (instead of
      *         directly sending the tokens to their address) */
     function creditSurplus (address recv, uint128 value, address token) private {
-        bytes32 key = encodeSurplusKey(recv, token);
-        surplusCollateral_[key] += value;
+        bytes32 key = tokenKey(recv, token);
+        userBals_[key].surplusCollateral_ += value;
     }
 
     /* @notice Debits the tokens owed from the user's pre-existing surplus collateral
@@ -405,13 +391,14 @@ contract SettleLayer is AgentMask {
      *                   collateral alone (0 othersize). */
     function debitSurplus (address recv, uint128 value, address token) private
         returns (uint128 remainder) {
-        bytes32 key = encodeSurplusKey(recv, token);
-        uint128 balance = surplusCollateral_[key];
-
+        bytes32 key = tokenKey(recv, token);
+        UserBalance storage bal = userBals_[key];
+        uint128 balance = bal.surplusCollateral_;
+        
         if (balance > value) {
-            surplusCollateral_[key] -= value;
+            bal.surplusCollateral_ -= value;
         } else {
-            surplusCollateral_[key] = 0;
+            bal.surplusCollateral_ = 0;
             remainder = value - balance;
         }
     }
@@ -434,11 +421,5 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    /* @notice Returns the keccak256 hash associated with the surplus collateral 
-     *         position for a given user on a given token. */
-    function encodeSurplusKey (address owner, address token) internal
-        pure returns (bytes32) {
-        return keccak256(abi.encode(owner, token));
-    }
 }
 

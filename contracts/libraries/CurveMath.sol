@@ -51,42 +51,30 @@ library CurveMath {
      * ambient seeds. This automatically takes care of the compounding of ambient 
      * rewards compounded on top of concentrated rewards. 
      *
-     * @param ambientSeed_ The total ambient liquidity seeds in the current curve.
-     *   Will need to be inflated by the cumulative ambient growth rate to get this term's
-     *   contribution to liquidity.
-     *
+     * @param priceRoot_ The square root of the price ratio exchange rate between the
+     *   base and quote-side tokens in the AMM curve. (represented in Q64.64 fixed point)
+     * @param ambientSeed_ The total ambient liquidity seeds in the current curve. 
+     *   (Inflated by seed deflator to get efective ambient liquidity)
      * @param concentrated_ The total concentrated liquidity active and in range at the
-     *   current state of the curve. */
-    struct CurveLiquidity {
-        uint128 ambientSeed_;
-        uint128 concentrated_;
-    }
-
-    /* @param ambientGrowth_ The cumulative growth rate (represented as Q16.48 fixed
+     *   current state of the curve.
+     * @param seedDeflator_ The cumulative growth rate (represented as Q16.48 fixed
      *    point) of a hypothetical 1-unit of ambient liquidity held in the pool since
      *    inception.
-     *    
-     * @param concTokenGrowth_ The cumulative rewards growth rate (represented as Q16.48
+     * @param concGrowth_ The cumulative rewards growth rate (represented as Q16.48
      *   fixed point) of hypothetical 1 unit of concentrated liquidity in range in the
      *   pool since inception. 
      *
-     * @dev To be conservative with collateral these growth rates should always be
-     *      rounded down from their real-value results. Some minor lower-bound 
-     *      approximation is fine, since all it will result in is slightly smaller 
-     *      reward payouts. */
-    struct CurveFeeAccum {
-        uint64 ambientGrowth_;
-        uint64 concTokenGrowth_;
-    }
-
-    /* @param priceRoot_ The square root of the price ratio exchange rate between the
-     *   base and quote-side tokens in the AMM curve. (represented in Q64.64 fixed point)
      * @dev Price ratio is stored as a square root because it makes reserve calculation
-     *   arithmetic much easier. */
+     *      arithmetic much easier. To be conservative with collateral these growth 
+     *      rates should always be rounded down from their real-value results. Some 
+     *      minor lower-bound approximation is fine, since all it will result in is 
+     *      slightly smaller reward payouts. */
     struct CurveState {
         uint128 priceRoot_;
-        CurveLiquidity liq_;
-        CurveFeeAccum accum_;
+        uint128 ambientSeeds_;
+        uint128 concLiq_;
+        uint64 seedDeflator_;
+        uint64 concGrowth_;
     }
 
     
@@ -100,8 +88,8 @@ library CurveMath {
      *           constant-product AMM. */
     function activeLiquidity (CurveState memory curve) internal pure returns (uint128) {
         uint128 ambient = CompoundMath.inflateLiqSeed
-            (curve.liq_.ambientSeed_, curve.accum_.ambientGrowth_);
-        return LiquidityMath.addLiq(ambient, curve.liq_.concentrated_);
+            (curve.ambientSeeds_, curve.seedDeflator_);
+        return LiquidityMath.addLiq(ambient, curve.concLiq_);
     }
 
     /* @notice Similar to calcLimitFlows(), except returns the max possible flow in the
@@ -267,7 +255,7 @@ library CurveMath {
                        FixedPoint.mulQ64(liq, price) :
                        FixedPoint.divQ64(liq, price)).toUint128();
     }
-    
+
     /* @notice Calculated the amount of concentrated liquidity within a price range
      *         supported by a fixed amount of collateral. Note that this calculates the 
      *         collateral only needed by one side of the pair.

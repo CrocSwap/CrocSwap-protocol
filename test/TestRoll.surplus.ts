@@ -26,8 +26,7 @@ describe('Roll Surplus', () => {
        sender = await (await test.trader).getAddress() 
 
        await test.initPool(feeRate, 0, 1, 1.5)
-       await (await test.dex).collect(sender, -100000, baseToken.address) 
-       await (await test.dex).collect(sender, -250000, quoteToken.address) 
+       await test.collectSurplus(sender, -100000, -250000)
     })
 
     it("roll surplus", async() => {
@@ -41,6 +40,7 @@ describe('Roll Surplus', () => {
         order.hops[0].pools[0].chain.offsetSurplus = true
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         order.open.useSurplus = true
         order.open.dustThresh = BigNumber.from(10)
@@ -65,6 +65,7 @@ describe('Roll Surplus', () => {
         order.hops[0].pools[0].chain.offsetSurplus = true
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         // Base side is the entry in TestFacade, so sell quote to get extra base
         // tokens to mint with
@@ -97,6 +98,7 @@ describe('Roll Surplus', () => {
       order.hops[0].pools[0].chain.offsetSurplus = true
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       order.hops[0].settlement.useSurplus = true
       order.open.dustThresh = BigNumber.from(10)
@@ -117,7 +119,7 @@ describe('Roll Surplus', () => {
 
       let owner = await (await test.trader).getAddress();
       // Top up the balance to 500,000
-      await (await test.dex).collect(owner, -400000, test.base.address);
+      await test.testCollectSurplus(await test.trader, owner, -400000, baseToken.address, false)
 
       order.open.useSurplus = true
       order.hops[0].pools[0].chain.swapDefer = false
@@ -127,6 +129,7 @@ describe('Roll Surplus', () => {
       order.hops[0].pools[0].chain.offsetSurplus = true
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       order.hops[0].settlement.useSurplus = true
       order.open.dustThresh = BigNumber.from(10)
