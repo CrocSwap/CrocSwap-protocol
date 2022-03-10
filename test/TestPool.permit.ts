@@ -23,10 +23,8 @@ describe('permissioned pool', () => {
        test = await makeTokenPool()
        await test.fundTokens();
 
-       console.log("A")
        await (await test.permit).setPassThru(true)
        await test.initPermitPool(feeRate, 0, 1, 1.5)
-       console.log("B")
        await test.fundTokens()    
        await (await test.permit).setPassThru(true)
        await test.testMint(-10000, 10000, 10000);

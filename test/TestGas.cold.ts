@@ -258,7 +258,7 @@ describe('Gas Benchmarks Coldpath', () => {
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAG), 143000)
+        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAG), 144000)
     })
 
 })

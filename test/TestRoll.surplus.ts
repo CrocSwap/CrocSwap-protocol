@@ -40,6 +40,7 @@ describe('Roll Surplus', () => {
         order.hops[0].pools[0].chain.offsetSurplus = true
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         order.open.useSurplus = true
         order.open.dustThresh = BigNumber.from(10)
@@ -64,6 +65,7 @@ describe('Roll Surplus', () => {
         order.hops[0].pools[0].chain.offsetSurplus = true
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         // Base side is the entry in TestFacade, so sell quote to get extra base
         // tokens to mint with
@@ -96,6 +98,7 @@ describe('Roll Surplus', () => {
       order.hops[0].pools[0].chain.offsetSurplus = true
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       order.hops[0].settlement.useSurplus = true
       order.open.dustThresh = BigNumber.from(10)
@@ -126,6 +129,7 @@ describe('Roll Surplus', () => {
       order.hops[0].pools[0].chain.offsetSurplus = true
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       order.hops[0].settlement.useSurplus = true
       order.open.dustThresh = BigNumber.from(10)

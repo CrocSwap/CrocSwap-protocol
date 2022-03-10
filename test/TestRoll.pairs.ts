@@ -50,6 +50,7 @@ describe('Roll between pairs', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5        
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
@@ -65,7 +66,6 @@ describe('Roll between pairs', () => {
 
         order.hops[0].pools[0].swap.qty = BigNumber.from(100)
         tx = await test.testOrder(order)
-        console.log((await tx.wait()).gasUsed.toString())
     })
 
     it("mint -> swap", async() => {
@@ -88,6 +88,7 @@ describe('Roll between pairs', () => {
         order.hops[1].pools[0].swap.isBuy = false
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = minSqrtPrice()
         
         await test2.snapStart()
@@ -126,6 +127,7 @@ describe('Roll between pairs', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = false
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         await test2.snapStart()
@@ -161,12 +163,14 @@ describe('Roll between pairs', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.hops[0].settlement
         order.hops[2].pools[0].swap.isBuy = true
         order.hops[2].pools[0].swap.inBaseQty = true
         order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.rollType = 5
         order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
@@ -227,12 +231,14 @@ describe('Pair roll triangle', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.open
         order.hops[2].pools[0].swap.isBuy = false
         order.hops[2].pools[0].swap.inBaseQty = false
         order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.rollType = 5
         order.hops[2].pools[0].swap.limitPrice = minSqrtPrice()
         
         await test2.snapStart()
@@ -272,6 +278,7 @@ describe('Pair roll triangle', () => {
         order.hops[1].pools[0].swap.isBuy = false
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.open
@@ -281,6 +288,7 @@ describe('Pair roll triangle', () => {
         order.hops[2].pools[0].swap.isBuy = false
         order.hops[2].pools[0].swap.inBaseQty = true
         order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.rollType = 5
         order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()
@@ -320,6 +328,7 @@ describe('Pair roll triangle', () => {
         order.hops[1].pools[0].swap.isBuy = false
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
 
         order.hops[2].settlement = order3.open
@@ -329,6 +338,7 @@ describe('Pair roll triangle', () => {
         order.hops[2].pools[0].swap.isBuy = false
         order.hops[2].pools[0].swap.inBaseQty = true
         order.hops[2].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[2].pools[0].swap.rollType = 5
         order.hops[2].pools[0].swap.limitPrice = maxSqrtPrice()
         
         await test2.snapStart()

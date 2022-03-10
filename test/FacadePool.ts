@@ -490,12 +490,12 @@ export class TestPool {
             (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)
 
             takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
-                [115, (await this.base).address, (await this.quote).address, this.poolIdx]);
+                [115, (await this.base).address, (await this.quote).address, idx]);
             (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)              
         }
 
-        let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8"],
-            [111, (await this.base).address, (await this.quote).address, idx, feeRate, tickSize, jit])
+        let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
+            [111, (await this.base).address, (await this.quote).address, idx, feeRate, tickSize, jit, 0])
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(0, cmd, false)

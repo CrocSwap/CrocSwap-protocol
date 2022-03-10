@@ -61,10 +61,8 @@ describe('Protocol Account', () => {
       await test.testAccum(baseToken.address, quoteToken.address, 5000, 2500)
       await test.connect(owner).disburseProtocol(treasury, baseToken.address)
 
-      expect(await baseToken.balanceOf(test.address)).to.equal(INIT_BAL - 5000)
-      expect(await baseToken.balanceOf(treasury)).to.equal(5000)
-      expect(await quoteToken.balanceOf(test.address)).to.equal(INIT_BAL)
-      expect(await quoteToken.balanceOf(treasury)).to.equal(0)
+      expect(await test.getPaidFees(treasury, baseToken.address)).to.equal(5000)
+      expect(await test.getPaidFees(treasury, quoteToken.address)).to.equal(0)
       expect(await test.protoFeeAccum(baseToken.address)).to.equal(0)
       expect(await test.protoFeeAccum(quoteToken.address)).to.equal(2500)
     })
@@ -76,9 +74,9 @@ describe('Protocol Account', () => {
       expect(await test.protoFeeAccum(quoteToken.address)).to.equal(10800)
 
       await test.connect(owner).disburseProtocol(treasury, ZERO_TOKEN)
-      
-      expect(await test.etherBalance(test.address)).to.equal(INIT_BAL - 14000)
-      expect(await test.etherBalance(treasury)).to.equal(14000)
+
+      expect(await test.getPaidFees(treasury, ZERO_TOKEN)).to.equal(14000)
+      expect(await test.getPaidFees(treasury, quoteToken.address)).to.equal(0)
       expect(await test.protoFeeAccum(ZERO_TOKEN)).to.equal(0)
       expect(await test.protoFeeAccum(quoteToken.address)).to.equal(10800)
     })
@@ -90,18 +88,9 @@ describe('Protocol Account', () => {
       await test.testAccum(baseToken.address, quoteToken.address, 3000, 6000)
       await test.connect(owner).disburseProtocol(treasury, quoteToken.address)
 
-      expect(await baseToken.balanceOf(test.address)).to.equal(INIT_BAL - 5000)
-      expect(await baseToken.balanceOf(treasury)).to.equal(5000)
-      expect(await quoteToken.balanceOf(test.address)).to.equal(INIT_BAL - 8500)
-      expect(await quoteToken.balanceOf(treasury)).to.equal(8500)
+      expect(await test.getPaidFees(treasury, baseToken.address)).to.equal(5000)
+      expect(await test.getPaidFees(treasury, quoteToken.address)).to.equal(8500)
       expect(await test.protoFeeAccum(baseToken.address)).to.equal(3000)
       expect(await test.protoFeeAccum(quoteToken.address)).to.equal(0)
-    })
-
-    it("unauthorized", async() => {
-      await test.testAccum(baseToken.address, quoteToken.address, 5000, 2500)
-      await expect(test
-        .connect(outsider)
-        .disburseProtocol(treasury, baseToken.address)).to.be.reverted
     })
 })

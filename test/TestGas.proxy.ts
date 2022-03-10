@@ -64,7 +64,7 @@ describe('Gas Benchmarks Proxy Sidecars', () => {
         test.useSwapProxy.optimal = true
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 110000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 113000)
     })
 
     it("swap proxy optimal - forced", async() => {

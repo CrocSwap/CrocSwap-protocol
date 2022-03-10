@@ -88,6 +88,7 @@ describe('Sequence Pair', () => {
 
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         order.hops[1].settlement.useSurplus = true
@@ -133,6 +134,7 @@ describe('Sequence Pair', () => {
         order.hops[1].pools[0].swap.isBuy = true
         order.hops[1].pools[0].swap.inBaseQty = true
         order.hops[1].pools[0].swap.qty = BigNumber.from(0)
+        order.hops[1].pools[0].swap.rollType = 5
         order.hops[1].pools[0].swap.limitPrice = maxSqrtPrice()
         order.hops[1].settlement.useSurplus = true
         

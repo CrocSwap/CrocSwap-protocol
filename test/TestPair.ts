@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -20,9 +20,11 @@ describe('Pair', () => {
     beforeEach("deploy",  async () => {
        test = await makeTokenPool()
 
+       let fstPoolIdx = test.poolIdx 
        await test.initPool(feeRate, 0, 1, 1.5)
        await test.initPoolIdx(pool2, feeRate, 0, 10, 1.7)
        await test.initPoolIdx(pool3, feeRate, 0, 6, 1.4)
+       test.poolIdx = fstPoolIdx
     })
 
     it("two pool arbitrage", async() => {

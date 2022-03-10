@@ -37,6 +37,7 @@ describe('Rolling Back Fill', () => {
         // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         // Base side is the entry in TestFacade, so sell quote to get extra base
         // tokens to mint with
@@ -70,6 +71,7 @@ describe('Rolling Back Fill', () => {
         // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
         order.hops[0].pools[0].passive.ambient.isAdd = true
         order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+        order.hops[0].pools[0].passive.ambient.rollType = 5
         
         // Base side is the entry in TestFacade, so sell quote to get extra base
         // tokens to mint with
@@ -102,6 +104,7 @@ describe('Rolling Back Fill', () => {
 
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
 
       order.hops[0].pools[0].swap.isBuy = false
       order.hops[0].pools[0].swap.inBaseQty = true
@@ -129,6 +132,7 @@ describe('Rolling Back Fill', () => {
       // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       // Base side is the entry in TestFacade, so sell quote to get extra base
       // tokens to mint with
@@ -163,6 +167,7 @@ describe('Rolling Back Fill', () => {
       // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       order.hops[0].pools[0].swap.isBuy = true
       order.hops[0].pools[0].swap.inBaseQty = true
@@ -190,6 +195,7 @@ describe('Rolling Back Fill', () => {
       // Ambient liquidity with isAdd=true and qty=0 will use the rolling quantity
       order.hops[0].pools[0].passive.ambient.isAdd = true
       order.hops[0].pools[0].passive.ambient.liquidity = BigNumber.from(0)
+      order.hops[0].pools[0].passive.ambient.rollType = 5
       
       // Base side is the entry in TestFacade, so sell quote to get extra base
       // tokens to mint with
@@ -225,6 +231,7 @@ describe('Rolling Back Fill', () => {
       order.hops[0].pools[0].swap.inBaseQty = true
       order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+      order.hops[0].pools[0].swap.rollType = 5
 
       order.open.dustThresh = BigNumber.from(10)
       
@@ -253,6 +260,7 @@ describe('Rolling Back Fill', () => {
       order.hops[0].pools[0].swap.inBaseQty = true
       order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+      order.hops[0].pools[0].swap.rollType = 5
 
       order.open.dustThresh = BigNumber.from(10)
       
@@ -280,6 +288,7 @@ describe('Rolling Back Fill', () => {
       // Should also disable the limit price, which is one the wrong side of the direction
       order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+      order.hops[0].pools[0].swap.rollType = 5
 
       order.open.dustThresh = BigNumber.from(10)
       
@@ -307,6 +316,7 @@ describe('Rolling Back Fill', () => {
       // Should also disable the limit price, which is one the wrong side of the direction
       order.hops[0].pools[0].swap.limitPrice = minSqrtPrice()
       order.hops[0].pools[0].swap.qty = BigNumber.from(0)
+      order.hops[0].pools[0].swap.rollType = 5
 
       order.open.dustThresh = BigNumber.from(10)
       
@@ -328,7 +338,7 @@ describe('Rolling Back Fill', () => {
         // Set to use rolling quantity
         let concen: ConcentratedDirective = {
             openTick: 4000,
-            bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0)}]
+            bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         
@@ -341,10 +351,10 @@ describe('Rolling Back Fill', () => {
         
         await test.testOrder(order)
 
-        expect(await test.liquidity()).to.equal(100000*1024 + 3068928)
+        expect(await test.liquidity()).to.equal(100000*1024 + 3067904)
         expect(fromSqrtPrice(await test.price())).to.lt(1.5)
         expect(await test.snapBaseOwed()).to.equal(0)
-        expect(await test.snapQuoteOwed()).to.equal(455438)
+        expect(await test.snapQuoteOwed()).to.equal(455289)
      })
 
      it("swap->burn range", async() => {
@@ -356,7 +366,7 @@ describe('Rolling Back Fill', () => {
         // Set to use rolling quantity
         let concen: ConcentratedDirective = {
            openTick: 3000,
-           bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0)}]
+           bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
          }
       
          order.hops[0].pools[0].passive.concentrated.push(concen)
@@ -367,10 +377,10 @@ describe('Rolling Back Fill', () => {
          order.open.dustThresh = BigNumber.from(1000)
          await test.testOrder(order)
 
-         expect(await test.liquidity()).to.equal(100000*1024 - 233*1024)
+         expect(await test.liquidity()).to.equal(100000*1024 - 234*1024)
          expect(fromSqrtPrice(await test.price())).to.gt(1.5)
          expect(await test.snapBaseOwed()).to.equal(0)
-         expect(await test.snapQuoteOwed()).to.equal(-44844)
+         expect(await test.snapQuoteOwed()).to.equal(-44993)
    })
 
    it("quote -> mint range", async() => {
@@ -384,7 +394,7 @@ describe('Rolling Back Fill', () => {
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
           openTick: 4000,
-          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0)}]
+          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -411,7 +421,7 @@ describe('Rolling Back Fill', () => {
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
           openTick: 2000,
-          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0)}]
+          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -441,7 +451,7 @@ describe('Rolling Back Fill', () => {
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
           openTick: 6000,
-          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0)}]
+          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -469,7 +479,7 @@ describe('Rolling Back Fill', () => {
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
           openTick: 2000,
-          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0)}]
+          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -484,7 +494,7 @@ describe('Rolling Back Fill', () => {
       // Set to use rolling quantity
       concen = {
          openTick: 6000,
-         bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0)}]
+         bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
       }
       order.hops[0].pools[0].passive.concentrated[0] = concen
      
@@ -510,7 +520,7 @@ describe('Rolling Back Fill', () => {
       }
       let concenMint: ConcentratedDirective = {
          openTick: 2000,
-         bookends: [{closeTick: 6000, isAdd: true, liquidity: BigNumber.from(0)}]
+         bookends: [{closeTick: 6000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
      }
 
       order.hops[0].pools[0].passive.concentrated.push(concenBurn)
