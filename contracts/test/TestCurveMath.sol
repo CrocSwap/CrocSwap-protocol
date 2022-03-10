@@ -148,7 +148,7 @@ contract TestCurveMath {
         CurveAssimilate.assimilateLiq(curve, feesPaid, inBase);
         
         (shiftPrice, shiftSeed) = (curve.priceRoot_, curve.ambientSeeds_);
-        (shiftGrowth, concGrowth) = (curve.ambientSeeds_,
+        (shiftGrowth, concGrowth) = (curve.seedDeflator_,
                                      curve.concGrowth_);
     }
 
