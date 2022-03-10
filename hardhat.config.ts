@@ -7,6 +7,7 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer"
 
 require("hardhat-storage-layout");
+require('solidity-coverage')
 
 module.exports = {
     solidity: {
