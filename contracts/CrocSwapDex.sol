@@ -11,7 +11,6 @@ import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
-import './interfaces/ICrocSwapHistRecv.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/WarmPath.sol';

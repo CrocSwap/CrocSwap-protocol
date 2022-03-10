@@ -11,7 +11,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/StorageLayout.sol';
-import '../interfaces/ICrocSwapHistRecv.sol';
 
 import "hardhat/console.sol";
 
