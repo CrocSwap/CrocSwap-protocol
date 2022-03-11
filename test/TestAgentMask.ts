@@ -124,7 +124,7 @@ describe('AgentMask', () => {
         expect(await agent.signer_()).to.be.eq(addrs[1])
 
         // Make sure contract reverts on an invalid signature (flip r and s...)
-        const badSig = abiCoder.encode(["uint8", "bytes32", "bytes32"],  [v, s, r])
-        expect(agent.testVerifySignature(cmd, conds, badSig)).to.be.reverted
+        const badSig = abiCoder.encode(["uint8", "bytes32", "bytes32"],  [200, r, s])
+        await expect(agent.testVerifySignature(cmd, conds, badSig)).to.be.reverted
     })
 })
