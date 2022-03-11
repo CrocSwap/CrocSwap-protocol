@@ -208,10 +208,10 @@ describe('Rolling Back Fill', () => {
       
       await test.testOrder(order)
 
-      expect(await test.liquidity()).to.equal(100000*1024 - 8167)
+      expect(await test.liquidity()).to.equal(100000*1024 - 8168)
       expect(await test.price()).to.gt(toSqrtPrice(1.5))
       expect(await test.snapBaseOwed()).to.equal(0)
-      expect(await test.snapQuoteOwed()).to.equal(-13329)
+      expect(await test.snapQuoteOwed()).to.equal(-13330)
      })
 
      it("mint ambient -> swap", async() => {
