@@ -198,24 +198,13 @@ contract AgentMask is StorageLayout {
         ++bal.nonce_;
     }
 
-    address constant MAGIC_SENDER_TIP = address(256);
-    address constant MAGIC_ORIGIN_TIP = address(512);
-    address constant MAGIC_COINBASE_TIP = address(1024);
-    
     function tipRelayer (bytes memory tipCmd) internal {
         if (tipCmd.length == 0) { return; }
         
         (address token, uint128 tip, address recv) =
             abi.decode(tipCmd, (address, uint128, address));
         
-        if (recv == MAGIC_SENDER_TIP) {
-            recv = msg.sender;
-        } else if (recv == MAGIC_ORIGIN_TIP) {
-            recv = tx.origin;
-        } else if (recv == MAGIC_COINBASE_TIP) {
-            recv = block.coinbase;
-        }
-        
+        recv = maskTipRecv(recv);
         bytes32 fromKey = tokenKey(lockHolder_, token);
         bytes32 toKey = tokenKey(recv, token);
         
@@ -232,6 +221,21 @@ contract AgentMask is StorageLayout {
         if (protoFee > 0) {
             feesAccum_[token] += protoFee;
         }
+    }
+
+    address constant MAGIC_SENDER_TIP = address(256);
+    address constant MAGIC_ORIGIN_TIP = address(512);
+    address constant MAGIC_COINBASE_TIP = address(1024);
+
+    function maskTipRecv (address recv) view private returns (address) {
+        if (recv == MAGIC_SENDER_TIP) {
+            recv = msg.sender;
+        } else if (recv == MAGIC_ORIGIN_TIP) {
+            recv = tx.origin;
+        } else if (recv == MAGIC_COINBASE_TIP) {
+            recv = block.coinbase;
+        }
+        return recv;
     }
 
     function virtualizeAddress (address base, uint256 salt) internal
