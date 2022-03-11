@@ -82,7 +82,7 @@ contract AgentMask is StorageLayout {
      * @param relayer  Address of the relayer the user requires to evaluate the order.
      *                 Must match either msg.sender or tx.origin. If zero, the order
      *                 does not require a specific relayer. */
-    function checkRelayConditions (address client, bytes calldata conds) private {
+    function checkRelayConditions (address client, bytes calldata conds) internal {
         (uint48 deadline, uint48 alive, bytes32 salt, uint32 nonce,
          address relayer)
             = abi.decode(conds, (uint48, uint48, bytes32, uint32, address));
@@ -94,10 +94,9 @@ contract AgentMask is StorageLayout {
     }
 
     /* @notice Verifies the supplied signature matches the EIP-712 compatible data. */
-    function verifySignature (bytes memory cmd,
-                              bytes calldata conds,
+    function verifySignature (bytes memory cmd, bytes calldata conds,
                               bytes calldata signature)
-        private view returns (address client) {
+        internal view returns (address client) {
         (uint8 v, bytes32 r, bytes32 s) =
             abi.decode(signature, (uint8, bytes32, bytes32));
         bytes32 checksum = checksumHash(cmd, conds);
@@ -108,9 +107,9 @@ contract AgentMask is StorageLayout {
     /* @notice Calculates the EIP-712 hash to check the signature against. */
     function checksumHash (bytes memory cmd, bytes calldata conds)
         private view returns (bytes32) {
-        bytes32 digest = contentHash(cmd, conds);
+        bytes32 hash = contentHash(cmd, conds);
         return keccak256(abi.encodePacked
-                         ("\x19\x01", domainHash(), digest));
+                         ("\x19\x01", domainHash(), hash));
     }
 
     /* @notice Calculates the EIP-712 typedStruct hash. */
@@ -119,7 +118,8 @@ contract AgentMask is StorageLayout {
         return keccak256(
             abi.encode
             (keccak256
-             ("CrocRelayerCall(bytes cmd,bytes conds)"), metaCmd, conds));
+             ("CrocRelayerCall(bytes cmd,bytes conds)"),
+             keccak256(metaCmd), keccak256(conds)));
     }
 
     /* @notice Calculates the EIP-712 domain hash. */
@@ -130,7 +130,6 @@ contract AgentMask is StorageLayout {
                 "EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
              keccak256("CrocSwap"),
              block.chainid, address(this)));
-        
     }
     
     /* @notice Returns the owner key that any LP position resulting from a mint action
