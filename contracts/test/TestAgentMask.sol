@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: Unlicensed
 pragma solidity >=0.8.4;
     
@@ -16,9 +15,12 @@ contract TestAgentMask is AgentMask {
         return uint256(keccak256(abi.encode(x, y)));
     }
 
-    function testVerifySignature (bytes memory cmd, bytes calldata conds,
+    function testVerifySignature (uint16 callpath, bytes memory cmd,
+                                  bytes calldata conds,
+                                  bytes memory tip,
                                   bytes calldata signature) public {
-        signer_ = verifySignature(cmd, conds, signature);
+        CrocRelayerCall memory call = CrocRelayerCall(callpath, cmd, conds, tip);
+        signer_ = verifySignature(call, signature);
     }
 
     function testRelayConds (address client, bytes calldata conds) public {

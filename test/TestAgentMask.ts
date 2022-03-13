@@ -2,12 +2,11 @@ import { TestAgentMask } from '../typechain/TestAgentMask'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toFixedGrowth, fromFixedGrowth, ZERO_ADDR } from './FixedPoint';
+import { ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { TestAgentMaskRouter } from '../typechain/TestAgentMaskRouter';
 import { Signer, BigNumber, Wallet } from 'ethers';
-import { getAddress } from 'ethers/lib/utils';
 
 chai.use(solidity);
 
@@ -92,8 +91,10 @@ describe('AgentMask', () => {
     })
 
     it("signature", async() => {
+        let callpath = 10
         let cmd = "0x0ab3e5"
         let conds = "0x5912bbcc"
+        let tip = "0x6492"
 
         const domain = {
             name: "CrocSwap",
@@ -103,14 +104,18 @@ describe('AgentMask', () => {
 
         const types = {
             CrocRelayerCall: [
+                { name: "callpath", type: "uint8"},
                 { name: "cmd", type: "bytes" },
                 { name: "conds", type: "bytes" },
+                { name: "tip", type: "bytes" }
             ]
         }
 
         const value = {
+            callpath: callpath,
             cmd: cmd,
-            conds: conds
+            conds: conds,
+            tip: tip
         }
           
         const signature = (await accts[1]._signTypedData(domain, types, value)).substring(2)
@@ -120,11 +125,11 @@ describe('AgentMask', () => {
 
         let abiCoder = new ethers.utils.AbiCoder()
         const sig = abiCoder.encode(["uint8", "bytes32", "bytes32"], [v, r, s])
-        await agent.testVerifySignature(cmd, conds, sig)
+        await agent.testVerifySignature(callpath, cmd, conds, tip, sig)
         expect(await agent.signer_()).to.be.eq(addrs[1])
 
         // Make sure contract reverts on an invalid signature (flip r and s...)
         const badSig = abiCoder.encode(["uint8", "bytes32", "bytes32"],  [200, r, s])
-        await expect(agent.testVerifySignature(cmd, conds, badSig)).to.be.reverted
+        await expect(agent.testVerifySignature(callpath, cmd, conds, tip, badSig)).to.be.reverted
     })
 })

@@ -47,22 +47,27 @@ contract AgentMask is StorageLayout {
 
     /* @notice Re-entrant gate for a relayer calling an order that was signed off-chain
      *         using the EIP-712 standard. */
-    modifier reEntrantAgent (bytes memory cmd,
-                             bytes calldata conds,
+    modifier reEntrantAgent (CrocRelayerCall memory call,
                              bytes calldata signature) {
         require(lockHolder_ == address(0));
-        lockHolder_ = lockSigner(cmd, conds, signature);
+        lockHolder_ = lockSigner(call, signature);
         _;
         lockHolder_ = address(0);
     }
 
+    struct CrocRelayerCall {
+        uint16 callpath;
+        bytes cmd;
+        bytes conds;
+        bytes tip;
+    }
+
     /* @notice Given the order, evaluation conditionals, and off-chain signature, recovers
      *         the client address if valid or reverts the transactions. */
-    function lockSigner (bytes memory cmd,
-                         bytes calldata conds,
+    function lockSigner (CrocRelayerCall memory call,
                          bytes calldata signature) private returns (address client) {
-        client = verifySignature(cmd, conds, signature);
-        checkRelayConditions(client, conds);
+        client = verifySignature(call, signature);
+        checkRelayConditions(client, call.conds);
     }
 
     /* @notice Verifies that the conditions signed by the user are met at evaluation time,
@@ -82,44 +87,47 @@ contract AgentMask is StorageLayout {
      * @param relayer  Address of the relayer the user requires to evaluate the order.
      *                 Must match either msg.sender or tx.origin. If zero, the order
      *                 does not require a specific relayer. */
-    function checkRelayConditions (address client, bytes calldata conds) internal {
+    function checkRelayConditions (address client, bytes memory conds) internal {
         (uint48 deadline, uint48 alive, bytes32 salt, uint32 nonce,
          address relayer)
             = abi.decode(conds, (uint48, uint48, bytes32, uint32, address));
         
-        require(deadline == 0 || block.timestamp <= deadline);
+        require(block.timestamp <= deadline);
         require(block.timestamp >= alive);
         require(relayer == address(0) || relayer == msg.sender || relayer == tx.origin);
         casNonce(client, salt, nonce);
     }
 
     /* @notice Verifies the supplied signature matches the EIP-712 compatible data. */
-    function verifySignature (bytes memory cmd, bytes calldata conds,
+    function verifySignature (CrocRelayerCall memory call,
                               bytes calldata signature)
         internal view returns (address client) {
         (uint8 v, bytes32 r, bytes32 s) =
             abi.decode(signature, (uint8, bytes32, bytes32));
-        bytes32 checksum = checksumHash(cmd, conds);
+        bytes32 checksum = checksumHash(call);
         client = ecrecover(checksum, v, r, s);
         require(client != address(0));
     }
     
     /* @notice Calculates the EIP-712 hash to check the signature against. */
-    function checksumHash (bytes memory cmd, bytes calldata conds)
+    function checksumHash (CrocRelayerCall memory call)
         private view returns (bytes32) {
-        bytes32 hash = contentHash(cmd, conds);
+        bytes32 hash = contentHash(call);
         return keccak256(abi.encodePacked
                          ("\x19\x01", domainHash(), hash));
     }
 
     /* @notice Calculates the EIP-712 typedStruct hash. */
-    function contentHash (bytes memory metaCmd, bytes calldata conds)
+    function contentHash (CrocRelayerCall memory call)
         private pure returns (bytes32) {
         return keccak256(
             abi.encode
             (keccak256
-             ("CrocRelayerCall(bytes cmd,bytes conds)"),
-             keccak256(metaCmd), keccak256(conds)));
+             ("CrocRelayerCall(uint8 callpath,bytes cmd,bytes conds,bytes tip)"),
+             call.callpath,
+             keccak256(call.cmd),
+             keccak256(call.conds),
+             keccak256(call.tip)));
     }
 
     /* @notice Calculates the EIP-712 domain hash. */
@@ -129,7 +137,8 @@ contract AgentMask is StorageLayout {
             (keccak256(
                 "EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
              keccak256("CrocSwap"),
-             block.chainid, address(this)));
+             block.chainid,
+             address(this)));
     }
     
     /* @notice Returns the owner key that any LP position resulting from a mint action
@@ -224,16 +233,13 @@ contract AgentMask is StorageLayout {
 
     address constant MAGIC_SENDER_TIP = address(256);
     address constant MAGIC_ORIGIN_TIP = address(512);
-    address constant MAGIC_COINBASE_TIP = address(1024);
 
     function maskTipRecv (address recv) view private returns (address) {
         if (recv == MAGIC_SENDER_TIP) {
             recv = msg.sender;
         } else if (recv == MAGIC_ORIGIN_TIP) {
             recv = tx.origin;
-        } else if (recv == MAGIC_COINBASE_TIP) {
-            recv = block.coinbase;
-        }
+        } 
         return recv;
     }
 

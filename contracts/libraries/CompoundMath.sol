@@ -21,7 +21,7 @@ library CompoundMath {
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
         // but the angel's share becomes unreasonble. 
-        require(x64 < FixedPoint.Q48, "C");
+        require(x64 < FixedPoint.Q48);
 
         uint256 x = uint256(x64);
         // Shift by 48, to bring x^2 back in fixed point precision
@@ -80,7 +80,7 @@ library CompoundMath {
     function compoundDivide (uint128 inflated, uint128 seed) internal
         pure returns (uint64) {
         // Otherwise arithmetic doesn't safely fit in 256 -bit
-        require(inflated < type(uint208).max, "C");
+        require(inflated < type(uint208).max);
         
         uint256 ONE = FixedPoint.Q48;
         uint256 num = uint256(inflated) << 48;

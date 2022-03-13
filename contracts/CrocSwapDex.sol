@@ -65,19 +65,24 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                   will execute up to this price, but not any worse. Average fill 
      *                   price will always be equal or better, because this is calculated
      *                   at the marginal unit of quantity.
+     * @param minOut The minimum output the user expects from the swap. If less is 
+     *               returned, the transaction will revery. (Alternatively if the swap
+     *               is fixed in terms of output, this is the maximum input.)
      * @param useSurplus If true, settlement is first attempted with the user's surplus
      *                   collateral balance held at the exchange. (Reduces gas cost 
-     *                   associated with an explicit transfer.) */
+     *                   associated with an explicit transfer.)
+     * @return The total token quantity in the output (input) for swaps where quantity
+     *         is fixed in input (output). */
     function swap (address base, address quote,
                    uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint16 tip,
-                   uint128 limitPrice, uint128 limitOut,
-                   uint8 reserveFlags) reEntrantLock public payable {
+                   uint128 limitPrice, uint128 minOut,
+                   uint8 reserveFlags) reEntrantLock public payable returns (int128) {
         // By default the embedded hot-path is enabled, but protocol governance can
         // disable by toggling the force proxy flag. If so, users should point to
         // swapProxy.
         require(hotPathOpen_);
-        swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
-                    limitPrice, limitOut, reserveFlags);
+        return swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
+                           limitPrice, minOut, reserveFlags);
     }
 
     /* @notice Consolidated method for protocol control related commands.
@@ -85,10 +90,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *         reduce the contract size in the main contract by paring down methods.
      * 
      * @param code The command code corresponding to the actual method being called. */
-    function protocolCmd (uint16 proxyIdx, bytes calldata input, bool sudo)
-        protocolOnly(sudo)
-        public payable override returns (bytes memory) {
-        return callProtocolCmd(proxyIdx, input);
+    function protocolCmd (uint16 callpath, bytes calldata cmd, bool sudo)
+        protocolOnly(sudo) public payable override returns (bytes memory) {
+        return callProtocolCmd(callpath, cmd);
     }
 
     /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
@@ -99,23 +103,22 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param spillIdx The index (0-63) of the spill sidecar the command is being sent to
      * @param input The arbitrary call data the client is calling the spill proxy 
      *              sidecar with */
-    function userCmd (uint16 proxyIdx, bytes calldata input) reEntrantLock
+    function userCmd (uint16 callpath, bytes calldata cmd) reEntrantLock
         public payable returns (bytes memory) {
-        return callUserCmd(proxyIdx, input);
+        return callUserCmd(callpath, cmd);
     }
 
-    function userCmdAgent (uint16 proxyIdx, bytes calldata cmd,
-                           bytes calldata conds, bytes calldata relayerTip, 
-                           bytes calldata signature)
-        reEntrantAgent(abi.encode(proxyIdx, cmd, relayerTip),
-                       conds, signature)
+    function userCmdRelayer (uint16 proxyIdx, bytes calldata cmd,
+                             bytes calldata conds, bytes calldata relayerTip, 
+                             bytes calldata signature)
+        reEntrantAgent(CrocRelayerCall(proxyIdx, cmd, conds, relayerTip), signature)
         public payable returns (bytes memory output) {
         output = callUserCmd(proxyIdx, cmd);
         tipRelayer(relayerTip);
     }
 
-    function userCmdAgent (uint16 proxyIdx, bytes calldata input, address client,
-                           uint256 salt)
+    function userCmdRouter (uint16 proxyIdx, bytes calldata input, address client,
+                            uint256 salt)
         reEntrantApproved(client, salt) public payable
         returns (bytes memory) {
         return callUserCmd(proxyIdx, input);
