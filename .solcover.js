@@ -1,5 +1,5 @@
 
 module.exports = {
-    skipFiles: ['test/'],
+    skipFiles: ['test/', 'lens/'],
     configureYulOptimizer: true
 };
