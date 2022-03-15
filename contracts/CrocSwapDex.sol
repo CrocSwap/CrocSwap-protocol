@@ -36,19 +36,11 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 
     /* @param authority The address of the protocol authority. Only this address will is
      *                  able to call methods related to protocol privileged operations.
-     * @param coldPath The address of the pre-deployed ColdPath sidecar contract.
-     * @param warmPath The address of the pre-deployed WarmPath sidecar contract.
-     * @param warmPath The address of the pre-deployed LongPath sidecar contract.
-     * @param warmPath The address of the pre-deployed MicroPath sidecar contract. */
-    constructor (address authority, address coldPath, address warmPath,
-                 address longPath, address microPath) {
+     * @param coldPath The address of the pre-deployed ColdPath sidecar contract. */
+    constructor (address authority, address coldPath) {
         authority_ = authority;
         hotPathOpen_ = true;
         proxyPaths_[CrocSlots.ADMIN_PROXY_IDX] = coldPath;
-        proxyPaths_[CrocSlots.BAL_PROXY_IDX] = coldPath;
-        proxyPaths_[CrocSlots.LP_PROXY_IDX] = warmPath;
-        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = longPath;
-        proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = microPath;
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -142,10 +134,11 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 contract CrocSwapDexSeed  is CrocSwapDex {
     
     constructor (address authority)
-        CrocSwapDex(authority,
-                    address(new ColdPath()),
-                    address(new WarmPath()),
-                    address(new LongPath()),
-                    address(new MicroPaths())) { }
+        CrocSwapDex(authority, address(new ColdPath())) {
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
+        proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
+
+    }
 }
 
