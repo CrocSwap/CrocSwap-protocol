@@ -84,7 +84,7 @@ describe('Pool HotPath', () => {
     
     it("swap protocol fee", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        await test.testRevisePool(feeRate, 6, 1)
+        await test.testRevisePool(feeRate, 43, 1)
 
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
@@ -106,7 +106,7 @@ describe('Pool HotPath', () => {
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10000)
 
         expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(0)
-        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(24)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(25)
     })
 
     it("swap sell", async() => {
@@ -133,12 +133,12 @@ describe('Pool HotPath', () => {
 
     it("swap sell protocol fee", async() => {
         await test.testMint(-5000, 8000, 1000000); 
-        await test.testRevisePool(feeRate, 6, 1)
+        await test.testRevisePool(feeRate, 43, 1)
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
-        const liqGrowth = 79025
-        const counterFlow = 7038795
+        const liqGrowth = 78901
+        const counterFlow = 7038793
 
         await test.snapStart()
         await test.testSwap(false, true, 10000*1024, toSqrtPrice(1.25))
@@ -150,7 +150,7 @@ describe('Pool HotPath', () => {
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-10000*1024)
 
         expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(0)
-        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(25*1024 + 210)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(25*1024 + 412)
     })
 
     it("swap wrong direction", async() => {
@@ -210,8 +210,8 @@ describe('Pool HotPath', () => {
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
-        const liqGrowth = 119011
-        const counterFlow = 15904029
+        const liqGrowth = 139505
+        const counterFlow = 15904661
 
         await test.snapStart()
         await test.testSwap(true, false, 10000*1024, toSqrtPrice(2.0))
@@ -304,7 +304,7 @@ describe('Pool HotPath', () => {
         await test.testMint(-5000, 8000, 40000); 
         await test.testMint(3800, 4300, 30000); 
         await test.testMint(3400, 4800, 20000); 
-        await test.testRevisePool(feeRate, 6, 1)
+        await test.testRevisePool(feeRate, 43, 1)
 
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
@@ -312,9 +312,9 @@ describe('Pool HotPath', () => {
         await test.snapStart()
         let x = await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
 
-        let limitFlow = -5584420
-        let counterFlow = 4109879
-        let liqGrowth = 44287
+        let limitFlow = -5584332
+        let counterFlow = 4109816
+        let liqGrowth = 44217
 
         expect(await test.snapBaseFlow()).to.equal(limitFlow)
         expect(await test.snapQuoteFlow()).to.equal(counterFlow)
@@ -323,7 +323,7 @@ describe('Pool HotPath', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(limitFlow)
 
-        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(21211)
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(21377)
         expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
     })
 
