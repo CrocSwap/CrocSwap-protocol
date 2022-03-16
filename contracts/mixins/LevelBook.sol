@@ -60,7 +60,7 @@ contract LevelBook is TickCensus, ColdPathInjector {
         }
 
         if (lvl.bidLots_.hasKnockoutLiq() || lvl.askLots_.hasKnockoutLiq()) {
-            callKnockout(poolIdx, tick, isBuy);
+            liqDelta += callKnockout(poolIdx, tick, isBuy);
         }
     }
 

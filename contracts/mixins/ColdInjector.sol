@@ -158,12 +158,16 @@ contract ColdPathInjector is StorageLayout {
         accum.foldFlow(swapFlow);
     }
 
-    function callKnockout (bytes32 poolHash, int24 tick, bool isBuy) internal {
+    function callKnockout (bytes32 poolHash, int24 tick, bool isBuy)
+        internal returns (int128 concLiqDelta) {
         require(proxyPaths_[CrocSlots.KNOCKOUT_PROXY_IDX] != address(0));
         
-        (bool success, ) = proxyPaths_[CrocSlots.KNOCKOUT_PROXY_IDX].delegatecall
+        (bool success, bytes memory cmd) =
+            proxyPaths_[CrocSlots.KNOCKOUT_PROXY_IDX].delegatecall
             (abi.encodeWithSignature
              ("callKnockoutCross(bytes32,int24,bool)", poolHash, tick, isBuy));
-        require(success);                                                       
+        require(success);
+
+        concLiqDelta = abi.decode(cmd, (int128));
     }
 }
