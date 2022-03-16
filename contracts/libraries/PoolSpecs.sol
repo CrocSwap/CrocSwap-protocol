@@ -12,8 +12,10 @@ library PoolSpecs {
      *         may have many different pool types, each of which may operate as segmented
      *         markts with different underlying behavior to the AMM. 
      *
-     * @param enabled_ Simple placeholder in storage slot to indicate whether a pool has
-     *                 been previously initialized.
+     * @param schema_ Placeholder that defines the structure of the poolSpecs object in
+     *                in storage. Becuase slots initialize zero, 0 is used for an 
+     *                unitializez or disabled pool. 1 is the only currently used schema
+     *                (for the below struct), but allows for upgradeability in the future
      *
      * @param feeRate_ The overall fee (liquidity fees + protocol fees inclusive) that
      *            swappers pay to the pool as a fraction of notional. Represented as an 
@@ -42,7 +44,7 @@ library PoolSpecs {
      *                     significant bit, which if on checks oracle permission on every
      *                     pool related call. Otherwise pool is permissionless. */
     struct Pool {
-        bool enabled_;
+        uint8 schema_;
         uint16 feeRate_;
         uint8 protocolTake_;
         uint16 tickSize_;
@@ -51,6 +53,8 @@ library PoolSpecs {
         uint8 oracleFlags_;
     }
 
+    uint8 constant BASE_SCHEMA = 1;
+    uint8 constant DISABLED_SCHEMA = 0;
 
     /* @notice Convenience struct that's used to gather all useful context about on a 
      *         specific pool.

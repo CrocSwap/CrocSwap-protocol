@@ -125,7 +125,7 @@ contract PoolRegistry is StorageLayout {
                               uint8 jitThresh, uint8 knockout, uint8 oracleFlags)
         internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
-        templ.enabled_ = true;
+        templ.schema_ = PoolSpecs.BASE_SCHEMA;
         templ.feeRate_ = feeRate;
         templ.tickSize_ = tickSize;
         templ.jitThresh_ = jitThresh;
@@ -135,7 +135,7 @@ contract PoolRegistry is StorageLayout {
 
     function disablePoolTemplate (uint256 poolIdx) internal {
         PoolSpecs.Pool storage templ = templates_[poolIdx];
-        templ.enabled_ = false;
+        templ.schema_ = PoolSpecs.DISABLED_SCHEMA;
     }
 
     /* @notice Resets the parameters on a previously existing pool in a specific pair.
@@ -286,13 +286,13 @@ contract PoolRegistry is StorageLayout {
      *         that hasn't been disabled. */
     function isPoolInit (PoolSpecs.Pool memory pool)
         private pure returns (bool) {
-        return pool.enabled_;
+        return pool.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 
     /* @notice Returns true if the pool cursor represents an initailized pool that
      *         hasn't been disabled. */
     function isPoolInit (PoolSpecs.PoolCursor memory pool)
         private pure returns (bool) {
-        return pool.head_.enabled_;
+        return pool.head_.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 }
