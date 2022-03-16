@@ -255,9 +255,9 @@ library SwapCurve {
         // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
         // because fees will neveer be larger than the underlying flow.
         uint256 FEE_BP_MULT = 100 * 100 * 100;
-        uint128 totalFee = uint128((uint256(flow) * feeRate) / FEE_BP_MULT);
+        uint256 totalFee = (uint256(flow) * feeRate) / FEE_BP_MULT;
 
-        protoFee = protoProp > 0 ? totalFee / protoProp : 0;
-        liqFee = totalFee - protoFee;
+        protoFee = uint128(totalFee * protoProp / 256);
+        liqFee = uint128(totalFee) - protoFee;
     }
 }
