@@ -31,8 +31,7 @@ describe('Pool Warm Path', () => {
         await test.testMintAmbient(5000)
 
         let flow = await test.snapBaseOwed()
-        expect(flow).to.lte(5000*1024)
-        expect(flow).to.gte(5000*1024 - 5)
+        expect(flow).to.eq(5000*1024)
     })
 
     it("mint ambient quote", async() => {
@@ -40,8 +39,7 @@ describe('Pool Warm Path', () => {
         await test.testMintAmbient(5000)
         
         let flow = await test.snapQuoteOwed()
-        expect(flow).to.lte(5000*1024)
-        expect(flow).to.gte(5000*1024 - 5)
+        expect(flow).to.eq(5000*1024)
     })
 
     it("burn ambient base", async() => {
@@ -69,8 +67,7 @@ describe('Pool Warm Path', () => {
         await test.testMint(3000, 5000, 10000)
 
         let flow = await test.snapBaseOwed()
-        expect(flow).to.lte(10000*1024)
-        expect(flow).to.gte(10000*1024 - 1024)
+        expect(flow).to.eq(10000*1024)
     })
 
     it("mint conc qutoe", async() => {
@@ -78,8 +75,7 @@ describe('Pool Warm Path', () => {
         await test.testMint(3000, 5000, 10000)
 
         let flow = await test.snapQuoteOwed()
-        expect(flow).to.lte(10000*1024)
-        expect(flow).to.gte(10000*1024 - 1024)
+        expect(flow).to.eq(10000*1024)
     })
 
     it("burn conc base", async() => {
