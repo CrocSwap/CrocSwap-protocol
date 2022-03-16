@@ -61,7 +61,7 @@ contract TestSettleLayer is DepositDesk {
         depositSurplus(owner, value, token);
     }
 
-    function testDisburse (address owner, address recv, uint128 value,
+    function testDisburse (address owner, address recv, int128 value,
                            address token) internal {
         lockHolder_ = owner;
         disburseSurplus(recv, value, token);

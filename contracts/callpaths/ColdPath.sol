@@ -260,20 +260,20 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
     }
 
     function disburseSurplus (bytes calldata cmd) private {
-        (, address recv, uint128 value, address token) =
-            abi.decode(cmd, (uint8, address, uint128, address));
+        (, address recv, int128 value, address token) =
+            abi.decode(cmd, (uint8, address, int128, address));
         disburseSurplus(recv, value, token);
     }
 
     function transferSurplus (bytes calldata cmd) private {
-        (, address recv, uint128 value, address token) =
-            abi.decode(cmd, (uint8, address, uint128, address));
-        transferSurplus(recv, value, token);
+        (, address recv, int128 size, address token) =
+            abi.decode(cmd, (uint8, address, int128, address));
+        transferSurplus(recv, size, token);
     }
 
     function sidePocketSurplus (bytes calldata cmd) private {
-        (, uint256 fromSalt, uint256 toSalt, uint128 value, address token) =
-            abi.decode(cmd, (uint8, uint256, uint256, uint128, address));
+        (, uint256 fromSalt, uint256 toSalt, int128 value, address token) =
+            abi.decode(cmd, (uint8, uint256, uint256, int128, address));
         sidePocketSurplus(fromSalt, toSalt, value, token);
     }
 
@@ -284,8 +284,8 @@ contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount
     }
 
     function disburseVirtual (bytes calldata cmd) private {
-        (, address tracker, uint256 salt, uint128 value, bytes memory args) =
-            abi.decode(cmd, (uint8, address, uint256, uint128, bytes));
+        (, address tracker, uint256 salt, int128 value, bytes memory args) =
+            abi.decode(cmd, (uint8, address, uint256, int128, bytes));
         disburseVirtual(tracker, salt, value, args);
     }
 

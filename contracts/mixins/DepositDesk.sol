@@ -35,14 +35,14 @@ contract DepositDesk is SettleLayer {
      *
      * @param owner The address of the owner associated with the account.
      * @param recv  The receiver where the collateral will be sent to.
-     * @param value The amount to be paid out. Owner's balance will be decremented 
+     * @param size  The amount to be paid out. Owner's balance will be decremented 
      *              accordingly.
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              disbursed. */
-    function disburseSurplus (address recv, uint128 value, address token) internal {
+    function disburseSurplus (address recv, int128 size, address token) internal {
         bytes32 key = tokenKey(lockHolder_, token);
         uint128 balance = userBals_[key].surplusCollateral_;
-        value = castTransVal(value, balance);
+        uint128 value = applyTransactVal(size, balance);
 
         // No need to use msg.value, because unlike trading there's no logical reason
         // we'd expect it to be set on this call.
@@ -50,24 +50,24 @@ contract DepositDesk is SettleLayer {
         userBals_[key].surplusCollateral_ -= value;
     }
 
-    function transferSurplus (address to, uint128 value, address token) internal {
+    function transferSurplus (address to, int128 size, address token) internal {
         bytes32 fromKey = tokenKey(lockHolder_, token);
         bytes32 toKey = tokenKey(to, token);
-        moveSurplus(fromKey, toKey, value);
+        moveSurplus(fromKey, toKey, size);
     }
 
-    function sidePocketSurplus (uint256 fromSalt, uint256 toSalt, uint128 value,
+    function sidePocketSurplus (uint256 fromSalt, uint256 toSalt, int128 size,
                                 address token) internal {
         address from = virtualizeUser(lockHolder_, fromSalt);
         address to = virtualizeUser(lockHolder_, toSalt);
         bytes32 fromKey = tokenKey(from, token);
         bytes32 toKey = tokenKey(to, token);
-        moveSurplus(fromKey, toKey, value);
+        moveSurplus(fromKey, toKey, size);
     }
 
-    function moveSurplus (bytes32 fromKey, bytes32 toKey, uint128 value) private {
+    function moveSurplus (bytes32 fromKey, bytes32 toKey, int128 size) private {
         uint128 balance = userBals_[fromKey].surplusCollateral_;
-        value = castTransVal(value, balance);
+        uint128 value = applyTransactVal(size, balance);
 
         userBals_[fromKey].surplusCollateral_ -= value;
         userBals_[toKey].surplusCollateral_ += value;
@@ -79,13 +79,13 @@ contract DepositDesk is SettleLayer {
         userBals_[toKey].surplusCollateral_ += value;
     }
 
-    function disburseVirtual (address tracker, uint256 tokenSalt, uint128 value,
+    function disburseVirtual (address tracker, uint256 tokenSalt, int128 size,
                               bytes memory extraArgs)
         internal {
         bytes32 fromKey = tokenKey(lockHolder_, tracker, tokenSalt);
         uint128 balance = userBals_[fromKey].surplusCollateral_;
-        
-        value = castTransVal(value, balance);
+
+        uint128 value = applyTransactVal(size, balance);
         userBals_[fromKey].surplusCollateral_ -= value;        
 
         bool success = ICrocVirtualToken(tracker).withdrawCroc
@@ -96,11 +96,16 @@ contract DepositDesk is SettleLayer {
     /* @notice Converts an encoded trasnfer argument to the actual quantity to transfer.
      *         Checks that the balance supports the requested value, and treats an 
      *         argument of zero as a special case to transfer the entire balance. */
-    function castTransVal (uint128 value, uint128 balance) private pure
-        returns (uint128) {
-        if (value == 0) { value = balance; }
-        require(balance > 0 && value <= balance, "SC");
-        return value;
+    function applyTransactVal (int128 qty, uint128 balance) private pure
+        returns (uint128 value) {
+        if (qty < 0) {
+            value = balance - uint128(-qty);
+        } else if (qty == 0) {
+            value = balance;
+        } else {
+            value = uint128(qty);
+        }
+        require(value <= balance, "SC");        
     }
 }
 
