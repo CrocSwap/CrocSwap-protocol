@@ -116,7 +116,6 @@ describe('Pool Rebalance', () => {
         return order
     }
 
-
     it("rebalance range", async() => {
         await test.testMint(-1000, 1000, 100000)
         await test.testMint(-500, -200, 1000);
@@ -150,5 +149,107 @@ describe('Pool Rebalance', () => {
 
         expect((await tx.wait()).gasUsed).to.lt(315000)
     })
-    
+  
+    function makeRebalOrderTwo(): OrderDirective {
+        let open: SettlementDirective = {
+            token: baseToken.address,
+            limitQty: BigNumber.from("0"),
+            dustThresh: BigNumber.from(0),
+            useSurplus: true
+        }
+
+        let close: SettlementDirective = {
+            token: quoteToken.address,
+            limitQty: BigNumber.from("0"),
+            dustThresh: BigNumber.from(0),
+            useSurplus: true
+        }
+
+        let order: OrderDirective = { 
+            schemaType: 1,
+            open: open,
+            hops: []
+        }
+
+        let hop: HopDirective = {
+            pools: [],
+            settlement: close,
+            improve: { isEnabled: false, useBaseSide: false }
+        }
+        order.hops.push(hop)
+
+        let emptyAmbient: AmbientDirective = {
+            isAdd: false,
+            liquidity: BigNumber.from(0)
+        }
+
+        let firstDir: PoolDirective = {
+            poolIdx: BigNumber.from(test.poolIdx),
+            passive: { ambient: emptyAmbient, concentrated: [] },
+            swap: {
+                isBuy: true,
+                inBaseQty: true,
+                qty: BigNumber.from(0),
+                rollType: 5,
+                limitPrice: MAX_PRICE
+            },
+            chain: {
+                rollExit: false,
+                swapDefer: true,
+                offsetSurplus: false
+            }
+        }
+
+        let burnLp: ConcentratedDirective = {
+            openTick: -500,
+            bookends: [
+                { closeTick: -300, isAdd: false, liquidity: BigNumber.from(1000*1024) }
+            ]
+        }
+        let mintLpFloor: ConcentratedDirective = {
+            openTick: -100,
+            bookends: [
+                { closeTick: 100, isAdd: true, liquidity: BigNumber.from(950*1024) }
+            ]
+        }
+
+        firstDir.passive.concentrated.push(burnLp)
+        firstDir.passive.concentrated.push(mintLpFloor)
+        
+        hop.pools.push(firstDir)
+
+        return order
+    }
+
+    it("rebalance liq", async() => {
+        await test.testMint(-1000, 1000, 100000)
+        await test.testMint(-500, -300, 1000);
+
+        let order = makeRebalOrderTwo()
+        let tx = await test.testOrder(order);
+
+        let baseSurp = (await test.query).querySurplus(await (await test.trader).getAddress(), baseToken.address)
+        let quoteSurp = (await test.query).querySurplus(await (await test.trader).getAddress(), quoteToken.address)
+
+        expect(await baseSurp).to.be.eq(0)
+        expect(await quoteSurp).to.be.gt(0)
+        expect(await quoteSurp).to.be.lt(300)
+
+        test.snapStart()
+        await test.testBurn(-100, 100, 950)
+        let basePos = await test.snapBaseOwed()
+        let quotePos = await test.snapQuoteOwed()
+        expect(basePos).to.be.equal(-4899)
+        expect(quotePos).to.be.equal(-4803)        
+    })
+
+    it("rebalance liq gas", async() => {
+        await test.testMint(-1000, 1000, 100000)
+        await test.testMint(-500, -300, 1000);
+
+        let order = makeRebalOrderTwo()
+        let tx = await test.testOrder(order);
+
+        expect((await tx.wait()).gasUsed).to.lt(295000)
+    })
 })
