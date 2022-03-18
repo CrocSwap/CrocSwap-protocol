@@ -66,7 +66,7 @@ describe('Swap Curve', () => {
    })
 
    it("swap fee+proto full qty", async() => {
-      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 50000, protoCut_: 5}
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 50000, protoCut_: 51}
       let swap = { qtyLeft_: 1000000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
       await curve.fixCurve(5, toSqrtPrice(2.25), 6000000, 10000000);
       await curve.fixAccum(5, toFixedGrowth(0.75), toFixedGrowth(2.5));
@@ -76,21 +76,21 @@ describe('Swap Curve', () => {
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1000000);
       expect(accum.paidQuote_.toNumber()).to.equal(-409466 + COLLATERAL_ROUND);
-      expect(accum.paidProto_.toNumber()).to.equal(4304);
+      expect(accum.paidProto_.toNumber()).to.equal(4287);
 
       let state = await curve.pullCurve(5);
-      expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.3957)
-      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.3958)
-      expect(state.ambientSeeds_.toNumber()).to.equal(6003595)
+      expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.3956)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.3957)
+      expect(state.ambientSeeds_.toNumber()).to.equal(6003599)
       expect(state.concLiq_.toNumber()).to.equal(10000000);
-      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110196);
-      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110197);
-      expect(fromFixedGrowth(state.concGrowth_)).to.lte(2.5 + 0.00035950);
-      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.00035949);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110304);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110305);
+      expect(fromFixedGrowth(state.concGrowth_)).to.lte(2.5 + 0.00035986);
+      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.00035985);
    })
 
    it("swap paid cumulative", async() => {
-      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 50000, protoCut_: 5}
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 50000, protoCut_: 51}
       let swap = { qtyLeft_: 1000000, paidQuote_: -100000, paidBase_: 300000, paidProto_: 10000, cntx_: swapCntx}
       await curve.fixCurve(3, toSqrtPrice(2.25), 6000000, 10000000);
       await curve.fixAccum(3, toFixedGrowth(0.75), toFixedGrowth(2.5));
@@ -100,7 +100,7 @@ describe('Swap Curve', () => {
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1300000);
       expect(accum.paidQuote_.toNumber()).to.equal(-509466 + COLLATERAL_ROUND);
-      expect(accum.paidProto_.toNumber()).to.equal(14304);
+      expect(accum.paidProto_.toNumber()).to.equal(14287);
    })
 
    it("swap sell", async() => {
@@ -121,7 +121,7 @@ describe('Swap Curve', () => {
    })
 
    it("swap sell fee", async() => {
-      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 50000, protoCut_: 4}
+      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 50000, protoCut_: 64}
       let swap = { qtyLeft_: 1000000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
       await curve.fixCurve(3, toSqrtPrice(2.25), 6000000, 10000000);
       await curve.fixAccum(3, toFixedGrowth(0.75), toFixedGrowth(2.5));
@@ -156,7 +156,7 @@ describe('Swap Curve', () => {
    })
 
    it("swap quote denom fees", async() => {
-      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 50000, protoCut_: 4}
+      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 50000, protoCut_: 64}
       let swap = { qtyLeft_: 1000000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
       await curve.fixCurve(1, toSqrtPrice(2.25), 6000000, 10000000);
       await curve.fixAccum(1, toFixedGrowth(0.75), toFixedGrowth(2.5));
@@ -191,7 +191,7 @@ describe('Swap Curve', () => {
    })
 
    it("swap quote sell fee", async() => {
-      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 50000, protoCut_: 4}
+      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 50000, protoCut_: 64}
       let swap = { qtyLeft_: 1000000, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
       await curve.fixCurve(1, toSqrtPrice(2.25), 6000000, 10000000);
       await curve.fixAccum(1, toFixedGrowth(0.75), toFixedGrowth(2.5));
