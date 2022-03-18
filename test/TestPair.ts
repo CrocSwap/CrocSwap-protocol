@@ -142,9 +142,9 @@ describe('Pair', () => {
         await test.testMintAmbientIdx(30000, pool3)
         
         // Turn protocol fees on at different rates 
-        await test.testRevisePool(100*100, 2, 1)
-        await test.testRevisePoolIdx(pool2, 100*100, 3, 1)
-        await test.testRevisePoolIdx(pool2, 50*100, 4, 1)
+        await test.testRevisePool(100*100, 128, 1)
+        await test.testRevisePoolIdx(pool2, 100*100, 85, 1)
+        await test.testRevisePoolIdx(pool2, 50*100, 64, 1)
 
         let order = await test.prototypeOrder(3)
         
@@ -165,9 +165,9 @@ describe('Pair', () => {
         await test.testMintAmbientIdx(30000, pool3)
         
         // Turn protocol fees on at different rates 
-        await test.testRevisePool(100*100, 2, 1)
-        await test.testRevisePoolIdx(pool2, 100*100, 3, 1)
-        await test.testRevisePoolIdx(pool3, 50*100, 4, 1)
+        await test.testRevisePool(100*100, 128, 1)
+        await test.testRevisePoolIdx(pool2, 100*100, 85, 1)
+        await test.testRevisePoolIdx(pool3, 50*100, 64, 1)
 
         let order = await test.prototypeOrder(3)
         
@@ -185,7 +185,7 @@ describe('Pair', () => {
         await test.testOrder(order)
 
         expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
-        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(192)
     })
 
     it("protocol fee stack base", async() => {
@@ -194,9 +194,9 @@ describe('Pair', () => {
         await test.testMintAmbientIdx(30000, pool3)
         
         // Turn protocol fees on at different rates 
-        await test.testRevisePool(100*100, 2, 1)
-        await test.testRevisePoolIdx(pool2, 100*100, 3, 1)
-        await test.testRevisePoolIdx(pool3, 50*100, 4, 1)
+        await test.testRevisePool(100*100, 128, 1)
+        await test.testRevisePoolIdx(pool2, 100*100, 85, 1)
+        await test.testRevisePoolIdx(pool3, 50*100, 64, 1)
 
         let order = await test.prototypeOrder(3)
         
@@ -220,7 +220,7 @@ describe('Pair', () => {
         await test.testOrder(order)
 
         expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(759)
-        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(283)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(281)
     })
 
     it("protocol fee stack quote", async() => {
@@ -229,9 +229,9 @@ describe('Pair', () => {
         await test.testMintAmbientIdx(30000, pool3)
         
         // Turn protocol fees on at different rates 
-        await test.testRevisePool(100*100, 2, 1)
-        await test.testRevisePoolIdx(pool2, 100*100, 3, 1)
-        await test.testRevisePoolIdx(pool3, 50*100, 4, 1)
+        await test.testRevisePool(100*100, 128, 1)
+        await test.testRevisePoolIdx(pool2, 100*100, 85, 1)
+        await test.testRevisePoolIdx(pool3, 50*100, 64, 1)
 
         let order = await test.prototypeOrder(3)
         
@@ -255,7 +255,7 @@ describe('Pair', () => {
         await test.testOrder(order)
 
         expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(934)
-        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(194)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(192)
     })
 
     it("pool settings individual", async() => {

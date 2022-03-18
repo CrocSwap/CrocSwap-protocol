@@ -80,12 +80,12 @@ describe('Pool Ethereum', () => {
  
     it("swap protocol fee", async() => {
         await test.testMint(200000, 210000, 1024*1000*1000);
-        await test.testRevisePool(feeRate, 6, 1)
+        await test.testRevisePool(feeRate, 43, 1)
 
         await test.testSwap(true, false, 10000, maxSqrtPrice())
         await test.testSwap(false, false, 10000, minSqrtPrice())
         
-        let bal = BigNumber.from("10074455836789651")
+        let bal = BigNumber.from("10074455836876107")
         expect(await baseToken.balanceOf((await test.dex).address)).to.equal(bal)
         expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(4269666)
     })
@@ -156,12 +156,12 @@ describe('Pool Ethereum Hotpath', () => {
  
     it("swap protocol fee", async() => {
         await test.testMint(200000, 210000, 1024*1000*1000);
-        await test.testRevisePool(feeRate, 6, 1)
+        await test.testRevisePool(feeRate, 43, 1)
 
         await test.testSwap(true, false, 10000, maxSqrtPrice())
         await test.testSwap(false, false, 10000, minSqrtPrice())
         
-        let bal = BigNumber.from("10074455836789651")
+        let bal = BigNumber.from("10074455836876107")
         expect(await baseToken.balanceOf((await test.dex).address)).to.equal(bal)
         expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(4269666)
     })

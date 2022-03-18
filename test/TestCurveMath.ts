@@ -119,13 +119,13 @@ describe('CurveMath', () => {
    })
    
    it("vig protocol cut", async() => {
-      let vigOne = await curve.testVig(10000, 1000, 50000, 5, true, true, 
+      let vigOne = await curve.testVig(10000, 1000, 50000, 51, true, true, 
          toSqrtPrice(0.5), toSqrtPrice(0.25))
-      let vigTwo = await curve.testVig(10000, 1000, 50000, 5, false, true, 
+      let vigTwo = await curve.testVig(10000, 1000, 50000, 51, false, true, 
          toSqrtPrice(0.1), toSqrtPrice(0.25))
-      let vigThree = await curve.testVig(10000, 1000, 50000, 5, false, false, 
+      let vigThree = await curve.testVig(10000, 1000, 50000, 51, false, false, 
          toSqrtPrice(0.5), toSqrtPrice(0.25))
-      let vigFour = await curve.testVig(10000, 5000, 50000, 5, true, false, 
+      let vigFour = await curve.testVig(10000, 5000, 50000, 51, true, false, 
          toSqrtPrice(0.36), toSqrtPrice(0.25))
          
       expect(vigOne[0]).to.equal(93)
@@ -143,7 +143,7 @@ describe('CurveMath', () => {
       let vigOne = await curve.testVigMax(10000, 50000, 0, true, toSqrtPrice(2.25))
       let vigTwo = await curve.testVigMax(10000, 50000, 0, false, toSqrtPrice(2.25))
       let vigThree = await curve.testVigMin(10000, 50000, 0, true, toSqrtPrice(2.25))
-      let vigFour = await curve.testVigMin(10000, 50000, 6, false, toSqrtPrice(2.25))
+      let vigFour = await curve.testVigMin(10000, 50000, 43, false, toSqrtPrice(2.25))
      
       // Consumes 6666 out of the 6666.67 (at 5% vig) in virtual reserves
       expect(vigOne[0]).to.equal(333)
