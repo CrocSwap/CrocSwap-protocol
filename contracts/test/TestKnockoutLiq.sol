@@ -14,13 +14,13 @@ contract TestKnockoutLiq {
         return KnockoutLiq.encodePivotKey(bytes32(pool), isBid, tick);
     }
 
-    function testEncodePosKey (uint256 pool, uint256 owner, bool isBid, int24 tick,
-                               uint24 range, uint32 pivotTime)
+    function testEncodePosKey (uint256 pool, uint256 owner, bool isBid, int24 lower,
+                               int24 upper, uint32 pivotTime)
         public pure returns (bytes32) {
         KnockoutLiq.KnockoutPosLoc memory pos;
         pos.isBid_ = isBid;
-        pos.tick_ = tick;
-        pos.rangeTicks_ = range;
+        pos.lowerTick_ = lower;
+        pos.upperTick_ = upper;
         pos.pivotTime_ = pivotTime;
         return KnockoutLiq.encodePosKey(pos, bytes32(pool), bytes32(owner));
     }
@@ -37,5 +37,14 @@ contract TestKnockoutLiq {
     function testProof (uint160 root, uint96[] calldata proof)
         view public returns (uint32, uint64) {
         return merkle_.proveHistory(root, proof);
+    }
+
+    function testAssertValid (bool isBid, int24 lower, int24 upper,
+                              int24 priceTick, uint8 knockoutBits) public pure {
+        KnockoutLiq.KnockoutPosLoc memory pos;
+        pos.isBid_ = isBid;
+        pos.lowerTick_ = lower;
+        pos.upperTick_ = upper;        
+        KnockoutLiq.assertValidPos(pos, priceTick, knockoutBits);
     }
 }

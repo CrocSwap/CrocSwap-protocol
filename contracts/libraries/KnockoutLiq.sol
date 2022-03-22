@@ -74,8 +74,8 @@ library KnockoutLiq {
      *                    order was placed. */
     struct KnockoutPosLoc {
         bool isBid_;
-        int24 tick_;
-        uint24 rangeTicks_;
+        int24 lowerTick_;
+        int24 upperTick_;
         uint32 pivotTime_;
     }
 
@@ -94,17 +94,30 @@ library KnockoutLiq {
         return keccak256(abi.encode(pool, isBid, tick));
     }
 
+    function encodePivotKey (KnockoutPosLoc memory loc, bytes32 pool)
+        internal pure returns (bytes32) {
+        return encodePivotKey(pool, loc.isBid_, knockoutTick(loc));
+    }
+
+    function knockoutTick (KnockoutPosLoc memory loc) internal pure returns (int24) {
+        return loc.isBid_ ? loc.lowerTick_ : loc.upperTick_;
+    }
+
+    function tickRange (KnockoutPosLoc memory loc) internal pure returns (uint16) {
+        uint24 range = uint24(loc.upperTick_ - loc.lowerTick_);
+        require (range < type(uint16).max);
+        return uint16(range);
+    }
+
     /* @notice Encodes a hash key for a knockout position. 
      * @param loc The location of the knockout position relative to the pool/user.
      * @param pool The hash index of the AMM pool.
      * @param owner The claimint of the liquidity position. */
     function encodePosKey (KnockoutPosLoc memory loc, bytes32 pool, bytes32 owner)
         internal pure returns (bytes32) {
-        return keccak256(abi.encode(pool, owner,
-                                    loc.isBid_, loc.tick_, loc.rangeTicks_,
-                                    loc.pivotTime_));
+        return keccak256(abi.encode(pool, owner, loc.isBid_,
+                                    loc.lowerTick_, loc.upperTick_, loc.pivotTime_));
     }
-    
     /* @notice Commits a now-crossed Knockout pivot to the merkle history for that tick
      *         location.
      * @param merkle The Merkle history object. Will be overwrriten by this function.
@@ -182,5 +195,84 @@ library KnockoutLiq {
 
         require(incrRoot == merkle.merkleRoot_, "KP");
         return decodeChainLink(proof[0]);
+    }
+
+
+    /* @notice Verifies that a given knockout location is valid relative to the curve
+     *         price and the pool's current knockout parameters. If not, the call will
+     *         reverty
+     *
+     * @param loc The location for the proposed knockout liquidity candidate.
+     * @param priceTick The tick index of the curv'es current price.
+     *
+     * @param loc The tightly packed knockout parameters related to the pool. The fields
+     *            are set in the following order from most to least significant bit:
+     *                [8][7]            [6][5]           [4][3][2][1]
+     *               Unusued          PlaceType           OrderWidth
+     *            
+     *            The field types are as follows:
+     *               OrderWidth - The width of new knockout pivots in ticks represented by
+     *                            power of two. 
+     *               PlaceType - Restricts where new knockout pivots can be placed 
+     *                           relative to curve price. Uses the following codes:
+     *                    0 - Disabled. No knockout pivots allowed.
+     *                    1 - Knockout bids (asks) must be placed with upper (lower) tick
+     *                        below (above) the current curve price.
+     *                    2 - Knockout bids (asks) must be placed with lower (upper) tick
+     *                        below (above) the current curve price.
+     *                    3 - Knockout pivots can be placed anywhere relative to price. */
+    function assertValidPos (KnockoutPosLoc memory loc, int24 priceTick, 
+                             uint8 knockoutBits) internal pure {
+        (bool enabled, uint8 width, bool inside, bool yonder) =
+            unpackBits(knockoutBits);
+
+        require(enabled && gridOkay(loc, width) &&
+                spreadOkay(loc, priceTick, inside, yonder), "KV");
+    }
+
+    /* @notice Evaluates whether the placement and width of a knockout pivot candidates
+     *         conforms to the grid parameters. */
+    function gridOkay (KnockoutPosLoc memory loc, uint8 widthBits)
+        private pure returns (bool) {
+        uint24 width = uint24(loc.upperTick_ - loc.lowerTick_);
+        bool rightWidth = width == uint24(1) << widthBits;
+
+        int24 tick = loc.upperTick_;
+        uint24 absTick = tick > 0 ? uint24(tick) : uint24(-tick);
+        bool onGrid = (absTick << widthBits) >> widthBits == absTick;
+
+        return rightWidth && onGrid;
+    }
+
+    /* @notice Evaluates whether the placement of a knockout pivot candidates conforms
+     *         to the parameters relative to the curve's current price tick. */
+    function spreadOkay (KnockoutPosLoc memory loc, int24 priceTick,
+                         bool inside, bool yonder) private pure returns (bool) {
+        if (yonder) { return true; }
+        else if (loc.isBid_) {
+            int24 refTick = inside ? loc.lowerTick_ : loc.upperTick_;
+            return refTick < priceTick;
+        } else {
+            
+            int24 refTick = inside ? loc.upperTick_ : loc.lowerTick_;
+            return refTick >= priceTick;
+        }
+    }
+
+    /* @notice Decodes the tightly packed bits in pool knockout parameters.
+     * @return enabled True if new knockout pivots are enabled at all.
+     * @return widthBits The width of new knockout pivots in ticks to the power of two.
+     * @return inside True if bids (asks) can be placed with upper (lower) tick above 
+     *                (below) the current price tick.
+     * @return yonder True if bids (asks) can be placed with lower (upper) tick above 
+     *                (below) the current price tick. */
+    function unpackBits (uint8 knockoutBits) private pure returns
+        (bool enabled, uint8 widthBits, bool inside, bool yonder) {
+        widthBits = uint8(knockoutBits & 0x0F);
+        uint8 flagBits = uint8(knockoutBits & 0x30) >> 4;
+
+        enabled = flagBits > 0;
+        yonder = flagBits >= 3;
+        inside = flagBits >= 2;
     }
 }
