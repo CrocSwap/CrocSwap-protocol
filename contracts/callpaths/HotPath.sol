@@ -23,7 +23,7 @@ import '../mixins/ProtocolAccount.sol';
  *         is inherited both directly by the main contract (allowing for low gas calls)
  *         as well as an explicit proxy contract (allowing for future upgradeability)
  *         which can be utilized through a different call path. */
-contract HotPath is MarketSequencer, SettleLayer, PoolRegistry, ProtocolAccount {
+contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;

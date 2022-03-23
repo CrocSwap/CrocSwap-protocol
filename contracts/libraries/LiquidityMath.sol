@@ -110,7 +110,7 @@ library LiquidityMath {
     /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
         uint128 liq = uint128(lots);
-        return liq >> LOT_SIZE_BITS;
+        return liq << LOT_SIZE_BITS;
     }
 
     /* @notice Given a positive and negative detla lots value net out the raw liquidity
@@ -124,5 +124,40 @@ library LiquidityMath {
      *         delta. (Which by definition is always positive.) */
     function lotToNetLiq (uint96 lots) internal pure returns (int128) {
         return int128(uint128(lots) << LOT_SIZE_BITS);
+    }
+
+    
+    /* @notice Blends the weighted average of two fee reward accumulators based on the
+     *         relative size of two liquidity position.
+     *
+     * @dev To be conservative in terms of rewards/collateral, this function always
+     *   rounds up to 2 units of precision. We need mileage rounded up, so reward payouts
+     *   are rounded down. However this could lead to the technically "impossible" 
+     *   situation where the mileage on a subsequent rewards burn is smaller than the
+     *   blended mileage in the liquidity postion. Technically this shouldn't happen 
+     *   because mileage only increases through time. However this is a non-consequential
+     *   failure. burnPosLiq() just treats it as a zero reward situation, and the staker
+     *   loses an economically non-meaningful amount of rewards on the burn. */
+    function blendMileage (uint64 mileageX, uint128 liqX, uint64 mileageY, uint128 liqY)
+        internal pure returns (uint64) {
+        if (liqY == 0) { return mileageX; }
+        if (liqX == 0) { return mileageY; }
+        if (mileageX == mileageY) { return mileageX; }
+        uint64 termX = calcBlend(mileageX, liqX, liqX + liqY);
+        uint64 termY = calcBlend(mileageY, liqY, liqX + liqY);
+
+        // With mileage we want to be conservative on the upside. Under-estimating
+        // mileage means overpaying rewards. So, round up the fractional weights.
+        termX = termX + 1;
+        termY = termY + 1;
+        return termX + termY;
+    }
+    
+    /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
+    function calcBlend (uint64 mileage, uint128 weight, uint128 total)
+        private pure returns (uint64) {
+        // Can safely cast, because result will always be smaller than origina since
+        // weight is less than total.
+        return uint64(uint256(mileage) * uint256(weight) / uint256(total));
     }
 }

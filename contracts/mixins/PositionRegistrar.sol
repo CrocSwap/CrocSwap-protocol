@@ -6,16 +6,18 @@ import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/CompoundMath.sol';
 import './StorageLayout.sol';
+import './PoolRegistry.sol';
 
 import "hardhat/console.sol";
 
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
-contract PositionRegistrar is StorageLayout {
+contract PositionRegistrar is PoolRegistry {
     using SafeCast for uint256;
     using SafeCast for uint144;
     using CompoundMath for uint128;
+    using LiquidityMath for uint64;
     using LiquidityMath for uint128;
 
     /* The six things we need to know for each concentrated liquidity position are:
@@ -83,13 +85,6 @@ contract PositionRegistrar is StorageLayout {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         assertJitSafe(pos.timestamp_, poolIdx);
         return decrementLiq(pos, burnLiq, feeMileage);
-    }
-
-    function assertJitSafe (uint32 posTime, bytes32 poolIdx) internal view {
-        uint32 elapsed = SafeCast.timeUint32() - posTime;
-        if (elapsed <= type(uint8).max) {
-            require(elapsed >= pools_[poolIdx].jitThresh_, "J");
-        }
     }
 
     /* @notice Removes all or some liquidity associated with a an ambient position. 
@@ -244,45 +239,14 @@ contract PositionRegistrar is StorageLayout {
             oldMileage = 0;
         }
 
-        uint128 liqNext = LiquidityMath.addLiq(liq, liqAdd);
-        uint64 mileage = blendMileage(feeMileage, liqAdd, oldMileage, liq);
+        uint128 liqNext = liq.addLiq(liqAdd);
+        uint64 mileage = feeMileage.blendMileage(liqAdd, oldMileage, liq);
         uint32 stamp = SafeCast.timeUint32();
         
         // Below should get optimized to a single SSTORE...
         pos.liquidity_ = liqNext;
         pos.feeMileage_ = mileage;
         pos.timestamp_ = stamp;
-    }
-
-    /* @dev To be conservative in terms of rewards/collateral, this function always
-     *   rounds up to 2 units of precision. We need mileage rounded up, so reward payouts
-     *   are rounded down. However this could lead to the technically "impossible" 
-     *   situation where the mileage on a subsequent rewards burn is smaller than the
-     *   blended mileage in the liquidity postion. Technically this shouldn't happen 
-     *   because mileage only increases through time. However this is a non-consequential
-     *   failure. burnPosLiq() just treats it as a zero reward situation, and the staker
-     *   loses an economically non-meaningful amount of rewards on the burn. */
-    function blendMileage (uint64 mileageX, uint128 liqX, uint64 mileageY, uint128 liqY)
-        private pure returns (uint64) {
-        if (liqY == 0) { return mileageX; }
-        if (liqX == 0) { return mileageY; }
-        if (mileageX == mileageY) { return mileageX; }
-        uint64 termX = calcBlend(mileageX, liqX, liqX + liqY);
-        uint64 termY = calcBlend(mileageY, liqY, liqX + liqY);
-
-        // With mileage we want to be conservative on the upside. Under-estimating
-        // mileage means overpaying rewards. So, round up the fractional weights.
-        termX = termX + 1;
-        termY = termY + 1;
-        return termX + termY;
-    }
-
-    /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
-    function calcBlend (uint64 mileage, uint128 weight, uint128 total)
-        private pure returns (uint64) {
-        // Can safely cast, because result will always be smaller than origina since
-        // weight is less than total.
-        return uint64(uint256(mileage) * uint256(weight) / uint256(total));
     }
 
     

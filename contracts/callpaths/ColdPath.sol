@@ -27,7 +27,7 @@ import "hardhat/console.sol";
  *         not state. As such it should never be called directly or externally, and should
  *         only be invoked with DELEGATECALL so that it operates on the contract state
  *         within the primary CrocSwap contract. */
-contract ColdPath is MarketSequencer, PoolRegistry, DepositDesk, ProtocolAccount {
+contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using SafeCast for uint128;
     using TokenFlow for TokenFlow.PairSeq;
     using CurveMath for CurveMath.CurveState;

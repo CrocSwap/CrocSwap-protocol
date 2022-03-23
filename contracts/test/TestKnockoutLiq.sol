@@ -21,8 +21,7 @@ contract TestKnockoutLiq {
         pos.isBid_ = isBid;
         pos.lowerTick_ = lower;
         pos.upperTick_ = upper;
-        pos.pivotTime_ = pivotTime;
-        return KnockoutLiq.encodePosKey(pos, bytes32(pool), bytes32(owner));
+        return KnockoutLiq.encodePosKey(pos, bytes32(pool), bytes32(owner), pivotTime);
     }
 
     function testCommit (uint96 lots, uint32 time, uint16 range,

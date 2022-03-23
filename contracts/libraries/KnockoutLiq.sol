@@ -69,14 +69,11 @@ library KnockoutLiq {
      * @param isBid_ If true, indicates that the knockout is on the bid side, i.e. will
      *                knockout when price falls below the tick.
      * @param tick_ The 24-bit tick index the knockout pivot is placed at.
-     * @param rangeTicks_ The number of ticks wide the corresponding range order is.
-     * @param pivotTime_ The pivot time associated with the knockout tranche when the
-     *                    order was placed. */
+     * @param rangeTicks_ The number of ticks wide the corresponding range order is. */
     struct KnockoutPosLoc {
         bool isBid_;
         int24 lowerTick_;
         int24 upperTick_;
-        uint32 pivotTime_;
     }
 
     function deletePivot (KnockoutPivot storage pivot) internal {
@@ -110,13 +107,15 @@ library KnockoutLiq {
     }
 
     /* @notice Encodes a hash key for a knockout position. 
-     * @param loc The location of the knockout position relative to the pool/user.
+     * @param loc The location of the knockout position
+     * @param pivotTime The timestamp of when the pivot tranche was created
      * @param pool The hash index of the AMM pool.
      * @param owner The claimint of the liquidity position. */
-    function encodePosKey (KnockoutPosLoc memory loc, bytes32 pool, bytes32 owner)
+    function encodePosKey (KnockoutPosLoc memory loc,
+                           bytes32 pool, bytes32 owner, uint32 pivotTime)
         internal pure returns (bytes32) {
         return keccak256(abi.encode(pool, owner, loc.isBid_,
-                                    loc.lowerTick_, loc.upperTick_, loc.pivotTime_));
+                                    loc.lowerTick_, loc.upperTick_, pivotTime));
     }
     /* @notice Commits a now-crossed Knockout pivot to the merkle history for that tick
      *         location.

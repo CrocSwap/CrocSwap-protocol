@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
+import '../libraries/KnockoutLiq.sol';
 
 /* @title Storage layout base layer
  * 
@@ -55,11 +56,9 @@ contract StorageLayout {
     /**************************************************************/
     // Knockout Counters
     /**************************************************************/
-    struct KnockoutCntr {
-        uint96 lots_;
-        uint128 crossCnt_;
-    }
-    mapping(bytes32 => KnockoutCntr) internal knockouts_;
+    mapping(bytes32 => KnockoutLiq.KnockoutPivot) internal knockoutPivots_;
+    mapping(bytes32 => KnockoutLiq.KnockoutMerkle) internal knockoutMerkles_;
+    mapping(bytes32 => KnockoutLiq.KnockoutPos) internal knockoutPos_;
     /**************************************************************/
 
     

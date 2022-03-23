@@ -96,9 +96,8 @@ contract LevelBook is TickCensus, ColdPathInjector {
      *    range specified by the order. This is necessary, so we consumers of this mixin
      *    can subtract the rewards accumulated before the order was added. */
     function addBookLiq (bytes32 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                         uint128 liq, uint64 feeGlobal)
+                         uint96 lots, uint64 feeGlobal)
         internal returns (uint64 feeOdometer) {
-        uint96 lots = liq.liquidityToLots();
 
         // Make sure to init before add, because init logic relies on pre-add liquidity
         initLevel(poolIdx, midTick, bidTick, feeGlobal);
@@ -127,9 +126,8 @@ contract LevelBook is TickCensus, ColdPathInjector {
      *    from addBookLiq to correctly calculate the rewards accumulated over the 
      *    lifetime of the order. */     
     function removeBookLiq (bytes32 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
-                            uint128 liq, uint64 feeGlobal)
+                            uint96 lots, uint64 feeGlobal)
         internal returns (uint64 feeOdometer) {
-        uint96 lots = liq.liquidityToLots();
         bool deleteBid = removeBid(poolIdx, bidTick, lots);
         bool deleteAsk = removeAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);

@@ -163,7 +163,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           bytes32 poolHash, bytes32 lpKey)
         private returns (int128 baseFlow, int128 quoteFlow, uint64 feeMileage) {
         feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
-                                liquidity, curve.concGrowth_);
+                                liquidity.liquidityToLots(),
+                                curve.concGrowth_);
         mintPosLiq(lpKey, poolHash, lowTick, highTick,
                    liquidity, feeMileage);
 
@@ -213,7 +214,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                         bytes32 poolHash)
         internal returns (int128, int128) {
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
-                                          liquidity, curve.concGrowth_);
+                                          liquidity.liquidityToLots(),
+                                          curve.concGrowth_);
         uint64 rewards = burnPosLiq(agentBurnKey(), poolHash,
                                     lowTick, highTick, liquidity, feeMileage);
         (uint128 base, uint128 quote) = liquidityPayable(curve, liquidity, rewards,
