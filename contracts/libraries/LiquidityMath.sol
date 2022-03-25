@@ -98,33 +98,43 @@ library LiquidityMath {
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
+        unchecked {
         return (liq >> LOT_ACTIVE_BITS) << LOT_ACTIVE_BITS;
+        }
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity, but rounds up to the
      *         next multiple. */
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128) {
+        unchecked {
         return ((liq >> LOT_ACTIVE_BITS) + 1) << LOT_ACTIVE_BITS;
+        }
     }
 
     /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
+        unchecked {
         uint96 realLots = lots & ~KNOCKOUT_FLAG_MASK;
         return uint128(realLots) << LOT_SIZE_BITS;
+        }
     }
 
     /* @notice Given a positive and negative detla lots value net out the raw liquidity
      *         delta. */
     function netLotsOnLiquidity (uint96 incrLots, uint96 decrLots) internal pure
         returns (int128) {
+        unchecked {
         return lotToNetLiq(incrLots) - lotToNetLiq(decrLots);
+        }
     }
 
     /* @notice Given an amount of lots of liquidity converts to a signed raw liquidity
      *         delta. (Which by definition is always positive.) */
     function lotToNetLiq (uint96 lots) internal pure returns (int128) {
+        unchecked {
         return int128(lotsToLiquidity(lots));
+        }
     }
 
     
@@ -149,16 +159,16 @@ library LiquidityMath {
 
         // With mileage we want to be conservative on the upside. Under-estimating
         // mileage means overpaying rewards. So, round up the fractional weights.
-        termX = termX + 1;
-        termY = termY + 1;
-        return termX + termY;
+        return (termX + 1) + (termY + 1);
     }
     
     /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
         private pure returns (uint64) {
+        unchecked {
         // Can safely cast, because result will always be smaller than origina since
         // weight is less than total.
         return uint64(uint256(mileage) * uint256(weight) / uint256(total));
+        }
     }
 }
