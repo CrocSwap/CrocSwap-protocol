@@ -60,6 +60,7 @@ library LiquidityMath {
      * 2^96 (equivalent to 2^108 of liquidity.) */
     uint16 constant LOT_SIZE = 1024;
     uint8 constant LOT_SIZE_BITS = 10;
+    
 
     /* By utilizing the least significant digit of the liquidity lots value, we can 
      * support special types of "knockout" liquidity, that when crossed trigger specific
@@ -67,19 +68,19 @@ library LiquidityMath {
      * whereas all vanilla resting liquidity will have an even number of lots. That
      * means we can test whether any level has knockout liquidity simply by seeing if the
      * the total sum is an odd number. */
-    uint8 constant RESTING_LOT_BITS = 11;
+    uint96 constant KNOCKOUT_FLAG_MASK = 0x1;
+    uint8 constant LOT_ACTIVE_BITS = 11;
 
     /* @notice Converts raw liquidity to lots of resting liquidity. (See comment above 
      *         defining lots. */
     function liquidityToLots (uint128 liq) internal pure returns (uint96) {
         unchecked {
-            // Resting liquidity must be an even number of lots (i.e. a multiple of 2048
-            // liquidity units.
-            uint256 resting = (liq >> RESTING_LOT_BITS);
-            require(resting << RESTING_LOT_BITS == liq, "OD");
-            
-            uint256 lots = resting << (RESTING_LOT_BITS - LOT_SIZE_BITS);
-            require(lots < type(uint96).max, "MQ");
+            uint256 lots = liq >> LOT_SIZE_BITS;
+            uint256 liqTrunc = lots << LOT_SIZE_BITS;
+            bool hasEmptyMask = (lots & KNOCKOUT_FLAG_MASK == 0);
+            require(hasEmptyMask &&
+                    liqTrunc == liq &&
+                    lots < type(uint96).max, "FD");
             return uint96(lots);
         }
     }
@@ -91,26 +92,26 @@ library LiquidityMath {
      *         given level be an odd number. Don't add two odd knockout lots together
      *         without renormalzing, because they'll sum to an even lot quantity. */
     function hasKnockoutLiq (uint96 lots) internal pure returns (bool) {
-        return lots & 0x1 == 0x1;
+        return lots & KNOCKOUT_FLAG_MASK > 0;
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
-        return (liq >> RESTING_LOT_BITS) << RESTING_LOT_BITS;
+        return (liq >> LOT_ACTIVE_BITS) << LOT_ACTIVE_BITS;
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity, but rounds up to the
      *         next multiple. */
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128) {
-        return ((liq >> RESTING_LOT_BITS) + 1) << RESTING_LOT_BITS;
+        return ((liq >> LOT_ACTIVE_BITS) + 1) << LOT_ACTIVE_BITS;
     }
 
     /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
-        uint128 liq = uint128(lots);
-        return liq << LOT_SIZE_BITS;
+        uint96 realLots = lots & ~KNOCKOUT_FLAG_MASK;
+        return uint128(realLots) << LOT_SIZE_BITS;
     }
 
     /* @notice Given a positive and negative detla lots value net out the raw liquidity
@@ -123,7 +124,7 @@ library LiquidityMath {
     /* @notice Given an amount of lots of liquidity converts to a signed raw liquidity
      *         delta. (Which by definition is always positive.) */
     function lotToNetLiq (uint96 lots) internal pure returns (int128) {
-        return int128(uint128(lots) << LOT_SIZE_BITS);
+        return int128(lotsToLiquidity(lots));
     }
 
     
