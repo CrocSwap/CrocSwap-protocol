@@ -306,14 +306,16 @@ contract MarketSequencer is TradeMatcher {
                                  Directives.ConcentratedDirective[] memory dirs,
                                  CurveCache.Cache memory curve,
                                  Chaining.ExecCntx memory cntx) private {
+        unchecked { // Only arithmetic in block is ++i/++j which will never overflow
         for (uint i = 0; i < dirs.length; ++i) {
-            for (uint j = 0; j < dirs[i].bookends_.length; ++j) {
+            for (uint j = 0; j < dirs[i].bookends_.length; ++j ) {
                 (int24 lowTick, int24 highTick, Directives.ConcenBookend memory bend) = 
                     dirs[i].sliceBookend(j);
                 (int128 nextBase, int128 nextQuote) = applyConcentrated
                     (curve, flow, cntx, lowTick, highTick, bend);
                 flow.accumFlow(nextBase, nextQuote);
             }
+        }
         }
     }
 

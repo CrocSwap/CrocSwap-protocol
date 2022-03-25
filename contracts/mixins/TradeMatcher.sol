@@ -381,6 +381,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
                           Directives.SwapDirective memory swap,
                           bytes32 poolHash) private
         returns (int24) {
+        unchecked {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
         bumpLiquidity(curve, bumpTick, swap.isBuy_, poolHash);
 
@@ -390,8 +391,11 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         swap.qty_ -= burnSwap;
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
-        // because the bump barrier is the first price on a tick. 
-        return swap.isBuy_ ? bumpTick : bumpTick - 1; 
+        // because the bump barrier is the first price on a tick.
+        return swap.isBuy_ ?
+            bumpTick :
+            bumpTick - 1; // Valid ticks are well above {min(int128)-1}
+        }
     }
 
     /* @notice Performs the book-keeping related to crossing a concentrated liquidity 

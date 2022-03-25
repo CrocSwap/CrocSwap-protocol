@@ -111,8 +111,10 @@ library CurveAssimilate {
         private pure returns (uint128) {
         uint128 bufferTokens = CurveMath.priceToTokenPrecision
             (liq, price, isFeesInBase);
+        unchecked {
         return feesPaid <= bufferTokens ?
             0 : feesPaid - bufferTokens;
+        }
     }
 
     /* @notice Given a targeted aggregate liquidity inflator, affects that change in
