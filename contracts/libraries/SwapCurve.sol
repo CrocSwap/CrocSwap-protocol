@@ -184,24 +184,29 @@ library SwapCurve {
      *    most to the inside of the swap direction. */
     function determineLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
         pure private returns (uint128) {
+        unchecked {
         uint128 bounded = boundLimit(bumpTick, limitPrice, isBuy);
         if (bounded < TickMath.MIN_SQRT_RATIO)  return TickMath.MIN_SQRT_RATIO;
         if (bounded >= TickMath.MAX_SQRT_RATIO)  return TickMath.MAX_SQRT_RATIO - 1;
         return bounded;
+        }
     }
 
     /* @notice Finds the effective max (min) swap limit price giving a bump tick index
      *         boundary and a user specified limitPrice. */
     function boundLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
         pure private returns (uint128) {
+        unchecked {
         if (bumpTick <= TickMath.MIN_TICK || bumpTick >= TickMath.MAX_TICK) {
             return limitPrice;
         } else if (isBuy) {
+            // Valid uint128 root prices are always well above 0.
             uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - 1;
             return bumpPrice < limitPrice ? bumpPrice : limitPrice;
         } else {
             uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);
             return bumpPrice > limitPrice ? bumpPrice : limitPrice;
+        }
         }
     }
 
@@ -239,25 +244,32 @@ library SwapCurve {
     function assignFees (uint128 liqFees, uint128 exchFees, bool inBaseQty)
         pure private returns (int128 paidBase, int128 paidQuote,
                               uint128 paidProto) {
-        uint128 totalFees = liqFees + exchFees;
-        if (inBaseQty) {
-            paidQuote = totalFees.toInt128Sign();
-        } else {
-            paidBase = totalFees.toInt128Sign();
+        unchecked {
+            // Safe for unchecked because total fees are always previously calculated in
+            // 128-bit space
+            uint128 totalFees = liqFees + exchFees; 
+
+            if (inBaseQty) {
+                paidQuote = totalFees.toInt128Sign();
+            } else {
+                paidBase = totalFees.toInt128Sign();
+            }
+            paidProto = exchFees;
         }
-        paidProto = exchFees;
     }
 
     /* @notice Given a fixed flow and a fee rate, calculates the owed liquidty and 
      *         protocol fees. */
     function vigOverFlow (uint128 flow, uint16 feeRate, uint8 protoProp)
         private pure returns (uint128 liqFee, uint128 protoFee) {
-        // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
-        // because fees will neveer be larger than the underlying flow.
-        uint256 FEE_BP_MULT = 100 * 100 * 100;
-        uint256 totalFee = (uint256(flow) * feeRate) / FEE_BP_MULT;
-
-        protoFee = uint128(totalFee * protoProp / 256);
-        liqFee = uint128(totalFee) - protoFee;
+        unchecked {
+            uint256 FEE_BP_MULT = 1000000;
+            
+            // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
+            // because fees will neveer be larger than the underlying flow.            
+            uint256 totalFee = (uint256(flow) * feeRate) / FEE_BP_MULT;
+            protoFee = uint128(totalFee * protoProp / 256);
+            liqFee = uint128(totalFee) - protoFee;
+        }
     }
 }
