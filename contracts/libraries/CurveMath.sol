@@ -160,9 +160,11 @@ library CurveMath {
      *   will be outside the limit price. */
     function deltaBase (uint128 liq, uint128 priceX, uint128 priceY)
         internal pure returns (uint128) {
+        unchecked {
         uint128 priceDelta = priceX > priceY ?
             priceX - priceY : priceY - priceX;
         return reserveAtPrice(liq, priceDelta, true);
+        }
     }
 
     /* @notice Calculates the change to quote token reserves associated with a price
@@ -276,9 +278,11 @@ library CurveMath {
                                       FixedPoint.recipQ64(priceX),
                                       FixedPoint.recipQ64(priceY));
         } else {
+            unchecked {
             uint128 priceDelta = priceX > priceY ?
                 priceX - priceY : priceY - priceX;
             return liquiditySupported(collateral, true, priceDelta);
+            }
         }
     }
 
@@ -307,19 +311,22 @@ library CurveMath {
     function invertFlow (uint128 liq, uint128 price, uint128 denomFlow,
                          bool isBuy, bool inBaseQty) private pure returns (uint128) {
         if (liq == 0) { return 0; }
-        
-        uint128 invertReserve = reserveAtPrice(liq, price, !inBaseQty);
-        uint128 initReserve = reserveAtPrice(liq, price, inBaseQty);
-        
-        uint128 endReserve = (isBuy == inBaseQty) ?
-            initReserve + denomFlow :
-            initReserve - denomFlow;
+
+        uint256 invertReserve = reserveAtPrice(liq, price, !inBaseQty);
+        uint256 initReserve = reserveAtPrice(liq, price, inBaseQty);
+
+        unchecked {
+        uint256 endReserve = (isBuy == inBaseQty) ?
+            initReserve + denomFlow : // Will always fit in 256-bits
+            initReserve - denomFlow; // flow is always less than total reserves
         if (endReserve == 0) { return type(uint128).max; }
         
-        uint128 endInvert = uint128(liq) * uint128(liq) / endReserve;
-        return endInvert > invertReserve ?
-            endInvert - invertReserve : invertReserve - endInvert;
-    }
+        uint256 endInvert = uint256(liq) * uint256(liq) / endReserve;
+        return (endInvert > invertReserve ?
+                endInvert - invertReserve :
+                invertReserve - endInvert).toUint128();
+        }
+     }
 
     /* @notice Computes the amount of token over-collateralization needed to buffer any 
      *   loss of precision rounding in the fixed price arithmetic on curve price. This
@@ -341,22 +348,16 @@ library CurveMath {
      *   should be multiplied by that factor. */
     function priceToTokenPrecision (uint128 liq, uint128 price,
                                     bool inBase) internal pure returns (uint128) {
-        uint128 liqCons = liq + 1; // Round up to be conservative
-        uint128 shift = deriveTokenPrecision(liqCons, price, inBase);
-        return shift + 1; // Round up by 1 wei to be conservative
-    }
+        unchecked {
 
-    /* @notice Derives the amount of tokens it would take buffer the curve by one price
-     *   precision unit. */
-    function deriveTokenPrecision (uint128 liq, uint128 price,
-                                   bool inBaseToken) private pure returns (uint128) {
         // To provide more base token collateral than price precision rounding:
         //     delta(B) >= L * delta(P)
         //     delta(P) <= 2^-64  (64 bit precision rounding)
         //     delta(B) >= L * 2^-64
         //  (where L is liquidity, B is base token reserves, P is price)
-        if (inBaseToken) {
-            return liq >> 64;
+        if (inBase) {
+            return (liq >> 64) + 1;
+            
         } else {
             // Proivde quote token collateral to buffer price precision roudning:
             //    delta(Q) >= L * delta(1/P)
@@ -371,18 +372,22 @@ library CurveMath {
                 // Therefore
                 //    delta(Q) >= L * 2^-64/(P/2^64)^2
                 //             >= L * 2^64/Pb^2
-                //
-                uint256 calc = FixedPoint.divSqQ64(liq, price-1);
+
+                // Curve price is always well above 1
+                uint256 calc = uint256(FixedPoint.divSqQ64(liq, price-1)) + 1; 
                 if (calc > type(uint128).max) { return type(uint128).max; }
                 return uint128(calc);
+                
             } else {
                 // If price is greater than 1, Can reduce to this (potentially loose,
                 // but still economically small) upper bound:
                 //           P >= 1
                 //    delta(Q) >= L * 2^-64/P^2
                 //             >= L * 2^-64
-                return liq >> 64;
+                return (liq >> 64) + 1;
             }
         }
+        }
     }
+
 }
