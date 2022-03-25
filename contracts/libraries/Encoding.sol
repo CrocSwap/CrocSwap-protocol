@@ -17,9 +17,16 @@ library OrderEncoding {
     // must start with this code in the first character position.
     uint8 constant LONG_FORM_SCHEMA = 1;
 
-    /* @notice Parses raw bytes into an OrderDirective struct in memory. */
+    /* @notice Parses raw bytes into an OrderDirective struct in memory.
+     * 
+     * @dev In general the array lengths and arithmetic in this function and child
+     *      functions are unchecked/unsanitized. The only use of this function is to
+     *      parse a user-supplied string into constituent commands. If a user supplies
+     *      malformed data it will have no impact on the state of the contract besides
+     *      the internally safe swap/mint/burn calls. */
     function decodeOrder (bytes calldata input) internal pure returns
         (Directives.OrderDirective memory dir) {
+        unchecked {
         uint32 offset = 0;
         uint8 cnt;
         uint8 schemaType;
@@ -37,6 +44,7 @@ library OrderEncoding {
         for (uint i = 0; i < cnt; ++i) {
             offset = parseHop(dir.hops_[i], input, offset);
         }
+        }
     }
 
     /* @notice Parses an offset bytestream into a single HopDirective in memory and 
@@ -44,6 +52,7 @@ library OrderEncoding {
     function parseHop (Directives.HopDirective memory hop,
                        bytes calldata input, uint32 offset)
         private pure returns (uint32 next) {
+        unchecked {
         uint8 poolCnt;
         (poolCnt, next) = eatUInt8(input, offset);
 
@@ -59,6 +68,7 @@ library OrderEncoding {
 
         (hop.improve_.isEnabled_, hop.improve_.useBaseSide_, next) =
             eatBool2(input, next);
+        }
     }
 
     /* @notice Parses an offset bytestream into a single PoolDirective in memory 
@@ -66,6 +76,7 @@ library OrderEncoding {
     function parsePool (Directives.PoolDirective memory pair,
                         bytes calldata input, uint32 offset)
         private pure returns (uint32 next) {
+        unchecked {
         uint concCnt;
 
         (pair.poolIdx_, next) = eatUInt256(input, offset);
@@ -77,7 +88,6 @@ library OrderEncoding {
         (concCnt, next) = eatUInt8(input, next);
         pair.conc_ = new Directives.ConcentratedDirective[](concCnt);
         for (uint8 i = 0; i < concCnt; ++i) {
-            
             next = parseConcentrated(pair.conc_[i], input, next);
         }
 
@@ -88,6 +98,7 @@ library OrderEncoding {
 
         (pair.chain_.rollExit_, pair.chain_.swapDefer_,
          pair.chain_.offsetSurplus_, next) = eatBool3(input, next);
+        }
     }
 
     /* @notice Parses an offset bytestream into a single ConcentratedDirective in 
@@ -95,7 +106,7 @@ library OrderEncoding {
     function parseConcentrated (Directives.ConcentratedDirective memory pass,
                                 bytes calldata input, uint32 offset)
         private pure returns (uint32 next) {
-
+        unchecked {
         uint8 bookendCnt;
         
         (pass.openTick_, next) = eatInt24(input, offset);
@@ -108,50 +119,60 @@ library OrderEncoding {
             (pass.bookends_[i].rollType_, next) = eatUInt8(input, next);
             (pass.bookends_[i].liquidity_, next) = eatUInt128(input, next);
         }
+        }
     }
 
     /* Reads a single boolean flag from the next byte in a stream. */
     function eatBool (bytes calldata input, uint32 offset)
         internal pure returns (bool on, uint32 next) {
+        unchecked {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         on = (flag > 0);
+        }
     }
     
     /* Reads two boolean flags encouded together into the next byte in a stream. */
     function eatBool2 (bytes calldata input, uint32 offset)
         internal pure returns (bool onA, bool onB, uint32 next) {
+        unchecked {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x2) > 0);
-        onB = ((flag & 0x1) > 0);        
+        onB = ((flag & 0x1) > 0);
+        }
     }
     
     /* Reads three boolean flags encouded together into the next byte in a stream. */
     function eatBool3 (bytes calldata input, uint32 offset)
         internal pure returns (bool onA, bool onB, bool onC, uint32 next) {
+        unchecked {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x4) > 0);
         onB = ((flag & 0x2) > 0);
-        onC = ((flag & 0x1) > 0);        
+        onC = ((flag & 0x1) > 0);
+        }
     }
 
     /* Reads four boolean flags encouded together into the next byte in a stream. */
     function eatBool4 (bytes calldata input, uint32 offset)
         internal pure returns (bool onA, bool onB, bool onC, bool onD, uint32 next) {
+        unchecked {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x8) > 0);
         onB = ((flag & 0x4) > 0);        
         onC = ((flag & 0x2) > 0);        
-        onD = ((flag & 0x1) > 0);        
+        onD = ((flag & 0x1) > 0);
+        }
     }
 
     /* Reads five boolean flags encouded together into the next byte in a stream. */
     function eatBool5 (bytes calldata input, uint32 offset)
         internal pure returns (bool onA, bool onB, bool onC, bool onD, bool onE,
                                uint32 next) {
+        unchecked {
         uint8 flag;
         (flag, next) = eatUInt8(input, offset);
         onA = ((flag & 0x10) > 0);
@@ -159,74 +180,91 @@ library OrderEncoding {
         onC = ((flag & 0x4) > 0);        
         onD = ((flag & 0x2) > 0);
         onE = ((flag & 0x1) > 0);
+        }
     }
     
     /* Reads next byte in a stream as a uint8 */
     function eatUInt8 (bytes calldata input, uint32 offset)
         internal pure returns (uint8 cnt, uint32 next) {
+        unchecked {
         cnt = uint8(input[offset]);
         next = offset + 1;
+        }
     }
 
     /* Reads next three in a stream as a uint8 */
     function eatUInt24 (bytes calldata input, uint32 offset)
         internal pure returns (uint24 val, uint32 next) {
+        unchecked {
         bytes3 coded = input[offset] |
             (bytes3(input[offset+1]) >> 8) |
             (bytes3(input[offset+2]) >> 16);
         val = uint24(coded);
         next = offset + 3;
+        }
     }
 
     /* Reads next 32 bytes as a token address. */
     function eatToken (bytes calldata input, uint32 offset)
         internal pure returns (address token, uint32 next) {
+        unchecked {
         token = abi.decode(input[offset:(offset+32)], (address));
         next = offset + 32;
+        }
     }
 
     /* Reads next 32 bytes as a uint256. */
     function eatUInt256 (bytes calldata input, uint32 offset)
         internal pure returns (uint256 delta, uint32 next) {
+        unchecked {
         delta = abi.decode(input[offset:(offset+32)], (uint256));
         next = offset + 32;
+        }
     }
 
     /* Reads next 32 bytes as a uint128. */
     function eatUInt128 (bytes calldata input, uint32 offset)
         internal pure returns (uint128 delta, uint32 next) {
+        unchecked {
         delta = abi.decode(input[offset:(offset+32)], (uint128));
         next = offset + 32;
+        }
     }
 
     /* Reads next 32 bytes as a int256. */
     function eatInt256 (bytes calldata input, uint32 offset)
         internal pure returns (int256 delta, uint32 next) {
+        unchecked {
         uint8 isNegFlag;
         uint256 magn;
         (isNegFlag, next) = eatUInt8(input, offset);        
         (magn, next) = eatUInt256(input, next);
         delta = isNegFlag > 0 ? -int256(magn) : int256(magn);
+        }
     }
 
     /* Reads next 32 bytes as a int128. */
     function eatInt128 (bytes calldata input, uint32 offset)
         internal pure returns (int128 delta, uint32 next) {
+        unchecked {
         uint8 isNegFlag;
         uint128 magn;
         (isNegFlag, next) = eatUInt8(input, offset);
         (magn, next) = eatUInt128(input, next);
         delta = isNegFlag > 0 ? -int128(magn) : int128(magn);
+        }
     }
 
     /* Reads next 4 bytes as a signed int24. */
     function eatInt24 (bytes calldata input, uint32 offset)
         internal pure returns (int24 delta, uint32 next) {
+        unchecked {
         uint8 isNegFlag;
         uint24 magn;
         (isNegFlag, next) = eatUInt8(input, offset);
         (magn, next) = eatUInt24(input, next);
         delta = isNegFlag > 0 ? -int24(magn) : int24(magn);
+        }
     }
 
 }
