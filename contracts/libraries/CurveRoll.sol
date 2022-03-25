@@ -129,10 +129,12 @@ library CurveRoll {
     function setShaveDown (CurveMath.CurveState memory curve, bool inBaseQty,
                            uint128 burnDown) private pure
         returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
+        unchecked {
         if (curve.priceRoot_ > TickMath.MIN_SQRT_RATIO) {
-            curve.priceRoot_ -= 1;
+            curve.priceRoot_ -= 1; // MIN_SQRT is well above uint128 0
         }
         return (0, burnDown.toInt128Sign(), !inBaseQty ? burnDown : 0);
+        }
     }
 
     /* @notice After calculating a burn down amount of collateral, roll the curve over
@@ -140,10 +142,12 @@ library CurveRoll {
     function setShaveUp (CurveMath.CurveState memory curve, bool inBaseQty,
                          uint128 burnDown) private pure
         returns (int128 paidBase, int128 paidQuote, uint128 burnSwap) {
+        unchecked {
         if (curve.priceRoot_ < TickMath.MAX_SQRT_RATIO - 1) {
-            curve.priceRoot_ += 1;
+            curve.priceRoot_ += 1; // MAX_SQRT is well below uint128.max
         }
         return (burnDown.toInt128Sign(), 0, inBaseQty ? burnDown : 0);
+        }
     }
 
     /* @notice After previously calculating the denominated and counter-denominated flows,
