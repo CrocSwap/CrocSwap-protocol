@@ -18,13 +18,13 @@ describe('Knockout Liquidity', () => {
       knockout = (await libFactory.deploy()) as TestKnockoutLiq;
    })
 
-   /*it("encode pivot", async() => {
+   it("encode pivot", async() => {
       let base = await knockout.testEncodePivotKey(35000, true, 25)
       expect(await knockout.testEncodePivotKey(36000, true, 25)).to.not.eq(base)
       expect(await knockout.testEncodePivotKey(35000, false, 25)).to.not.eq(base)
       expect(await knockout.testEncodePivotKey(35000, true, 26)).to.not.eq(base)
       expect(await knockout.testEncodePivotKey(35000, true, 25)).to.eq(base)
-   })*/
+   })
 
    it("encode pos", async() => {
       let base = await knockout.testEncodePosKey(35000, 525000, true, 25, 128, 500)
@@ -51,19 +51,6 @@ describe('Knockout Liquidity', () => {
       expect(state[0]).to.be.equal(5000)
       expect(state[1]).to.be.equal(850000)
    })
-
-   /*it("proof merkle one step", async() => {
-      await knockout.testCommit(200, 5000, 256, 550000)
-      await knockout.testCommit(100, 6000, 128, 850000)
-      await knockout.testCommit(100, 7000, 128, 950000)
-      await knockout.testCommit(100, 8000, 128, 975000)
-      await knockout.testCommit(100, 9000, 128, 250000)
-
-      let pivotTime = BigNumber.from(9000).shl()
-      let state = await knockout.testProof(0, [])
-      expect(state[0]).to.be.equal(8000)
-      expect(state[1]).to.be.equal(550000)
-   })*/
 
    function proofEncap (time: number, mileage: number): BigNumber {
       return BigNumber.from(time).shl(64).add(BigNumber.from(mileage))
