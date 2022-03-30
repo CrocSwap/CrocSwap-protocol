@@ -13,6 +13,7 @@ contract TestKnockoutCounter is KnockoutCounter {
     uint32 public pivotTime_;
     uint64 public rewards_;
     uint32 public callTime_;
+    bool public togglesPivot_;
     
     function testCross (uint256 pool, bool isBid, int24 tick,
                         uint64 feeGlobal) public {
@@ -31,7 +32,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
         
-        (bookLots_, pivotTime_) = mintKnockout(pool, tick, feeGlobal, loc, lots);
+        (pivotTime_, togglesPivot_) = mintKnockout(pool, tick, feeGlobal, loc, lots);
 
         callTime_ = uint32(block.timestamp);
     }
@@ -43,7 +44,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
         
-        (bookLots_, pivotTime_, rewards_) =
+        (togglesPivot_, pivotTime_, rewards_) =
             burnKnockout(bytes32(poolIdx), tick, feeGlobal, loc, lots);
     }
 

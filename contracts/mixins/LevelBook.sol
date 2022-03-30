@@ -71,7 +71,7 @@ contract LevelBook is TickCensus, ColdPathInjector {
     }
 
     /* @notice Retrieves a storage pointer to the level associated with the tick. */
-    function fetchLevel (bytes32 poolIdx, int24 tick) private view returns
+    function fetchLevel (bytes32 poolIdx, int24 tick) internal view returns
         (BookLevel storage) {
         return levels_[keccak256(abi.encodePacked(poolIdx, tick))];
     }
