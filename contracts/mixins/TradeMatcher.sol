@@ -403,8 +403,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
      *         AMM liquidity. */
     function bumpLiquidity (CurveMath.CurveState memory curve,
                             int24 bumpTick, bool isBuy, bytes32 poolHash) private {
-        int128 liqDelta = crossLevel(poolHash, bumpTick, isBuy,
-                                     curve.concGrowth_);
+        (int128 liqDelta, bool knockoutFlag) =
+            crossLevel(poolHash, bumpTick, isBuy, curve.concGrowth_);
         curve.concLiq_ = curve.concLiq_.addDelta(liqDelta);
     }    
 }

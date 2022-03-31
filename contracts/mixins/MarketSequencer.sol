@@ -15,11 +15,12 @@ import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './ColdInjector.sol';
 import './TradeMatcher.sol';
+import './ColdInjector.sol';
 
 /* @title Market sequencer.
  * @notice Mixin class that's responsibile for coordinating one or multiple sequetial
  *         trade actions within a single liqudity pool. */
-contract MarketSequencer is TradeMatcher {
+contract MarketSequencer is TradeMatcher, ColdPathInjector {
 
     using SafeCast for int256;
     using SafeCast for int128;

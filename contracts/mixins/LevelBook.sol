@@ -11,7 +11,7 @@ import './ColdInjector.sol';
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
  *         accumulators on a per-tick basis. */
-contract LevelBook is TickCensus, ColdPathInjector {
+contract LevelBook is TickCensus {
     using SafeCast for uint128;
     using LiquidityMath for uint128;
     using LiquidityMath for uint96;
@@ -47,9 +47,13 @@ contract LevelBook is TickCensus, ColdPathInjector {
      *                    growth rate per unit of liquidity.
      *
      * @return liqDelta - The net change in concentrated liquidity that should be applied
-     *                    to the AMM curve following this level cross. */
+     *                    to the AMM curve following this level cross.
+     * @return knockoutFlag - Indicates that the liquidity of the cross level has a 
+     *                        knockout flag toggled. Upstream caller should handle 
+     *                        appropriately */
     function crossLevel (bytes32 poolIdx, int24 tick, bool isBuy, uint64 feeGlobal)
-        internal returns (int128 liqDelta) {
+        internal returns (int128 liqDelta, bool knockoutFlag) {
+        
         BookLevel storage lvl = fetchLevel(poolIdx, tick);
         int128 crossDelta = LiquidityMath.netLotsOnLiquidity
             (lvl.bidLots_, lvl.askLots_);
@@ -57,11 +61,11 @@ contract LevelBook is TickCensus, ColdPathInjector {
         liqDelta = isBuy ? crossDelta : -crossDelta;
         if (feeGlobal != lvl.feeOdometer_) {
             lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
-        }
+        }                
 
-        if (lvl.bidLots_.hasKnockoutLiq() || lvl.askLots_.hasKnockoutLiq()) {
-            liqDelta += callKnockout(poolIdx, tick, isBuy);
-        }
+        knockoutFlag = isBuy ?
+            lvl.askLots_.hasKnockoutLiq() :
+            lvl.bidLots_.hasKnockoutLiq();
     }
 
     /* @notice Retrieves the level book state associated with the tick. */
@@ -131,7 +135,7 @@ contract LevelBook is TickCensus, ColdPathInjector {
         bool deleteBid = removeBid(poolIdx, bidTick, lots);
         bool deleteAsk = removeAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
-        
+
         if (deleteBid) { deleteLevel(poolIdx, bidTick); }
         if (deleteAsk) { deleteLevel(poolIdx, askTick); }
     }

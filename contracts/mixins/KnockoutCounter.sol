@@ -50,12 +50,13 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
         KnockoutLiq.KnockoutMerkle storage merkle = knockoutMerkles_[lvlKey];
 
+        unmarkPivot(pool, isBid, tick);
         uint64 feeRange = knockoutRangeLiq(pool, pivot, isBid, tick, feeGlobal);
+
         merkle.commitKnockout(pivot, feeRange);
         emit CrocKnockoutCross(pool, tick, isBid, merkle.pivotTime_, merkle.feeMileage_);
         
         pivot.deletePivot(); // Nice little SSTORE refund for the swapper
-        unmarkPivot(pool, isBid, tick);
     }
 
     /* @notice Removes the liquidity at the AMM curve's bump points as part of a pivot
@@ -120,9 +121,10 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         internal returns (bool killsPivot, uint32 pivotTime, uint64 rewards) {
 
         (pivotTime, killsPivot) = recallPivot(pool, loc, lots);
+        if (killsPivot) { unmarkPivot(pool, loc); }
+
         uint64 feeRange = removeBookLiq(pool, curveTick, loc.lowerTick_,
                                         loc.upperTick_, lots, feeGlobal);
-        if (killsPivot) { unmarkPivot(pool, loc); }
         rewards = removePosition(pool, loc, lots, feeRange, pivotTime);
     }
 
@@ -334,7 +336,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         require(merkle.pivotTime_ != SafeCast.timeUint32(), "KT");
             
         // Warm up the slot so that the SSTORE fresh is paid by the LP, not
-            // the swapper. This means all Merkle histories begin with a root of 1
+        // the swapper. This means all Merkle histories begin with a root of 1
         if(merkle.merkleRoot_ == 0) {
             merkle.merkleRoot_ = 1;
         }
