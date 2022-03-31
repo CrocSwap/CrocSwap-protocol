@@ -17,6 +17,7 @@ contract TestKnockoutCounter is KnockoutCounter {
     
     function testCross (uint256 pool, bool isBid, int24 tick,
                         uint64 feeGlobal) public {
+        crossLevel(bytes32(pool), tick, !isBid, feeGlobal);
         crossKnockout(bytes32(pool), isBid, tick, feeGlobal);
     }
 
@@ -35,6 +36,14 @@ contract TestKnockoutCounter is KnockoutCounter {
         (pivotTime_, togglesPivot_) = mintKnockout(pool, tick, feeGlobal, loc, lots);
 
         callTime_ = uint32(block.timestamp);
+    }
+
+    // Mints a bid and an ask at the same time
+    function testMintArch (uint256 poolIdx, uint8 knockoutBits,
+                           int24 tick, uint64 feeGlobal, uint96 lots,
+                           int24 lower, int24 upper) public {
+        testMint(poolIdx, knockoutBits, tick, feeGlobal, lots, true, lower, upper);
+        testMint(poolIdx, knockoutBits, tick, feeGlobal, lots, false, lower, upper);
     }
 
     function testBurn (uint256 poolIdx, int24 tick, uint64 feeGlobal, uint96 lots,
@@ -81,6 +90,20 @@ contract TestKnockoutCounter is KnockoutCounter {
         lots = pivot.lots_;
         pivotTime = pivot.pivotTime_;
         range = pivot.rangeTicks_;
+    }
+
+    function getMerkle (uint256 poolIdx, bool isBid, int24 lower, int24 upper)
+        public view returns (uint160 root, uint32 pivotTime, uint64 feeMileage) {
+        KnockoutLiq.KnockoutPosLoc memory loc;
+        loc.isBid_ = isBid;
+        loc.lowerTick_ = lower;
+        loc.upperTick_ = upper;
+        
+        bytes32 key = loc.encodePivotKey(bytes32(poolIdx));
+        KnockoutLiq.KnockoutMerkle memory merkle = knockoutMerkles_[key];
+        root = merkle.merkleRoot_;
+        pivotTime = merkle.pivotTime_;
+        feeMileage = merkle.feeMileage_;
     }
 
     function getPosition (uint256 poolIdx, bool isBid, int24 lower, int24 upper,

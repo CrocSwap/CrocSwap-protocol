@@ -9,6 +9,7 @@ contract TestLevelBook is LevelBook {
     using TickMath for uint160;
 
     int256 public liqDelta;
+    bool public knockoutFlag;
     uint256 public odometer;
 
     function getLevelState (uint256 poolIdx, int24 tick) public view returns
@@ -24,7 +25,7 @@ contract TestLevelBook is LevelBook {
 
     function testCrossLevel (uint256 poolIdx, int24 tick, bool isBuy,
                              uint64 feeGlobal) public {
-        liqDelta = crossLevel(bytes32(poolIdx), tick, isBuy, feeGlobal);
+        (liqDelta, knockoutFlag) = crossLevel(bytes32(poolIdx), tick, isBuy, feeGlobal);
     }
 
     function testAdd (uint256 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
