@@ -95,6 +95,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         (baseFlow, quoteFlow) = Chaining.pinFlow(baseFlow, quoteFlow, qty, loc.isBid_);
     }
 
+    
     function burnCmd (address base, address quote, PoolSpecs.PoolCursor memory pool,
                       CurveMath.CurveState memory curve,
                       KnockoutLiq.KnockoutPosLoc memory loc,
@@ -116,6 +117,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         commitCurve(pool.hash_, curve);
     }
 
+    
     function claimCmd (bytes32 pool, CurveMath.CurveState memory curve,
                        KnockoutLiq.KnockoutPosLoc memory loc,
                        bytes memory args) private returns
