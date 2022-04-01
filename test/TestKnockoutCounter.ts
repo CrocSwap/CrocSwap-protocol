@@ -232,34 +232,14 @@ describe('Knockout Counter Mixin', () => {
     })
 
     it("burn over qty", async() => {
+        // Over pivot qty
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
-        let pivotTime = await test.callTime_()
+        expect(await test.testBurn(35000, 900, 95000, 502, true, 800, 928)).to.be.reverted
 
-        await test.testBurn(35000, 900, 95000, 502, true, 800, 928)
-
-        expect(await test.togglesPivot_()).to.be.true
-        expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998) // Rounds down
-
-        let bid = await test.getLevelState(35000, 800)
-        let ask = await test.getLevelState(35000, 928)
-        expect(bid.bidLots_).to.eq(0)
-        expect(ask.askLots_).to.eq(0)
-        expect(bid.askLots_).to.eq(0)
-        expect(ask.bidLots_).to.eq(0)
-        expect(bid.feeOdometer_).to.eq(0)
-        expect(ask.feeOdometer_).to.eq(0)
-
-        let pivot = await test.getPivot(35000, true, 800, 928)
-        let callTime = await test.callTime_()
-        expect(pivot.lots).to.eq(0)
-        expect(pivot.pivotTime).to.eq(0)
-        expect(pivot.range).to.eq(0)        
-
-        let pos = await test.getPosition(35000, true, 800, 928, callTime)
-        expect(pos.lots).to.eq(0)
-        expect(pos.timestamp).to.eq(0)
-        expect(pos.feeMileage).to.eq(0)
+        // Over position, but not over pivot
+        await test.setLockholder(128)
+        await test.testMint(35000, knockoutBits, 900, 85000, 300, true, 800, 928)    
+        expect(await test.testBurn(35000, 900, 95000, 302, true, 800, 928)).to.be.reverted
     })
 
     it("burn ask position", async() => {
@@ -354,7 +334,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998) // Rounds down
+        expect(await test.rewards_()).to.equal(10000)
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
