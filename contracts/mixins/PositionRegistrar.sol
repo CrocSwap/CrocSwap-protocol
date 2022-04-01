@@ -120,11 +120,9 @@ contract PositionRegistrar is PoolRegistry {
                            uint128 burnLiq, uint64 feeMileage) internal returns
         (uint64 rewards) {
         uint128 liq = pos.liquidity_;
-        uint64 oldMileage = pos.feeMileage_;
-
         uint128 nextLiq = LiquidityMath.minusDelta(liq, burnLiq);
 
-        rewards = deltaRewardsRate(feeMileage, oldMileage);
+        rewards = feeMileage.deltaRewardsRate(pos.feeMileage_);
 
         if (nextLiq > 0) {
             // Partial burn. Check that it's allowed on this position.
@@ -161,21 +159,9 @@ contract PositionRegistrar is PoolRegistry {
         // handle it because it can happen due to fixed-point effects.
         // (See blendMileage() function.)
         if (feeMileage > oldMileage) {
-            uint64 rewardsRate = deltaRewardsRate(feeMileage, oldMileage);
+            uint64 rewardsRate = feeMileage.deltaRewardsRate(oldMileage);
             rewards = FixedPoint.mulQ48(pos.liquidity_, rewardsRate).toUint128By144();
             pos.feeMileage_ = feeMileage;
-        }
-    }
-
-    /* @dev Computes a rounding safe calculation of the accumulated rewards rate based on
-     *      a beggining and end mileage counter. */
-    function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) private pure
-        returns (uint64) {
-        uint64 REWARD_ROUND_DOWN = 2;
-        if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {
-            return feeMileage - oldMileage - REWARD_ROUND_DOWN;
-        } else {
-            return 0;
         }
     }
 

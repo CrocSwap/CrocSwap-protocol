@@ -64,12 +64,15 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function knockoutRangeLiq (bytes32 pool, KnockoutLiq.KnockoutPivot memory pivot,
                                bool isBid, int24 tick, uint64 feeGlobal)
         private returns (uint64 feeRange) {
+        // Unchecked because min/max tick are well within uint16 of int24 bounds
+        unchecked {            
         int24 offset = int24(uint24(pivot.rangeTicks_));
         int24 priceTick = isBid ? tick-1 : tick;
         int24 lowerTick = isBid ? tick : tick - offset;
         int24 upperTick = !isBid ? tick : tick + offset;
         feeRange = removeBookLiq(pool, priceTick, lowerTick, upperTick,
                                  pivot.lots_, feeGlobal);
+        }
     }
 
 
@@ -119,8 +122,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function rmKnockoutLiq (bytes32 pool, int24 curveTick, uint64 feeGlobal,
                             KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
         internal returns (bool killsPivot, uint32 pivotTime, uint64 rewards) {
-
-        (pivotTime, killsPivot) = recallPivot(pool, loc, lots);
+        (pivotTime, killsPivot, lots) = recallPivot(pool, loc, lots);
         if (killsPivot) { unmarkPivot(pool, loc); }
 
         uint64 feeRange = removeBookLiq(pool, curveTick, loc.lowerTick_,
@@ -223,10 +225,11 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function removePosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime)
         private returns (uint64 feeRewards) {
+        unchecked {
         bytes32 posKey = loc.encodePosKey(pool, agentBurnKey(), pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
-        feeRewards = feeRange - pos.feeMileage_;
+        feeRewards = feeRange.deltaRewardsRate(pos.feeMileage_);
         assertJitSafe(pos.timestamp_, pool);
         
         if (lots >= pos.lots_) {
@@ -236,6 +239,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
             pos.timestamp_ = 0;
         } else {
             pos.lots_ -= lots;
+        }
         }
     }
 
@@ -308,14 +312,17 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return pivotTime The tranche timestamp of the current knockout pivot. */
     function recallPivot (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                           uint96 lots) private returns
-        (uint32 pivotTime, bool killsPivot) {
+        (uint32 pivotTime, bool killsPivot, uint96 bookLots) {
         bytes32 lvlKey = KnockoutLiq.encodePivotKey(pool, loc.isBid_,
                                                     loc.knockoutTick());
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
         pivotTime = pivot.pivotTime_;
+        bookLots = lots;
         killsPivot = (lots >= pivot.lots_);
 
         if (killsPivot) {
+            bookLots = pivot.lots_;
+            
             // Get the SSTORE refund when completely burning the level
             pivot.lots_ = 0;
             pivot.pivotTime_ = 0;

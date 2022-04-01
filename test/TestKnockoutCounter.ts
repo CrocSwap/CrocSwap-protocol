@@ -178,7 +178,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(10000)
+        expect(await test.rewards_()).to.equal(9998) // Rounds down
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -208,7 +208,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.true
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(10000)
+        expect(await test.rewards_()).to.equal(9998) // Rounds down
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -231,10 +231,35 @@ describe('Knockout Counter Mixin', () => {
         expect(pos.feeMileage).to.eq(0)
     })
 
-    it("burn over", async() => {
+    it("burn over qty", async() => {
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
         let pivotTime = await test.callTime_()
-        await expect(test.testBurn(35000, 900, 95000, 501, true, 800, 928)).to.be.reverted
+
+        await test.testBurn(35000, 900, 95000, 502, true, 800, 928)
+
+        expect(await test.togglesPivot_()).to.be.true
+        expect(await test.pivotTime_()).to.equal(pivotTime)
+        expect(await test.rewards_()).to.equal(9998) // Rounds down
+
+        let bid = await test.getLevelState(35000, 800)
+        let ask = await test.getLevelState(35000, 928)
+        expect(bid.bidLots_).to.eq(0)
+        expect(ask.askLots_).to.eq(0)
+        expect(bid.askLots_).to.eq(0)
+        expect(ask.bidLots_).to.eq(0)
+        expect(bid.feeOdometer_).to.eq(0)
+        expect(ask.feeOdometer_).to.eq(0)
+
+        let pivot = await test.getPivot(35000, true, 800, 928)
+        let callTime = await test.callTime_()
+        expect(pivot.lots).to.eq(0)
+        expect(pivot.pivotTime).to.eq(0)
+        expect(pivot.range).to.eq(0)        
+
+        let pos = await test.getPosition(35000, true, 800, 928, callTime)
+        expect(pos.lots).to.eq(0)
+        expect(pos.timestamp).to.eq(0)
+        expect(pos.feeMileage).to.eq(0)
     })
 
     it("burn ask position", async() => {
@@ -244,7 +269,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(10000)
+        expect(await test.rewards_()).to.equal(9998) // Rounds down
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -329,7 +354,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(10000)
+        expect(await test.rewards_()).to.equal(9998) // Rounds down
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)

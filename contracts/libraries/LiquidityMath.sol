@@ -171,4 +171,18 @@ library LiquidityMath {
         return uint64(uint256(mileage) * uint256(weight) / uint256(total));
         }
     }
+
+    /* @dev Computes a rounding safe calculation of the accumulated rewards rate based on
+     *      a beggining and end mileage counter. */
+    function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) internal pure
+        returns (uint64) {
+        unchecked {
+        uint64 REWARD_ROUND_DOWN = 2;
+        if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {
+            return feeMileage - oldMileage - REWARD_ROUND_DOWN;
+        } else {
+            return 0;
+        }
+        }
+    }
 }
