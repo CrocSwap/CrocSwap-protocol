@@ -77,4 +77,9 @@ library UserCmd {
     uint8 constant DISBURSE_VIRTUAL_CODE = 78;
     uint8 constant RESET_NONCE = 80;
     uint8 constant RESET_NONCE_COND = 81;
+
+    uint8 constant MINT_KNOCKOUT = 91;
+    uint8 constant BURN_KNOCKOUT = 92;
+    uint8 constant CLAIM_KNOCKOUT = 93;
+    uint8 constant RECOVER_KNOCKOUT = 94;
 }

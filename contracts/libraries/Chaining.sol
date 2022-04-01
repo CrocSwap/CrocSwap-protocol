@@ -405,4 +405,21 @@ library Chaining {
             return rollGap - int128(target);
         }
     }
+
+    /* @notice Convenience function to round up flows pinned to liquidity. Will safely 
+     *         (i.e. only in the debit direction) round up the flow to the user-specified
+     *         qty. This is primarily useful for mints where the user specifies a token 
+     *         qty, that gets cast to liquidity, that then then gets converted back to
+     *         a token quantity amount. Because of fixed-point rounding the latter will
+     *         be slightly smaller than the fixed specified amount. For usability and gas
+     *         optimization the user will likely want to just pay the full amount. */
+    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 qty, bool inBase)
+        internal pure returns (int128, int128) {
+        if (inBase && int128(qty) > baseFlow) {
+            baseFlow = int128(qty);
+        } else if (!inBase && int128(qty) > quoteFlow) {
+            quoteFlow = int128(qty);
+        }
+        return (baseFlow, quoteFlow);
+    }
 }

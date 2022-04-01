@@ -86,17 +86,17 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *                   sqrt(X*Y) liquidity) being added to the knockout position. 
      *
      * @return pivotTime  The time tranche of the pivot the liquidity was added to. */
-    function mintKnockout (PoolSpecs.PoolCursor memory pool,
-                           int24 curveTick, uint64 feeGlobal,
-                           KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
+    function addKnockoutLiq (bytes32 pool, uint8 knockoutBits,
+                             int24 curveTick, uint64 feeGlobal,
+                             KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
         internal returns (uint32 pivotTime, bool newPivot) {
-        (pivotTime, newPivot) = injectPivot(pool, loc, lots, curveTick);
-        uint64 feeRange = addBookLiq(pool.hash_, curveTick, loc.lowerTick_,
+        (pivotTime, newPivot) = injectPivot(pool, knockoutBits, loc, lots, curveTick);
+        uint64 feeRange = addBookLiq(pool, curveTick, loc.lowerTick_,
                                      loc.upperTick_, lots, feeGlobal);
         if (newPivot) {
-            markPivot(pool.hash_, loc);
+            markPivot(pool, loc);
         }
-        insertPosition(pool.hash_, loc, lots, feeRange, pivotTime);
+        insertPosition(pool, loc, lots, feeRange, pivotTime);
     }
 
     /* @notice Burns pre-exisitng knockout liquidity, but only if the liqudity is still
@@ -116,8 +116,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *                   removed from.
      * @return rewards  The concentrated liquidity rewards accumulated to the 
      *                  position. */
-    function burnKnockout (bytes32 pool, int24 curveTick, uint64 feeGlobal,
-                           KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
+    function rmKnockoutLiq (bytes32 pool, int24 curveTick, uint64 feeGlobal,
+                            KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
         internal returns (bool killsPivot, uint32 pivotTime, uint64 rewards) {
 
         (pivotTime, killsPivot) = recallPivot(pool, loc, lots);
@@ -170,8 +170,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *                 collateral at the knockout price *not* the current curve price).
      * @return reards The in-range concentrated liquidity rewards earned by the position.
      */
-    function claimKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
-                            uint160 merkleRoot, uint96[] calldata merkleProof)
+    function claimPostKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
+                                uint160 merkleRoot, uint96[] memory merkleProof)
         internal returns (uint96 lots, uint64 rewards) {
         (uint32 pivotTime, uint64 feeSnap) =
             proveKnockout(pool, loc, merkleRoot, merkleProof);
@@ -194,8 +194,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return lots    The liquidity (in 1024-unit lots) claimable by the underlying 
      *                 position. Note that this liquidity should be converted to 
      *                 collateral at the knockout price *not* the current curve price).*/
-    function recoverKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
-                              uint32 pivotTime)
+    function recoverPostKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
+                                  uint32 pivotTime)
         internal returns (uint96 lots) {
         confirmPivotDead(pool, loc, pivotTime);
         (lots, ) = claimPosition(pool, loc, 0, pivotTime);
@@ -229,8 +229,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         feeRewards = feeRange - pos.feeMileage_;
         assertJitSafe(pos.timestamp_, pool);
         
-        require(pos.lots_ >= lots, "KM");
-        if (pos.lots_ == lots) {
+        if (lots >= pos.lots_) {
             // Get SSTORE refund on full burn
             pos.lots_ = 0;
             pos.feeMileage_ = 0;
@@ -270,11 +269,11 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return pivotTime The time tranche of the pivot the liquidity is added to. Either
      *                   the current time if liquidity creates a new pivot, or the 
      *                   timestamp of when the previous tranche was created. */
-    function injectPivot (PoolSpecs.PoolCursor memory pool,
+    function injectPivot (bytes32 pool, uint8 knockoutBits,
                           KnockoutLiq.KnockoutPosLoc memory loc,
                           uint96 lots, int24 curveTick) private returns
         (uint32 pivotTime, bool newPivot) {
-        bytes32 lvlKey = loc.encodePivotKey(pool.hash_);
+        bytes32 lvlKey = loc.encodePivotKey(pool);
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
         newPivot = (pivot.lots_ == 0);
 
@@ -284,7 +283,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         if (newPivot) {            
             pivotTime = SafeCast.timeUint32();
             freshenMerkle(knockoutMerkles_[lvlKey]);
-            loc.assertValidPos(curveTick, pool.head_.knockoutBits_);
+            loc.assertValidPos(curveTick, knockoutBits);
 
             // Should optimize to a single SSTORE call.
             pivot.lots_ = lots;
@@ -314,7 +313,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
                                                     loc.knockoutTick());
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
         pivotTime = pivot.pivotTime_;
-        killsPivot = (pivot.lots_ == lots);
+        killsPivot = (lots >= pivot.lots_);
 
         if (killsPivot) {
             // Get the SSTORE refund when completely burning the level
@@ -370,7 +369,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return feeSnap The in-range fee mileage at Merkle commitment time, i.e. when the
      *                 pivot was knocked out. */
     function proveKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
-                            uint160 root, uint96[] calldata proof)
+                            uint160 root, uint96[] memory proof)
         private view returns (uint32 pivotTime, uint64 feeSnap) {
         bytes32 lvlKey = KnockoutLiq.encodePivotKey(pool, loc.isBid_,
                                                     loc.knockoutTick());

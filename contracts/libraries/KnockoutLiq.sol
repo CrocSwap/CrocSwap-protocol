@@ -172,7 +172,7 @@ library KnockoutLiq {
      * @return The 32-bit Knockout tranche pivot and 64-bit fee mileage at the start of
      *         the proof. */
     function proveHistory (KnockoutMerkle memory merkle, uint160 proofRoot,
-                            uint96[] calldata proof)
+                            uint96[] memory proof)
         internal pure returns (uint32, uint64) {
         // If we're only looking at the most recent knockout, it's still stored raw
         // and doesn't need a proof.
@@ -183,7 +183,7 @@ library KnockoutLiq {
 
     /* @notice Verifies a non-empty Merkle proof. */
     function proveSteps (KnockoutMerkle memory merkle, uint160 proofRoot,
-                         uint96[] calldata proof)
+                         uint96[] memory proof)
         private pure returns (uint32, uint64) {
         uint160 incrRoot = proofRoot;
         unchecked {
@@ -246,13 +246,12 @@ library KnockoutLiq {
     /* @notice Evaluates whether the placement of a knockout pivot candidates conforms
      *         to the parameters relative to the curve's current price tick. */
     function spreadOkay (KnockoutPosLoc memory loc, int24 priceTick,
-                         bool inside, bool yonder) private pure returns (bool) {
+                         bool inside, bool yonder) internal pure returns (bool) {
         if (yonder) { return true; }
         else if (loc.isBid_) {
             int24 refTick = inside ? loc.lowerTick_ : loc.upperTick_;
             return refTick < priceTick;
         } else {
-            
             int24 refTick = inside ? loc.upperTick_ : loc.lowerTick_;
             return refTick >= priceTick;
         }

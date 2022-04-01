@@ -24,16 +24,13 @@ contract TestKnockoutCounter is KnockoutCounter {
     function testMint (uint256 poolIdx, uint8 knockoutBits,
                        int24 tick, uint64 feeGlobal, uint96 lots,
                        bool isBid, int24 lower, int24 upper) public {
-        PoolSpecs.PoolCursor memory pool;
-        pool.hash_ = bytes32(poolIdx);
-        pool.head_.knockoutBits_ = knockoutBits;
-        
         KnockoutLiq.KnockoutPosLoc memory loc;
         loc.isBid_ = isBid;
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
         
-        (pivotTime_, togglesPivot_) = mintKnockout(pool, tick, feeGlobal, loc, lots);
+        (pivotTime_, togglesPivot_) = addKnockoutLiq
+            (bytes32(poolIdx), knockoutBits, tick, feeGlobal, loc, lots);
 
         callTime_ = uint32(block.timestamp);
     }
@@ -54,7 +51,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.upperTick_ = upper;
         
         (togglesPivot_, pivotTime_, rewards_) =
-            burnKnockout(bytes32(poolIdx), tick, feeGlobal, loc, lots);
+            rmKnockoutLiq(bytes32(poolIdx), tick, feeGlobal, loc, lots);
     }
 
     function testClaim (uint256 poolIdx, bool isBid, int24 lower, int24 upper,
@@ -64,7 +61,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
         
-        (bookLots_, rewards_) = claimKnockout
+        (bookLots_, rewards_) = claimPostKnockout
             (bytes32(poolIdx), loc, merkleRoot, merkleProof);
     }
 
@@ -75,7 +72,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
         
-        (bookLots_) = recoverKnockout(bytes32(poolIdx), loc, pivotTime);
+        (bookLots_) = recoverPostKnockout(bytes32(poolIdx), loc, pivotTime);
     }
 
     function getPivot (uint256 poolIdx, bool isBid, int24 lower, int24 upper)

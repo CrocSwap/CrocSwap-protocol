@@ -13,6 +13,7 @@ import '../interfaces/ICrocLpConduit.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
+import './KnockoutCounter.sol';
 import './ColdInjector.sol';
 import './AgentMask.sol';
 
@@ -26,14 +27,15 @@ import "hardhat/console.sol";
  *           3) Burn ambient liquidity
  *           4) Burn range liquidity
  *           5) Swap                                                     */
-contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
-    AgentMask {
+contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
+    ColdPathInjector {
 
     using SafeCast for int256;
     using SafeCast for int128;
     using SafeCast for uint256;
     using SafeCast for uint128;
     using TickMath for uint128;
+    using LiquidityMath for uint96;
     using LiquidityMath for uint128;
     using PoolSpecs for PoolSpecs.Pool;
     using CurveRoll for CurveMath.CurveState;
@@ -223,6 +225,53 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         return signBurnFlow(base, quote);
     }
 
+    
+    function mintKnockout (CurveMath.CurveState memory curve, int24 priceTick,
+                           KnockoutLiq.KnockoutPosLoc memory loc,
+                           uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        addKnockoutLiq(poolHash, knockoutBits, priceTick, curve.concGrowth_, loc,
+                       liquidity.liquidityToLots());
+        
+        (uint128 base, uint128 quote) = liquidityReceivable
+            (curve, liquidity, loc.lowerTick_, loc.upperTick_);
+        (baseFlow, quoteFlow) = signMintFlow(base, quote);
+    }
+
+    function burnKnockout (CurveMath.CurveState memory curve, int24 priceTick,
+                           KnockoutLiq.KnockoutPosLoc memory loc,
+                           uint128 liquidity, bytes32 poolHash)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        (, , uint64 rewards) = rmKnockoutLiq(poolHash, priceTick, curve.concGrowth_,
+                                             loc, liquidity.liquidityToLots());
+        
+        (uint128 base, uint128 quote) = liquidityPayable
+            (curve, liquidity, rewards, loc.lowerTick_, loc.upperTick_);
+        (baseFlow, quoteFlow) = signBurnFlow(base, quote);
+    }
+
+    function claimKnockout (CurveMath.CurveState memory curve, 
+                            KnockoutLiq.KnockoutPosLoc memory loc,
+                            uint160 root, uint96[] memory proof, bytes32 poolHash)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        (uint96 lots, uint64 rewards) = claimPostKnockout(poolHash, loc, root, proof);
+        uint128 liquidity = lots.lotsToLiquidity();
+        
+        (uint128 base, uint128 quote) = liquidityHeldPayable
+            (curve, liquidity, rewards, loc);
+        (baseFlow, quoteFlow) = signBurnFlow(base, quote);
+    }
+    
+    function recoverKnockout (KnockoutLiq.KnockoutPosLoc memory loc,
+                              uint32 pivotTime, bytes32 poolHash)
+        internal returns (int128 baseFlow, int128 quoteFlow) {
+        uint96 lots = recoverPostKnockout(poolHash, loc, pivotTime);
+        uint128 liquidity = lots.lotsToLiquidity();
+        
+        (uint128 base, uint128 quote) = liquidityHeldPayable(liquidity, loc);
+        (baseFlow, quoteFlow) = signBurnFlow(base, quote);
+    }
+
     /* @notice Harvests the accumulated rewards on a concentrated liquidity position.
      * 
      * @param curve The object representing the pre-loaded liquidity curve. Will be
@@ -406,5 +455,11 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, LevelBook,
         (int128 liqDelta, bool knockoutFlag) =
             crossLevel(poolHash, bumpTick, isBuy, curve.concGrowth_);
         curve.concLiq_ = curve.concLiq_.addDelta(liqDelta);
+
+        if (knockoutFlag) {
+            int128 knockoutDelta = callCrossFlag
+                (poolHash, bumpTick, isBuy, curve.concGrowth_);
+            curve.concLiq_.addDelta(knockoutDelta);
+        }
     }    
 }

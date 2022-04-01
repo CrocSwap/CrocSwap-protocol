@@ -141,7 +141,13 @@ contract LiquidityCurve is StorageLayout {
                                uint64 rewardRate, int24 lowerTick, int24 upperTick)
         internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityPayable(curve, liquidity, lowerTick, upperTick);
+        (base, quote) = stackRewards(base, quote, curve, liquidity, rewardRate);
+   }
 
+    function stackRewards (uint128 base, uint128 quote,
+                           CurveMath.CurveState memory curve,
+                           uint128 liquidity, uint64 rewardRate)
+        internal pure returns (uint128, uint128) {
         if (rewardRate > 0) {
             // Round down reward sees on payout, in contrast to rounding them up on
             // incremental accumulation (see CurveAssimilate.sol). This mathematicaly
@@ -155,6 +161,7 @@ contract LiquidityCurve is StorageLayout {
                 quote += quoteRewards;
             }
         }
+        return (base, quote);
     }
 
     /* @notice The same as the above liquidityPayable() but called when accumulated 
@@ -187,6 +194,25 @@ contract LiquidityCurve is StorageLayout {
         internal pure returns (uint128 base, uint128 quote) {
         (base, quote) = liquidityFlows(curve, seeds);
         bumpAmbient(curve, -(seeds.toInt128Sign()));
+    }
+
+    function liquidityHeldPayable (CurveMath.CurveState memory curve, uint128 liquidity,
+                                   uint64 rewards, KnockoutLiq.KnockoutPosLoc memory loc)
+        internal pure returns (uint128 base, uint128 quote) {
+        (base, quote) = liquidityHeldPayable(liquidity, loc);
+        (base, quote) = stackRewards(base, quote, curve, liquidity, rewards);
+    }
+
+    function liquidityHeldPayable (uint128 liquidity,
+                                   KnockoutLiq.KnockoutPosLoc memory loc)
+        internal pure returns (uint128 base, uint128 quote) {
+        (uint128 bidPrice, uint128 askPrice) = translateTickRange
+            (loc.lowerTick_, loc.upperTick_);
+        if (loc.isBid_) {
+            quote = liquidity.deltaQuote(bidPrice, askPrice);
+        } else {
+            base = liquidity.deltaBase(bidPrice, askPrice);
+        }
     }
 
     /* @notice Directly increments the ambient liquidity on the curve. */

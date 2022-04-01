@@ -223,7 +223,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         
         (int128 baseFlow, int128 quoteFlow) =
             mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
-        return pinFlow(baseFlow, quoteFlow, qty, inBase);
+        return Chaining.pinFlow(baseFlow, quoteFlow, qty, inBase);
     }
 
     function mintQty (address base, address quote, uint256 poolIdx,
@@ -235,18 +235,8 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         (int128 baseFlow, int128 quoteFlow) =
             mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                  limitLower, limitHigher);
-        return pinFlow(baseFlow, quoteFlow, qty, inBase);
+        return Chaining.pinFlow(baseFlow, quoteFlow, qty, inBase);
             
-    }
-
-    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 qty, bool inBase)
-        private pure returns (int128, int128) {
-        if (inBase && int128(qty) > baseFlow) {
-            baseFlow = int128(qty);
-        } else if (!inBase && int128(qty) > quoteFlow) {
-            quoteFlow = int128(qty);
-        }
-        return (baseFlow, quoteFlow);
     }
 
     function sizeAddLiq (address base, address quote, uint256 poolIdx, uint128 qty,
