@@ -122,7 +122,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function rmKnockoutLiq (bytes32 pool, int24 curveTick, uint64 feeGlobal,
                             KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
         internal returns (bool killsPivot, uint32 pivotTime, uint64 rewards) {
-        (pivotTime, killsPivot, lots) = recallPivot(pool, loc, lots);
+        (pivotTime, killsPivot) = recallPivot(pool, loc, lots);
         if (killsPivot) { unmarkPivot(pool, loc); }
 
         uint64 feeRange = removeBookLiq(pool, curveTick, loc.lowerTick_,
@@ -231,8 +231,9 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
 
         feeRewards = feeRange.deltaRewardsRate(pos.feeMileage_);
         assertJitSafe(pos.timestamp_, pool);
+        require(lots <= pos.lots_, "KB");
         
-        if (lots >= pos.lots_) {
+        if (lots == pos.lots_) {
             // Get SSTORE refund on full burn
             pos.lots_ = 0;
             pos.feeMileage_ = 0;
@@ -312,17 +313,16 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return pivotTime The tranche timestamp of the current knockout pivot. */
     function recallPivot (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                           uint96 lots) private returns
-        (uint32 pivotTime, bool killsPivot, uint96 bookLots) {
+        (uint32 pivotTime, bool killsPivot) {
+        unchecked {
         bytes32 lvlKey = KnockoutLiq.encodePivotKey(pool, loc.isBid_,
                                                     loc.knockoutTick());
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
         pivotTime = pivot.pivotTime_;
-        bookLots = lots;
-        killsPivot = (lots >= pivot.lots_);
+        require(lots <= pivot.lots_, "KB");
+        killsPivot = (lots == pivot.lots_);
 
         if (killsPivot) {
-            bookLots = pivot.lots_;
-            
             // Get the SSTORE refund when completely burning the level
             pivot.lots_ = 0;
             pivot.pivotTime_ = 0;
@@ -330,6 +330,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
 
         } else {
             pivot.lots_ -= lots;
+        }
         }
     }
 

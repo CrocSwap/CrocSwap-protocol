@@ -234,12 +234,12 @@ describe('Knockout Counter Mixin', () => {
     it("burn over qty", async() => {
         // Over pivot qty
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
-        expect(await test.testBurn(35000, 900, 95000, 502, true, 800, 928)).to.be.reverted
+        await expect(test.testBurn(35000, 900, 95000, 502, true, 800, 928)).to.be.reverted
 
         // Over position, but not over pivot
         await test.setLockholder(128)
         await test.testMint(35000, knockoutBits, 900, 85000, 300, true, 800, 928)    
-        expect(await test.testBurn(35000, 900, 95000, 302, true, 800, 928)).to.be.reverted
+        await expect(test.testBurn(35000, 900, 95000, 302, true, 800, 928)).to.be.reverted
     })
 
     it("burn ask position", async() => {
@@ -334,7 +334,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(10000)
+        expect(await test.rewards_()).to.equal(9998)
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)

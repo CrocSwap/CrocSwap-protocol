@@ -100,13 +100,16 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
                       KnockoutLiq.KnockoutPosLoc memory loc,
                       bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
-        (uint128 qty, bool insideMid) = abi.decode(args, (uint128,bool));
+        (uint128 qty, bool inLiqQty, bool insideMid) =
+            abi.decode(args, (uint128,bool,bool));
 
         int24 priceTick = curve.priceRoot_.getTickAtSqrtRatio();
         require(loc.spreadOkay(priceTick, insideMid, false), "KL");
+
+        uint128 liq = inLiqQty ? qty :
+            Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
+                                 loc.lowerTick_, loc.upperTick_, loc.isBid_);
         
-        uint128 liq = Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
-                                           loc.lowerTick_, loc.upperTick_, loc.isBid_);
         verifyPermitBurn(pool, base, quote, loc.lowerTick_, loc.upperTick_, liq);
 
         (baseFlow, quoteFlow) = burnKnockout(curve, priceTick, loc, liq, pool.hash_);
