@@ -118,7 +118,7 @@ describe('Knockout Liquidity', () => {
    it("assert grid", async() => {
       let width = 10
       let enabled = 1
-      let params = enabled * 16 + width
+      let params = 64 + enabled * 16 + width
 
       // Safe grids
       await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 20000, params)).to.not.be.reverted
