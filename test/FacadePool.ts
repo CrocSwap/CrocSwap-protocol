@@ -12,6 +12,7 @@ import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, sin
 import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
+import { CrocQuery } from "../typechain/CrocQuery";
 
 chai.use(solidity);
 
@@ -135,7 +136,7 @@ export class NativeEther implements Token {
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
-    query: Promise<QueryHelper>
+    query: Promise<CrocQuery>
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
@@ -177,9 +178,9 @@ export class TestPool {
                 f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
         }
 
-        factory = ethers.getContractFactory("QueryHelper")
+        factory = ethers.getContractFactory("CrocQuery")
         this.query = factory.then(f => this.dex.then(
-            d => f.deploy(d.address))) as Promise<QueryHelper>
+            d => f.deploy(d.address))) as Promise<CrocQuery>
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
@@ -335,6 +336,50 @@ export class TestPool {
         }
     }
 
+    async encodeMintKnockout (liq: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 91
+        const inner: BytesLike = abiCoder.encode(["uint128", "bool"], [liq, partial])
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "bool", "uint8", "bytes"],
+            [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
+    }
+
+    async encodeBurnKnockout (liq: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, qtyInLiq: boolean, useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 92
+        const inner: BytesLike = abiCoder.encode(["uint128", "bool", "bool"], [liq, qtyInLiq, partial])
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "bool", "uint8", "bytes"],
+            [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
+    }
+
+    async encodeClaimKnockout (isBid: boolean, bidTick: number, askTick: number, root: BigNumber, proof: BigNumber[], useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 93
+        const inner: BytesLike = abiCoder.encode(["uint160", "uint96[]"], [root, proof])
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "bool", "uint8", "bytes"],
+            [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
+    }
+
+    async encodeRecoverKnockout (isBid: boolean, bidTick: number, askTick: number, pivotTime: number, useSurplus: number): Promise<BytesLike> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = 94
+        const inner: BytesLike = abiCoder.encode(["uint32"], [pivotTime])
+        return abiCoder.encode(
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "bool", "uint8", "bytes"],
+            [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
+    }
+
     async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq, useSurplus)
     }
@@ -382,6 +427,7 @@ export class TestPool {
     readonly WARM_PROXY: number = 2;
     readonly LONG_PROXY: number = 4;
     readonly HOT_PROXY: number = 1;
+    readonly KNOCKOUT_PROXY: number = 3576;
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
@@ -450,6 +496,36 @@ export class TestPool {
         }
     }
 
+    async testKnockoutMint (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeMintKnockout(qty, isBid, bidTick, askTick, partial, useSurplus)
+        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+    }
+
+    async testKnockoutBurn (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, false, useSurplus)
+        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+    }
+
+    async testKnockoutBurnLiq (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, true, useSurplus)
+        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+    }
+
+    async testKnockoutClaim (isBid: boolean, bidTick: number, askTick: number, root: BigNumber, proof: BigNumber[], useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeClaimKnockout(isBid, bidTick, askTick, root, proof, useSurplus)
+        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+    }
+
+    async testKnockoutRecover (isBid: boolean, bidTick: number, askTick: number, pivot: number, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        let inputBytes = this.encodeRecoverKnockout(isBid, bidTick, askTick, pivot, useSurplus)
+        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+    }
+
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
         useSurplus: number = 0): Promise<ContractTransaction> {
         const slippage = inBaseQty == isBuy ? BigNumber.from(0) : BigNumber.from(2).pow(126)
@@ -475,7 +551,7 @@ export class TestPool {
             .userCmd(this.LONG_PROXY, encodeOrderDirective(order), override)
     }
 
-    async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
+    async testRevisePool (feeRate: number, protoTake: number, tickSize:number, jit: number = 0, knockoutFlags: number = 0): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
 
         if (protoTake > 0) {
@@ -488,7 +564,7 @@ export class TestPool {
         }
 
         let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
-            [111, (await this.base).address, (await this.quote).address, this.poolIdx, feeRate, tickSize, jit, 0])
+            [111, (await this.base).address, (await this.quote).address, this.poolIdx, feeRate, tickSize, jit, knockoutFlags])
 
         return (await this.dex)
             .connect(await this.auth)
