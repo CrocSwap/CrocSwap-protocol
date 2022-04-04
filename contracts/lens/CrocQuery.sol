@@ -101,9 +101,14 @@ contract CrocQuery {
         loc.isBid_ = isBid;
         loc.lowerTick_ = lowerTick;
         loc.upperTick_ = upperTick;
-        bytes32 ownerHash = bytes32(uint256(uint160(owner)));
 
-        bytes32 key = KnockoutLiq.encodePosKey(loc, poolHash, ownerHash, pivot);
+        return queryKnockoutPos(loc, poolHash, owner, pivot);
+    }
+
+    function queryKnockoutPos (KnockoutLiq.KnockoutPosLoc memory loc,
+                               bytes32 poolHash, address owner, uint32 pivot)
+        private view returns (uint96 lots, uint64 mileage, uint32 timestamp) {
+        bytes32 key = KnockoutLiq.encodePosKey(loc, poolHash, owner, pivot);
         bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_POS_SLOT));
         uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
 

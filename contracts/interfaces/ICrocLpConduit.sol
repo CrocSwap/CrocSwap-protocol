@@ -31,4 +31,8 @@ interface ICrocLpConduit {
     function depositCrocLiq (address sender, bytes32 poolHash,
                              int24 lowerTick, int24 upperTick,
                              uint128 liq, uint64 mileage) external returns (bool);
+
+    function withdrawCrocLiq (address sender, bytes32 poolHash,
+                              int24 lowerTick, int24 upperTick,
+                              uint128 liq, uint64 mileage) external returns (bool);
 }

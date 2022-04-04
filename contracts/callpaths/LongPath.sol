@@ -91,7 +91,7 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
         if (flags.offsetSurplus_) {
             address token = flags.rollExit_ ?
                 pair.backToken() : pair.frontToken();
-            roll.prePairBal_ -= querySurplus(msg.sender, token).toInt128Sign();
+            roll.prePairBal_ -= querySurplus(lockHolder_, token).toInt128Sign();
         }
     }
 }

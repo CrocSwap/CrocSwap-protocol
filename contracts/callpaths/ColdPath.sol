@@ -122,7 +122,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         verifyPermitInit(pool, base, quote, poolIdx);
         
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
-        settleInitFlow(msg.sender, base, baseFlow, quote, quoteFlow);
+        settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
     }
 
     /* @notice Sets template parameters for a pool type index.

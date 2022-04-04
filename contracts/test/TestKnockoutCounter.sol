@@ -111,7 +111,7 @@ contract TestKnockoutCounter is KnockoutCounter {
         loc.lowerTick_ = lower;
         loc.upperTick_ = upper;
 
-        bytes32 key = loc.encodePosKey(bytes32(poolIdx), agentMintKey(), pivotTime);
+        bytes32 key = loc.encodePosKey(bytes32(poolIdx), lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos memory pos = knockoutPos_[key];
         lots = pos.lots_;
         timestamp = pos.timestamp_;

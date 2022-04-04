@@ -112,7 +112,7 @@ library KnockoutLiq {
      * @param pool The hash index of the AMM pool.
      * @param owner The claimint of the liquidity position. */
     function encodePosKey (KnockoutPosLoc memory loc,
-                           bytes32 pool, bytes32 owner, uint32 pivotTime)
+                           bytes32 pool, address owner, uint32 pivotTime)
         internal pure returns (bytes32) {
         return keccak256(abi.encode(pool, owner, loc.isBid_,
                                     loc.lowerTick_, loc.upperTick_, pivotTime));

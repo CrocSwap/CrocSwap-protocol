@@ -212,7 +212,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *                 at current mint time. */
     function insertPosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime) private {
-        bytes32 posKey = loc.encodePosKey(pool, agentMintKey(), pivotTime);
+        bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
         uint64 mileage = feeRange.blendMileage(lots, pos.feeMileage_, pos.lots_);
@@ -226,7 +226,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
                              uint96 lots, uint64 feeRange, uint32 pivotTime)
         private returns (uint64 feeRewards) {
         unchecked {
-        bytes32 posKey = loc.encodePosKey(pool, agentBurnKey(), pivotTime);
+        bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
         feeRewards = feeRange.deltaRewardsRate(pos.feeMileage_);
@@ -247,7 +247,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function claimPosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                             uint64 feeRange, uint32 pivotTime)
         private returns (uint96 lots, uint64 feeRewards) {
-        bytes32 posKey = loc.encodePosKey(pool, agentBurnKey(), pivotTime);
+        bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
         lots = pos.lots_;

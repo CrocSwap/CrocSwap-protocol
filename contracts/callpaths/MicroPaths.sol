@@ -58,8 +58,8 @@ contract MicroPaths is MarketSequencer {
         curve.seedDeflator_ = seedGrowth;
         curve.concGrowth_ = concGrowth;
         
-        (baseFlow, quoteFlow) = burnRange(curve, priceTick,
-                                          lowTick, highTick, liq, poolHash);
+        (baseFlow, quoteFlow) = burnRange(curve, priceTick, lowTick, highTick,
+                                          liq, poolHash, lockHolder_);
 
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
@@ -98,8 +98,8 @@ contract MicroPaths is MarketSequencer {
         curve.seedDeflator_ = seedGrowth;
         curve.concGrowth_ = concGrowth;
         
-        (baseFlow, quoteFlow) = mintRange(curve, priceTick,
-                                          lowTick, highTick, liq, poolHash);
+        (baseFlow, quoteFlow) = mintRange(curve, priceTick, lowTick, highTick, liq,
+                                          poolHash, lockHolder_);
 
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
@@ -133,7 +133,7 @@ contract MicroPaths is MarketSequencer {
         curve.seedDeflator_ = seedGrowth;
         curve.concGrowth_ = concGrowth;
         
-        (baseFlow, quoteFlow) = burnAmbient(curve, liq, poolHash);
+        (baseFlow, quoteFlow) = burnAmbient(curve, liq, poolHash, lockHolder_);
         
         seedOut = curve.ambientSeeds_;
     }
@@ -166,7 +166,7 @@ contract MicroPaths is MarketSequencer {
         curve.seedDeflator_ = seedGrowth;
         curve.concGrowth_ = concGrowth;
         
-        (baseFlow, quoteFlow) = mintAmbient(curve, liq, poolHash);
+        (baseFlow, quoteFlow) = mintAmbient(curve, liq, poolHash, lockHolder_);
 
         seedOut = curve.ambientSeeds_;
     }

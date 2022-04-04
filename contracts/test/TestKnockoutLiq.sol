@@ -14,14 +14,14 @@ contract TestKnockoutLiq {
         return KnockoutLiq.encodePivotKey(bytes32(pool), isBid, tick);
     }
 
-    function testEncodePosKey (uint256 pool, uint256 owner, bool isBid, int24 lower,
+    function testEncodePosKey (uint256 pool, uint160 owner, bool isBid, int24 lower,
                                int24 upper, uint32 pivotTime)
         public pure returns (bytes32) {
         KnockoutLiq.KnockoutPosLoc memory pos;
         pos.isBid_ = isBid;
         pos.lowerTick_ = lower;
         pos.upperTick_ = upper;
-        return KnockoutLiq.encodePosKey(pos, bytes32(pool), bytes32(owner), pivotTime);
+        return KnockoutLiq.encodePosKey(pos, bytes32(pool), address(owner), pivotTime);
     }
 
     function testCommit (uint96 lots, uint32 time, uint16 range,

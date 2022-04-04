@@ -138,13 +138,13 @@ contract MarketSequencer is TradeMatcher {
      *                   from the pool as part of the burn. */
     function burnOverPool (int24 bidTick, int24 askTick, uint128 liq,
                            PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             burnRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
-                      bidTick, askTick, liq, pool.hash_);
+                      bidTick, askTick, liq, pool.hash_, lpConduit);
         commitCurve(pool.hash_, curve);
     }
 
@@ -167,13 +167,13 @@ contract MarketSequencer is TradeMatcher {
      *                   from the pool as part of the burn. */
     function harvestOverPool (int24 bidTick, int24 askTick,
                               PoolSpecs.PoolCursor memory pool,
-                              uint128 minPrice, uint128 maxPrice)
+                              uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
             harvestRange(curve, curve.priceRoot_.getTickAtSqrtRatio(),
-                         bidTick, askTick, pool.hash_);
+                         bidTick, askTick, pool.hash_, lpConduit);
         commitCurve(pool.hash_, curve);
     }
 
@@ -221,12 +221,12 @@ contract MarketSequencer is TradeMatcher {
      * @return quoteFlow The total amount of quote-side token collateral that is returned
      *                   from the pool as part of the burn. */
     function burnOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
-                           uint128 minPrice, uint128 maxPrice)
+                           uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
         (baseFlow, quoteFlow) =
-            burnAmbient(curve, liq, pool.hash_);
+            burnAmbient(curve, liq, pool.hash_, lpConduit);
         commitCurve(pool.hash_, curve);
     }
 
@@ -338,7 +338,7 @@ contract MarketSequencer is TradeMatcher {
                 // partial burns on these positions. Since off-grid size eligibility
                 // is only checked at mint time this is necessary to prevent under-sized
                 // off-grid orders.
-                markPosAtomic(agentMintKey(), cntx.pool_.hash_, lowTick, highTick);
+                markPosAtomic(lockHolder_, cntx.pool_.hash_, lowTick, highTick);
             }
         }
 
