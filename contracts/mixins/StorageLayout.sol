@@ -142,6 +142,9 @@ library CrocSlots {
     // can be used to directly read state in CrocSwapDex by other contracts.
     uint constant public AUTHORITY_SLOT = 0;
     uint constant public LVL_MAP_SLOT = 65538;
+    uint constant public KO_PIVOT_SLOT = 65539;
+    uint constant public KO_MERKLE_SLOT = 65540;
+    uint constant public KO_POS_SLOT = 65541;
     uint constant public FEE_MAP_SLOT = 65548;
     uint constant public POS_MAP_SLOT = 65549;
     uint constant public AMB_MAP_SLOT = 65550;
