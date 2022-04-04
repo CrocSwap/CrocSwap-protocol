@@ -115,6 +115,20 @@ describe('Knockout Liquidity', () => {
       await expect(knockout.testAssertValid(true, 10240, 10240 + 512, 0, params)).to.be.reverted
    })
 
+   it("assert grid", async() => {
+      let width = 10
+      let enabled = 1
+      let params = enabled * 16 + width
+
+      // Safe grids
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 20000, params)).to.not.be.reverted
+      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, 0, params)).to.not.be.reverted
+
+      // Bad grids
+      await expect(knockout.testAssertValid(true, 10241, 10240 + 1024, 20000, params)).to.be.reverted
+      await expect(knockout.testAssertValid(true, -10241, -10241 + 1024, 0, params)).to.be.reverted
+   })
+
    it("assert disabled", async() => {
       let width = 10
       let disabled = 0
