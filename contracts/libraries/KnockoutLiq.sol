@@ -222,23 +222,23 @@ library KnockoutLiq {
      *                    3 - Knockout pivots can be placed anywhere relative to price. */
     function assertValidPos (KnockoutPosLoc memory loc, int24 priceTick, 
                              uint8 knockoutBits) internal pure {
-        (bool enabled, uint8 width, bool inside, bool yonder) =
+        (bool enabled, uint8 width, bool inside, bool yonder, bool onGrid) =
             unpackBits(knockoutBits);
 
-        require(enabled && gridOkay(loc, width) &&
+        require(enabled && gridOkay(loc, width, onGrid) &&
                 spreadOkay(loc, priceTick, inside, yonder), "KV");
     }
 
     /* @notice Evaluates whether the placement and width of a knockout pivot candidates
      *         conforms to the grid parameters. */
-    function gridOkay (KnockoutPosLoc memory loc, uint8 widthBits)
+    function gridOkay (KnockoutPosLoc memory loc, uint8 widthBits, bool mustBeOnGrid)
         private pure returns (bool) {
         uint24 width = uint24(loc.upperTick_ - loc.lowerTick_);
         bool rightWidth = width == uint24(1) << widthBits;
 
         int24 tick = loc.upperTick_;
         uint24 absTick = tick > 0 ? uint24(tick) : uint24(-tick);
-        bool onGrid = (absTick << widthBits) >> widthBits == absTick;
+        bool onGrid = (!mustBeOnGrid) || (absTick >> widthBits) << widthBits == absTick;
 
         return rightWidth && onGrid;
     }
@@ -265,12 +265,16 @@ library KnockoutLiq {
      * @return yonder True if bids (asks) can be placed with lower (upper) tick above 
      *                (below) the current price tick. */
     function unpackBits (uint8 knockoutBits) private pure returns
-        (bool enabled, uint8 widthBits, bool inside, bool yonder) {
+        (bool enabled, uint8 widthBits, bool inside, bool yonder, bool onGrid) {
+        unchecked {
         widthBits = uint8(knockoutBits & 0x0F);
         uint8 flagBits = uint8(knockoutBits & 0x30) >> 4;
 
         enabled = flagBits > 0;
         yonder = flagBits >= 3;
         inside = flagBits >= 2;
+
+        onGrid = knockoutBits & 0x40 > 0;
+        }
     }
 }
