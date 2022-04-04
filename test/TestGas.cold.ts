@@ -11,7 +11,7 @@ import { ContractTransaction, BigNumber } from 'ethers';
 chai.use(solidity);
 
 // If set to true, every test will fail and therefore print the actual gas spend. 
-const METRIC_PROFILE = false
+const METRIC_PROFILE = true
 
 describe('Gas Benchmarks Coldpath', () => {
     let test: TestPool
