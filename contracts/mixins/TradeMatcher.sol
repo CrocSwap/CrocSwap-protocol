@@ -267,7 +267,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         internal returns (int128 baseFlow, int128 quoteFlow) {
         uint96 lots = recoverPostKnockout(poolHash, loc, pivotTime);
         uint128 liquidity = lots.lotsToLiquidity();
-        
+
         (uint128 base, uint128 quote) = liquidityHeldPayable(liquidity, loc);
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
     }

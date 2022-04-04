@@ -39,6 +39,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
      * @param code The command code corresponding to the actual method being called. */
     function userCmd (bytes calldata cmd) public payable returns
         (int128 baseFlow, int128 quoteFlow) {
+        
         (uint8 code, address base, address quote, uint256 poolIdx,
          int24 bidTick, int24 askTick, bool isBid, uint8 reserveFlags,
          bytes memory args) = abi.decode
@@ -66,9 +67,9 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         } else if (code == UserCmd.BURN_KNOCKOUT) {
             (baseFlow, quoteFlow) = burnCmd(base, quote, pool, curve, loc, args);
         } else if (code == UserCmd.CLAIM_KNOCKOUT) {
-            return claimCmd(pool.hash_, curve, loc, args);
+            (baseFlow, quoteFlow) = claimCmd(pool.hash_, curve, loc, args);
         } else if (code == UserCmd.RECOVER_KNOCKOUT) {
-            return recoverCmd(pool.hash_, loc, args);
+            (baseFlow, quoteFlow) = recoverCmd(pool.hash_, loc, args);
         }
 
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
@@ -109,8 +110,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
 
         uint128 liq = inLiqQty ? qty :
             Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
-                                 loc.lowerTick_, loc.upperTick_, loc.isBid_);
-        
+                                 loc.lowerTick_, loc.upperTick_, loc.isBid_);        
         verifyPermitBurn(pool, base, quote, loc.lowerTick_, loc.upperTick_, liq);
 
         (baseFlow, quoteFlow) = burnKnockout(curve, priceTick, loc, liq, pool.hash_);
