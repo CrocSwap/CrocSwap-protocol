@@ -65,4 +65,50 @@ contract CrocQuery {
         askLots = uint96((val << 64) >> 160);
         bidLots = uint96((val << 160) >> 160);
     }
+
+    function queryKnockoutPivot (address base, address quote, uint256 poolIdx,
+                                 bool isBid, int24 tick)
+        public view returns (uint96 lots, uint32 pivot, uint16 range) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 key = KnockoutLiq.encodePivotKey(poolHash, isBid, tick);
+        bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_PIVOT_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        lots = uint96((val << 160) >> 160);
+        pivot = uint32((val << 128) >> 224);
+        range = uint16(val >> 128);
+    }
+
+    function queryKnockoutMerkle (address base, address quote, uint256 poolIdx,
+                                  bool isBid, int24 tick)
+        public view returns (uint160 root, uint32 pivot, uint64 fee) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 key = KnockoutLiq.encodePivotKey(poolHash, isBid, tick);
+        bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_MERKLE_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        root = uint160((val << 96) >> 96);
+        pivot = uint32((val << 64) >> 224);
+        fee = uint64(val >> 192);
+    }
+
+    function queryKnockoutPos (address owner, address base, address quote,
+                               uint256 poolIdx, uint32 pivot, bool isBid,
+                               int24 lowerTick, int24 upperTick) public view
+        returns (uint96 lots, uint64 mileage, uint32 timestamp) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        KnockoutLiq.KnockoutPosLoc memory loc;
+        loc.isBid_ = isBid;
+        loc.lowerTick_ = lowerTick;
+        loc.upperTick_ = upperTick;
+        bytes32 ownerHash = bytes32(uint256(uint160(owner)));
+
+        bytes32 key = KnockoutLiq.encodePosKey(loc, poolHash, ownerHash, pivot);
+        bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_POS_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        lots = uint96((val << 160) >> 160);
+        mileage = uint64((val << 96) >> 224);
+        timestamp = uint32(val >> 224);
+    }
 }
