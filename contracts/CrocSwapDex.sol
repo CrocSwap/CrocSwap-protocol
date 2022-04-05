@@ -116,7 +116,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         returns (bytes memory) {
         return callUserCmd(proxyIdx, input);
     }
-        
+
     /* @notice General purpose query fuction for reading arbitrary data from the dex.
      * @dev    This function is bare bones, because we're trying to keep the size 
      *         footprint of CrocSwapDex down. See SlotLocations.sol and QueryHelper.sol 
@@ -141,6 +141,7 @@ contract CrocSwapDexSeed  is CrocSwapDex {
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
         proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
+        proxyPaths_[CrocSlots.MULTICALL_PROXY_IDX] = address(new KnockoutFlagPath());
     }
 }
 
