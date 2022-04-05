@@ -6,7 +6,7 @@ pragma solidity >=0.8.4;
  * @notice Defines a generalized interface for checking an arbitrary condition. Used in
  *         an off-chain relayer context. User can gate specific order on a runtime 
  *         condition by calling to the oracle. */
-interface ICrocCondOracle {
+interface ICrocNonceOracle {
 
     /* @notice Oracle function that tests a condition.
      *
@@ -22,4 +22,8 @@ interface ICrocCondOracle {
      *         transaction, and the nonce will not be reset. */
     function checkCrocNonceSet (address user, bytes32 nonceSalt, uint32 nonce,
                                 bytes calldata args) external returns (bool);
+}
+
+interface ICrocCondOracle {
+    function checkCrocCond (address user, bytes calldata args) external returns (bool);
 }

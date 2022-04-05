@@ -162,10 +162,16 @@ contract AgentMask is StorageLayout {
 
     function resetNonceCond (bytes32 salt, uint32 nonce, address oracle,
                              bytes memory args) internal {
-        bool canProceed = ICrocCondOracle(oracle).checkCrocNonceSet
+        bool canProceed = ICrocNonceOracle(oracle).checkCrocNonceSet
             (lockHolder_, salt, nonce, args);
         require(canProceed, "ON");
         resetNonce(salt, nonce);
+    }
+
+    function checkGateOracle (address oracle, bytes memory args) internal {
+        bool canProceed = ICrocCondOracle(oracle).checkCrocCond
+            (lockHolder_, args);
+        require(canProceed, "OG");
     }
 
     function casAgent (address client, address agent, uint256 salt) internal {

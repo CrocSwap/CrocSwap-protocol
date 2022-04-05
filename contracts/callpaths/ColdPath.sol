@@ -103,6 +103,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             resetNonce(cmd);
         } else if (cmdCode == UserCmd.RESET_NONCE_COND) {
             resetNonceCond(cmd);
+        } else if (cmdCode == UserCmd.GATE_ORACLE_COND) {
+            checkGateOracle(cmd);
         }
 
     }
@@ -299,6 +301,12 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (, bytes32 salt, uint32 nonce, address oracle, bytes memory args) = 
             abi.decode(cmd, (uint8,bytes32,uint32,address,bytes));
         resetNonceCond(salt, nonce, oracle, args);
+    }
+
+    function checkGateOracle (bytes calldata cmd) private {
+        (, address oracle, bytes memory args) = 
+            abi.decode(cmd, (uint8,address,bytes));
+        checkGateOracle(oracle, args);
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.

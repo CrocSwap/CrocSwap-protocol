@@ -77,6 +77,7 @@ library UserCmd {
     uint8 constant DISBURSE_VIRTUAL_CODE = 78;
     uint8 constant RESET_NONCE = 80;
     uint8 constant RESET_NONCE_COND = 81;
+    uint8 constant GATE_ORACLE_COND = 82;
 
     uint8 constant MINT_KNOCKOUT = 91;
     uint8 constant BURN_KNOCKOUT = 92;
