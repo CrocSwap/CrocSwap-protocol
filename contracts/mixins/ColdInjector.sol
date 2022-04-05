@@ -42,6 +42,16 @@ contract ColdPathInjector is StorageLayout {
         return output;
     }
 
+    function callUserCmdMem (uint16 proxyIdx, bytes memory input)
+        internal returns (bytes memory) {
+        require(proxyPaths_[proxyIdx] != address(0));
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
+            abi.encodeWithSignature("userCmd(bytes)", input));
+        require(success);
+        return output;
+    }
+
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
     function callMintAmbient (CurveCache.Cache memory curve, uint128 liq,
                               bytes32 poolHash) internal
