@@ -207,7 +207,7 @@ library Chaining {
      * @return isAdd If true, then liquidity must be minted to neutralize rolling flow,
      *   If false, then liquidity must be burned. */
     function plugLiquidity (RollTarget memory roll,
-                            Directives.ConcenBookend memory bend,
+                            Directives.ConcentratedDirective memory bend,
                             CurveMath.CurveState memory curve,
                             int24 lowTick, int24 highTick, PairFlow memory flow)
         internal pure {

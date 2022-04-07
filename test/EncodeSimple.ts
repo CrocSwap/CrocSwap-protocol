@@ -1,5 +1,5 @@
 import { BigNumber, BytesLike, ethers, BigNumberish } from 'ethers';
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MAX_PRICE, MIN_PRICE } from './FixedPoint';
 
 export function singleHop (open: string, close: string, pool: PoolDirective): OrderDirective {
@@ -42,10 +42,8 @@ export function simpleMint (poolIdx: BigNumberish, lowerTick: number, upperTick:
         poolIdx: poolIdx,
         passive: {
             ambient: { isAdd: false, rollType: 0, liquidity: BigNumber.from(0) },
-            concentrated: [{ openTick: lowerTick,
-                bookends: [{ closeTick: upperTick, 
-                    isAdd: BigNumber.from(liq).gt(0), rollType: 0, liquidity: BigNumber.from(liq).abs()}]
-            }]
+            concentrated: [{ lowTick: lowerTick, highTick: upperTick, isRelTick: false, 
+                isAdd: BigNumber.from(liq).gt(0), rollType: 0, liquidity: BigNumber.from(liq).abs()}]
         },
         swap: {
             isBuy: false,
@@ -82,8 +80,7 @@ export function simpleSwap (poolIdx: BigNumberish, isBuy: boolean, inBaseQty: bo
        poolIdx: poolIdx,
        passive: {
         ambient: { isAdd: false, rollType: 0, liquidity: BigNumber.from(0) },
-        concentrated: [{ openTick: 0,
-            bookends: [] }]
+        concentrated: []
        },
        swap: {
            isBuy: isBuy,

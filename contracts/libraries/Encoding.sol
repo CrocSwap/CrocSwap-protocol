@@ -107,18 +107,12 @@ library OrderEncoding {
                                 bytes calldata input, uint32 offset)
         private pure returns (uint32 next) {
         unchecked {
-        uint8 bookendCnt;
-        
-        (pass.openTick_, next) = eatInt24(input, offset);
-        (bookendCnt, next) = eatUInt8(input, next);
-
-        pass.bookends_ = new Directives.ConcenBookend[](bookendCnt);
-        for (uint8 i = 0; i < bookendCnt; ++i) {
-            (pass.bookends_[i].closeTick_, next) = eatInt24(input, next);
-            (pass.bookends_[i].isAdd_, next) = eatBool(input, next);
-            (pass.bookends_[i].rollType_, next) = eatUInt8(input, next);
-            (pass.bookends_[i].liquidity_, next) = eatUInt128(input, next);
-        }
+        (pass.lowTick_, next) = eatInt24(input, offset);
+        (pass.highTick_, next) = eatInt24(input, next);
+        (pass.isTickRel_, next) = eatBool(input, next);
+        (pass.isAdd_, next) = eatBool(input, next);
+        (pass.rollType_, next) = eatUInt8(input, next);
+        (pass.liquidity_, next) = eatUInt128(input, next);
         }
     }
 

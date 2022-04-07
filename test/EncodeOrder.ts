@@ -64,12 +64,9 @@ export interface AmbientDirective {
 }
 
 export interface ConcentratedDirective {
-    openTick: number,
-    bookends: ConcentratedBookend[]
-}
-
-export interface ConcentratedBookend {
-    closeTick: number,
+    lowTick: number,
+    highTick: number,
+    isRelTick: boolean,
     isAdd: boolean,
     rollType?: number,
     liquidity: BigNumber
@@ -127,17 +124,13 @@ function encodePassive (passive: PassiveDirective): BytesLike {
 }
 
 function encodeConc (conc: ConcentratedDirective): BytesLike {
-    let openTick = encodeJsSigned(conc.openTick, 3)
-    let bookends = listEncoding(conc.bookends, encodeBookend)
-    return ethers.utils.concat([openTick, bookends])
-}
-
-function encodeBookend (bookend: ConcentratedBookend): BytesLike {
-    let closeTick = encodeJsSigned(bookend.closeTick, 3)
-    let isAdd = encodeBool(bookend.isAdd)
-    let rollType = encodeWord(bookend.rollType ? bookend.rollType : 0)
-    let liq = encodeFull(bookend.liquidity)
-    return ethers.utils.concat([closeTick, isAdd, rollType, liq])
+    let openTick = encodeJsSigned(conc.lowTick, 3)
+    let closeTick = encodeJsSigned(conc.highTick, 3)
+    let isRelTick = encodeBool(conc.isRelTick)
+    let isAdd = encodeBool(conc.isAdd)
+    let rollType = encodeWord(conc.rollType ? conc.rollType : 0)
+    let liq = encodeFull(conc.liquidity)
+    return ethers.utils.concat([openTick, closeTick, isRelTick, isAdd, rollType, liq])
 }
 
 function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike {

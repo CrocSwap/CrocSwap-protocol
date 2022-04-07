@@ -4,7 +4,7 @@ import { ethers } from 'hardhat';
 import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides, Bytes, BigNumberish } from 'ethers';
@@ -427,7 +427,7 @@ export class TestPool {
     readonly WARM_PROXY: number = 2;
     readonly LONG_PROXY: number = 4;
     readonly HOT_PROXY: number = 1;
-    readonly KNOCKOUT_PROXY: number = 3576;
+    readonly KNOCKOUT_PROXY: number = 7;
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()

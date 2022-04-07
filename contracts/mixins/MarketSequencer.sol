@@ -309,13 +309,9 @@ contract MarketSequencer is TradeMatcher {
                                  Chaining.ExecCntx memory cntx) private {
         unchecked { // Only arithmetic in block is ++i/++j which will never overflow
         for (uint i = 0; i < dirs.length; ++i) {
-            for (uint j = 0; j < dirs[i].bookends_.length; ++j ) {
-                (int24 lowTick, int24 highTick, Directives.ConcenBookend memory bend) = 
-                    dirs[i].sliceBookend(j);
-                (int128 nextBase, int128 nextQuote) = applyConcentrated
-                    (curve, flow, cntx, lowTick, highTick, bend);
-                flow.accumFlow(nextBase, nextQuote);
-            }
+            (int128 nextBase, int128 nextQuote) = applyConcentrated
+                (curve, flow, cntx, dirs[i]);
+            flow.accumFlow(nextBase, nextQuote);
         }
         }
     }
@@ -324,13 +320,27 @@ contract MarketSequencer is TradeMatcher {
     function applyConcentrated (CurveCache.Cache memory curve,
                                 Chaining.PairFlow memory flow,
                                 Chaining.ExecCntx memory cntx,
-                                int24 lowTick, int24 highTick,
-                                Directives.ConcenBookend memory bend)
+                                Directives.ConcentratedDirective memory bend)
         private returns (int128, int128) {
-        cntx.roll_.plugLiquidity(bend, curve.curve_, lowTick, highTick, flow);
+
+        // If ticks are relative, normalize against current pool price.
+        if (bend.isTickRel_) {
+            int24 priceTick = curve.pullPriceTick();
+            bend.lowTick_ = priceTick + bend.lowTick_;
+            bend.highTick_ = priceTick + bend.highTick_;
+            require((bend.lowTick_ >= TickMath.MIN_TICK) &&
+                    (bend.highTick_ <= TickMath.MAX_TICK) &&
+                    (bend.lowTick_ <= bend.highTick_), "RT");
+        }
+
+        // If liquidity is set based on rolling balance, dynamically set in base
+        // liquidity space.
+        cntx.roll_.plugLiquidity(bend, curve.curve_, bend.lowTick_,
+                                 bend.highTick_, flow);
 
         if (bend.isAdd_) {
-            bool offGrid = cntx.improve_.verifyFit(lowTick, highTick, bend.liquidity_,
+            bool offGrid = cntx.improve_.verifyFit(bend.lowTick_, bend.highTick_,
+                                                   bend.liquidity_,
                                                    cntx.pool_.head_.tickSize_,
                                                    curve.pullPriceTick());
             if (offGrid) {
@@ -338,14 +348,17 @@ contract MarketSequencer is TradeMatcher {
                 // partial burns on these positions. Since off-grid size eligibility
                 // is only checked at mint time this is necessary to prevent under-sized
                 // off-grid orders.
-                markPosAtomic(lockHolder_, cntx.pool_.hash_, lowTick, highTick);
+                markPosAtomic(lockHolder_, cntx.pool_.hash_,
+                              bend.lowTick_, bend.highTick_);
             }
         }
 
         if (bend.liquidity_ == 0) { return (0, 0); }
         return bend.isAdd_ ?
-            callMintRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_) :
-            callBurnRange(curve, lowTick, highTick, bend.liquidity_, cntx.pool_.hash_);
+            callMintRange(curve, bend.lowTick_, bend.highTick_,
+                          bend.liquidity_, cntx.pool_.hash_) :
+            callBurnRange(curve, bend.lowTick_, bend.highTick_,
+                          bend.liquidity_, cntx.pool_.hash_);
     }
 
 }

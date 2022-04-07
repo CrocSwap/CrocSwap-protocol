@@ -11,7 +11,7 @@ contract TestEncoding {
     Directives.ChainingFlags public chaining;
     Directives.SwapDirective public swap;
     Directives.AmbientDirective public ambientOpen;
-    Directives.ConcenBookend public bookend;
+    Directives.ConcentratedDirective public bookend;
     
     uint256 public poolIdx;
     int24 public openTick;
@@ -33,12 +33,9 @@ contract TestEncoding {
     }
 
     function testEncodePassive (uint8 pairPos, uint8 poolPos, uint8 concPos,
-                                uint8 bookendPos, bytes calldata input) public {
+                                bytes calldata input) public {
         Directives.OrderDirective memory dir = OrderEncoding.decodeOrder(input);
-        openTick = dir.hops_[pairPos].pools_[poolPos]
-            .conc_[concPos].openTick_;
-        bookend = dir.hops_[pairPos].pools_[poolPos]
-            .conc_[concPos].bookends_[bookendPos];
+        bookend = dir.hops_[pairPos].pools_[poolPos].conc_[concPos];
     }
 
     function testEncodeOpen (bytes calldata input) public {

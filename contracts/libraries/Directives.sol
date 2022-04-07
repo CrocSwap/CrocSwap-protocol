@@ -41,19 +41,11 @@ library Directives {
 
     /* @notice Defines a sequence of mint/burn actions related to concentrated liquidity
      *         range orders on a single pool.
-     * @param openTick_ A single tick index that defines one side of the range order 
-     *                  boundary for all range orders in this directive.
-     * @param bookends_ One of more set of closing parameters, each of which together with
-     *                  open tick defines a single range order. */
-    struct ConcentratedDirective {
-        int24 openTick_;
-        ConcenBookend[] bookends_;
-    }
-
-    /* @notice Along with a root open tick from above defines a single range order mint
-     *         or burn action.
-     * @param closeTick_ The tick index of the other side of the boundary of the range
-     *                   order.
+     *
+     * @param lowTick_ A single tick index that defines one side of the range order 
+     *                 boundary for all range orders in this directive.
+     * @param highTick_ The tick index of the other side of the boundary of the range
+     *                  order.
      * @param isAdd_ If true, the action mints new concentrated liquidity. If false, it
      *               burns pre-existing concentrated liquidity. 
      * @param rollType_  The flavor of rolling gap fill that should be applied (if any)
@@ -63,12 +55,17 @@ library Directives {
      *                   Represented as the equivalent of sqrt(X*Y) liquidity for the 
      *                   equivalent constant-product AMM curve. If rolling is turned
      *                   on, this is instead interpreted as a rolling target value. */
-    struct ConcenBookend {
-        int24 closeTick_;
+    struct ConcentratedDirective {
+        int24 lowTick_;
+        int24 highTick_;
         bool isAdd_;
+        bool isTickRel_;
         uint8 rollType_;
         uint128 liquidity_;
     }
+
+    /* @notice Along with a root open tick from above defines a single range order mint
+     *         or burn action.
 
     /* @notice Defines a directive related to the mint/burn of ambient liquidity on a 
      *         single pre-specified curve.
@@ -188,38 +185,6 @@ library Directives {
     struct OrderDirective {
         SettlementChannel open_;
         HopDirective[] hops_;
-    }
-
-    /* @notice Convenience function that exists to normalize a single range order from
-     *    a ConcentratedDirective object.
-     *
-     * @param dir The ConcentratedDirective object to be used.
-     * @param idx The array index of the entries to be casted into a single range order.
-     *
-     * @return lowTick The lower price tick boundary of the range order.
-     * @return highTick The upper prick tick boundary of the range order.
-     * @return isAdd If true, the range order mints new liquidity to the pool. If false,
-     *    burns pre-existing liquidity.
-     * @return liq The amount of liquidity to be minted or burned in this single range 
-     *    order. */
-    function sliceBookend (ConcentratedDirective memory dir, uint idx)
-        internal pure returns (int24 lowTick, int24 highTick,
-                               ConcenBookend memory bend) {
-        bend = dir.bookends_[idx];
-        (lowTick, highTick) =
-            pinLowerUpper(dir.openTick_, bend.closeTick_);
-    }
-
-    /* @notice Sorts an arbitrary open and closed tick boundary to a lower and upper tick
-     *         index. */
-    function pinLowerUpper (int24 openTick, int24 closeTick)
-        private pure returns (int24 lowerTick, int24 upperTick) {
-        require(openTick != closeTick);
-        if (openTick < closeTick) {
-            (lowerTick, upperTick) = (openTick, closeTick);
-        } else {
-            (lowerTick, upperTick) = (closeTick, openTick);
-        }
     }
 
 }
