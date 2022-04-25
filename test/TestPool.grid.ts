@@ -86,8 +86,8 @@ describe('Pool Grid', () => {
         let order = await test.prototypeOrder()
 
         let concen: ConcentratedDirective = {
-            openTick: 3030,
-            bookends: [{closeTick: 6030, isAdd: true, liquidity: BigNumber.from(1000*1024)}]
+            lowTick: 3030, isRelTick: false,
+            highTick: 6030, isAdd: true, liquidity: BigNumber.from(1000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -96,7 +96,7 @@ describe('Pool Grid', () => {
         await test.testOrder(order)
         expect(await test.liquidity()).to.eq(1000*1024)  
 
-        order.hops[0].pools[0].passive.concentrated[0].openTick = 6031
+        order.hops[0].pools[0].passive.concentrated[0].lowTick = 6031
         await expect(test.testOrder(order)).to.be.reverted
 
         order.hops[0].improve.useBaseSide = false
@@ -110,8 +110,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -120,7 +120,7 @@ describe('Pool Grid', () => {
         await test.testOrder(order)
         expect(await test.liquidity()).to.eq(18000*1024)  
 
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(16000*1024)
+        order.hops[0].pools[0].passive.concentrated[0].liquidity = BigNumber.from(16000*1024)
         await expect(test.testOrder(order)).to.be.reverted
     })
 
@@ -131,8 +131,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -140,8 +140,8 @@ describe('Pool Grid', () => {
         
         await test.testOrder(order)
 
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(18000*1024)
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].isAdd = false
+        order.hops[0].pools[0].passive.concentrated[0].liquidity = BigNumber.from(18000*1024)
+        order.hops[0].pools[0].passive.concentrated[0].isAdd = false
         await test.testOrder(order)
         expect(await test.liquidity()).to.eq(0) 
     })
@@ -152,8 +152,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -161,8 +161,8 @@ describe('Pool Grid', () => {
         
         await test.testOrder(order)
 
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(17999*1024)
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].isAdd = false
+        order.hops[0].pools[0].passive.concentrated[0].liquidity = BigNumber.from(17999*1024)
+        order.hops[0].pools[0].passive.concentrated[0].isAdd = false
         expect(test.testOrder(order)).to.be.reverted
     })
 
@@ -172,8 +172,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -196,8 +196,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -206,7 +206,7 @@ describe('Pool Grid', () => {
         await test.testOrder(order)
         expect(await test.liquidity()).to.eq(18000*1024)  
 
-        order.hops[0].pools[0].passive.concentrated[0].bookends[0].liquidity = BigNumber.from(16000*1024)
+        order.hops[0].pools[0].passive.concentrated[0].liquidity = BigNumber.from(16000*1024)
         await expect(test.testOrder(order)).to.be.reverted
     })
 
@@ -217,8 +217,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(18000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -239,8 +239,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(100000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(100000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true
@@ -256,8 +256,8 @@ describe('Pool Grid', () => {
 
         // Collateral thresh is about 18k of liquidity
         let concen: ConcentratedDirective = {
-            openTick: 3801,
-            bookends: [{closeTick: 4200, isAdd: true, liquidity: BigNumber.from(100000*1024)}]
+            lowTick: 3801, isRelTick: false,
+            highTick: 4200, isAdd: true, liquidity: BigNumber.from(100000*1024)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         order.hops[0].improve.isEnabled = true

@@ -266,18 +266,18 @@ describe('Pair', () => {
         let order = await test.prototypeOrder(3)
 
         let concenOffGrid: ConcentratedDirective = {
-            openTick: 3001,
-            bookends: [{closeTick: 5001, isAdd: true, liquidity: BigNumber.from(1000*1024)}]
+            lowTick: 3001, isRelTick: false,
+            highTick: 5001, isAdd: true, liquidity: BigNumber.from(1000*1024)
         }
 
         let concenTenGrid: ConcentratedDirective = {
-            openTick: 1000,
-            bookends: [{closeTick: 9000, isAdd: true, liquidity: BigNumber.from(2000*1024)}]
+            lowTick: 1000, isRelTick: false,
+            highTick: 9000, isAdd: true, liquidity: BigNumber.from(2000*1024)
         }
 
         let concenSixGrid: ConcentratedDirective = {
-            openTick: 3000,
-            bookends: [{closeTick: 5004, isAdd: true, liquidity: BigNumber.from(3000*1024)}]
+            lowTick: 3000, isRelTick: false,
+            highTick: 5004, isAdd: true, liquidity: BigNumber.from(3000*1024)
         }
 
         order.hops[0].pools[1].poolIdx = pool2

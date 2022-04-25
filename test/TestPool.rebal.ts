@@ -78,10 +78,8 @@ describe('Pool Rebalance', () => {
         }
 
         let burnLp: ConcentratedDirective = {
-            openTick: -500,
-            bookends: [
-                { closeTick: -200, isAdd: false, liquidity: BigNumber.from(1000*1024) }
-            ]
+            lowTick: -500, isRelTick: false,
+            highTick: -200, isAdd: false, liquidity: BigNumber.from(1000*1024)
         }
         firstDir.passive.concentrated.push(burnLp)
         hop.pools.push(firstDir)
@@ -103,13 +101,10 @@ describe('Pool Rebalance', () => {
         }
 
         let mintLp: ConcentratedDirective = {
-            openTick: -100,
-            bookends: [
-                { closeTick: 100, isAdd: false, 
-                    rollType: 5,
-                    liquidity: BigNumber.from(0) }
-            ]
-        }
+            lowTick: -100, isRelTick: false,
+            highTick: 100, isAdd: false, 
+            rollType: 5,
+            liquidity: BigNumber.from(0) }
         secondDir.passive.concentrated.push(mintLp)
         hop.pools.push(secondDir)
 
@@ -201,16 +196,12 @@ describe('Pool Rebalance', () => {
         }
 
         let burnLp: ConcentratedDirective = {
-            openTick: -500,
-            bookends: [
-                { closeTick: -300, isAdd: false, liquidity: BigNumber.from(1000*1024) }
-            ]
+            lowTick: -500, isRelTick: false,
+            highTick: -300, isAdd: false, liquidity: BigNumber.from(1000*1024)
         }
         let mintLpFloor: ConcentratedDirective = {
-            openTick: -100,
-            bookends: [
-                { closeTick: 100, isAdd: true, liquidity: BigNumber.from(950*1024) }
-            ]
+            lowTick: -100, highTick: 100, isRelTick: false,
+            isAdd: true, liquidity: BigNumber.from(950*1024)
         }
 
         firstDir.passive.concentrated.push(burnLp)

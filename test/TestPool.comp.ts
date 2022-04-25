@@ -111,8 +111,8 @@ describe('Pool Compound', () => {
         order.hops[0].pools[0].chain.swapDefer = false
 
         let concen: ConcentratedDirective = {
-            openTick: 4000,
-            bookends: [{closeTick: 8000, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100)}]
+            lowTick: 4000, isRelTick: false,
+            highTick: 8000, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100)
         }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         
@@ -138,14 +138,17 @@ describe('Pool Compound', () => {
         order.hops[0].pools[0].chain.swapDefer = false
 
         let concens: ConcentratedDirective[] = [{
-            openTick: 8000,
-            bookends: [{closeTick: -5000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
-                {closeTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024) }]
+            lowTick: -5000, isRelTick: false,
+            highTick: 8000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
+            {
+               lowTick: 8000, isRelTick: false, highTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024)            
             },
         {
-            openTick: -5000,
-            bookends: [{closeTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
-                {closeTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)}]
+            lowTick: -5000, isRelTick: false,
+            highTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
+         {
+            lowTick: -5000, isRelTick: false,
+            highTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)
 
         }]
 
@@ -187,8 +190,8 @@ describe('Pool Compound Curve Cache', () => {
       order.hops[0].pools[0].chain.swapDefer = false
 
       let concen: ConcentratedDirective = {
-         openTick: 4100,
-         bookends: [{closeTick: 4200, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100000)}]
+         lowTick: 4100, isRelTick: false,
+         highTick: 4200, isAdd: true, rollType: 0, liquidity: BigNumber.from(1024*100000)
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
      

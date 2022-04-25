@@ -1,5 +1,5 @@
 import { BigNumber, BytesLike, ethers, BigNumberish } from 'ethers';
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective,   ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective } from './EncodeOrder';
 import { MAX_PRICE, MIN_PRICE } from './FixedPoint';
 
 export function singleHop (open: string, close: string, pool: PoolDirective): OrderDirective {

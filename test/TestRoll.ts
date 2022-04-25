@@ -337,9 +337,8 @@ describe('Rolling Back Fill', () => {
 
         // Set to use rolling quantity
         let concen: ConcentratedDirective = {
-            openTick: 4000,
-            bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
-        }
+            lowTick: 4000, highTick: 8000, isRelTick: false, 
+            isAdd: true, liquidity: BigNumber.from(0), rollType: 5 }
         order.hops[0].pools[0].passive.concentrated.push(concen)
         
         order.hops[0].pools[0].swap.isBuy = false
@@ -365,8 +364,7 @@ describe('Rolling Back Fill', () => {
         order.hops[0].pools[0].chain.swapDefer = false
         // Set to use rolling quantity
         let concen: ConcentratedDirective = {
-           openTick: 3000,
-           bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
+           lowTick: 3000, highTick: 8000, isAdd: false, isRelTick: false, liquidity: BigNumber.from(0), rollType: 5
          }
       
          order.hops[0].pools[0].passive.concentrated.push(concen)
@@ -393,8 +391,7 @@ describe('Rolling Back Fill', () => {
 
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
-          openTick: 4000,
-          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
+          lowTick: 4000, highTick: 8000, isRelTick: false, isAdd: true, liquidity: BigNumber.from(0), rollType: 5
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -420,8 +417,7 @@ describe('Rolling Back Fill', () => {
 
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
-          openTick: 2000,
-          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
+          lowTick: 2000, highTick: 3000, isRelTick: false, isAdd: true, liquidity: BigNumber.from(0), rollType: 5
       }
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
@@ -450,9 +446,7 @@ describe('Rolling Back Fill', () => {
 
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
-          openTick: 6000,
-          bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
-      }
+          lowTick: 6000, highTick: 8000, isRelTick: false, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
       order.hops[0].pools[0].swap.isBuy = true
@@ -478,9 +472,7 @@ describe('Rolling Back Fill', () => {
 
       // Set to use rolling quantity
       let concen: ConcentratedDirective = {
-          openTick: 2000,
-          bookends: [{closeTick: 3000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
-      }
+          lowTick: 2000, highTick: 3000, isRelTick: false, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}
       order.hops[0].pools[0].passive.concentrated.push(concen)
       
       order.hops[0].pools[0].swap.isBuy = true
@@ -493,8 +485,8 @@ describe('Rolling Back Fill', () => {
       order.hops[0].pools[0].chain.rollExit = false
       // Set to use rolling quantity
       concen = {
-         openTick: 6000,
-         bookends: [{closeTick: 8000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
+         lowTick: 6000, highTick: 8000, isRelTick: false, 
+         isAdd: true, liquidity: BigNumber.from(0), rollType: 5
       }
       order.hops[0].pools[0].passive.concentrated[0] = concen
      
@@ -515,13 +507,11 @@ describe('Rolling Back Fill', () => {
 
       // Set to use rolling quantity
       let concenBurn: ConcentratedDirective = {
-          openTick: 3000,
-          bookends: [{closeTick: 5000, isAdd: false, liquidity: BigNumber.from(100000*1024)}]
+          lowTick: 3000, highTick: 5000, isRelTick: false, isAdd: false, liquidity: BigNumber.from(100000*1024)
       }
       let concenMint: ConcentratedDirective = {
-         openTick: 2000,
-         bookends: [{closeTick: 6000, isAdd: true, liquidity: BigNumber.from(0), rollType: 5}]
-     }
+         lowTick: 2000, highTick: 6000, isRelTick: false,
+         isAdd: true, liquidity: BigNumber.from(0), rollType: 5}
 
       order.hops[0].pools[0].passive.concentrated.push(concenBurn)
       order.hops[0].pools[0].passive.concentrated.push(concenMint)      

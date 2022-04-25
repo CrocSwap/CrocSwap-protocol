@@ -34,7 +34,7 @@ describe('Pool HotPath', () => {
        expect(await test.snapBaseOwed()).to.equal(100*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        await test.testMint(5000, 6000, 10000);
-       CONVEX_ADJ = 193
+/*       CONVEX_ADJ = 193
        expect(await test.snapQuoteOwed()).to.equal(380*1024 - CONVEX_ADJ + MINT_BUFFER)
        expect(await test.snapBaseOwed()).to.equal(0)
 
@@ -45,7 +45,7 @@ describe('Pool HotPath', () => {
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
        expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 336 + 2*MINT_BUFFER)
+       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 336 + 2*MINT_BUFFER)*/
     })
 
     it("mint liquidity", async() => {

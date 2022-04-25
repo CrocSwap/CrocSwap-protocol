@@ -5,7 +5,7 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import { toSqrtPrice } from './FixedPoint';
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedBookend, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective, ImproveDirective, ChainingDirective } from './EncodeOrder';
+import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, ConcentratedDirective, SettlementDirective, HopDirective, encodeOrderDirective, ImproveDirective, ChainingDirective } from './EncodeOrder';
 import { BigNumber } from 'ethers';
 
 chai.use(solidity);
@@ -101,21 +101,22 @@ describe('Encoding', () => {
         concLiqs: number[][]): PassiveDirective {
         let concs: ConcentratedDirective[] = []
         for (let i = 0; i < openTicks.length; ++i) {
-            concs.push(buildConcentrated(openTicks[i], closeTicks[i], concLiqs[i]))
+            concs = concs.concat(buildConcentrated(openTicks[i], closeTicks[i], concLiqs[i]))
         }
-        
         return { ambient: { isAdd: ambientLiq > 0,
             liquidity: BigNumber.from(ambientLiq).abs() }, concentrated: concs }
     }
 
     function buildConcentrated (openTick: number, closeTicks: number[],
-        concLiqs: number[]): ConcentratedDirective {
-        let bookends: ConcentratedBookend[] = []
+        concLiqs: number[]): ConcentratedDirective[] {
+        let dirs: ConcentratedDirective[] = []
         for (let i = 0; i < closeTicks.length; ++i) {
-            bookends.push({closeTick: closeTicks[i], 
+            let lowTick = openTick < closeTicks[i] ? openTick : closeTicks[i]
+            let highTick = openTick >= closeTicks[i] ? openTick : closeTicks[i]
+            dirs.push({lowTick: lowTick, highTick: highTick, isRelTick: false,
                 isAdd: concLiqs[i] > 0, liquidity: BigNumber.from(concLiqs[i]).abs()})
         }        
-        return { openTick: openTick, bookends: bookends }
+        return dirs
     }
 
     it ("open settlement", async() => {
@@ -189,14 +190,14 @@ describe('Encoding', () => {
     })
 
     it ("concentrated", async() => {
-        await encoder.testEncodePassive(0, 1, 0, 1, encodeOrderDirective(order))
-        let cmp = order.hops[0].pools[1].passive.concentrated[0]
-        let cmpEnd = cmp.bookends[1]
+        await encoder.testEncodePassive(0, 1, 1, encodeOrderDirective(order))
+        let cmp = order.hops[0].pools[1].passive.concentrated[1]
         
-        expect((await encoder.openTick())).to.equal(cmp.openTick)
-        expect((await encoder.bookend()).closeTick_).to.equal(cmpEnd.closeTick)
-        expect((await encoder.bookend()).liquidity_).to.equal(cmpEnd.liquidity)
-        expect((await encoder.bookend()).isAdd_).to.equal(cmpEnd.isAdd)
+        expect((await encoder.bookend()).lowTick_).to.equal(cmp.lowTick)
+        expect((await encoder.bookend()).highTick_).to.equal(cmp.highTick)
+        expect((await encoder.bookend()).liquidity_).to.equal(cmp.liquidity)
+        expect((await encoder.bookend()).isAdd_).to.equal(cmp.isAdd)
+        expect((await encoder.bookend()).isTickRel_).to.equal(cmp.isRelTick)
     })
 
     it ("chain flags", async() => {
