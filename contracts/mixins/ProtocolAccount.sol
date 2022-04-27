@@ -34,12 +34,6 @@ contract ProtocolAccount is StorageLayout  {
         }
     }
 
-    function accumProtocolFees (address token, uint128 collected) internal {
-        if (collected > 0) {
-            feesAccum_[token] += collected;
-        }
-    }
-
     /* @notice Pays out the earned, but unclaimed protocol fees in the pool.
      * @param receipient - The receiver of the protocol fees.
      * @param token - The token address of the quote token. */

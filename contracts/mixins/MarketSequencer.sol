@@ -72,16 +72,6 @@ contract MarketSequencer is TradeMatcher {
         commitCurve(pool.hash_, curve);
     }
 
-    function assertInsidePrice (Directives.SwapDirective memory dir,
-                                CurveMath.CurveState memory curve,
-                                uint128 limitPrice) private pure {
-        if (limitPrice > 0) {
-            require(dir.isBuy_ ?
-                    curve.priceRoot_ <= limitPrice:
-                    curve.priceRoot_ >= limitPrice, "LI");
-        }
-    }
-
     /* @notice Mints concentrated liquidity in the form of a range order on to the pool.
      *
      * @param bidTick The price tick associated with the lower boundary of the range
