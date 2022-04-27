@@ -49,16 +49,6 @@ library TokenFlow {
         }
     }
 
-    /* @notice Returns the token flow for the front/entry side of the pair hop. */
-    function frontFlow (PairSeq memory seq) internal pure returns (int128) {
-        return seq.isBaseFront_ ? seq.flow_.baseFlow_ : seq.flow_.quoteFlow_;
-    }
-
-    /* @notice Returns the token flow for the back/exit side of the pair hop. */
-    function backFlow (PairSeq memory seq) internal pure returns (int128) {
-        return seq.isBaseFront_ ? seq.flow_.quoteFlow_ : seq.flow_.baseFlow_;
-    }
-
     /* @notice Returns the token at the front/entry side of the pair hop. */
     function frontToken (PairSeq memory seq) internal pure returns (address) {
         return seq.isBaseFront_ ? seq.baseToken_ : seq.quoteToken_;

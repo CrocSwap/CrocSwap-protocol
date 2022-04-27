@@ -43,11 +43,4 @@ library CurveCache {
     function dirtyPrice (Cache memory cache) internal pure {
         cache.isTickClean_ = false;
     }
-
-    /* @notice Call when the price tick was calculated externally, and we want to set that
-     *         cache on the object. */
-    function plugTick (Cache memory cache, int24 tick) internal pure {
-        cache.isTickClean_ = true;
-        cache.unsafePriceTick_ = tick;
-    }
 }
