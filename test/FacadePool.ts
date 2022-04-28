@@ -621,6 +621,42 @@ export class TestPool {
             .protocolCmd(0, cmd, true)
     }
 
+    async testDeposit (from: Signer, recv: string, value: number | BigNumber, token: string, 
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
+                    [73, recv, value, token])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testDisburse (from: Signer, recv: string, value: number | BigNumber, token: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
+                    [74, recv, value, token])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testTransfer (from: Signer, recv: string, value: number | BigNumber, token: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
+                    [75, recv, value, token])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testSidePocket (from: Signer, fromSalt: number, toSalt: number, value: number | BigNumber, token: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "uint256", "uint256", "int128", "address"],
+                    [76, fromSalt, toSalt, value, token])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+    
     async testCollectSurplus (from: Signer, recv: string, value: number | BigNumber, token: string, isTransfer: boolean,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()

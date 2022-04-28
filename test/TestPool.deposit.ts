@@ -35,7 +35,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await baseToken.balanceOf(pool.address)
-      await test.testCollectSurplus(await test.trader, other, -5000, baseToken.address, false)
+      await test.testDeposit(await test.trader, other, 5000, baseToken.address)
 
       let nextBal = await baseToken.balanceOf(pool.address)
       expect(nextBal.sub(initBal)).to.equal(5000)
@@ -50,7 +50,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, ZERO_ADDR)
       let initBal = await nativeEth.balanceOf(pool.address)
-      await test.testCollectSurplus(await test.trader, other, -5000, ZERO_ADDR, false,
+      await test.testDeposit(await test.trader, other, 5000, ZERO_ADDR,
         {value: 5000})
 
       let nextBal = await nativeEth.balanceOf(pool.address)
@@ -63,7 +63,7 @@ describe('Pool Surplus Deposits', () => {
 
     it("deposit native insufficient value", async() => {
       let pool = await test.dex
-      expect(test.testCollectSurplus(await test.trader, other, -5000, ZERO_ADDR, false, {value: 4999})).to.be.reverted
+      expect(test.testDeposit(await test.trader, other, 5000, ZERO_ADDR, {value: 4999})).to.be.reverted
     })
 
     it("disburse", async() => {
@@ -72,7 +72,7 @@ describe('Pool Surplus Deposits', () => {
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let quoteSurplus = await query.querySurplus(sender, quoteToken.address)
       let initBal = await baseToken.balanceOf(other)
-      await test.testCollectSurplus(await test.trader, other, 5000, baseToken.address, false)
+      await test.testDisburse(await test.trader, other, 5000, baseToken.address)
 
       let nextBal = await baseToken.balanceOf(other)
       expect(nextBal.sub(initBal)).to.equal(5000)
@@ -92,7 +92,7 @@ describe('Pool Surplus Deposits', () => {
       let initSurplus = await query.querySurplus(sender, ZERO_ADDR)
       let initOtherSurplus = await query.querySurplus(other, ZERO_ADDR)
       let initBal = await nativeEth.balanceOf(other)
-      await test.testCollectSurplus(await test.trader, other, 5000, ZERO_ADDR, false)
+      await test.testDisburse(await test.trader, other, 5000, ZERO_ADDR)
 
       let nextBal = await nativeEth.balanceOf(other)
       expect(nextBal.sub(initBal)).to.equal(5000)
@@ -105,7 +105,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await baseToken.balanceOf(other)
-      await test.testCollectSurplus(await test.trader, other, initSurplus, baseToken.address, false)
+      await test.testDisburse(await test.trader, other, initSurplus, baseToken.address)
 
       let nextBal = await baseToken.balanceOf(other)
       expect(nextBal.sub(initBal)).to.equal(initSurplus)
@@ -117,7 +117,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await baseToken.balanceOf(other)
-      await test.testCollectSurplus(await test.trader, other, 0, baseToken.address, false)
+      await test.testDisburse(await test.trader, other, 0, baseToken.address)
 
       let nextBal = await baseToken.balanceOf(other)
       expect(nextBal.sub(initBal)).to.equal(initSurplus)
@@ -127,7 +127,19 @@ describe('Pool Surplus Deposits', () => {
     it("disburse over-size", async() => {
       let pool = await test.dex
       let initBal = await baseToken.balanceOf(other)
-      expect(test.testCollectSurplus(await test.trader, other, initBal.add(1), baseToken.address, false)).to.be.reverted
+      expect(test.testDisburse(await test.trader, other, initBal.add(1), baseToken.address)).to.be.reverted
+    })
+
+    it("disburse all but", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+      let initBal = await baseToken.balanceOf(other)
+      await test.testDisburse(await test.trader, other, -500, baseToken.address)
+
+      let nextBal = await baseToken.balanceOf(other)
+      expect(nextBal.sub(initBal)).to.equal(initSurplus.sub(500))
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(500)
     })
 
     it("transfer", async() => {
@@ -135,7 +147,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await query.querySurplus(other, baseToken.address)
-      await test.testCollectSurplus(await test.trader, other, 5000, baseToken.address, true)
+      await test.testTransfer(await test.trader, other, 5000, baseToken.address)
 
       expect(await query.querySurplus(other, baseToken.address)).to.equal(initBal.add(5000))
       expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(5000))
@@ -146,10 +158,21 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await query.querySurplus(other, baseToken.address)
-      await test.testCollectSurplus(await test.trader, other, initSurplus, baseToken.address, true)
+      await test.testTransfer(await test.trader, other, initSurplus, baseToken.address)
 
       expect(await query.querySurplus(other, baseToken.address)).to.equal(initBal.add(initSurplus))
       expect(await query.querySurplus(sender, baseToken.address)).to.equal(0)
+    })
+
+    it("transfer all but", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+      let initBal = await query.querySurplus(other, baseToken.address)
+      await test.testTransfer(await test.trader, other, -500, baseToken.address)
+
+      expect(await query.querySurplus(other, baseToken.address)).to.equal(initSurplus.sub(500))
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(500);
     })
 
     it("transfer full infer", async() => {
@@ -157,7 +180,7 @@ describe('Pool Surplus Deposits', () => {
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, baseToken.address)
       let initBal = await query.querySurplus(other, baseToken.address)
-      await test.testCollectSurplus(await test.trader, other, 0, baseToken.address, true)
+      await test.testTransfer(await test.trader, other, 0, baseToken.address)
 
       expect(await query.querySurplus(other, baseToken.address)).to.equal(initBal.add(initSurplus))
       expect(await query.querySurplus(sender, baseToken.address)).to.equal(0)
@@ -170,4 +193,96 @@ describe('Pool Surplus Deposits', () => {
       let initBal = await query.querySurplus(other, baseToken.address)
       expect(test.testCollectSurplus(await test.trader, other, initSurplus.add(1), baseToken.address, true)).to.be.reverted
     })
-})
+
+    it("side pocket", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+
+      const BASE_SALT = 0
+      const SIDE_SALT = 5000
+
+      // Move to side pocket
+      await test.testSidePocket(await test.trader, BASE_SALT, SIDE_SALT, initSurplus, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(0)
+
+      // Move back
+      await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, initSurplus, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus)
+    })
+
+    it("side partial", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+
+      const BASE_SALT = 0
+      const SIDE_SALT = 5000
+
+      // Move to side pocket
+      await test.testSidePocket(await test.trader, BASE_SALT, SIDE_SALT, initSurplus.sub(5000), baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(5000)
+
+      // Move back
+      await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, initSurplus.sub(15000), baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(10000))
+    })
+
+
+    it("side zero full", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+
+      const BASE_SALT = 0
+      const SIDE_SALT = 5000
+
+      // Move to side pocket
+      await test.testSidePocket(await test.trader, BASE_SALT, SIDE_SALT, 0, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(0)
+
+      // Move back
+      await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, 0, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus)
+    })
+
+    it("side all but", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+
+      const BASE_SALT = 0
+      const SIDE_SALT = 5000
+
+      // Move to side pocket
+      await test.testSidePocket(await test.trader, BASE_SALT, SIDE_SALT, -5000, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(5000)
+
+      // Move back
+      await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, -10000, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(10000))
+    })
+
+    it("side pocket protects capital", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+      let initBal = await baseToken.balanceOf(other)
+
+      const BASE_SALT = 0
+      const SIDE_SALT = 5000
+
+      // Move to side pocket
+      await test.testSidePocket(await test.trader, BASE_SALT, SIDE_SALT, -5000, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(5000)
+
+      // Disburse, but only from the main pocket
+      await test.testDisburse(await test.trader, other, -500, baseToken.address)
+      let nextBal = await baseToken.balanceOf(other)
+      expect(nextBal.sub(initBal)).to.equal(4500)
+
+      // Move back
+      await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, 0, baseToken.address)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(4500))
+    })
+  })
