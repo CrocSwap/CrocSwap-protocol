@@ -116,7 +116,7 @@ contract CrocPolicy {
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
      * @param cmd    The content of the command passed to the protocolCmd() method. */
-    function opsResolution (address minion, uint8 proxyPath,
+    function opsResolution (address minion, uint16 proxyPath,
                             bytes calldata cmd) opsAuth public {
         emit CrocResolutionOps(minion, cmd);
         ICrocMinion(minion).protocolCmd(proxyPath, cmd, false);
@@ -128,7 +128,7 @@ contract CrocPolicy {
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
      * @param cmd    The content of the command passed to the protocolCmd() method. */
-    function treasuryResolution (address minion, uint8 proxyPath,
+    function treasuryResolution (address minion, uint16 proxyPath,
                                  bytes calldata cmd, bool sudo)
         treasuryAuth public {
         emit CrocResolutionTreasury(minion, sudo, cmd);
@@ -190,7 +190,7 @@ contract CrocPolicy {
      *
      * @param minion The address of the underlying CrocSwapDex contract
      * @param cmd    The content of the command passed to protocolCmd() */
-    function invokePolicy (address minion, uint8 proxyPath, bytes calldata cmd) public {
+    function invokePolicy (address minion, uint16 proxyPath, bytes calldata cmd) public {
         bytes32 ruleKey = keccak256(abi.encode(msg.sender, proxyPath));
         PolicyRule memory policy = rules_[ruleKey];
         require(passesPolicy(policy, cmd), "Policy authority");
@@ -257,7 +257,7 @@ contract CrocPolicy {
      *         or 2) the new policy does not revoke any pre-existing command flags. */
     function isLegal (PolicyRule memory prev, PolicyRule memory next)
         private view returns (bool) {
-        if (weakensPolicy(next, prev)) {
+        if (weakensPolicy(prev, next)) {
             return isPostMandate(prev);
             
         }
