@@ -64,7 +64,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
 
     
     function sudoCmd (bytes calldata cmd) private {
-        require(sudoMode_ = true, "Sudo");
+        require(sudoMode_, "Sudo");
         uint8 cmdCode = uint8(cmd[31]);
         
         if (cmdCode == ProtocolCmd.COLLECT_TREASURY_CODE) {
@@ -280,9 +280,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     }
 
     function depositVirtual (bytes calldata cmd) private {
-        (, address recv, uint256 salt, uint128 value) = 
-            abi.decode(cmd, (uint8, address, uint256, uint128));
-        depositVirtual(recv, salt, value);
+        (, address recv, uint256 salt, uint128 value, bytes memory args) = 
+            abi.decode(cmd, (uint8, address, uint256, uint128, bytes));
+        depositVirtual(recv, salt, value, args);
     }
 
     function disburseVirtual (bytes calldata cmd) private {
