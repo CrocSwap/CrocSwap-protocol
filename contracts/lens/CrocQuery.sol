@@ -47,6 +47,12 @@ contract CrocQuery {
         surplus = uint128((val << 128) >> 128);
     }
 
+    function queryVirtual (address owner, address tracker, uint256 salt)
+        public view returns (uint128 surplus) {
+        address token = PoolSpecs.virtualizeAddress(tracker, salt);
+        surplus = querySurplus(owner, token);
+    }
+
     function queryProtocolAccum (address token) public view returns (uint128) {
         bytes32 key = bytes32(uint256(uint160(token)));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.FEE_MAP_SLOT));
