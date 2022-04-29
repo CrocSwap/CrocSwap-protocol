@@ -140,6 +140,7 @@ export class TestPool {
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
+    third: Promise<Signer>
     permit: Promise<MockPermit>
     base: Token
     quote: Token
@@ -167,6 +168,7 @@ export class TestPool {
         this.trader = accts.then(a => a[0])
         this.auth = accts.then(a => a[1])
         this.other = accts.then(a => a[2])
+        this.third = accts.then(a => a[3])        
         this.liqQty = false
         this.liqBase = true
 
@@ -428,6 +430,8 @@ export class TestPool {
     readonly LONG_PROXY: number = 4;
     readonly HOT_PROXY: number = 1;
     readonly KNOCKOUT_PROXY: number = 7;
+    readonly MULTI_PROXY: number = 6;
+    readonly EMERGENCY_PROXY: number = 9999
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
@@ -621,7 +625,7 @@ export class TestPool {
             .protocolCmd(0, cmd, true)
     }
 
-    async testDeposit (from: Signer, recv: string, value: number | BigNumber, token: string, 
+    async testDeposit (from: Signer, recv: string, value: number | BigNumber, token: string,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
@@ -656,6 +660,24 @@ export class TestPool {
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
             overrides ? overrides : this.overrides)
     }
+
+    async testDepositVirt (from: Signer, tracker: string, salt: number, value: number | BigNumber, args: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "uint256", "int128", "bytes"],
+                    [77, tracker, salt, value, args])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testWithdrawVirt (from: Signer, tracker: string, salt: number, value: number | BigNumber, args: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "uint256", "int128", "bytes"],
+                    [78, tracker, salt, value, args])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
     
     async testCollectSurplus (from: Signer, recv: string, value: number | BigNumber, token: string, isTransfer: boolean,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
@@ -675,11 +697,27 @@ export class TestPool {
             overrides ? overrides : this.overrides)
     }
 
-    async testApproveRouter (from: Signer, router: string, forDebit: boolean, forBurn: boolean): Promise<ContractTransaction> {
+    async testApproveRouter (from: Signer, router: string, nCalls: number, salt: number): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
-        const cmd = abiCoder.encode(["uint8", "address", "bool", "bool"],
-                [72, router, forDebit, forBurn])
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
+                [72, router, nCalls, salt])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
+    }
+
+    async testApproveRouterCond (from: Signer, router: string, nCalls: number, salt: number, ): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
+                [72, router, nCalls, salt])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
+    }
+
+    async testDisburseAgent (from: Signer, client: string, salt: number, recv: string, value: number | BigNumber, token: string,
+        overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
+                    [74, recv, value, token])
+        return (await this.dex).connect(from).userCmdRouter(this.COLD_PROXY, cmd, client, salt,
+            overrides ? overrides : this.overrides)
     }
 
     async collectSurplus (recv: string, base: number | BigNumber, quote: number | BigNumber) {
