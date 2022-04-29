@@ -45,11 +45,6 @@ library ProtocolCmd {
     ////////////////////////////////////////////////////////////////////////////
 
 
-    function encodeUpgrade (address proxy, uint16 proxySlot)
-        internal pure returns (bytes memory) {
-        return abi.encode(UPGRADE_DEX_CODE, proxy, proxySlot);
-    }
-
     function encodeHotPath (bool open)
         internal pure returns (bytes memory) {
         return abi.encode(HOT_OPEN_CODE, open);

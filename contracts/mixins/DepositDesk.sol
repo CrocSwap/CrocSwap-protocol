@@ -73,10 +73,14 @@ contract DepositDesk is SettleLayer {
         userBals_[toKey].surplusCollateral_ += value;
     }
 
-    function depositVirtual (address recv, uint256 tokenSalt, uint128 value) internal {
-        address tracker = lockHolder_;
-        bytes32 toKey = tokenKey(recv, tracker, tokenSalt);
+    function depositVirtual (address tracker, uint256 tokenSalt, uint128 value,
+                             bytes memory extraArgs) internal {
+        bytes32 toKey = tokenKey(lockHolder_, tracker, tokenSalt);
         userBals_[toKey].surplusCollateral_ += value;
+
+        bool success = ICrocVirtualToken(tracker).depositCroc
+            (lockHolder_, tokenSalt, value, extraArgs);
+        require(success, "VF");
     }
 
     function disburseVirtual (address tracker, uint256 tokenSalt, int128 size,

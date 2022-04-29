@@ -111,9 +111,6 @@ contract PoolRegistry is StorageLayout {
      *                template in any pair by using this pool index.
      * @param feeRate The pool's exchange fee as a percent of notional swapped. 
      *                Represented as a multiple of 0.0001%.
-     * @param protocolTake The protocol's take rate on the pool's fees. (The rest goes to
-     *                liquidity rewards.) Specified as a fraction 1/n. Zero is a special
-     *                case that indicates the protocol fee is turned off.
      * @param tickSize The tick grid size for range orders in the pool. (Template can
      *                 also be disabled by setting this to zero.)
      * @param permitOracle The address of the external permission oracle contract that
@@ -217,6 +214,7 @@ contract PoolRegistry is StorageLayout {
      *                 lock to create the pool. (See setNewPoolLiq() above) */
     function registerPool (address base, address quote, uint256 poolIdx) internal
         returns (PoolSpecs.PoolCursor memory, uint128) {
+        assertPoolFresh(base, quote, poolIdx);
         PoolSpecs.Pool memory template = queryTemplate(poolIdx);
         PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         template.protocolTake_ = protocolTakeRate_;

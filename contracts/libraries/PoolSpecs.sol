@@ -119,4 +119,19 @@ library PoolSpecs {
             address(uint160(poolIdx >> 96)) :
             address(0);
     }
+
+    /* @notice Constructs a cryptographically unique virtual address based off a base
+     *         address (either virtual or real), and a salt unique to the base address.
+     *         Can be used to create synthetic tokens, users, etc.
+     *
+     * @param base The address of the base root.
+     * @param salt A salt unique to the base token tracker contract.
+     *
+     * @return A synthetic token address corresponding to the specific virtual address. */
+    function virtualizeAddress (address base, uint256 salt) internal
+        pure returns (address) {
+        bytes32 hash = keccak256(abi.encode(base, salt));
+        uint160 hashTrail = uint160((uint256(hash) << 96) >> 96);
+        return address(hashTrail);
+    }
 }

@@ -225,23 +225,11 @@ contract AgentMask is StorageLayout {
         return recv;
     }
 
-    function virtualizeAddress (address base, uint256 salt) internal
-        pure returns (address) {
-        bytes32 hash = keccak256(abi.encode(base, salt));
-        uint160 hashTrail = uint160((uint256(hash) << 96) >> 96);
-        return address(hashTrail);
-    }
-
-    function virtualizeToken (address tracker, uint256 salt) internal pure returns
-        (address) {
-        return virtualizeAddress(tracker, salt);
-    }
-
     function virtualizeUser (address client, uint256 salt) internal pure returns
         (address) {
         if (salt == 0) { return client; }
         else {
-            return virtualizeAddress(client, salt);
+            return PoolSpecs.virtualizeAddress(client, salt);
         }
     }
     
@@ -255,7 +243,7 @@ contract AgentMask is StorageLayout {
 
     function tokenKey (address user, address token, uint256 salt) pure internal
         returns (bytes32) {
-        return tokenKey(user, virtualizeAddress(token, salt));
+        return tokenKey(user, PoolSpecs.virtualizeAddress(token, salt));
     }
 
     function agentKey (address user, address agent, uint256 salt) pure internal
@@ -263,7 +251,7 @@ contract AgentMask is StorageLayout {
         if (salt == 0) {
             return keccak256(abi.encode(user, agent));
         } else {
-            return keccak256(abi.encode(user, virtualizeAddress(agent, salt)));
+            return keccak256(abi.encode(user, PoolSpecs.virtualizeAddress(agent, salt)));
         }
     }
 

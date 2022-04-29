@@ -23,8 +23,7 @@ contract ColdPathInjector is StorageLayout {
     /* @notice Passes through the protocolCmd call to a sidecar proxy. */
     function callProtocolCmd (uint16 proxyIdx, bytes calldata input) internal
         returns (bytes memory) {
-        require(proxyPaths_[proxyIdx] != address(0));
-        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
         require(success);
@@ -34,8 +33,7 @@ contract ColdPathInjector is StorageLayout {
     /* @notice Passes through the userCmd call to a sidecar proxy. */
     function callUserCmd (uint16 proxyIdx, bytes calldata input)
         internal returns (bytes memory) {
-        require(proxyPaths_[proxyIdx] != address(0));
-        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
         require(success);
@@ -44,12 +42,16 @@ contract ColdPathInjector is StorageLayout {
 
     function callUserCmdMem (uint16 proxyIdx, bytes memory input)
         internal returns (bytes memory) {
-        require(proxyPaths_[proxyIdx] != address(0));
-        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);
+        assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
         require(success);
         return output;
+    }
+
+    function assertProxy (uint16 proxyIdx) private view {
+        require(proxyPaths_[proxyIdx] != address(0));
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);        
     }
 
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
