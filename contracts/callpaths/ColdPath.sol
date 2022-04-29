@@ -40,7 +40,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * 
      * @param code The command code corresponding to the actual method being called.
      *             See ProtocolCmd.sol for outline of protocol command codes. */
-    function protocolCmd (bytes calldata cmd) public {
+    function protocolCmd (bytes calldata cmd) virtual public {
         uint8 code = uint8(cmd[31]);
 
         if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
@@ -63,7 +63,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     }
 
     
-    function sudoCmd (bytes calldata cmd) private {
+    function sudoCmd (bytes calldata cmd) internal {
         require(sudoMode_, "Sudo");
         uint8 cmdCode = uint8(cmd[31]);
         
@@ -80,7 +80,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         }
     }
     
-    function userCmd (bytes calldata cmd) public payable {
+    function userCmd (bytes calldata cmd) virtual public payable {
         uint8 cmdCode = uint8(cmd[31]);
         
         if (cmdCode == UserCmd.INIT_POOL_CODE) {

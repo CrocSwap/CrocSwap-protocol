@@ -38,6 +38,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         
         PoolSpecs.PoolCursor memory pool = preparePoolCntx
             (base, quote, poolIdx, poolTip, isBuy, inBaseQty, qty);
+
         Chaining.PairFlow memory flow = swapDir(pool, isBuy, inBaseQty, qty, limitPrice);
 
         int128 outFlow = pivotOutFlow(flow, minOutput, isBuy, inBaseQty);        
