@@ -80,15 +80,18 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *         existing position.
      *
      * @param pool The cursor for the pool knockout liquidity is being added to.
+     * @param knockoutBits The current knockout parameter flags in the pool's settings.
      * @param curveTick The 24-bit tick index of the current curve price in the pool
      * @param feeGlobal The global cumulative concentrated liquidity fee mileage for
      *                  the curve at mint time.
      * @param loc       The position on the curve the knockout liquidity is being added
      *                  to. (See comments for struct for full explanation of fields)
-     * @param posLots    The amount of liquidity lots (in lots of 1024-units of 
-     *                   sqrt(X*Y) liquidity) being added to the knockout position. 
+     * @param lots    The amount of liquidity lots (in lots of 1024-units of 
+     *                sqrt(X*Y) liquidity) being added to the knockout position. 
      *
-     * @return pivotTime  The time tranche of the pivot the liquidity was added to. */
+     * @return pivotTime  The time tranche of the pivot the liquidity was added to.
+     * @return newPivot If true indicates that this is the first active liquidity at the
+     *                  pivot. */
     function addKnockoutLiq (bytes32 pool, uint8 knockoutBits,
                              int24 curveTick, uint64 feeGlobal,
                              KnockoutLiq.KnockoutPosLoc memory loc, uint96 lots)
@@ -112,9 +115,11 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @param loc       The position on the curve the knockout liquidity is being claimed
      *                  from. (See comments for struct for full explanation of fields)
      *                  to. (See comments for struct for full explanation of fields)
-     * @param posLots    The amount of liquidity lots (in lots of 1024-units of 
-     *                   sqrt(X*Y) liquidity) being added to the knockout position. 
+     * @param lots    The amount of liquidity lots (in lots of 1024-units of 
+     *                sqrt(X*Y) liquidity) being added to the knockout position. 
      *
+     * @return killsPivot If true indicates that removing this liquidity means the pivot
+     *                    has no remaining liquidity.
      * @return pivotTime The tranche time of the underlying pivot the liquidity was 
      *                   removed from.
      * @return rewards  The concentrated liquidity rewards accumulated to the 
@@ -130,6 +135,12 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         rewards = removePosition(pool, loc, lots, feeRange, pivotTime);
     }
 
+    /* @notice Marks the tick level as containing a knockout pivot.
+     * @dev This is done by switching on the least significant bit in the bump point.
+     *      Based on the spec of liquidity lots (see LiquidityMath.sol), this least 
+     *      significant bit should *not* be treated as actual liquidity, but rather just
+     *      an unrelated flag indicating that the level has a corresponding active 
+     *      knockout pivot. */
     function markPivot (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc) private {
         if (loc.isBid_) {
             BookLevel storage lvl = fetchLevel(pool, loc.lowerTick_);
@@ -140,6 +151,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         }
     }
 
+    /* @notice Removes the mark on the book level related to the presence of knockout 
+     *         liquidity. */
     function unmarkPivot (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc) private {
         if (loc.isBid_) {
             unmarkPivot(pool, true, loc.lowerTick_);
@@ -148,6 +161,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         }
     }
 
+    /* @notice Removes the mark on the book level related to the presence of knockout 
+     *         liquidity. */
     function unmarkPivot (bytes32 pool, bool isBid, int24 tick) private {
         BookLevel storage lvl = fetchLevel(pool, tick);
         if (isBid) {
@@ -170,7 +185,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return lots    The liquidity (in 1024-unit lots) claimable by the underlying 
      *                 position. Note that this liquidity should be converted to 
      *                 collateral at the knockout price *not* the current curve price).
-     * @return reards The in-range concentrated liquidity rewards earned by the position.
+     * @return rewards The in-range concentrated liquidity rewards earned by the position.
      */
     function claimPostKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                                 uint160 merkleRoot, uint96[] memory merkleProof)
@@ -209,7 +224,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @param loc The context/location data of the knockout liquidity position.
      * @param lots The amount of liquidity minted to the position.
      * @param feeRange The cumulative fee mileage for the concentrated liquidity range
-     *                 at current mint time. */
+     *                 at current mint time.
+     * @param pivotTime The time corresponding to the underlying pivot creation. */
     function insertPosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime) private {
         bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
@@ -222,6 +238,15 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         pos.timestamp_ = SafeCast.timeUint32();
     }
 
+    /* @notice Removes the tracking data for an individual knockout liquidity position.
+     * @dev Should only be called when the underlying knockout pivot *is still active*
+     * @param pool The hash of the pool the liquidity applies to.
+     * @param loc The context/location data of the knockout liquidity position.
+     * @param lots The amount of liquidity burned from the position.
+     * @param feeRange The cumulative fee mileage for the concentrated liquidity range
+     *                 at current mint time.
+     * @param pivotTime The time corresponding to the underlying pivot creation.
+     * @return feeRewards The accumulated fee rewards rate on the position. */
     function removePosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime)
         private returns (uint64 feeRewards) {
@@ -244,6 +269,16 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         }
     }
 
+    /* @notice Removes the tracking data for an individual knockout liquidity position 
+     *         that's being claimed post knockout. 
+     * @dev Should only be called *after* the underlying pivot is knocked out.
+     * @param pool The hash of the pool the liquidity applies to.
+     * @param loc The context/location data of the knockout liquidity position.
+     * @param feeRange The cumulative fee mileage for the concentrated liquidity range
+     *                 at current mint time.
+     * @param pivotTime The time corresponding to the underlying pivot creation.
+     * @return lots The amount of liquidity lots in the underlying position. 
+     * @return feeRewards The accumulated fee rewards rate on the position. */
     function claimPosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                             uint64 feeRange, uint32 pivotTime)
         private returns (uint96 lots, uint64 feeRewards) {
