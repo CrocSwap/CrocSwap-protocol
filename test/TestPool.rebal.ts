@@ -234,7 +234,7 @@ describe('Pool Rebalance', () => {
         expect(quotePos).to.be.equal(-4803)        
     })
 
-    it("rebalance liq gas", async() => {
+    it("rebalance liq gas [@gas-test]", async() => {
         await test.testMint(-1000, 1000, 100000)
         await test.testMint(-500, -300, 1000);
 

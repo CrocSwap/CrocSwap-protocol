@@ -42,14 +42,14 @@ describe('Gas Benchmarks', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    it("swap cross full knockout", async() => {
+    it("swap cross full knockout [@gas-test]", async() => {
         await test.testMint(-10000, 10000, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum
         await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 162000)
     })
 
-    it("swap cross end of knockout", async() => {
+    it("swap cross end of knockout [@gas-test]", async() => {
         await test.testMint(-10000, 10000, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum

@@ -45,6 +45,12 @@ describe('Pool Extremes', () => {
         expect((await test.price())).to.equal(toSqrtPrice(2.0))
         expect((await quoteToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
         expect((await baseToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
+    })
+
+    it("zero liq [@gas-test]", async() => {
+        await test.initPool(feeRate, 0, 1, 1.0, true)
+        let tx = test.testSwap(true, true, 1000, toSqrtPrice(2.0))
+        await tx
         expect(await gasUsed(tx)).to.lte(600000)
     })
 
@@ -57,6 +63,12 @@ describe('Pool Extremes', () => {
         expect((await test.price())).to.equal(toSqrtPrice(0.5))
         expect((await quoteToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
         expect((await baseToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
+    })
+
+    it("zero liq sell [@gas-test]", async() => {
+        await test.initPool(feeRate, 0, 1, 1.0, true)
+        let tx = test.testSwap(false, true, 1000, toSqrtPrice(0.5))
+        await tx
         expect(await gasUsed(tx)).to.lte(600000)
     })
 
@@ -69,6 +81,12 @@ describe('Pool Extremes', () => {
         expect((await test.price())).to.equal(MIN_PRICE)
         expect((await quoteToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
         expect((await baseToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
+    })
+
+    it("init high price [@gas-test]", async() => {
+        await test.initPool(feeRate, 0, 1, MAX_PRICE, true)
+        let tx = test.testSwap(false, false, 1000, MIN_PRICE)
+        await tx
         expect(await gasUsed(tx)).to.lte(620000)
     })
 
@@ -81,6 +99,11 @@ describe('Pool Extremes', () => {
         expect((await test.price())).to.equal(MAX_PRICE)
         expect((await quoteToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
         expect((await baseToken.balanceOf((await test.dex).address))).to.equal(2*COLLATERAL_BUFFER)
+    })
+
+    it("init low price [@gas-test]", async() => {
+        await test.initPool(feeRate, 0, 1, MIN_PRICE, true)
+        let tx = test.testSwap(true, true, 1000, MAX_PRICE)
         expect(await gasUsed(tx)).to.lte(620000)
     })
 

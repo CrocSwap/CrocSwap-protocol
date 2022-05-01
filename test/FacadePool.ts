@@ -155,6 +155,7 @@ export class TestPool {
     poolIdx: BigNumberish
     liqQty: boolean
     liqBase: boolean
+    initTemplBefore: boolean
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
         this.base = base
@@ -171,6 +172,7 @@ export class TestPool {
         this.third = accts.then(a => a[3])        
         this.liqQty = false
         this.liqBase = true
+        this.initTemplBefore = true
 
         factory = ethers.getContractFactory("CrocSwapDexSeed")
         if (dex) {
@@ -214,19 +216,27 @@ export class TestPool {
     async initPoolIdx (poolIdx: BigNumberish, feeRate: number, protoTake: number, tickSize: number,
         price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
-        let abiCoder = new ethers.utils.AbiCoder()
-        let cmd = abiCoder.encode(["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
-            [110, poolIdx, feeRate, tickSize, 0, this.knockoutBits, 0])
 
-        await (await this.dex)
-            .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+        if (this.initTemplBefore) {
+            await this.initTempl(feeRate, tickSize)
+        }
+
         let gasTx = await (await this.dex)
             .userCmd(0, await this.encodeInitPool(poolIdx, price), overrides)
 
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
+    }
+
+    async initTempl (feeRate: number, tickSize: number): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
+            [110, this.poolIdx, feeRate, tickSize, 0, this.knockoutBits, 0])
+
+        return (await this.dex)
+                .connect(await this.auth)
+                .protocolCmd(0, cmd, false)
     }
 
     async encodeInitPool (poolIdx: BigNumberish, price:number | BigNumber): Promise<BytesLike> {
@@ -293,7 +303,7 @@ export class TestPool {
         const callCode = this.lpCallCode(2, 21, 22);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
-            [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+            [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeHarvest(lower: number, upper: number, limitLow: BigNumber, limitHigh: BigNumber,
@@ -304,7 +314,7 @@ export class TestPool {
         const callCode = 5
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
-            [ callCode, base, quote, this.poolIdx, lower, upper, 0, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+            [ callCode, base, quote, this.poolIdx, lower, upper, 0, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
     async encodeMintAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
@@ -326,7 +336,7 @@ export class TestPool {
         const callCode = this.lpCallCode(4, 41, 42);
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"], 
-            [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, ZERO_ADDR  ]);
+            [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit ]);
     }
 
     lpCallCode (liqCode: number, baseCode: number, quoteCode: number): number {

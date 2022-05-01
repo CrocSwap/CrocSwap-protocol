@@ -46,20 +46,20 @@ describe('Gas Benchmarks Proxy Sidecars', () => {
         expect(gas).to.be.lt(comp)
     }
 
-    it("swap proxy unused", async() => {
+    it("swap proxy unused [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
         await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 109000)
     })
 
-    it("swap proxy base", async() => {
+    it("swap proxy base [@gas-test]", async() => {
         test.useSwapProxy.base = true
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
         await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 116000)
     })
 
-    it("swap proxy optimal - unforced", async() => {
+    it("swap proxy optimal - unforced [@gas-test]", async() => {
         test.useSwapProxy.base = true
         test.useSwapProxy.optimal = true
         await test.testMint(-100, 100, 10000)
@@ -67,7 +67,7 @@ describe('Gas Benchmarks Proxy Sidecars', () => {
         await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 113000)
     })
 
-    it("swap proxy optimal - forced", async() => {
+    it("swap proxy optimal - forced [@gas-test]", async() => {
         await test.testUpgradeHotProxy(hotProxy.address, true)
         test.useSwapProxy.base = true
         test.useSwapProxy.optimal = true

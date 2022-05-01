@@ -21,6 +21,10 @@ contract MockLpConduit is ICrocLpConduit {
         accept_ = accept;
     }
 
+    function setAccept (bool accept) public {
+        accept_ = accept;
+    }
+
     function hashMatches (address base, address quote, uint256 poolIdx)
         public view returns (bool){
         return poolSnap_ == PoolSpecs.encodeKey(base, quote, poolIdx);

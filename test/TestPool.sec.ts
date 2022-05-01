@@ -6,6 +6,7 @@ import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, MIN_TICK, MAX_T
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
+import { AbiCoder } from 'ethers/lib/utils';
 
 chai.use(solidity);
 
@@ -23,6 +24,16 @@ describe('Pool Security', () => {
         await expect(test.initPool(0, 0, 10, 1.5)).to.reverted
         await expect(test.initPool(225*100, 0, 1, 2.5)).to.reverted
         await expect(test.initPool(0, 5, 1, 1.5)).to.reverted
+    })
+
+    it("template disabled", async() => {
+        let abi = new AbiCoder()
+        let disableCmd = abi.encode(["uint8", "uint256"], [109, test.poolIdx]);
+
+        await test.initTempl(0, 1)
+        test.initTemplBefore = false
+        await (await test.dex).connect(await test.auth).protocolCmd(test.COLD_PROXY, disableCmd, false);
+        await expect(test.initPool(0, 0, 1, 1.5)).to.be.reverted
     })
 
     it("pre-initialize", async() => {

@@ -46,6 +46,17 @@ describe('Pool Conduit', () => {
         expect(await conduit.mileageSnap_()).to.eq(0)
     })
 
+    it("burn ambient", async() => {
+        await test.testMintAmbient(10000)
+        await test.testBurnAmbient(5000)
+        expect(await conduit.hashMatches(baseToken.address, quoteToken.address, POOL_IDX)).to.be.true
+        expect(await conduit.senderSnap_()).to.eq(await (await test.trader).getAddress())
+        expect(await conduit.lowerSnap_()).to.eq(0)
+        expect(await conduit.upperSnap_()).to.eq(0)
+        expect(await conduit.liqSnap_()).to.eq(5000*1024)
+        expect(await conduit.mileageSnap_()).to.eq(0)
+    })
+
     it("mint ambient deflator", async() => {
         await test.testMintAmbient(5000)
         await test.testSwap(true, true, 2500000, MAX_PRICE)
@@ -66,6 +77,17 @@ describe('Pool Conduit', () => {
         expect(await conduit.mileageSnap_()).to.eq(0)
     })
 
+    it("burn concentrated", async() => {
+        await test.testMint(-25000, 85000, 5000)
+        await test.testMint(-25000, 85000, 2000)
+        expect(await conduit.hashMatches(baseToken.address, quoteToken.address, POOL_IDX)).to.be.true
+        expect(await conduit.senderSnap_()).to.eq(await (await test.trader).getAddress())
+        expect(await conduit.lowerSnap_()).to.eq(-25000)
+        expect(await conduit.upperSnap_()).to.eq(85000)
+        expect(await conduit.liqSnap_()).to.eq(2000*1024)
+        expect(await conduit.mileageSnap_()).to.eq(0)
+    })
+
     it("mint concentrated deflator", async() => {
         await test.testMint(-25000, 85000, 5000)
         await test.testSwap(true, true, 2500000, MAX_PRICE)
@@ -82,5 +104,15 @@ describe('Pool Conduit', () => {
         test.lpConduit = rejConduit.address
         await expect(test.testMintAmbient(5000)).to.be.reverted
         await expect(test.testMint(-25000, 85000, 5000)).to.be.reverted
+    })
+
+    it("burn reject", async() => {
+        await test.testMintAmbient(5000)
+        await test.testMint(-25000, 85000, 5000)
+
+        await conduit.setAccept(false)
+        await expect(test.testBurnAmbient(1000)).to.be.reverted
+        await expect(test.testBurn(-25000, 85000, 1000)).to.be.reverted
+        
     })
 })

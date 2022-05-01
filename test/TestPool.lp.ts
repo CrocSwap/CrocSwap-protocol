@@ -10,7 +10,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 chai.use(solidity);
 
 // Just a copy of the pool unit tests, but with hot path enabled
-describe('Pool Warm Path', () => {
+describe('Pool Warm LP Path', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token
