@@ -43,7 +43,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function protocolCmd (bytes calldata cmd) virtual public {
         uint8 code = uint8(cmd[31]);
 
-        if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
+        if (code == ProtocolCmd.DISABLE_TEMPLATE_CODE) {
+            disableTemplate(cmd);
+        } else if (code == ProtocolCmd.POOL_TEMPLATE_CODE) {
             setTemplate(cmd);
         } else if (code == ProtocolCmd.POOL_REVISE_CODE) {
             revisePool(cmd);
@@ -118,6 +120,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
+
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
                                                    
@@ -127,6 +130,15 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
     }
 
+    /* @notice Disables an existing pool template. Any previously insatiated pools on
+     *         this template will continue exist, but calling this will prevent any new
+     *         pools from being created on this template. */
+    function disableTemplate (bytes calldata input) private {
+        (, uint256 poolIdx) = abi.decode(input, (uint8, uint256));
+        emit CrocEvents.DisablePoolTemplate(poolIdx);
+        disablePoolTemplate(poolIdx);
+    }
+    
     /* @notice Sets template parameters for a pool type index.
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
