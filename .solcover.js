@@ -1,5 +1,10 @@
 
 module.exports = {
     skipFiles: ['test/', 'lens/'],
-    configureYulOptimizer: true
+    configureYulOptimizer: true,
+
+    mocha: {
+        grep: "@gas-test",
+        invert: true
+    }
 };
