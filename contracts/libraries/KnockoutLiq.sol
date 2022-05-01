@@ -76,6 +76,7 @@ library KnockoutLiq {
         int24 upperTick_;
     }
 
+    /* @notice Resets all fields on a existing pivot struct. */
     function deletePivot (KnockoutPivot storage pivot) internal {
         pivot.lots_ = 0;
         pivot.pivotTime_ = 0;
@@ -91,11 +92,14 @@ library KnockoutLiq {
         return keccak256(abi.encode(pool, isBid, tick));
     }
 
+    /* @notice Encodes a hash key for a knockout pivot given a pos location struct. */
     function encodePivotKey (KnockoutPosLoc memory loc, bytes32 pool)
         internal pure returns (bytes32) {
         return encodePivotKey(pool, loc.isBid_, knockoutTick(loc));
     }
 
+    /* @notice Determines which tick side is the pivot point based on whether the pivot
+     *         is a bid or ask. */
     function knockoutTick (KnockoutPosLoc memory loc) internal pure returns (int24) {
         return loc.isBid_ ? loc.lowerTick_ : loc.upperTick_;
     }

@@ -29,6 +29,8 @@ library ProtocolCmd {
     ////////////////////////////////////////////////////////////////////////////
     // General purpose policy commands.
     ////////////////////////////////////////////////////////////////////////////
+    // Code to disable a given pool template
+    uint8 constant DISABLE_TEMPLATE_CODE = 109;
     // Code to set pool type template
     uint8 constant POOL_TEMPLATE_CODE = 110;
     // Code to revise parameters on pre-existing pool
