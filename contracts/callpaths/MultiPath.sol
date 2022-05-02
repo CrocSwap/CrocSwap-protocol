@@ -17,6 +17,11 @@ import '../CrocEvents.sol';
 
 import "hardhat/console.sol";
 
+/* @notice Multi Callpath
+ * @notice Convenience callpath that lets us sequence arbitrary userCmds across multiple
+ *         callpaths into a single userCmd call.
+ * @dev Supports 2-5 sequential calls, but longer requirements can be done by nesting
+ *      a userCmd into this callpath recursively. */
 contract MultiPath is ColdPathInjector {
     
     function userCmd (bytes calldata cmd) public payable {

@@ -34,12 +34,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using Chaining for Chaining.PairFlow;
     using ProtocolCmd for bytes;
 
-    /* @notice Consolidated method for protocol control related commands.
-     * @dev    We consolidate multiple protocol control types into a single method to 
-     *         reduce the contract size in the main contract by paring down methods.
-     * 
-     * @param code The command code corresponding to the actual method being called.
-     *             See ProtocolCmd.sol for outline of protocol command codes. */
+    /* @notice Consolidated method for protocol control related commands. */
     function protocolCmd (bytes calldata cmd) virtual public {
         uint8 code = uint8(cmd[31]);
 
@@ -64,7 +59,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         }
     }
 
-    
+    /* @notice Subset of highly privileged commands that are only allowed to run in sudo
+     *         mode. */
     function sudoCmd (bytes calldata cmd) internal {
         require(sudoMode_, "Sudo");
         uint8 cmdCode = uint8(cmd[31]);

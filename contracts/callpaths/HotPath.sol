@@ -29,7 +29,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    
+
+    /* @notice Executes a swap on an arbitrary pool. */
     function swapExecute (address base, address quote,
                           uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                           uint16 poolTip, uint128 limitPrice, uint128 minOutput,
@@ -47,6 +48,10 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         return outFlow;
     }
 
+    /* @notice Final check at swap completion to verify that the non-fixed side of the 
+     *         swap meets the user's minimum execution standards: minimum floor if output,
+     *         maximum ceiling if input. 
+     * @return outFlow Returns the non-fixed side of the swap flow. */
     function pivotOutFlow (Chaining.PairFlow memory flow, uint128 minOutput,
                            bool isBuy, bool inBaseQty) private pure
         returns (int128 outFlow) {
@@ -56,6 +61,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         require(outFlow <= thresh || minOutput == 0, "SL");
     }
 
+    /* @notice Wrapper call to setup the swap directive object and call the swap logic in
+     *         the MarketSequencer mixin. */
     function swapDir (PoolSpecs.PoolCursor memory pool, bool isBuy,
                       bool inBaseQty, uint128 qty, uint128 limitPrice) private
         returns (Chaining.PairFlow memory) {
@@ -67,7 +74,10 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         return swapOverPool(dir, pool);
         
     }
-    
+
+    /* @notice Given a pair and pool type index queries and returns the current specs for
+     *         that pool. And if permissioned pool, checks against the permit oracle, 
+     *         adjusting fee if necessary. */
     function preparePoolCntx (address base, address quote,
                               uint256 poolIdx, uint16 poolTip,
                               bool isBuy, bool inBaseQty, uint128 qty) private
@@ -80,6 +90,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         return pool;
     }
 
+    /* @notice Syntatic sugar that wraps a swapExecute call with an ABI encoded version of
+     *         the arguments. */
     function swapEncoded (bytes calldata input) internal returns (int128 outFlow) {
         (address base, address quote,
          uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint16 poolTip,
