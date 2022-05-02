@@ -218,7 +218,7 @@ export class TestPool {
         let overrides = noOverrides ? {} : this.overrides 
 
         if (this.initTemplBefore) {
-            await this.initTempl(feeRate, tickSize)
+            await this.initTempl(feeRate, tickSize, poolIdx)
         }
 
         let gasTx = await (await this.dex)
@@ -229,10 +229,10 @@ export class TestPool {
         return gasTx
     }
 
-    async initTempl (feeRate: number, tickSize: number): Promise<ContractTransaction> {
+    async initTempl (feeRate: number, tickSize: number, poolIdx?: BigNumberish): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
-            [110, this.poolIdx, feeRate, tickSize, 0, this.knockoutBits, 0])
+            [110, poolIdx ? poolIdx : this.poolIdx, feeRate, tickSize, 0, this.knockoutBits, 0])
 
         return (await this.dex)
                 .connect(await this.auth)
