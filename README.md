@@ -12,6 +12,10 @@ To verify that the code is functioning run:
 
     $ npx hardhat test
 
+Test coverage can be run with
+
+
+
 ## Documentation
 
 Additional technical documentation can be found
