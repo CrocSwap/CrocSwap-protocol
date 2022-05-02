@@ -3,7 +3,7 @@ This doc outlines the layout of the repository and highlights important source f
 
 # ./contracts
 
-* CrocSwap.sol - The top level smart contract for the entire decentralized exchange protocol. One contract
+* CrocSwapDex.sol - The top level smart contract for the entire decentralized exchange protocol. One contract
 instances manages every pair and the protocol and serves as a single point of entry for end-users.
 * CrocEvents.sol - Defines top-level Ethereum log events inside the protocol
 
@@ -12,7 +12,6 @@ instances manages every pair and the protocol and serves as a single point of en
 * CrocPolicy.sol - Middle-layer contract sitting between top-level governance and the underlying CrocSwapDex mechanism
 contract. Allows for either straight pass through of governance resolutions or for rules governing what external 
 policy oracles can invoke on the underlying CrocSwapDex contract.
-
 
 # ./contracts/libraries
 
@@ -27,13 +26,14 @@ Math and calculation libraries:
 * CompoundMath.sol - Calculators for compound growth and deflation rates
 * CurveMath.sol - Computes price and reserve changes across a constant product AMM curve.
 
-Libraries related to exeucting swaps 
+Libraries related to exeucting swaps and tracking LP positions
 
 * CurveRoll.sol - Derives flow on a constant-product AMM curve based on targeted price or reserve changes
 * CurveAssimilate.sol - Converts collected fees into liquidity on the AMM curve. 
 * SwapCurve.sol - Executes a swap against an AMM curve and calculates the input, output and fees.
 * CurveCache.sol - Convenience function for caching the expensive re-computation of the price tick.
 * Bitmaps.sol - Tracks which ticks have active concentrated liquidity positions.
+* KnockoutLiq.sol - Defines set of common operation for knockout liquidity.
 
 Libraries related to executing high-level order directives
 
@@ -60,13 +60,27 @@ can be imported into a top-level smart contract.
 * TickCensus.sol - Stores which ticks in which pools have active concentrated liquidity positions.
 * PositionRegistrar.sol - Tracks individual liquidity provider positions and fee accumulation.
 * ProtocolAccount.sol - Tracks and pays out the accumulated protocol fees.
-* OracleHist - Tracks the history of pool price and liquidity over time. (Not currently used.)
+* KnockoutCounter.sol - Tracks both individual and aggregated LP positions for knockout liquidity.
 * TradeMatcher.sol - Executes the logic related to swapping, minting, or burning on a curve.
 * MarketSequencer.sol - Orchestrates a sequence of tradable actions within a single pool.
 * PoolRegistry.sol - Maps the market specification context (fee amount, tick size, etc.) to individual pools.
 * SettleLayer.sol - Handles the logic of sending netted out tokens/ethereum to the user.
-* AgentMask.sol - Facility for external smart contracts to provide LP positions and swaps to end-users.
+* AgentMask.sol - Facility for external smart contracts and off-chain relayers to provide execution for end-users      
 * ColdInjector.sol - Wrappers for delegate-calling functions in sidecar contracts.
+
+# ./contracts/interfaces/
+
+Abstract interfaces related to external calls made by the CrocSwap contract in certain circumstances.
+
+* ICrocCondOracle.sol - Conditional oracle interface used for commands where an arbitrary condition is checked before executing.
+* ICrocLpConduit.sol - Defines an LP conduit that accepts and manages liquidity on behalf of users.
+* ICrocVirtualToken.sol - Portal for defining the deposit and withdraw of virtualized tokens into the dex.
+* ICrocPermitOracle.sol - Defines a permissioned pool oracle that gatekeeps access to one or more pools
+* ICrocMinion.sol - Defines an interface to be called by CrocPolicy contract (implemented by CrocSwapDex contract)
+
+# ./contracts/periphery/
+
+* CrocLpErc20.sol - Implements ICrocLpConduit to wrap ambient liquidity into a standardized ERC20 LP token.
 
 # ./contracts/callpaths/
 
@@ -81,6 +95,9 @@ because we want to minimize gas cost by avoiding a delegate-call and EXTCODE pen
 * WarmPath.sol - Contains other common simple operations (mints and burns to liquidity positions) that can be gas-optimized.
 * LongPath.sol - Contains function for building arbitrarily long complex operations over multiple pairs and pools.
 * MicroPaths.sol - Sidecar contract for small atomic operations that are called within the context of LongPath.sol
+* KnockoutPath.sol - Sidecar contract for managing knockout liquidity LP positions.
+* MultiPath.sol - Convenience sidecars that nests multiple calls across different sidecars into a single top-level call
+* SafeModePath.sol - Special purpose sidecar proxy s the only accessible code path during emergency safe mode.
 
 # ./contracts/tests
 
