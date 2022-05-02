@@ -7,7 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, Wallet, Signer, BytesLike } from 'ethers';
-import { CrocPolicy } from '../contracts/typechain/CrocPolicy';
+import { CrocPolicy } from '../typechain/CrocPolicy';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 
 chai.use(solidity);

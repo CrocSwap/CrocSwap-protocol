@@ -7,7 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { ContractTransaction, BigNumber, ContractFactory } from 'ethers';
-import { HotProxy } from '../contracts/test/typechain/HotProxy';
+import { HotProxy } from '../typechain/HotProxy';
 
 chai.use(solidity);
 

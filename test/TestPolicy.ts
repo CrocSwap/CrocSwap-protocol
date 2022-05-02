@@ -5,7 +5,7 @@ import { ethers } from 'hardhat';
 import { toFixedGrowth, fromFixedGrowth } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
-import { MockMinion } from '../contracts/test/typechain/MockMinion';
+import { MockMinion } from '../typechain/MockMinion';
 import { CrocPolicy } from '../typechain/CrocPolicy';
 import { Wallet, Signer } from 'ethers';
 

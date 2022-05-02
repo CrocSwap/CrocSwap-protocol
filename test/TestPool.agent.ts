@@ -9,7 +9,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 import { MockCrocNonceOracle } from '../typechain/MockCrocNonceOracle';
 import { BytesLike, Wallet, Signer, BigNumber, Transaction } from 'ethers';
 import { AddressZero } from '@ethersproject/constants';
-import { PoolRegistry } from '../contracts/test/typechain/PoolRegistry';
+import { PoolRegistry } from '../typechain/PoolRegistry';
 
 chai.use(solidity);
 
