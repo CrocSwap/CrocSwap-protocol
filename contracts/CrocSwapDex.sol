@@ -139,9 +139,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     function userCmdRelayer (uint16 callpath, bytes calldata cmd,
                              bytes calldata conds, bytes calldata relayerTip, 
                              bytes calldata signature)
-        reEntrantAgent(CrocRelayerCall(proxyIdx, cmd, conds, relayerTip), signature)
+        reEntrantAgent(CrocRelayerCall(callpath, cmd, conds, relayerTip), signature)
         public payable returns (bytes memory output) {
-        output = callUserCmd(proxyIdx, cmd);
+        output = callUserCmd(callpath, cmd);
         tipRelayer(relayerTip);
     }
 
@@ -161,7 +161,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                             uint256 salt)
         reEntrantApproved(client, salt) public payable
         returns (bytes memory) {
-        return callUserCmd(proxyIdx, input);
+        return callUserCmd(callpath, cmd);
     }
 
     /* @notice General purpose query fuction for reading arbitrary data from the dex.
