@@ -15,15 +15,13 @@ interface UniswapV3Pool {
 contract FeeOracle {
   uint24 feeMin;
   uint24 feeMax;
-  PoolSpecs.Pool pool;
   CurveMath.CurveState curve;
   UniswapV3Pool uniswapPool30;
   UniswapV3Pool uniswapPool5;
 
-  constructor (uint24 _feeMin, uint24 _feeMax, PoolSpecs.Pool memory _pool, CurveMath.CurveState memory _curve, address _uniswapPool30, address _uniswapPool5) {
+  constructor (uint24 _feeMin, uint24 _feeMax, CurveMath.CurveState memory _curve, address _uniswapPool30, address _uniswapPool5) {
     feeMin = _feeMin;
     feeMax = _feeMax;
-    pool = _pool;
     curve = _curve;
     uniswapPool30 = UniswapV3Pool(_uniswapPool30);
     uniswapPool5 = UniswapV3Pool(_uniswapPool5);
