@@ -68,7 +68,7 @@ contract FeeOracle {
 
   /// @notice Returns the price of the 5 basis point Uniswap reference pool in square-root Q64.64 format.
   function getUniswapSqrtPrice5 () private view returns (uint128) {
-    (, int24 tick, , , , ,) = uniswapPool30.slot0();
+    (, int24 tick, , , , ,) = uniswapPool5.slot0();
     return TickMath.getSqrtRatioAtTick(tick);
   }
 
@@ -181,7 +181,7 @@ contract FeeOracle {
   /// @notice Fully calculates the dynamic, per-swap fee with a multi-step process given a specific quantity of token inflow.
   /// @param token0 A boolean which is true if the token provided to the pool by the swap is token 0 in the pool's pair.
   /// @param tokenIn The quantity of token provided to the CrocSwap pool in a swap.
-  function calculateDynamicFee (bool token0, uint128 tokenIn) private view returns (uint24 fee) {
+  function calculateDynamicFee (bool token0, uint128 tokenIn) public view returns (uint24 fee) {
     // Calculate a no-slippage approximation of the optimal fee
     fee = token0 ? calculateBestDynamicFeeToken0In() : calculateBestDynamicFeeToken1In();
 
