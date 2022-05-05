@@ -13,18 +13,32 @@ interface UniswapV3Pool {
 }
 
 contract FeeOracle {
-  uint24 feeMin;
-  uint24 feeMax;
-  CrocQuery query;
-  UniswapV3Pool uniswapPool30;
-  UniswapV3Pool uniswapPool5;
+  uint24 immutable feeMin;
+  uint24 immutable feeMax;
+  CrocQuery immutable query;
+  address immutable base;
+  address immutable quote;
+  address immutable uniswapPool30;
+  address immutable uniswapPool5;
+  uint256 immutable poolIdx;
 
-  constructor (uint24 _feeMin, uint24 _feeMax, address _dex, address _uniswapPool30, address _uniswapPool5) {
+  /// @param _feeMin The minimum swap fee to return, in hundredths of basis points.
+  /// @param _feeMax The maximum swap fee to return, in hundredths of basis points.
+  /// @param _dex The address of the CrocSwap DEX.
+  /// @param _base Token address of the base (1st) token.
+  /// @param _quote Token address of the quote (2nd) token.
+  /// @param _poolIdx Numerical index of the CrocSwap pool.
+  /// @param _uniswapPool30 Address of the Uniswap 30 basis point fee reference pool.
+  /// @param _uniswapPool5 Address of the Uniswap 5 basis point fee reference pool.
+  constructor (uint24 _feeMin, uint24 _feeMax, address _dex, address _base, address _quote, uint256 _poolIdx, address _uniswapPool30, address _uniswapPool5) {
     feeMin = _feeMin;
     feeMax = _feeMax;
     query = CrocQuery(_dex);
-    uniswapPool30 = UniswapV3Pool(_uniswapPool30);
-    uniswapPool5 = UniswapV3Pool(_uniswapPool5);
+    base = _base;
+    quote = _quote;
+    poolIdx = _poolIdx;
+    uniswapPool30 = _uniswapPool30;
+    uniswapPool5 = _uniswapPool5;
   }
 
   /// @notice Converts an integer into a Q64.64 fixed point representation.
@@ -55,13 +69,12 @@ contract FeeOracle {
     return uint128(a_ / b);
   }
 
-  /// @notice Returns the current tick of the 30 basis point Uniswap reference pool.
-  function getUniswapTick30 () private view returns (int24 tick) {
-    (, tick, , , , ,) = uniswapPool30.slot0();
-  }
-  /// @notice Returns the current tick of the 5 basis point Uniswap reference pool.
-  function getUniswapTick5 () private view returns (int24 tick) {
-    (, tick, , , , ,) = uniswapPool5.slot0();
+  /// @notice Returns the square root price (in Q64.64 fixed-point format) and the current tick of a UniswapV3Pool contract.
+  /// @param pool The UniswapV3Pool to query for data.
+  function getUniswapSqrtPriceAndTick (UniswapV3Pool pool) internal view returns (uint128 priceSqrt, int24 tick) {
+    uint160 priceSqrt_;
+    (priceSqrt_, tick, , , , ,) = pool.slot0();
+    priceSqrt = uint128(priceSqrt_ >> 32);
   }
 
   /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token0 is supplied by the trader. Uses a no-slippage approximation.
@@ -124,10 +137,7 @@ contract FeeOracle {
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
   function estimateSqrtPriceToken0In (uint128 tokenIn, uint128 poolSqrtPrice, uint128 poolLiquidity, uint24 fee) internal pure returns (uint128) {
     tokenIn = adjustTokenInForFee(tokenIn, fee);
-    uint128 invSqrtPrice = divQ64(convQ64(1), poolSqrtPrice);
-    uint128 deltaInvSqrtPrice = divQ64(convQ64(tokenIn), convQ64(poolLiquidity));
-    uint128 newInvSqrtPrice = invSqrtPrice + deltaInvSqrtPrice;
-    return divQ64(convQ64(1), newInvSqrtPrice);
+    return divQ64(convQ64(1), divQ64(convQ64(1), poolSqrtPrice) + divQ64(convQ64(tokenIn), convQ64(poolLiquidity)));
   }
 
   /// @notice Calculates the new square-root price of the CrocSwap pool given an input quantity of token 1 and a fee rate, assuming active liquidity stays constant.
@@ -137,8 +147,7 @@ contract FeeOracle {
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
   function estimateSqrtPriceToken1In (uint128 tokenIn, uint128 poolSqrtPrice, uint128 poolLiquidity, uint24 fee) internal pure returns (uint128) {
     tokenIn = adjustTokenInForFee(tokenIn, fee);
-    uint128 deltaSqrtPrice = divQ64(convQ64(tokenIn), convQ64(poolLiquidity));
-    return poolSqrtPrice + deltaSqrtPrice;
+    return poolSqrtPrice + divQ64(convQ64(tokenIn), convQ64(poolLiquidity));
   }
 
   /// @notice Given two square-rooted fixed-point Q64.64 prices, returns the absolute difference in hundredths of basis points relative to the first number.
@@ -176,20 +185,19 @@ contract FeeOracle {
   }
 
   /// @notice Fully calculates the dynamic, per-swap fee with a multi-step process given a specific quantity of token inflow.
-  /// @param base Token address of the base (1st) token.
-  /// @param quote Token address of the quote (2nd) token.
-  /// @param poolIdx Numerical index of the CrocSwap pool.
   /// @param token0 A boolean which is true if the token provided to the pool by the swap is token 0 in the pool's pair.
   /// @param tokenIn The quantity of token provided to the CrocSwap pool in a swap.
-  function calculateDynamicFee (address base, address quote, uint256 poolIdx, bool token0, uint128 tokenIn) public view returns (uint24 fee) {
+  function calculateDynamicFee (bool token0, uint128 tokenIn) public view returns (uint24 fee) {
     // Retrieve data about the CrocSwap pool curve
     CurveMath.CurveState memory curve = query.queryCurve(base, quote, poolIdx);
 
     // Precompute the ticks square-rooted Q64.64 prices of the two Uniswap reference pools and the CrocSwap pool under consideration
-    int24 uniswapTick30 = getUniswapTick30();
-    int24 uniswapTick5 = getUniswapTick5();
-    uint128 uniswapSqrtPrice30 = TickMath.getSqrtRatioAtTick(uniswapTick30);
-    uint128 uniswapSqrtPrice5 = TickMath.getSqrtRatioAtTick(uniswapTick5);
+    uint128 uniswapSqrtPrice30;
+    uint128 uniswapSqrtPrice5;
+    int24 uniswapTick30;
+    int24 uniswapTick5;
+    (uniswapSqrtPrice30, uniswapTick30) = getUniswapSqrtPriceAndTick(UniswapV3Pool(uniswapPool30));
+    (uniswapSqrtPrice5, uniswapTick5) = getUniswapSqrtPriceAndTick(UniswapV3Pool(uniswapPool5));
     uint128 poolSqrtPrice = curve.priceRoot_;
     uint128 poolLiquidity = CurveMath.activeLiquidity(curve);
     int24 poolTick = TickMath.getTickAtSqrtRatio(poolSqrtPrice);
