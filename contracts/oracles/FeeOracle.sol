@@ -77,49 +77,23 @@ contract FeeOracle {
     priceSqrt = uint128(priceSqrt_ >> 32);
   }
 
-  /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token0 is supplied by the trader. Uses a no-slippage approximation.
-  /// @param refSqrtPrice Square root of the price of the reference pool, in Q64.64 fixed point format.
-  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
-  /// @param refFee Swap fee of the reference pool, in hundredths of basis points.
-  function calculateDynamicFeeToken0In (uint128 refSqrtPrice, uint128 poolSqrtPrice, uint24 refFee) internal pure returns (uint24) {
-    uint128 tmp = mulQ64(divQ64(refSqrtPrice, poolSqrtPrice), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
-    if (tmp > convQ64(1)) {
-      return 0;
-    } else {
-      return uint24(deconvQ64(mulQ64((convQ64(1) - tmp) >> 1, convQ64(100000000))));
-    }
-  }
-
-  /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token1 is supplied by the trader. Uses a no-slippage approximation.
-  /// @param refSqrtPrice Square root of the price of the reference pool, in Q64.64 fixed point format.
-  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
-  /// @param refFee Swap fee of the reference pool, in hundredths of basis points.
-  function calculateDynamicFeeToken1In (uint128 refSqrtPrice, uint128 poolSqrtPrice, uint24 refFee) internal pure returns (uint24) {
-    uint128 tmp = mulQ64(divQ64(poolSqrtPrice, refSqrtPrice), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
-    if (tmp > convQ64(1)) {
-      return 0;
-    } else {
-      return uint24(deconvQ64(mulQ64((convQ64(1) - tmp) >> 1, convQ64(100000000))));
-    }
-  }
-
   /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both the 30 and 5 basis point fee Uniswap reference pools, assuming swap provides token 0 as input, and returns the lower of the two fees.
-  /// @param refSqrtPrice30 Square root of the price of the Uniswap 30 basis point reference pool, in Q64.64 fixed point format.
-  /// @param refSqrtPrice30 Square root of the price of the Uniswap 5 basis point reference pool, in Q64.64 fixed point format.
-  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
-  function calculateBestDynamicFeeToken0In (uint128 refSqrtPrice30, uint128 refSqrtPrice5, uint128 poolSqrtPrice) internal pure returns (uint24) {
-    uint24 fee30 = calculateDynamicFeeToken0In(refSqrtPrice30, poolSqrtPrice, 300000);
-    uint24 fee5 = calculateDynamicFeeToken0In(refSqrtPrice5, poolSqrtPrice, 50000);
+  /// @param tick Current tick of the CrocSwap pool.
+  /// @param tick30 Current tick of the Uniswap 30 basis point reference pool.
+  /// @param tick5 Current tick of the Uniswap 5 basis point reference pool.
+  function calculateDynamicFeeToken0In (int24 tick, int24 tick30, int24 tick5) internal pure returns (int24) {
+    int24 fee30 = (tick - tick30 + 30) * 100;
+    int24 fee5 = (tick - tick5 + 5) * 100;
     return fee5 < fee30 ? fee5 : fee30;
   }
 
   /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both the 30 and 5 basis point fee Uniswap reference pools, assuming swap provides token 1 as input, and returns the lower of the two fees.
-  /// @param refSqrtPrice30 Square root of the price of the Uniswap 30 basis point reference pool, in Q64.64 fixed point format.
-  /// @param refSqrtPrice30 Square root of the price of the Uniswap 5 basis point reference pool, in Q64.64 fixed point format.
-  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
-  function calculateBestDynamicFeeToken1In (uint128 refSqrtPrice30, uint128 refSqrtPrice5, uint128 poolSqrtPrice) internal pure returns (uint24) {
-    uint24 fee30 = calculateDynamicFeeToken1In(refSqrtPrice30, poolSqrtPrice, 300000);
-    uint24 fee5 = calculateDynamicFeeToken1In(refSqrtPrice5, poolSqrtPrice, 50000);
+  /// @param tick Current tick of the CrocSwap pool.
+  /// @param tick30 Current tick of the Uniswap 30 basis point reference pool.
+  /// @param tick5 Current tick of the Uniswap 5 basis point reference pool.
+  function calculateDynamicFeeToken1In (int24 tick, int24 tick30, int24 tick5) internal pure returns (int24) {
+    int24 fee30 = (tick30 - tick + 30) * 100;
+    int24 fee5 = (tick5 - tick + 5) * 100;
     return fee5 < fee30 ? fee5 : fee30;
   }
 
@@ -203,10 +177,10 @@ contract FeeOracle {
     int24 poolTick = TickMath.getTickAtSqrtRatio(poolSqrtPrice);
 
     // Calculate a no-slippage approximation of the optimal fee
-    fee = token0 ? calculateBestDynamicFeeToken0In(uniswapSqrtPrice30, uniswapSqrtPrice5, poolSqrtPrice) : calculateBestDynamicFeeToken1In(uniswapSqrtPrice30, uniswapSqrtPrice5, poolSqrtPrice);
+    int24 fee_ = token0 ? calculateDynamicFeeToken0In(poolTick, uniswapTick30, uniswapTick5) : calculateDynamicFeeToken1In(poolTick, uniswapTick30, uniswapTick5);
 
     // Calculate the slippage of executing the entire trade in the CrocSwap pool
-    uint24 slippage = token0 ? estimateSlippageToken0In(tokenIn, poolSqrtPrice,poolLiquidity,  fee) : estimateSlippageToken1In(tokenIn, poolSqrtPrice, poolLiquidity, fee);
+    uint24 slippage = token0 ? estimateSlippageToken0In(tokenIn, poolSqrtPrice, poolLiquidity,  fee) : estimateSlippageToken1In(tokenIn, poolSqrtPrice, poolLiquidity, fee);
 
     // Calculate the signed difference of the CrocSwap pool's price minus the Uniswap 30bp pool's price
     int24 priceDiff = estimatePriceDifferenceWithTicks(uniswapTick30, poolTick);
@@ -216,11 +190,13 @@ contract FeeOracle {
     int24 slippage_ = int24(slippage) + priceDiff;
     slippage = slippage_ < 0 ? 0 : uint24(slippage_);
 
+    // Convert fee to unsigned integer, using feeMin if below minimum
+    fee = fee_ < int24(feeMin) ? feeMin : fee;
+
     // If slippage is higher than fee, use slippage as fee
     fee = slippage > fee ? slippage : fee;
 
-    // Restrict fee to minimum and maximum values
-    fee = fee < feeMin ? feeMin : fee;
+    // Restrict fee to maximum value
     fee = fee > feeMax ? feeMax : fee;
   }
 }
