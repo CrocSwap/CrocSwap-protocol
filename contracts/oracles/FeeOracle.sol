@@ -29,47 +29,59 @@ contract FeeOracle {
 
   /// @notice Converts an integer into a Q64.64 fixed point representation.
   /// @param x A 64-bit unsigned integer to convert into Q64.64 format.
-  function convQ64(uint128 x) internal pure returns (uint128) {
+  function convQ64 (uint128 x) internal pure returns (uint128) {
     return x << 64;
   }
 
   /// @notice Converts a Q64.64 fixed point number into an integer by discarding all decimals.
   /// @param x A Q64.64 fixed point number to convert into a 64-bit integer
-  function deconvQ64(uint128 x) internal pure returns (uint128) {
+  function deconvQ64 (uint128 x) internal pure returns (uint128) {
     return x >> 64;
   }
 
   /// @notice Multiplies two Q64.64 fixed point numbers together, returning another Q64.64 number (result assumed to be below 2^63).
   /// @param a A Q64.64 fixed point number
   /// @param b A Q64.64 fixed point number
-  function mulQ64(uint128 a, uint128 b) internal pure returns (uint128) {
+  function mulQ64 (uint128 a, uint128 b) internal pure returns (uint128) {
     return uint128((uint256(a) * uint256(b)) >> 64);
   }
 
   /// @notice Divides one Q64.64 fixed point number by another Q64.64 number.
   /// @param a A Q64.64 fixed point number (the numerator).
   /// @param b A Q64.64 fixed point number (the denominator).
-  function divQ64(uint128 a, uint128 b) internal pure returns (uint128) {
+  function divQ64 (uint128 a, uint128 b) internal pure returns (uint128) {
     uint256 a_ = uint256(a);
     a_ = a_ << 64;
     return uint128(a_ / b);
   }
 
   /// @notice Returns the price of the CrocSwap pool in square-root Q64.64 format.
-  function getPoolSqrtPrice() private view returns (uint128) {
+  function getPoolSqrtPrice () private view returns (uint128) {
     return curve.priceRoot_;
+  }
+
+  /// @notice Returns the current tick of the CrocSwap pool.
+  function getPoolTick () private view returns (int24) {
+    return TickMath.getTickAtSqrtRatio(curve.priceRoot_);
+  }
+
+  /// @notice Returns the current tick of the 30 basis point Uniswap reference pool.
+  function getUniswapTick30 () private view returns (int24 tick) {
+    (, tick, , , , ,) = uniswapPool30.slot0();
   }
 
   /// @notice Returns the price of the 30 basis point Uniswap reference pool in square-root Q64.64 format.
   function getUniswapSqrtPrice30 () private view returns (uint128) {
-    (, int24 tick, , , , ,) = uniswapPool30.slot0();
-    return TickMath.getSqrtRatioAtTick(tick);
+    return TickMath.getSqrtRatioAtTick(getUniswapTick30());
+  }
+  /// @notice Returns the current tick of the 5 basis point Uniswap reference pool.
+  function getUniswapTick5 () private view returns (int24 tick) {
+    (, tick, , , , ,) = uniswapPool5.slot0();
   }
 
   /// @notice Returns the price of the 5 basis point Uniswap reference pool in square-root Q64.64 format.
   function getUniswapSqrtPrice5 () private view returns (uint128) {
-    (, int24 tick, , , , ,) = uniswapPool5.slot0();
-    return TickMath.getSqrtRatioAtTick(tick);
+    return TickMath.getSqrtRatioAtTick(getUniswapTick5());
   }
 
   /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token0 is supplied by the trader. Uses a no-slippage approximation.
@@ -170,12 +182,9 @@ contract FeeOracle {
     return calculateSqrtPriceDifference(getPoolSqrtPrice(), newSqrtPrice);
   }
 
-  /// @notice Calculates the signed difference of the CrocSwap pool price relative to the Uniswap 30bp pool price in hundredths of basis points.
-  function calculatePriceDiffUniswap30 () private view returns (int24 priceDiff) {
-    priceDiff = int24(calculateSqrtPriceDifference(getPoolSqrtPrice(), getUniswapSqrtPrice30()));
-    if (getUniswapSqrtPrice30() > getPoolSqrtPrice()) {
-      priceDiff = -priceDiff;
-    }
+  /// @notice Estimates the signed difference of the CrocSwap pool price relative to the Uniswap 30bp pool price in hundredths of basis points. The difference of the two prices is estimated as the difference of the corresponding ticks.
+  function estimatePriceDiffUniswap30 () private view returns (int24) {
+    return getPoolTick() - getUniswapTick30();
   }
 
   /// @notice Fully calculates the dynamic, per-swap fee with a multi-step process given a specific quantity of token inflow.
@@ -189,9 +198,9 @@ contract FeeOracle {
     uint24 slippage = token0 ? estimateSlippageToken0In(tokenIn, fee) : estimateSlippageToken1In(tokenIn, fee);
 
     // Calculate the signed difference of the CrocSwap pool's price minus the Uniswap 30bp pool's price
-    int24 priceDiff = calculatePriceDiffUniswap30();
+    int24 priceDiff = token0 ? estimatePriceDiffUniswap30() : -estimatePriceDiffUniswap30();
 
-    // Adjust the slippage by adding or subtracting the price difference between pools
+    // Adjust the slippage by adding the signed price difference between pools
     int24 slippage_ = int24(slippage) + priceDiff;
     slippage = slippage_ < 0 ? uint24(0) : uint24(slippage_);
 
