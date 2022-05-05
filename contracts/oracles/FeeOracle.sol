@@ -18,9 +18,9 @@ contract FeeOracle {
   CrocQuery immutable query;
   address immutable base;
   address immutable quote;
-  address immutable uniswapPool30;
-  address immutable uniswapPool5;
   uint256 immutable poolIdx;
+  UniswapV3Pool immutable uniswapPool30;
+  UniswapV3Pool immutable uniswapPool5;
 
   /// @param _feeMin The minimum swap fee to return, in hundredths of basis points.
   /// @param _feeMax The maximum swap fee to return, in hundredths of basis points.
@@ -37,8 +37,8 @@ contract FeeOracle {
     base = _base;
     quote = _quote;
     poolIdx = _poolIdx;
-    uniswapPool30 = _uniswapPool30;
-    uniswapPool5 = _uniswapPool5;
+    uniswapPool30 = UniswapV3Pool(_uniswapPool30);
+    uniswapPool5 = UniswapV3Pool(_uniswapPool5);
   }
 
   /// @notice Converts an integer into a Q64.64 fixed point representation.
@@ -196,8 +196,8 @@ contract FeeOracle {
     uint128 uniswapSqrtPrice5;
     int24 uniswapTick30;
     int24 uniswapTick5;
-    (uniswapSqrtPrice30, uniswapTick30) = getUniswapSqrtPriceAndTick(UniswapV3Pool(uniswapPool30));
-    (uniswapSqrtPrice5, uniswapTick5) = getUniswapSqrtPriceAndTick(UniswapV3Pool(uniswapPool5));
+    (uniswapSqrtPrice30, uniswapTick30) = getUniswapSqrtPriceAndTick(uniswapPool30);
+    (uniswapSqrtPrice5, uniswapTick5) = getUniswapSqrtPriceAndTick(uniswapPool5);
     uint128 poolSqrtPrice = curve.priceRoot_;
     uint128 poolLiquidity = CurveMath.activeLiquidity(curve);
     int24 poolTick = TickMath.getTickAtSqrtRatio(poolSqrtPrice);
