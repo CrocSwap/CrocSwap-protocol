@@ -4,7 +4,6 @@ pragma solidity >=0.8.4;
 
 import '../libraries/TickMath.sol';
 import '../libraries/CurveMath.sol';
-import '../libraries/PoolSpecs.sol';
 
 import "hardhat/console.sol";
 
@@ -55,9 +54,13 @@ contract FeeOracle {
     return uint128(a_ / b);
   }
 
-  /// @notice Returns the current tick of the CrocSwap pool.
-  function getPoolTick () private view returns (int24) {
-    return TickMath.getTickAtSqrtRatio(curve.priceRoot_);
+  /// @notice Returns the current tick of the 30 basis point Uniswap reference pool.
+  function getUniswapTick30 () private view returns (int24 tick) {
+    (, tick, , , , ,) = uniswapPool30.slot0();
+  }
+  /// @notice Returns the current tick of the 5 basis point Uniswap reference pool.
+  function getUniswapTick5 () private view returns (int24 tick) {
+    (, tick, , , , ,) = uniswapPool5.slot0();
   }
 
   /// @notice Returns the price of the CrocSwap pool in square-root Q64.64 format.
@@ -65,30 +68,17 @@ contract FeeOracle {
     return curve.priceRoot_;
   }
 
-  /// @notice Returns the current tick of the 30 basis point Uniswap reference pool.
-  function getUniswapTick30 () private view returns (int24 tick) {
-    (, tick, , , , ,) = uniswapPool30.slot0();
-  }
-
-  /// @notice Returns the price of the 30 basis point Uniswap reference pool in square-root Q64.64 format.
-  function getUniswapSqrtPrice30 () private view returns (uint128) {
-    return TickMath.getSqrtRatioAtTick(getUniswapTick30());
-  }
-  /// @notice Returns the current tick of the 5 basis point Uniswap reference pool.
-  function getUniswapTick5 () private view returns (int24 tick) {
-    (, tick, , , , ,) = uniswapPool5.slot0();
-  }
-
-  /// @notice Returns the price of the 5 basis point Uniswap reference pool in square-root Q64.64 format.
-  function getUniswapSqrtPrice5 () private view returns (uint128) {
-    return TickMath.getSqrtRatioAtTick(getUniswapTick5());
+  /// @notice Returns the amount of liquidity active in the CrocSwap pool.
+  function getPoolLiquidity () private view returns (uint128) {
+    return CurveMath.activeLiquidity(curve);
   }
 
   /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token0 is supplied by the trader. Uses a no-slippage approximation.
   /// @param refSqrtPrice Square root of the price of the reference pool, in Q64.64 fixed point format.
+  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
   /// @param refFee Swap fee of the reference pool, in hundredths of basis points.
-  function calculateDynamicFeeToken0In (uint128 refSqrtPrice, uint24 refFee) private view returns (uint24) {
-    uint128 tmp = mulQ64(divQ64(refSqrtPrice, getPoolSqrtPrice()), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
+  function calculateDynamicFeeToken0In (uint128 refSqrtPrice, uint128 poolSqrtPrice, uint24 refFee) internal pure returns (uint24) {
+    uint128 tmp = mulQ64(divQ64(refSqrtPrice, poolSqrtPrice), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
     if (tmp > convQ64(1)) {
       return 0;
     } else {
@@ -98,9 +88,10 @@ contract FeeOracle {
 
   /// @notice Calculates the optimal fee rate relative to a reference pool and assuming token1 is supplied by the trader. Uses a no-slippage approximation.
   /// @param refSqrtPrice Square root of the price of the reference pool, in Q64.64 fixed point format.
+  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
   /// @param refFee Swap fee of the reference pool, in hundredths of basis points.
-  function calculateDynamicFeeToken1In (uint128 refSqrtPrice, uint24 refFee) private view returns (uint24) {
-    uint128 tmp = mulQ64(divQ64(getPoolSqrtPrice(), refSqrtPrice), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
+  function calculateDynamicFeeToken1In (uint128 refSqrtPrice, uint128 poolSqrtPrice, uint24 refFee) internal pure returns (uint24) {
+    uint128 tmp = mulQ64(divQ64(poolSqrtPrice, refSqrtPrice), convQ64(1) - divQ64(convQ64(refFee), convQ64(200000000)));
     if (tmp > convQ64(1)) {
       return 0;
     } else {
@@ -108,19 +99,24 @@ contract FeeOracle {
     }
   }
 
-  /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both Uniswap reference pools, assuming swap provides token 0 as input, and returns the lower of the two fees.
-  function calculateBestDynamicFeeToken0In () private view returns (uint24) {
-    uint24 fee30 = calculateDynamicFeeToken0In(getUniswapSqrtPrice30(), 300000);
-    uint24 fee5 = calculateDynamicFeeToken0In(getUniswapSqrtPrice5(), 50000);
+  /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both the 30 and 5 basis point fee Uniswap reference pools, assuming swap provides token 0 as input, and returns the lower of the two fees.
+  /// @param refSqrtPrice30 Square root of the price of the Uniswap 30 basis point reference pool, in Q64.64 fixed point format.
+  /// @param refSqrtPrice30 Square root of the price of the Uniswap 5 basis point reference pool, in Q64.64 fixed point format.
+  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
+  function calculateBestDynamicFeeToken0In (uint128 refSqrtPrice30, uint128 refSqrtPrice5, uint128 poolSqrtPrice) internal pure returns (uint24) {
+    uint24 fee30 = calculateDynamicFeeToken0In(refSqrtPrice30, poolSqrtPrice, 300000);
+    uint24 fee5 = calculateDynamicFeeToken0In(refSqrtPrice5, poolSqrtPrice, 50000);
     return fee5 < fee30 ? fee5 : fee30;
   }
 
-  /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both Uniswap reference pools, assuming swap provides token 1 as input, and returns the lower of the two fees.
-  function calculateBestDynamicFeeToken1In () private view returns (uint24) {
-    uint24 fee30 = calculateDynamicFeeToken1In(getUniswapSqrtPrice30(), 300000);
-    uint24 fee5 = calculateDynamicFeeToken1In(getUniswapSqrtPrice5(), 50000);
+  /// @notice Calculates the no-slippage approximation of the dynamic fee relative to both the 30 and 5 basis point fee Uniswap reference pools, assuming swap provides token 1 as input, and returns the lower of the two fees.
+  /// @param refSqrtPrice30 Square root of the price of the Uniswap 30 basis point reference pool, in Q64.64 fixed point format.
+  /// @param refSqrtPrice30 Square root of the price of the Uniswap 5 basis point reference pool, in Q64.64 fixed point format.
+  /// @param poolSqrtPrice Square root of the price of the pool for which the fee is being calculated, in Q64.64 fixed point format.
+  function calculateBestDynamicFeeToken1In (uint128 refSqrtPrice30, uint128 refSqrtPrice5, uint128 poolSqrtPrice) internal pure returns (uint24) {
+    uint24 fee30 = calculateDynamicFeeToken1In(refSqrtPrice30, poolSqrtPrice, 300000);
+    uint24 fee5 = calculateDynamicFeeToken1In(refSqrtPrice5, poolSqrtPrice, 50000);
     return fee5 < fee30 ? fee5 : fee30;
-    }
   }
 
   /// @notice Calculates token quantity remaining after subtracting a given fee rate.
@@ -132,22 +128,24 @@ contract FeeOracle {
 
   /// @notice Calculates the new square-root price of the CrocSwap pool given an input quantity of token 0 and a fee rate, assuming active liquidity stays constant.
   /// @param tokenIn The quantity of token 0 provided in the swap.
+  /// @param poolSqrtPrice The square rooted price of the CrocSwap pool, in Q64.64 fixed-point format.
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
-  function estimateSqrtPriceToken0In (uint128 tokenIn, uint24 fee) private view returns (uint128) {
+  function estimateSqrtPriceToken0In (uint128 tokenIn, uint128 poolSqrtPrice, uint24 fee) private view returns (uint128) {
     tokenIn = adjustTokenInForFee(tokenIn, fee);
-    uint128 invSqrtPrice = divQ64(convQ64(1), getPoolSqrtPrice());
-    uint128 deltaInvSqrtPrice = divQ64(convQ64(tokenIn), convQ64(CurveMath.activeLiquidity(curve)));
+    uint128 invSqrtPrice = divQ64(convQ64(1), poolSqrtPrice);
+    uint128 deltaInvSqrtPrice = divQ64(convQ64(tokenIn), convQ64(getPoolLiquidity()));
     uint128 newInvSqrtPrice = invSqrtPrice + deltaInvSqrtPrice;
     return divQ64(convQ64(1), newInvSqrtPrice);
   }
 
   /// @notice Calculates the new square-root price of the CrocSwap pool given an input quantity of token 1 and a fee rate, assuming active liquidity stays constant.
   /// @param tokenIn The quantity of token 1 provided by the swap.
+  /// @param poolSqrtPrice The square rooted price of the CrocSwap pool, in Q64.64 fixed-point format.
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
-  function estimateSqrtPriceToken1In (uint128 tokenIn, uint24 fee) private view returns (uint128) {
+  function estimateSqrtPriceToken1In (uint128 tokenIn, uint128 poolSqrtPrice, uint24 fee) private view returns (uint128) {
     tokenIn = adjustTokenInForFee(tokenIn, fee);
-    uint128 deltaSqrtPrice = divQ64(convQ64(tokenIn), convQ64(CurveMath.activeLiquidity(curve)));
-    return getPoolSqrtPrice() + deltaSqrtPrice;
+    uint128 deltaSqrtPrice = divQ64(convQ64(tokenIn), convQ64(getPoolLiquidity()));
+    return poolSqrtPrice + deltaSqrtPrice;
   }
 
   /// @notice Given two square-rooted fixed-point Q64.64 prices, returns the absolute difference in hundredths of basis points relative to the first number.
@@ -168,37 +166,41 @@ contract FeeOracle {
 
   /// @notice Calculates absolute slippage in hundredths of basis points given an input quantity of token 0 and a fee rate, assuming active liquidity stays constant.
   /// @param tokenIn The quantity of token 0 provided by the swap.
+  /// @param poolSqrtPrice The square rooted price of the pool, in Q64.64 fixed-point format.
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
-  function estimateSlippageToken0In (uint128 tokenIn, uint24 fee) private view returns (uint24) {
-    uint128 newSqrtPrice = estimateSqrtPriceToken0In(tokenIn, fee);
-    return calculateSqrtPriceDifference(getPoolSqrtPrice(), newSqrtPrice);
+  function estimateSlippageToken0In (uint128 tokenIn, uint128 poolSqrtPrice, uint24 fee) private view returns (uint24) {
+    return calculateSqrtPriceDifference(poolSqrtPrice, estimateSqrtPriceToken0In(tokenIn, poolSqrtPrice, fee));
   }
 
   /// @notice Calculates absolute slippage in hundredths of basis points given an input quantity of token 1 and a fee rate, assuming active liquidity stays constant.
   /// @param tokenIn The quantity of token 1 provided by the swap.
+  /// @param poolSqrtPrice The square rooted price of the pool, in Q64.64 fixed-point format.
   /// @param fee The fee rate charged to the swap, in hundredths of basis points.
-  function estimateSlippageToken1In (uint128 tokenIn, uint24 fee) private view returns (uint24) {
-    uint128 newSqrtPrice = estimateSqrtPriceToken1In(tokenIn, fee);
-    return calculateSqrtPriceDifference(getPoolSqrtPrice(), newSqrtPrice);
-  }
-
-  /// @notice Estimates the signed difference of the CrocSwap pool price relative to the Uniswap 30bp pool price in hundredths of basis points. The difference of the two prices is estimated as the difference of the corresponding ticks.
-  function estimatePriceDiffUniswap30 () private view returns (int24) {
-    return estimatePriceDifferenceWithTicks(getUniswapTick30(), getPoolTick());
+  function estimateSlippageToken1In (uint128 tokenIn, uint128 poolSqrtPrice, uint24 fee) private view returns (uint24) {
+    return calculateSqrtPriceDifference(poolSqrtPrice, estimateSqrtPriceToken1In(tokenIn, poolSqrtPrice, fee));
   }
 
   /// @notice Fully calculates the dynamic, per-swap fee with a multi-step process given a specific quantity of token inflow.
   /// @param token0 A boolean which is true if the token provided to the pool by the swap is token 0 in the pool's pair.
   /// @param tokenIn The quantity of token provided to the CrocSwap pool in a swap.
   function calculateDynamicFee (bool token0, uint128 tokenIn) public view returns (uint24 fee) {
+    // Precompute the ticks and square-rooted Q64.64 prices of the two Uniswap reference pools and the CrocSwap pool under consideration
+    int24 uniswapTick30 = getUniswapTick30();
+    int24 uniswapTick5 = getUniswapTick5();
+    uint128 uniswapSqrtPrice30 = TickMath.getSqrtRatioAtTick(uniswapTick30);
+    uint128 uniswapSqrtPrice5 = TickMath.getSqrtRatioAtTick(uniswapTick5);
+    uint128 poolSqrtPrice = getPoolSqrtPrice();
+    int24 poolTick = TickMath.getTickAtSqrtRatio(poolSqrtPrice);
+
     // Calculate a no-slippage approximation of the optimal fee
-    fee = token0 ? calculateBestDynamicFeeToken0In() : calculateBestDynamicFeeToken1In();
+    fee = token0 ? calculateBestDynamicFeeToken0In(uniswapSqrtPrice30, uniswapSqrtPrice5, poolSqrtPrice) : calculateBestDynamicFeeToken1In(uniswapSqrtPrice30, uniswapSqrtPrice5, poolSqrtPrice);
 
     // Calculate the slippage of executing the entire trade in the CrocSwap pool
-    uint24 slippage = token0 ? estimateSlippageToken0In(tokenIn, fee) : estimateSlippageToken1In(tokenIn, fee);
+    uint24 slippage = token0 ? estimateSlippageToken0In(tokenIn, poolSqrtPrice, fee) : estimateSlippageToken1In(tokenIn, poolSqrtPrice, fee);
 
     // Calculate the signed difference of the CrocSwap pool's price minus the Uniswap 30bp pool's price
-    int24 priceDiff = token0 ? estimatePriceDiffUniswap30() : -estimatePriceDiffUniswap30();
+    int24 priceDiff = estimatePriceDifferenceWithTicks(uniswapTick30, poolTick);
+    priceDiff = token0 ? priceDiff : -priceDiff;
 
     // Adjust the slippage by adding the signed price difference between pools
     int24 slippage_ = int24(slippage) + priceDiff;
