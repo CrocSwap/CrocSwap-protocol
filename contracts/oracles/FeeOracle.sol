@@ -53,11 +53,11 @@ contract FeeOracle {
     return x >> 64;
   }
 
-  /// @notice Multiplies two Q64.64 fixed point numbers together, returning another Q64.64 number (result assumed to be below 2^63).
+  /// @notice Multiplies two Q64.64 fixed point numbers together, returning a Q128.128 number.
   /// @param a A Q64.64 fixed point number
   /// @param b A Q64.64 fixed point number
   function mulQ64 (uint128 a, uint128 b) internal pure returns (uint128) {
-    return uint128((uint256(a) * uint256(b)) >> 64);
+    return uint256(a) * uint256(b);
   }
 
   /// @notice Divides one Q64.64 fixed point number by another Q64.64 number.
@@ -128,9 +128,10 @@ contract FeeOracle {
   /// @param a The reference price relative to which the price difference is calculated, in square-root Q64.64 fixed-point format.
   /// @param b The price which is compared to the reference price, in square-root Q64.64 fixed-point format.
   function calculateSqrtPriceDifference (uint128 a, uint128 b) internal pure returns (uint24) {
-    a = mulQ64(a, a);
-    b = mulQ64(b, b);
-    return uint24(deconvQ64(mulQ64(divQ64(b > a ? b - a : a - b, a), convQ64(100000000))));
+    uint256 aSq = mulQ64(a, a);
+    uint256 bSq = mulQ64(b, b);
+    uint128 diff = uint128(b - a >> 64);
+    return uint24(deconvQ64(mulQ64(divQ64(b > a ? diff : -diff, a), convQ64(100000000))));
   }
 
   /// @notice Given two price ticks, estimates the signed difference of the second price relative to the first price by simply taking the difference in tick space. The difference is given in hundredths of basis points.
