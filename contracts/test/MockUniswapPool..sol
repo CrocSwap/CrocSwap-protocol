@@ -5,13 +5,13 @@ import '../oracles/FeeOracle.sol';
 pragma solidity >=0.8.4;
 
 contract MockUniswapPool is UniswapV3Pool {
-  uint128 priceSqrt;
+  uint160 priceSqrt;
   int24 tick;
 
   constructor () {
   }
 
-  function setPriceSqrt(uint128 _priceSqrt) public {
+  function setPriceSqrt(uint160 _priceSqrt) public {
     priceSqrt = _priceSqrt;
   }
 

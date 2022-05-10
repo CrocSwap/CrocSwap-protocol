@@ -89,11 +89,15 @@ describe('FeeOracle', () => {
   })
 
   it("retrieve uniswap pool data", async() => {
-    /*await uniswapPool.setPriceSqrt(101092)
+    await uniswapPool.setPriceSqrt(BigNumber.from("7922816251426433759354395033600"))
     await uniswapPool.setTick(910239)
-    let result = await oracle.getUniswapSqrtPriceAndTick(await uniswapPool)
-    expect(result.priceSqrt).to.equal(101092)
-    expect(result.tick).to.equal(910239)*/
+    let result = await oracle.getUniswapSqrtPriceAndTick(await uniswapPool.address)
+    expect(await oracle.deconvQ64(result.priceSqrt)).to.equal(100)
+    expect(result.tick).to.equal(910239)
+
+    await uniswapPool.setPriceSqrt(BigNumber.from("39614081257132168796771975168"))
+    result = await oracle.getUniswapSqrtPriceAndTick(await uniswapPool.address)
+    expect(result.priceSqrt).to.equal(await oracle.divQ64(await oracle.convQ64(1), await oracle.convQ64(2)))
   })
 
   it("calculate dynamic fee with token 0 in", async() => {
