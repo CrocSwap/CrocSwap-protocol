@@ -3,236 +3,226 @@ import { CrocSwapDexSeed } from '../../typechain/CrocSwapDexSeed';
 import { ethers } from 'hardhat';
 import { ContractFactory, BytesLike, BigNumber } from 'ethers';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { toSqrtPrice, fromSqrtPrice, MIN_PRICE, MAX_PRICE, MIN_TICK } from '../../test/FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, MIN_PRICE, MAX_PRICE, MIN_TICK, ZERO_ADDR } from '../../test/FixedPoint';
 import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
 import { CrocSwapDex } from '../../typechain/CrocSwapDex';
 import { IERC20Minimal } from '../../typechain/IERC20Minimal';
 import { MAX_TICK } from './tmpMint';
+import { ColdPath } from '../../typechain/ColdPath';
+import { AddressZero } from '@ethersproject/constants';
+import { WarmPath } from '../../typechain/WarmPath';
+import { LongPath } from '../../typechain/LongPath';
+import { MicroPaths } from '../../typechain/MicroPaths';
+import { CrocPolicy } from '../../typechain/CrocPolicy';
+import { CrocQuery } from '../../typechain/CrocQuery';
+import { CrocShell } from '../../typechain/CrocShell';
+import { HotPath } from '../../typechain/HotPath';
 
-/* Helper script for deploying a basic mock setup to a localhost or test network.
- * Only for ad-hoc testing purposes. Do NOT use in production. */
+let override = { gasPrice: BigNumber.from("10").pow(9).mul(2), gasLimit: 6000000 }
 
-const POOL_IDX = 35000
-const POOL_IDX_2 = 212
+/* Ropsten */
+/*let addrs = {
+    dex: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
+    cold: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
+    //warm: "0xb2aE163293C82DCF36b0cE704591eDC2f9E2608D",
+    warm: "0x6ef7587858b8118e6c40491523f17d6fefe1eeb5",
+    long: "0x141E224f461a85006b2EF051a7C1c290E449202A",
+    micro: "0xfAfcD1f5530827e7398B6D3C509f450b1b24a209",
+    hot: null,
+    policy: "0xAA391eE82F0C6b406E98cCd76d637CaC2f712228",
+    query: "0x0c4ba0d85b6a93ae8746dbe4bd1e9499d8e61999",
+    shell: "0x0be8385d8cdde8facb54cf52fed856d6c37bb8e3"
+}*/
 
-const FEE_RATE = 30 * 100
-const FEE_RATE_2 = 5 * 100
-const BIG_QTY = BigNumber.from("1000000000000000")
-
-export const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
-
-function encodeProtocolCmd (code: number, token: string, sidecar: string, poolIdx: number, 
-    feeRate: number, protoTake: number, ticks: number, value: number): BytesLike {
-    let abiCoder = new ethers.utils.AbiCoder()
-    return abiCoder.encode(
-        [ "uint8", "address", "address", "uint24", "uint24", "uint8", "uint16", "uint128" ], 
-        [ code, token, sidecar, poolIdx, feeRate, protoTake, ticks, value ]);
+let addrs = {
+    dex: "0x129bcaa67e211bfaf5f2d070405f3437282b5661",
+    cold: "0x965a77f99d6aab400d5d13bccf47c63d192b3fa8",
+    warm: "0x40ec968eEB324963127D86A5821FDa3379578301",
+    long: "0x15ccfd33faba9651adc3ca779ab2fd6debda76a0",
+    micro: "0xf9d00826c2692f379862ab8dfb06e14a6fd1f8ee",
+    hot: "0x2975F2849B37a401f526a363e410B930c82A4f3d",
+    policy: "0x8dce7b4583d1777671b3db2c80370e8053d4a90a",
+    query: "0xc6768b1fb34035af90c0c994baced9ad86671a8c",
+    shell: "0x2ee92b38056c28360467880bfa33c78cdbd1cab6"
 }
 
-function encodeMintAmbient (base: string, quote: string,
-    liq: BigNumber | number, useSurplus: boolean): BytesLike {
-    let abiCoder = new ethers.utils.AbiCoder()
-    const callCode = 3
-    return abiCoder.encode(
-        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-        [ callCode, base, quote, POOL_IDX, 0, 0, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
+// Kovan
+/*let addrs = {
+    dex: "0x5d42d6046927dee12b9b4a235be0cecd55d0e0fb",
+    cold: "0x141e224f461a85006b2ef051a7c1c290e449202a",
+    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
+    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
+    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
+    hot: "0x6291aa5812ff75412cf3f3258447139653a9a209",
+    policy: "0xdcb3b5ec9170bef68e9fff21f0edd622f72f1899",
+    query: "0x3a6e9cff691a473d4d0742e1dfc8ea263a99f6d0",
+    shell: "0xf19D3dcdF82af0d40Cb3b4AaE4D266c638A3E454"
+}*/
+
+// Ropsten
+let tokens = {
+    eth: ZERO_ADDR,
+    dai: "0xaD6D458402F60fD3Bd25163575031ACDce07538D",
+    usdc: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
 }
 
-function encodeMintConc (base: string, quote: string,
-    liq: BigNumber | number, useSurplus: boolean): BytesLike {
-    let abiCoder = new ethers.utils.AbiCoder()
-    const callCode = 1
-    return abiCoder.encode(
-        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-        [ callCode, base, quote, POOL_IDX, 665430, 831810, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
-}
+// Kovan
+/*let tokens = {
+    eth: ZERO_ADDR,
+    dai: "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa",
+    usdc: "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede"
+}*/
 
-function encodeBurnAmbient (base: string, quote: string,
-    liq: BigNumber | number, useSurplus: boolean): BytesLike {
-    let abiCoder = new ethers.utils.AbiCoder()
-    const callCode = 4
-    return abiCoder.encode(
-        [ "uint8", "address", "address", "uint24", "int24", "int24", "uint128", "uint128", "uint128", "bool" ], 
-        [ callCode, base, quote, POOL_IDX, 0, 0, liq, MIN_PRICE, MAX_PRICE, useSurplus  ]);
-}
-
-async function describeCurve (query: QueryHelper, base: string, quote: string) {
-    let liq = await query.queryLiquidity(base, quote, POOL_IDX)
-    let curve = await query.queryCurve(base, quote, POOL_IDX)
-    let weiPrice = fromSqrtPrice(curve.priceRoot_)
-    let baseDeflator = await tokenDeflator(base)
-    let quoteDeflator = await tokenDeflator(quote)
-    console.log(curve.priceRoot_.toString())
-    console.log(weiPrice)
-    console.log("Deflators " + baseDeflator.toString() + " " + quoteDeflator.toString())
-    let price = weiPrice * (quoteDeflator / baseDeflator)
-    console.log("Liquidity " + liq.toString() + " at price " + price.toString())
-}
-
-async function tokenDeflator (token: string): Promise<number> {
-    if (token === ZERO_ADDR) {
-        return 1e18
-    } else {
-        let factory = await ethers.getContractFactory("MockERC20")
-        let tracker = factory.attach(token) as MockERC20
-        let decimals = await tracker.decimals()
-        console.log("Decimals " + decimals.toString())
-        return Math.pow(10.0, decimals)
-    }
-}
-
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(5), gasLimit: 6000000 }
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
-    /*let lp = (await ethers.getSigners())[1]
-    let trader = (await ethers.getSigners())[2]*/
 
-    // Just do everything from one account for Ropsten
-    let lp = authority
-    let trader = authority
+    let abi = new ethers.utils.AbiCoder()
+    let cmd;
+    let factory
+    let tx;
 
     console.log("Deploying with the following addresses...")
     console.log("Protocol Authority: ", await authority.address)
-    console.log("Liquidity Provider: ", await lp.address);
-    
-    /*let factory = await ethers.getContractFactory("ColdPath")
-    let tx = await factory.deploy(override)
-
-    let coldPath = (await factory.deploy(override)).address
 
     factory = await ethers.getContractFactory("WarmPath")
-    let warmPath = (await factory.deploy(override)).address
-
+    let warmPath = addrs.warm ? factory.attach(addrs.warm) :
+        await factory.deploy(override) as WarmPath
+    
     factory = await ethers.getContractFactory("LongPath")
-    let longPath = (await factory.deploy(override)).address
-
+    let longPath = addrs.long ? factory.attach(addrs.long) :
+        await factory.deploy(override) as LongPath
+    
     factory = await ethers.getContractFactory("MicroPaths")
-    let microPath = (await factory.deploy(override)).address*/
+    let microPath = addrs.micro ? factory.attach(addrs.micro) :
+        await factory.deploy(override) as MicroPaths
 
-    let factory = await ethers.getContractFactory("CrocSwapDex");
-    /*let dex = await factory.deploy(authority.getAddress(), 
-        coldPath, warmPath, longPath, microPath, override) as CrocSwapDexSeed*/
-    //let dex = factory.attach("0x141E224f461a85006b2EF051a7C1c290E449202A") as CrocSwapDex
-    let dex = factory.attach("0xB6Ff2e53408f38A5a363586746d1dB306AF5caa4") as CrocSwapDex
+    factory = await ethers.getContractFactory("ColdPath")
+    let coldPath = addrs.cold ? factory.attach(addrs.cold) :
+        await factory.deploy(override) as ColdPath
 
-    //factory = await ethers.getContractFactory("MockERC20")
-    /*let base = await factory.deploy(override) as MockERC20
-    let quote = await factory.deploy(override) as MockERC20
-    if( base.address > quote.address) {
-        let holder = base
-        base = quote
-        quote = holder
-    }*/
+    factory = await ethers.getContractFactory("HotProxy")
+    let hotPath = addrs.hot ? factory.attach(addrs.hot) :
+        await factory.deploy(override) as HotPath
+        
+    factory = await ethers.getContractFactory("CrocSwapDex")
+    let dex = addrs.dex ? factory.attach(addrs.dex) :
+        await factory.deploy(authority.address, coldPath.address, override) as CrocSwapDex
+            
+    factory = await ethers.getContractFactory("CrocPolicy")
+    let policy = (addrs.policy ? factory.attach(addrs.policy) :
+        await factory.deploy(dex.address, await authority.getAddress(),
+        await authority.getAddress(), await authority.getAddress())) as CrocPolicy
 
-    //let base = factory.attach("0x66B5b7f1F5604FC33aF247D59a7938369B37358F")
-    //let quote = factory.attach("0x6c53969F9273560F393a8BcbFA40906E7B51b1B2")
-    /*let base = factory.attach("0x10e13e6DE3BD3A5D2e0361F56a695EB08731E40B") as MockERC20
-    let quote = factory.attach("0x788C030D0ac6cd3902Da1Bcc3C6945b8be6f3BA2") as MockERC20
+    factory = await ethers.getContractFactory("CrocQuery")
+    let query = (addrs.query ? factory.attach(addrs.query) :
+        await factory.deploy(dex.address, override)) as CrocQuery
 
-    console.log("Mock Base Token created: " + base.address)
-    console.log("Mock Quote Token created: " + quote.address);*/
-
-    /*await base.setDecimals(3)
-    await quote.setDecimals(6)
-    await base.setSymbol("USDC")
-    await quote.setSymbol("WETH")*/
-
-    /*await base.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
-    await quote.deposit("0xd825D73CDD050ecbEBC0B3a8D9C5952d1F64722e", BIG_QTY, override)
-    await base.deposit(await lp.getAddress(), BIG_QTY, override)
-    await quote.deposit(await lp.getAddress(), BIG_QTY, override)
-    await base.deposit(await trader.getAddress(), BIG_QTY, override)
-    await quote.deposit(await trader.getAddress(), BIG_QTY, override)
-    await base.connect(lp).approve(dex.address, BIG_QTY, override)
-    await quote.connect(lp).approve(dex.address, BIG_QTY, override)
-    await base.connect(trader).approve(dex.address, BIG_QTY, override)
-    await quote.connect(trader).approve(dex.address, BIG_QTY, override)*/
-
-    /*let protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX, FEE_RATE, 0, 30, 100)
-    await dex.protocolCmd(protoCmd, override)*/
-
-    /*protoCmd = encodeProtocolCmd(66, ZERO_ADDR, ZERO_ADDR, POOL_IDX_2, FEE_RATE_2, 0, 5, 100)
-    await dex.protocolCmd(protoCmd, override)*/
-    //await dex.initPool(base.address, quote.address, POOL_IDX, toSqrtPrice(1.0), override)
-
-    const ropstenDai = "0xad6d458402f60fd3bd25163575031acdce07538d"
-    const ropstenWbtc = "0x442be68395613bdcd19778e761f03261ec46c06d"
-    const ropstenUsdc = "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
-
-    //await dex.initPool(ZERO_ADDR, ropstenDai, POOL_IDX, toSqrtPrice(6), override)
-    /*await dex.initPool(ZERO_ADDR, ropstenWbtc, POOL_IDX, toSqrtPrice(60000000), override)
-    await dex.initPool(ZERO_ADDR, ropstenUsdc, POOL_IDX, toSqrtPrice(3e+15), override)
-    await dex.initPool(ropstenUsdc, ropstenDai, POOL_IDX, toSqrtPrice(1e-06), override)
-
-    console.log("Pool initialized at Index: " + POOL_IDX)*/
-
-    /*factory = await ethers.getContractFactory("MockERC20")
-    let daiErc20 = factory.attach(ropstenDai) as MockERC20
-    await daiErc20.approve(dex.address, BigNumber.from(10).pow(30), override)*/
-
-    /*factory = await ethers.getContractFactory("MockERC20")
-    let wbtcErc20 = factory.attach(ropstenWbtc) as MockERC20
-    await wbtcErc20.approve(dex.address, BigNumber.from(10).pow(30), override)
+    factory = await ethers.getContractFactory("CrocShell")
+    let shell = (addrs.shell ? factory.attach(addrs.shell) :
+        await factory.deploy(override)) as CrocShell
 
     factory = await ethers.getContractFactory("MockERC20")
-    let usdcErc20 = factory.attach(ropstenUsdc) as MockERC20
-    await usdcErc20.approve(dex.address, BigNumber.from(10).pow(30), override)*/
+    let dai = factory.attach(tokens.dai) as MockERC20
+    let usdc = factory.attach(tokens.usdc) as MockERC20
 
-    /*let mintCmd = encodeMintAmbient(ZERO_ADDR, ropstenDai, BigNumber.from(10).pow(18), false)
-    let tx = await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))
-    console.log(tx.hash)
-    console.log(tx.wait())*/
+    /*tx = await dai.approve(dex.address, BigNumber.from(10).pow(36))
+    await tx.wait()
 
-    /*let mintCmd = encodeMintConc(ZERO_ADDR, ropstenDai, BigNumber.from(10).pow(18), false)
-    let tx = await dex.connect(lp).tradeWarm(mintCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
+    tx = await usdc.approve(dex.address, BigNumber.from(10).pow(36))
+    await tx.wait()*/
 
-    /*let burnCmd = encodeBurnAmbient(ZERO_ADDR, ropstenWbtc, BigNumber.from(10).pow(4), false)
-    await dex.connect(lp).tradeWarm(burnCmd, Object.assign({value: BigNumber.from(10).pow(17)}, override))*/
+    /*let nonceCmd = dex.protocolCmd(0, 
+        abi.encode(["uint8", "uint256", "uint32"], [80, 0, 0]), false, override)
+    await (await nonceCmd).wait()*/
 
-    /*let mintCmd = encodeMintAmbient(ropstenUsdc, ropstenDai, BigNumber.from(10).pow(12), false)
-    await dex.connect(lp).tradeWarm(mintCmd, override)*/
+    /*let authCmd = abi.encode(["uint8", "address"], [20, policy.address])
+    tx = await dex.protocolCmd(0, authCmd, true, override);
+    await tx.wait()
 
-    /*await dex.swap(ZERO_ADDR, ropstenWbtc, POOL_IDX, true, true, BigNumber.from(10).pow(6), toSqrtPrice(1.8e11), false, 
-        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+    let upCmd = abi.encode(["uint8", "address", "uint16"], [21, warmPath.address, 2])
+    tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
+    await tx.wait()
 
-    /*await dex.swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, false, BigNumber.from(10).pow(6), toSqrtPrice(1.866667e-09), false, 
-        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+    upCmd = abi.encode(["uint8", "address", "uint16"], [21, longPath.address, 4])
+    tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
+    await tx.wait()
 
-    /*await dex.swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, true, BigNumber.from(10).pow(6), toSqrtPrice(3e9), false, 
-        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+    upCmd = abi.encode(["uint8", "address", "uint16"], [21, microPath.address, 5])
+    tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
+    await tx.wait()
 
-    /*await dex.swap(ropstenUsdc, ropstenDai, POOL_IDX, false, true, BigNumber.from(10).pow(6), toSqrtPrice(1e-12), false, 
-        Object.assign({value: BigNumber.from(10).pow(14)}, override))*/
+    let setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, 10000])
+    tx = await policy.treasuryResolution(dex.address, 0, setPoolLiqCmd, false)
+    await tx.wait()
 
-    factory = await ethers.getContractFactory("QueryHelper")
-    //let query = await factory.deploy(dex.address, override) as QueryHelper
-    let query = factory.attach("0x3F6B274529dDe713CF7703129f219e38dC0D83b5") as QueryHelper
-    console.log("Query Sidecar at " + query.address)
+    let templateCmd = abi.encode(["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
+        [110, 36000, 500, 64, 5, 64, 0])
+    tx = await policy.opsResolution(dex.address, 0, templateCmd)
+    await tx.wait()
 
-    await describeCurve(query, ZERO_ADDR, ropstenDai)
-    await describeCurve(query, ZERO_ADDR, ropstenWbtc)
-    await describeCurve(query, ZERO_ADDR, ropstenUsdc)
-    await describeCurve(query, ropstenUsdc, ropstenDai)
+    return*/
 
-    /*let swapTx = await dex.connect(trader)
-        .swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, true, true, BigNumber.from(10).pow(15), MAX_PRICE, false,
-                Object.assign({value: BigNumber.from(10).pow(15)}, override))
+    let initPoolCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
+        [71, tokens.eth, tokens.dai, 36000, toSqrtPrice(1/3000)])
+    tx = await dex.userCmd(0, initPoolCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000})
+    console.log(tx)
+    await tx.wait()
+
+    let initUsdcCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
+        [71, tokens.dai, tokens.usdc, 36000, toSqrtPrice(Math.pow(10, 12))])
+    tx = await dex.userCmd(0, initUsdcCmd, { gasLimit: 6000000})
+    console.log(tx)
+    await tx.wait()
+
+    /*let mintCmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [31, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, mintCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000})
+    console.log(tx)
+    await tx.wait()*/
+
+    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [32, tokens.dai, tokens.usdc, 36000, 0, 0, BigNumber.from(10).pow(8), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd)
+    console.log(tx)
+    await tx.wait()*/
+
+    /*tx = await dex.swap(tokens.eth, tokens.dai, 36000, true, true, BigNumber.from(10).pow(12), 0, MAX_PRICE, 0, 0,
+        {value: BigNumber.from(10).pow(12)})
+    await tx.wait()
+
+    tx = await dex.swap(tokens.eth, tokens.dai, 36000, false, true, BigNumber.from(10).pow(12), 0, MIN_PRICE, 0, 0)
+    await tx.wait()*/
+
+    /*tx = await dex.swap(tokens.dai, tokens.usdc, 36000, true, false, BigNumber.from(10).pow(2), 0, MAX_PRICE, 0, 0)
+    await tx.wait()*/
+
+    // Burn ambient
+    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [41, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000})
+    await tx.wait()*/
     
-    await dex.connect(trader)
-        .swap(ZERO_ADDR, ropstenUsdc, POOL_IDX, false, true, BigNumber.from(10).pow(15), MIN_PRICE, false,
-                override)*/
-    
-    /*let swapTx = await dex.connect(trader)
-        .swap(ZERO_ADDR, ropstenDai, POOL_IDX, false, false, BigNumber.from(10).pow(15), MIN_PRICE, false,
-                override)*/
+    // Remint
+    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [31, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(15) })
+    console.log(tx)
+    await tx.wait()*/
 
-    /*liq = await query.queryLiquidity(ZERO_ADDR, ropstenDai, POOL_IDX)
-    curve = await query.queryCurve(ZERO_ADDR, ropstenDai, POOL_IDX)
-    price = fromSqrtPrice(curve.priceRoot_)
-    console.log("Swap Tx: " + swapTx.hash)
-    console.log("Liquidity " + liq.toString() + " at price " + price.toString())*/
+    // Mint concentrated liquidity
+    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [11, tokens.eth, tokens.dai, 36000, -128000+256, 128000-256, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(15) })
+    console.log(tx)
+    await tx.wait()*/
+
+    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+        [21, tokens.eth, tokens.dai, 36000, -128000+64, 128000-64, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(16) })
+    console.log(tx)
+    await tx.wait()*/
 }
 
 deploy()
