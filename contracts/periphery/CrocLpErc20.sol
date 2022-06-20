@@ -4,7 +4,7 @@ pragma solidity >=0.5.0;
 
 import "../libraries/PoolSpecs.sol";
 import "../interfaces/ICrocLpConduit.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@rari-capital/solmate/src/tokens/ERC20.sol";
 import "hardhat/console.sol";
 
 contract CrocLpErc20 is ERC20, ICrocLpConduit {
@@ -15,7 +15,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
     uint256 public immutable poolType;
     
     constructor (address base, address quote, uint256 poolIdx)
-        ERC20 ("Croc Ambient LP ERC20 Token", "LP-CrocAmb") {
+        ERC20 ("Croc Ambient LP ERC20 Token", "LP-CrocAmb", 18) {
         baseToken = base;
         quoteToken = quote;
         poolType = poolIdx;
