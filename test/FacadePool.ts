@@ -92,7 +92,7 @@ export interface Token {
     sendEth: boolean
 }
 
-class ERC20Token implements Token {
+export class ERC20Token implements Token {
     address: string
     contract: MockERC20
     sendEth: boolean
@@ -640,6 +640,15 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
                     [73, recv, value, token])
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+            overrides ? overrides : this.overrides)
+    }
+
+    async testDepositPermit (from: Signer, recv: string, value: number | BigNumber, token: string,
+        deadline: number, v: number, r: number, s: number, overrides?: PayableOverrides): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "uint128", "address", "uint256", "uint8", "uint256", "uint256"],
+                    [83, recv, value, token, deadline, v, r, s])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
             overrides ? overrides : this.overrides)
     }

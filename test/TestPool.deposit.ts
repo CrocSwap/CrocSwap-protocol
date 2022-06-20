@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool, NativeEther } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, NativeEther, ERC20Token } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -64,6 +64,35 @@ describe('Pool Surplus Deposits', () => {
     it("deposit native insufficient value", async() => {
       let pool = await test.dex
       expect(test.testDeposit(await test.trader, other, 5000, ZERO_ADDR, {value: 4999})).to.be.reverted
+    })
+
+
+    it("deposit permit", async() => {
+      let pool = await test.dex
+      let query = await test.query
+      let initSurplus = await query.querySurplus(sender, baseToken.address)
+      let initBal = await baseToken.balanceOf(pool.address)
+
+      let deadline = 25000
+      let v = 28
+      let r = 817
+      let s = 912
+    
+      await test.testDepositPermit(await test.trader, other, 5000, baseToken.address,
+        deadline, v, r, s)
+      let nextBal = await baseToken.balanceOf(pool.address)
+      expect(nextBal.sub(initBal)).to.equal(5000)
+      expect(await query.querySurplus(other, baseToken.address)).to.equal(5000)
+      expect(await query.querySurplus(other, quoteToken.address)).to.equal(0)
+      expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus)
+
+      expect(await (baseToken as ERC20Token).contract.owner712()).to.equal(other)
+      expect(await (baseToken as ERC20Token).contract.spender712()).to.equal((await test.dex).address)
+      expect(await (baseToken as ERC20Token).contract.amount712()).to.equal(5000)
+      expect(await (baseToken as ERC20Token).contract.deadline712()).to.equal(deadline)
+      expect(await (baseToken as ERC20Token).contract.v712()).to.equal(v)
+      expect(await (baseToken as ERC20Token).contract.r712()).to.equal(r)
+      expect(await (baseToken as ERC20Token).contract.s712()).to.equal(s)
     })
 
     it("disburse", async() => {
@@ -285,4 +314,6 @@ describe('Pool Surplus Deposits', () => {
       await test.testSidePocket(await test.trader, SIDE_SALT, BASE_SALT, 0, baseToken.address)
       expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(4500))
     })
-  })
+
+
+})
