@@ -6,7 +6,7 @@ based on specification described here. CrocSwap will also make available a TypeS
 The input argument for long-form orders is a binary encoding, with several nested variable length array fields. Each array field is preceded by a count field that
 must allign with the number of elements in the array. The nested structure is visualized below. 
 
-(In the below and following diagrams all primitive type fields are marked with their Solidity type and byte size.)
+(*In the below and following diagrams all primitive type fields are marked with their Solidity type and byte size.*)
 
 ![trade() Order Directive](assets/OrderDirective.jpg)
 
@@ -28,13 +28,9 @@ Pool directives (third layer) are arranged as a compose of the following:
 * Swap directive: A directive specifying the net swap action (if any) to take on the pool
 * Chaining flags: A set of flags related to how the pool chains rolling flow between pairs. 
 
-Range order directives (fourth layer) are a composite of the following sub-fields:
-* Open tick: The price tick index on one side of the range order
-* Close bookend array: The reason this is an array is because it allows us to economically encode multiple range orders sharing a single boundary on one side.
-
 The remaining sections decompose the composite fields not broken down by the original visualization.
 
-### Settlement Directive
+## Settlement Directive
 ![Settle directive](assets/Settlement.jpg)
 
 Describes the settlement directive from both the opening of the top-layer order directive as well as at each hop in the chain.
@@ -43,26 +39,30 @@ Describes the settlement directive from both the opening of the top-layer order 
 * Dust threshold: The quantity threshold below which the user requests to skip the token transfer (usually to save gas on economically meaningless flows)
 * Surplus collateral flag: If true, the user requests to first settle any flows using their surplus collateral balance at the exchange.
 
-### Ambient Liquidity Directive
+## Ambient Liquidity Directive
 ![Ambient liquidity](assets/Ambient.jpg)
 * Is Add: If true indicates that this action is to mint liquidity. If false, burns liquidity.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Liquidity: The total amount of liquidity to mint or burn. (Or zero if no action)
 
 ### Swap Directive
 ![Swap directive](assets/Swap.jpg)
-* Mask: Unusued. Always set to zero.
 * Flags: Bit flag field with two flags:
     * Is Buy: Indicates swap will convert base-side token to quote-side token. (By convention CrocSwap internally always defines the base side as the token with the lexically smaller address in the pair.)
     * In Base Qty: The quantity field of the swa is denominated in the pair's base-side token.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Qty: The quantity to swap (final result could be smaller if swap hits the limit price).
 * Limit Price: The worse price up to which the user is willing to trade. Note that this represents the price on the margin, for this reason the average fill price of the swap will always be better than this limit price.
 
 ### Range Bookend Directive
 ![Range Bookend](assets/RangeBookend.jpg)
 
-Describes the range directive bookend that, when attached to an open tick index defines a single liquidity range order.
-* Close tick: The price tick index on the opposite side of the range order.
+Describes the range directive that defines a single concentrated liquidity range order.
+* Low tick: The price tick index on the lower side of the range order
+* High tick: The price tick index on the high side of the range order.
+* Relative tick flag: If set to true the low/high tick are defined as a relative offset to the current price tick
 * Is Add: If true indicates that the order is minting liquidity. If false, burning.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Liquidity: The amount of liquidity to mint/burn.
 
 ### Price Improve Flags
