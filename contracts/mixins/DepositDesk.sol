@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import './StorageLayout.sol';
 import './SettleLayer.sol';
 import '../interfaces/ICrocVirtualToken.sol';
+import '../interfaces/IERC20Minimal.sol';
 
 contract DepositDesk is SettleLayer {
     using SafeCast for uint256;
@@ -25,6 +26,19 @@ contract DepositDesk is SettleLayer {
         debitTransfer(lockHolder_, value, token, msg.value.toUint128());
         bytes32 key = tokenKey(recv, token);
         userBals_[key].surplusCollateral_ += value;
+    }
+
+    /* @notice Same as deposit surplus, but used with EIP-2612 compliant tokens that have
+     *         a permit function. Allows the user to avoid needing to approve() the DEX
+     *         contract.
+     *
+     * @param v,r,s  The EIP-712 signature approviing Permit of the token underlying 
+     *               token to be deposited. */
+    function depositSurplusPermit (address recv, uint128 value, address token,
+                                   uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        internal {
+        IERC20Permit(token).permit(recv, address(this), value, deadline, v, r, s);
+        depositSurplus(recv, value, token);
     }
 
     /* @notice Pays out surplus collateral held by the owner at the exchange.

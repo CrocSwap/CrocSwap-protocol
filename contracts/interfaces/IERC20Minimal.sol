@@ -50,3 +50,16 @@ interface IERC20Minimal {
     /// @param value The new allowance from the owner to the spender
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
+
+interface IERC20Permit is IERC20Minimal {
+
+    function permit(
+        address owner,
+        address spender,
+        uint256 amount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+        ) external;
+}

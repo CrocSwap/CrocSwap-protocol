@@ -87,6 +87,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             approveRouter(cmd);
         } else if (cmdCode == UserCmd.DEPOSIT_SURPLUS_CODE) {
             depositSurplus(cmd);
+        } else if (cmdCode == UserCmd.DEPOSIT_PERMIT_CODE) {
+            depositPermit(cmd);
         } else if (cmdCode == UserCmd.DISBURSE_SURPLUS_CODE) {
             disburseSurplus(cmd);
         } else if (cmdCode == UserCmd.TRANSFER_SURPLUS_CODE) {
@@ -267,6 +269,14 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (, address recv, uint128 value, address token) =
             abi.decode(cmd, (uint8, address, uint128, address));
         depositSurplus(recv, value, token);
+    }
+
+    function depositPermit (bytes calldata cmd) private {
+        (, address recv, uint128 value, address token, uint256 deadline,
+         uint8 v, bytes32 r, bytes32 s) =
+            abi.decode(cmd, (uint8, address, uint128, address, uint256,
+                             uint8, bytes32, bytes32));
+        depositSurplusPermit(recv, value, token, deadline, v, r, s);
     }
 
     function disburseSurplus (bytes calldata cmd) private {
