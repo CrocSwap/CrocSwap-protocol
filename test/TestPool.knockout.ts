@@ -205,10 +205,17 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10255865) // Slight decrease from pulling ambient rewards
     })
 
-    function formProof (pivots: number[], mileages: BigNumber[]): BigNumber[] {
+    function hashToEntropy (hash: string): BigNumber {
+        let mask = BigNumber.from(2).pow(160).sub(1)
+        return BigNumber.from(hash).and(mask)
+    }
+
+    function formProof (pivots: number[], mileages: BigNumber[], hash: string[]): BigNumber[] {
         let proofs: BigNumber[] = []
         for (let i = 0; i < pivots.length; ++i) {
-            proofs.push(BigNumber.from(pivots[i]).shl(64).add(BigNumber.from(mileages[i])))
+            let entropy = hashToEntropy(hash[i])
+            let commit = BigNumber.from(pivots[i]).shl(64).add(BigNumber.from(mileages[i]))
+            proofs.push(entropy.shl(96).add(commit))
         }
         return proofs
     }
@@ -223,16 +230,19 @@ describe('Pool Knockout Liq', () => {
         let merkleOne = (await (await test.query).queryKnockoutMerkle((await test.base).address, (await test.quote).address, test.poolIdx, true, 3200))
 
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+        let hashOne: string = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
 
         let merkleTwo = (await (await test.query).queryKnockoutMerkle((await test.base).address, (await test.quote).address, test.poolIdx, true, 3200))
 
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+        let hashTwo: string = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
 
-        await test.testKnockoutClaim(true, 3200, 3200+32, merkleOne.root, formProof([merkleOne.pivot, merkleTwo.pivot], [merkleOne.fee, merkleTwo.fee]))
+        await test.testKnockoutClaim(true, 3200, 3200+32, merkleOne.root, 
+            formProof([merkleOne.pivot, merkleTwo.pivot], [merkleOne.fee, merkleTwo.fee], [hashOne, hashTwo]))
         expect(await test.snapBaseFlow()).to.equal(-60294) // Small claim from rewards
         expect(await test.snapQuoteFlow()).to.equal(-3752189)
         expect(await test.liquidity()).to.equal(10374514) // Slight decrease from pulling ambient rewards
@@ -248,16 +258,18 @@ describe('Pool Knockout Liq', () => {
         let merkleOne = (await (await test.query).queryKnockoutMerkle((await test.base).address, (await test.quote).address, test.poolIdx, true, 3200))
 
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+        let hashOne: string = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
 
         let merkleTwo = (await (await test.query).queryKnockoutMerkle((await test.base).address, (await test.quote).address, test.poolIdx, true, 3200))
 
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+        let hashTwo: string = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
 
-        const fakeProof = formProof([merkleOne.pivot, merkleTwo.pivot], [BigNumber.from(0), merkleTwo.fee]);
+        const fakeProof = formProof([merkleOne.pivot, merkleTwo.pivot], [BigNumber.from(0), merkleTwo.fee], [hashOne, hashTwo]);
         await expect(test.testKnockoutClaim(true, 3200, 3200+32, merkleOne.root, fakeProof)).to.be.reverted
     })
 

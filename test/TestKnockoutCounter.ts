@@ -475,10 +475,17 @@ describe('Knockout Counter Mixin', () => {
         expect(pivot.range).to.eq(0)        
     })
 
-    function formProof (pivots: number[], mileages: number[]): BigNumber[] {
+    function hashToEntropy (hash: string): BigNumber {
+        let mask = BigNumber.from(2).pow(160).sub(1)
+        return BigNumber.from(hash).and(mask)
+    }
+
+    function formProof (pivots: number[], mileages: number[], hash: string[] = []): BigNumber[] {
         let proofs: BigNumber[] = []
         for (let i = 0; i < pivots.length; ++i) {
-            proofs.push(BigNumber.from(pivots[i]).shl(64).add(BigNumber.from(mileages[i])))
+            let entropy = hash.length == 0 ? BigNumber.from(0) : hashToEntropy(hash[i])
+            let commit = BigNumber.from(pivots[i]).shl(64).add(BigNumber.from(mileages[i]))
+            proofs.push(entropy.shl(96).add(commit))
         }
         return proofs
     }
@@ -526,22 +533,26 @@ describe('Knockout Counter Mixin', () => {
     it("claim stack", async() => {
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
         let pivotTime = await test.callTime_()
+        let hashOne = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 125000)
         await test.testCross(35000, false, 800, 135000)
         let rootOne = (await test.getMerkle(35000, true, 800, 928)).root
 
         await test.testMint(35000, knockoutBits, 900, 140000, 600, true, 800, 928)
         let pivotTimeTwo = await test.callTime_()
+        let hashTwo = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 155000)
         await test.testCross(35000, false, 800, 165000)
         let rootTwo = (await test.getMerkle(35000, true, 800, 928)).root
 
         await test.testMint(35000, knockoutBits, 900, 225000, 700, true, 800, 928)
         let pivotTimeThree = await test.callTime_()
+        let hashThree = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 225000)
         await test.testCross(35000, false, 800, 240000)
 
-        await test.testClaim(35000, true, 800, 928, rootOne, formProof([pivotTime, pivotTimeTwo], [40000, 15000]))
+        await test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))
         expect(await test.bookLots_()).to.eq(500)
         expect(await test.rewards_()).to.eq(40000)        
 
@@ -556,7 +567,7 @@ describe('Knockout Counter Mixin', () => {
         expect(pos.lots).to.eq(600)
 
         // Claim second pivot
-        await test.testClaim(35000, true, 800, 928, rootTwo, formProof([pivotTimeTwo], [15000]))
+        await test.testClaim(35000, true, 800, 928, rootTwo, formProof([pivotTimeTwo], [15000], [hashThree]))
         expect(await test.bookLots_()).to.eq(600)
         expect(await test.rewards_()).to.eq(15000)        
 
@@ -565,7 +576,7 @@ describe('Knockout Counter Mixin', () => {
         expect(pos.lots).to.eq(0)
     })
 
-    it("claim before knockout", async() => {
+   it("claim before knockout", async() => {
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
         let pivotTime = await test.callTime_()
 
@@ -592,34 +603,48 @@ describe('Knockout Counter Mixin', () => {
     it("bad claim proofs", async() => {
         await test.testMint(35000, knockoutBits, 900, 85000, 500, true, 800, 928)
         let pivotTime = await test.callTime_()
+        let hashOne = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 125000)
         await test.testCross(35000, false, 800, 135000)
         let rootOne = (await test.getMerkle(35000, true, 800, 928)).root
 
         await test.testMint(35000, knockoutBits, 900, 140000, 600, true, 800, 928)
         let pivotTimeTwo = await test.callTime_()
+        let hashTwo = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 155000)
         await test.testCross(35000, false, 800, 165000)
         let rootTwo = (await test.getMerkle(35000, true, 800, 928)).root
 
         await test.testMint(35000, knockoutBits, 900, 225000, 700, true, 800, 928)
         let pivotTimeThree = await test.callTime_()
+        let hashThree = (await hre.ethers.provider.getBlock("latest")).hash
         await test.testCross(35000, true, 800, 225000)
         await test.testCross(35000, false, 800, 240000)
 
         // Bad proofs...
-        await expect(test.testClaim(35000, true, 800, 928, rootOne, formProof([pivotTime, pivotTimeTwo], [45000, 15000]))).to.be.reverted
-        await expect(test.testClaim(35000, true, 800, 928, rootOne, formProof([pivotTime+1, pivotTimeTwo], [40000, 15000]))).to.be.reverted
-        await expect(test.testClaim(35000, true, 800, 928, rootTwo, formProof([pivotTime, pivotTimeTwo], [40000, 15000]))).to.be.reverted
-
+        await expect(test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [45000, 15000], [hashTwo, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime+1, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, true, 800, 928, rootTwo, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashOne, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashThree, hashTwo]))).to.be.reverted
+            
         // Proofs at wrong pivot
-        await expect(test.testClaim(36000, true, 800, 928, rootOne, formProof([pivotTime, pivotTimeTwo], [40000, 15000]))).to.be.reverted
-        await expect(test.testClaim(35000, false, 800, 928, rootOne, formProof([pivotTime, pivotTimeTwo], [40000, 15000]))).to.be.reverted
-        await expect(test.testClaim(35000, true, 700, 828, rootOne, formProof([pivotTime, pivotTimeTwo], [40000, 15000]))).to.be.reverted
+        await expect(test.testClaim(36000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, false, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))).to.be.reverted
+        await expect(test.testClaim(35000, true, 700, 828, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))).to.be.reverted
 
         // User without claim on pivot... gets zero lots
         await test.setLockholder(128)
-        expect(test.testClaim(35000, true, 800, 928, rootOne, formProof([pivotTime, pivotTimeTwo], [40000, 15000])))
+        await test.testClaim(35000, true, 800, 928, rootOne, 
+            formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))
         expect(await test.bookLots_()).to.eq(0)
         expect(await test.rewards_()).to.eq(40000)     
 

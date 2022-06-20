@@ -52,30 +52,40 @@ describe('Knockout Liquidity', () => {
       expect(state[1]).to.be.equal(850000)
    })
 
-   function proofEncap (time: number, mileage: number): BigNumber {
-      return BigNumber.from(time).shl(64).add(BigNumber.from(mileage))
+   function proofEncap (time: number, mileage: number, hash: string): BigNumber {
+      let mask = BigNumber.from(2).pow(160).sub(1)
+      let entropy = BigNumber.from(hash).and(mask)
+      let args = BigNumber.from(time).shl(64).add(BigNumber.from(mileage))
+      return entropy.shl(96).add(args)
    }
 
    it("proof merkle one step", async() => {
+      let blockHashOne = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(200, 5000, 256, 550000)
+      let blockHashTwo = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 6000, 128, 850000)
 
-      let proof = [proofEncap(0, 0), proofEncap(5000, 550000)]
+      let proof = [proofEncap(0, 0, blockHashOne), proofEncap(5000, 550000, blockHashTwo)]
       let state = await knockout.testProof(0, proof)
       expect(state[0]).to.be.equal(0)
       expect(state[1]).to.be.equal(0)
    })
 
    it("proof merkle multi steps", async() => {
+      let hashA = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(200, 5000, 256, 550000)
+      let hashB = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 6000, 128, 850000)
+      let hashC = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 7000, 128, 750000)
+      let hashD = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 8000, 128, 650000)
+      let hashE = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 9000, 128, 550000)
 
-      let proof = [proofEncap(0, 0), proofEncap(5000, 550000),
-         proofEncap(6000, 850000), proofEncap(7000, 750000), 
-         proofEncap(8000, 650000)]
+      let proof = [proofEncap(0, 0, hashA), proofEncap(5000, 550000, hashB),
+         proofEncap(6000, 850000, hashC), proofEncap(7000, 750000, hashD), 
+         proofEncap(8000, 650000, hashE)]
          
       let state = await knockout.testProof(0, proof)
       expect(state[0]).to.be.equal(0)
@@ -88,11 +98,13 @@ describe('Knockout Liquidity', () => {
       await knockout.testCommit(100, 7000, 128, 750000)
 
       let root = (await knockout.merkle_()).merkleRoot_
+      let hashA = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 8000, 128, 650000)
+      let hashB = (await hre.ethers.provider.getBlock("latest")).hash
       await knockout.testCommit(100, 9000, 128, 550000)
 
-      let proof = [proofEncap(7000, 750000), 
-         proofEncap(8000, 650000)]
+      let proof = [proofEncap(7000, 750000, hashA), 
+         proofEncap(8000, 650000, hashB)]
          
       let state = await knockout.testProof(root, proof)
       expect(state[0]).to.be.equal(7000)

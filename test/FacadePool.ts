@@ -375,7 +375,7 @@ export class TestPool {
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = 93
-        const inner: BytesLike = abiCoder.encode(["uint160", "uint96[]"], [root, proof])
+        const inner: BytesLike = abiCoder.encode(["uint160", "uint256[]"], [root, proof])
         return abiCoder.encode(
             [ "uint8", "address", "address", "uint256", "int24", "int24", "bool", "uint8", "bytes"],
             [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
