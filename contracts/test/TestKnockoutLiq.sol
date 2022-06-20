@@ -33,7 +33,7 @@ contract TestKnockoutLiq {
         merkle_.commitKnockout(pivot, feeMileage);
     }
 
-    function testProof (uint160 root, uint96[] calldata proof)
+    function testProof (uint160 root, uint256[] calldata proof)
         view public returns (uint32, uint64) {
         return merkle_.proveHistory(root, proof);
     }

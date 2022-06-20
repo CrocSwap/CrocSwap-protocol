@@ -28,7 +28,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *         of these logs to reconstructo the Merkle history necessary to claim
      *         their fees. */
     event CrocKnockoutCross (bytes32 indexed pool, int24 indexed tick, bool isBid,
-                             uint32 pivotTime, uint64 feeMileage);
+                             uint32 pivotTime, uint64 feeMileage, uint160 commitEntropy);
 
     
     /* @notice Called when a given knockout pivot is crossed. Performs the book-keeping
@@ -54,8 +54,8 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         uint64 feeRange = knockoutRangeLiq(pool, pivot, isBid, tick, feeGlobal);
 
         merkle.commitKnockout(pivot, feeRange);
-        emit CrocKnockoutCross(pool, tick, isBid, merkle.pivotTime_, merkle.feeMileage_);
-        
+        emit CrocKnockoutCross(pool, tick, isBid, merkle.pivotTime_, merkle.feeMileage_,
+                               KnockoutLiq.commitEntropySalt());
         pivot.deletePivot(); // Nice little SSTORE refund for the swapper
     }
 
@@ -188,7 +188,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return rewards The in-range concentrated liquidity rewards earned by the position.
      */
     function claimPostKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
-                                uint160 merkleRoot, uint96[] memory merkleProof)
+                                uint160 merkleRoot, uint256[] memory merkleProof)
         internal returns (uint96 lots, uint64 rewards) {
         (uint32 pivotTime, uint64 feeSnap) =
             proveKnockout(pool, loc, merkleRoot, merkleProof);
@@ -412,7 +412,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @return feeSnap The in-range fee mileage at Merkle commitment time, i.e. when the
      *                 pivot was knocked out. */
     function proveKnockout (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
-                            uint160 root, uint96[] memory proof)
+                            uint160 root, uint256[] memory proof)
         private view returns (uint32 pivotTime, uint64 feeSnap) {
         bytes32 lvlKey = KnockoutLiq.encodePivotKey(pool, loc.isBid_,
                                                     loc.knockoutTick());

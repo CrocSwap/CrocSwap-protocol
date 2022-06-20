@@ -55,7 +55,7 @@ contract TestKnockoutCounter is KnockoutCounter {
     }
 
     function testClaim (uint256 poolIdx, bool isBid, int24 lower, int24 upper,
-                        uint160 merkleRoot, uint96[] calldata merkleProof) public {
+                        uint160 merkleRoot, uint256[] calldata merkleProof) public {
         KnockoutLiq.KnockoutPosLoc memory loc;
         loc.isBid_ = isBid;
         loc.lowerTick_ = lower;

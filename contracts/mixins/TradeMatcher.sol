@@ -236,7 +236,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
 
     function claimKnockout (CurveMath.CurveState memory curve, 
                             KnockoutLiq.KnockoutPosLoc memory loc,
-                            uint160 root, uint96[] memory proof, bytes32 poolHash)
+                            uint160 root, uint256[] memory proof, bytes32 poolHash)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         (uint96 lots, uint64 rewards) = claimPostKnockout(poolHash, loc, root, proof);
         uint128 liquidity = lots.lotsToLiquidity();

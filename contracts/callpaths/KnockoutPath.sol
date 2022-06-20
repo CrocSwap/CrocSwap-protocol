@@ -145,7 +145,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
                        KnockoutLiq.KnockoutPosLoc memory loc,
                        bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
-        (uint160 root, uint96[] memory proof) = abi.decode(args, (uint160,uint96[]));
+        (uint160 root, uint256[] memory proof) = abi.decode(args, (uint160,uint256[]));
         (baseFlow, quoteFlow) = claimKnockout(curve, loc, root, proof, pool);
         commitCurve(pool, curve);
     }
