@@ -78,12 +78,14 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                     terms of surplus collateral balance held at the dex contract.
      *                          0x1 - Base token is paid/received from surplus collateral
      *                          0x2 - Quote token is paid/received from surplus collateral
-     * @return The total token quantity in the output (input) for swaps where quantity
-     *         is fixed in input (output). */
+     * @return The token base and quote token flows associated with this swap action. 
+     *         (Negative indicates a credit paid to the user, positive a debit collected
+     *         from the user) */
     function swap (address base, address quote,
                    uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint16 tip,
                    uint128 limitPrice, uint128 minOut,
-                   uint8 reserveFlags) reEntrantLock public payable returns (int128) {
+                   uint8 reserveFlags) reEntrantLock public payable
+        returns (int128 baseQuote, int128 quoteFlow) {
         // By default the embedded hot-path is enabled, but protocol governance can
         // disable by toggling the force proxy flag. If so, users should point to
         // swapProxy.

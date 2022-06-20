@@ -35,17 +35,17 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
                           uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                           uint16 poolTip, uint128 limitPrice, uint128 minOutput,
                           uint8 reserveFlags) internal
-        returns (int128){
+        returns (int128 baseFlow, int128 quoteFlow) {
         
         PoolSpecs.PoolCursor memory pool = preparePoolCntx
             (base, quote, poolIdx, poolTip, isBuy, inBaseQty, qty);
 
         Chaining.PairFlow memory flow = swapDir(pool, isBuy, inBaseQty, qty, limitPrice);
+        (baseFlow, quoteFlow) = (flow.baseFlow_, flow.quoteFlow_);
 
-        int128 outFlow = pivotOutFlow(flow, minOutput, isBuy, inBaseQty);        
+        pivotOutFlow(flow, minOutput, isBuy, inBaseQty);        
         settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
         accumProtocolFees(flow, base, quote);
-        return outFlow;
     }
 
     /* @notice Final check at swap completion to verify that the non-fixed side of the 
@@ -92,7 +92,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
 
     /* @notice Syntatic sugar that wraps a swapExecute call with an ABI encoded version of
      *         the arguments. */
-    function swapEncoded (bytes calldata input) internal returns (int128 outFlow) {
+    function swapEncoded (bytes calldata input) internal returns
+        (int128 baseFlow, int128 quoteFlow) {
         (address base, address quote,
          uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty, uint16 poolTip,
          uint128 limitPrice, uint128 minOutput, uint8 reserveFlags) =

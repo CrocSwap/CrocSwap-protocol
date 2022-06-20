@@ -123,6 +123,8 @@ async function deploy() {
     let shell = (addrs.shell ? factory.attach(addrs.shell) :
         await factory.deploy(override)) as CrocShell
 
+    console.log("M")
+
     factory = await ethers.getContractFactory("MockERC20")
     let dai = factory.attach(tokens.dai) as MockERC20
     let usdc = factory.attach(tokens.usdc) as MockERC20
@@ -164,14 +166,15 @@ async function deploy() {
 
     return*/
 
-    let initPoolCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
+    console.log("Q")
+    /*let initPoolCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
         [71, tokens.eth, tokens.dai, 36000, toSqrtPrice(1/3000)])
     tx = await dex.userCmd(0, initPoolCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000})
     console.log(tx)
-    await tx.wait()
+    await tx.wait()*/
 
     let initUsdcCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
-        [71, tokens.dai, tokens.usdc, 36000, toSqrtPrice(Math.pow(10, 12))])
+        [71, tokens.usdc, tokens.dai, 36000, toSqrtPrice(Math.pow(10, 12))])
     tx = await dex.userCmd(0, initUsdcCmd, { gasLimit: 6000000})
     console.log(tx)
     await tx.wait()
