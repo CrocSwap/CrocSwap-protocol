@@ -26,26 +26,37 @@ contract TestSettleLayer is DepositDesk {
         return super.querySurplus(recv, token);
     }
     
-    function testSettleFlow (int128 flow, address token) public payable {
-        testSettle(flow, token, type(int128).max, 0, false);
+    function testSettleFlow (int128 flow, address token) reEntrantLock public payable {
+        testSettleInner(flow, token, type(int128).max, 0, false);
+    }
+
+    function testSettleFlowTwo (int128 flowOne, int128 flowTwo,
+                                address token) reEntrantLock public payable {
+        testSettleInner(flowOne, token, type(int128).max, 0, false);
+        testSettleInner(flowTwo, token, type(int128).max, 0, false);
     }
 
     function testSettleLimit (int128 flow, address token, int128 limitQty)
-        public payable {
-        testSettle(flow, token, limitQty, 0, false);
+        reEntrantLock public payable {
+        testSettleInner(flow, token, limitQty, 0, false);
     }
 
     function testSettleDust (int128 flow, address token, uint128 dustThresh)
-        public payable {
-        testSettle(flow, token, type(int128).max, dustThresh, false);  
+        reEntrantLock public payable {
+        testSettleInner(flow, token, type(int128).max, dustThresh, false);  
     }
 
-    function testSettleReserves (int128 flow, address token) public payable {
-        testSettle(flow, token, type(int128).max, 0, true);
+    function testSettleReserves (int128 flow, address token) reEntrantLock public payable {
+        testSettleInner(flow, token, type(int128).max, 0, true);
     }
 
     function testSettle (int128 flow, address token, int128 limitQty,
-                         uint128 dustThresh, bool useSurplus) public payable {
+                         uint128 dustThresh, bool useSurplus) reEntrantLock public payable {
+        testSettleInner(flow, token, limitQty, dustThresh, useSurplus);
+    }
+
+    function testSettleInner (int128 flow, address token, int128 limitQty,
+                              uint128 dustThresh, bool useSurplus) public payable {
         Directives.SettlementChannel memory dir = Directives.SettlementChannel
             ({token_: token, limitQty_: limitQty, dustThresh_: dustThresh,
                     useSurplus_: useSurplus});
@@ -57,8 +68,14 @@ contract TestSettleLayer is DepositDesk {
     }
 
     function testDesposit (address owner, uint128 value,
-                           address token) internal {
+                           address token) reEntrantLock internal {
         depositSurplus(owner, value, token);
+    }
+
+    function testDepositTwice (address owner, uint128 valueOne, uint128 valueTwo,
+                               address token) reEntrantLock internal {
+        depositSurplus(owner, valueOne, token);
+        depositSurplus(owner, valueTwo, token);
     }
 
     function testDisburse (address owner, address recv, int128 value,
