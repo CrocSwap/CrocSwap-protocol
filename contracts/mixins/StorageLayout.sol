@@ -27,6 +27,8 @@ contract StorageLayout {
     // privileged mode. *Must* always be reset to false after every call.
     bool internal sudoMode_;
 
+    bool internal msgValSpent_;
+
     // If set to true, than the embedded hot-path (swap()) is not enabled and
     // users must use the hot proxy for the hot-path. By default set to false.
     bool internal hotPathOpen_;

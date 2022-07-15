@@ -236,7 +236,7 @@ contract SettleLayer is AgentMask {
                             int128 flow, bool useReserves)
         private {
         // This is the only point in a standard transaction where msg.value is accessed.
-        uint128 recvEth = msg.value.toUint128();
+        uint128 recvEth = popMsgVal();
         if (flow != 0) {
             transactFlow(debitor, creditor, flow, address(0), recvEth, useReserves);
         } else {
