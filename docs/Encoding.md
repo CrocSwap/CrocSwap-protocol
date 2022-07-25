@@ -1,41 +1,12 @@
-# Encoding Public Calls
+# Encoding Long Form Orders
 
-To optimize gas, certain public CrocSwap methods do not rely on Solidity native encoding. Clients calling these functions must directly encode a byte string
+To optimize gas, long-form CrocSwap calls do not rely on Solidity ABI encoding. Clients calling these functions must directly encode a byte string
 based on specification described here. CrocSwap will also make available a TypeScript based SDK to support client-side encoding.
 
-This "special encoding" applies to three public methods on the `CrocSwapDex` contract:
-
-* `tradeWarm(bytes)`: Apples a single, simple, gas-optimized, atomic trading actions within a single pool
-* `trade(bytes)`: Applies an arbitrary complex compound order directive across potentially multiple pairs and pools.
-* `protocolCmd(bytes)`: Consolidates another of administrative commands that belong to the protocol authority.
-
-## tradeWarm() Method Call
-
-The input argument for this method uses a simple binary encoding of a fixed number of fields. The layout for the argument encoding is below:
-
-![tradeWarm() Encoding](assets/WarmPath.png)
-
-Details for these fields:
-* Action code: Code specifying the atomic trade action for the call. (Note that swap() is a dedicated call for gas optimization purposes.)
-* Base token: Base side token speciying the pair.
-* Quote token: Quote side token specifying the pair.
-* Pool type index: The index of the pool type to use.
-* Bid tick: The price tick of the lower boundary (only applicate for range orders)
-* Ask tick: The price tick of the upper boundary (only applicate for range orders)
-* Liquidity: The amount of liquidity to be added or removed
-* Limit price lower: The threshold price below which the transaction will be aborted
-* Limit price upper: The threshold price above which the transaction will be aborted
-* Use surplus collateral: Flag indicating whether the user wants to settle with the surplus collateral they hold at the exchange.
-
-For certain command types some of those fields may not be relevant, in which case the value of those fields are ignored. Regardless of the type of the field, all
-field slots are big-Endian, occupy 32 bytes and are padded with zeros. Therefore the encoded byte string is equivalent to calling abi.encode on the field arguments.
-
-## trade() Method Call
-
-The input argument for this method is a binary encoding, but with several nested variable length array fields. Each array field is preceded by a count field that
+The input argument for long-form orders is a binary encoding, with several nested variable length array fields. Each array field is preceded by a count field that
 must allign with the number of elements in the array. The nested structure is visualized below. 
 
-(In the below and following diagrams all primitive type fields are marked with their Solidity type and byte size.)
+(*In the below and following diagrams all primitive type fields are marked with their Solidity type and byte size.*)
 
 ![trade() Order Directive](assets/OrderDirective.jpg)
 
@@ -57,13 +28,9 @@ Pool directives (third layer) are arranged as a compose of the following:
 * Swap directive: A directive specifying the net swap action (if any) to take on the pool
 * Chaining flags: A set of flags related to how the pool chains rolling flow between pairs. 
 
-Range order directives (fourth layer) are a composite of the following sub-fields:
-* Open tick: The price tick index on one side of the range order
-* Close bookend array: The reason this is an array is because it allows us to economically encode multiple range orders sharing a single boundary on one side.
-
 The remaining sections decompose the composite fields not broken down by the original visualization.
 
-### Settlement Directive
+## Settlement Directive
 ![Settle directive](assets/Settlement.jpg)
 
 Describes the settlement directive from both the opening of the top-layer order directive as well as at each hop in the chain.
@@ -72,26 +39,30 @@ Describes the settlement directive from both the opening of the top-layer order 
 * Dust threshold: The quantity threshold below which the user requests to skip the token transfer (usually to save gas on economically meaningless flows)
 * Surplus collateral flag: If true, the user requests to first settle any flows using their surplus collateral balance at the exchange.
 
-### Ambient Liquidity Directive
+## Ambient Liquidity Directive
 ![Ambient liquidity](assets/Ambient.jpg)
 * Is Add: If true indicates that this action is to mint liquidity. If false, burns liquidity.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Liquidity: The total amount of liquidity to mint or burn. (Or zero if no action)
 
 ### Swap Directive
 ![Swap directive](assets/Swap.jpg)
-* Mask: Unusued. Always set to zero.
 * Flags: Bit flag field with two flags:
     * Is Buy: Indicates swap will convert base-side token to quote-side token. (By convention CrocSwap internally always defines the base side as the token with the lexically smaller address in the pair.)
     * In Base Qty: The quantity field of the swa is denominated in the pair's base-side token.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Qty: The quantity to swap (final result could be smaller if swap hits the limit price).
 * Limit Price: The worse price up to which the user is willing to trade. Note that this represents the price on the margin, for this reason the average fill price of the swap will always be better than this limit price.
 
 ### Range Bookend Directive
 ![Range Bookend](assets/RangeBookend.jpg)
 
-Describes the range directive bookend that, when attached to an open tick index defines a single liquidity range order.
-* Close tick: The price tick index on the opposite side of the range order.
+Describes the range directive that defines a single concentrated liquidity range order.
+* Low tick: The price tick index on the lower side of the range order
+* High tick: The price tick index on the high side of the range order.
+* Relative tick flag: If set to true the low/high tick are defined as a relative offset to the current price tick
 * Is Add: If true indicates that the order is minting liquidity. If false, burning.
+* Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Liquidity: The amount of liquidity to mint/burn.
 
 ### Price Improve Flags
