@@ -7,6 +7,7 @@ import "hardhat/console.sol";
 
 contract CrocQuery {
     using CurveMath for CurveMath.CurveState;
+    using SafeCast for uint144;
     
     address public dex_;
     
@@ -29,8 +30,7 @@ contract CrocQuery {
     }
 
     function queryLiquidity (address base, address quote, uint256 poolIdx)
-        public view returns (uint128) {
-        
+        public view returns (uint128) {        
         return queryCurve(base, quote, poolIdx).activeLiquidity();
     }
 
@@ -121,5 +121,51 @@ contract CrocQuery {
         lots = uint96((val << 160) >> 160);
         mileage = uint64((val << 96) >> 224);
         timestamp = uint32(val >> 224);
+    }
+
+    function queryRangePosition (address owner, address base, address quote,
+                                 uint256 poolIdx, int24 lowerTick, int24 upperTick)
+        public view returns (uint128 liq, uint64 fee,
+                             uint32 timestamp, bool atomic) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 posKey = keccak256(abi.encodePacked(owner, poolHash, lowerTick, upperTick));
+        bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.POS_MAP_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        liq = uint128((val << 128) >> 128);
+        fee = uint64((val >> 128) << (128 + 64) >> (128 + 64));
+        timestamp = uint32((val >> (128 + 64)) << (128 + 64 + 32) >> (128 + 64 + 32));
+        atomic = bool((val >> (128 + 64 + 32)) > 0);
+    }
+
+    function queryAmbientPosition (address owner, address base, address quote,
+                                   uint256 poolIdx)
+        public view returns (uint128 seeds, uint32 timestamp) {
+        bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 posKey = keccak256(abi.encodePacked(owner, poolHash));
+        bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.AMB_MAP_SLOT));
+        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        seeds = uint128((val << 128) >> 128);
+        timestamp = uint32((val >> (128)) << (128 + 32) >> (128 + 32));
+    }
+
+    function queryConcRewards (address owner, address base, address quote, uint256 poolIdx,
+                               int24 lowerTick, int24 upperTick) public view returns (uint128) {
+        (uint128 liq, uint64 feeStart, ,) = queryRangePosition(owner, base, quote, poolIdx,
+                                                               lowerTick, upperTick);
+        (, , uint64 bidFee) = queryLevel(base, quote, poolIdx, lowerTick);
+        (, , uint64 askFee) = queryLevel(base, quote, poolIdx, upperTick);
+        CurveMath.CurveState memory curve = queryCurve(base, quote, poolIdx);
+        uint64 curveFee = queryCurve(base, quote, poolIdx).concGrowth_;
+
+        int24 curveTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
+        uint64 feeLower = lowerTick <= curveTick ? bidFee : curveFee - bidFee;
+        uint64 feeUpper = upperTick <= curveTick ? askFee : curveFee - askFee;
+        unchecked {
+            uint64 accumFees = (feeUpper - feeLower) - feeStart;
+            uint128 seeds = FixedPoint.mulQ48(liq, accumFees).toUint128By144();
+            return CompoundMath.inflateLiqSeed(seeds, curve.seedDeflator_);
+        }
     }
 }
