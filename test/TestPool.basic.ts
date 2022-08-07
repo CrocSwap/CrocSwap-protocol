@@ -475,7 +475,7 @@ describe('Pool', () => {
         startBase = await baseToken.balanceOf((await test.dex).address)
         await test.testBurn(-10000, 25000, 250000)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-31)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-47)
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-47);
 
         // Adding more liquidity at higher rewards mark should blend down the rewards rate per unit burned 
         await test.testMint(-10000, 25000, 250000)
@@ -483,14 +483,15 @@ describe('Pool', () => {
         startQuote = await quoteToken.balanceOf((await test.dex).address)
         await test.testBurn(-10000, 25000, 250000)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31)        
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
 
         // Rewards rate on subsequent burns should remain the at the same blended rate
         startBase = await baseToken.balanceOf((await test.dex).address)
         startQuote = await quoteToken.balanceOf((await test.dex).address)
         await test.testBurn(-10000, 25000, 250000)
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31)        
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
+
     })
 
     it("mint ambient", async() => {

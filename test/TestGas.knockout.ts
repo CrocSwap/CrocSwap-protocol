@@ -42,6 +42,19 @@ describe('Gas Benchmarks', () => {
         expect(gas).to.be.lt(comp)
     }
 
+    it("mint knockout", async() => {
+        await test.testMint(-10000, 10000, 10000)
+        await test.testMint(-100, 100, 10000)
+        await expectGas(test.testKnockoutMint(5000*1024, false, 32, 64, true), 228000)
+    })
+
+    it("mint knockout pre-init pivot", async() => {
+        await test.testMint(-10000, 10000, 10000)
+        await test.testMint(-100, 100, 10000)
+        await test.testKnockoutMint(5000*1024, false, 32, 64, true)
+        await expectGas(test.testKnockoutMint(5000*1024, false, 32, 64, true), 105000)
+    })
+
     it("swap cross full knockout [@gas-test]", async() => {
         await test.testMint(-10000, 10000, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)

@@ -50,11 +50,16 @@ module.exports = {
         chainId: 42,
         accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]
       },
+      goerli: {
+        url: 'https://goerli.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8',
+        chainId: 5,
+        accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]      
+      },
 
-       fuji: {
-         url: "https://api.avax-test.network/ext/bc/C/rpc",
-         chainId: 43113,
-       },
+      fuji: {
+        url: "https://api.avax-test.network/ext/bc/C/rpc",
+        chainId: 43113,
+      },
 
     },
 };
