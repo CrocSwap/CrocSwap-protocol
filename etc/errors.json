@@ -25,6 +25,7 @@
     "R": "Price outside tick range",
     "RB": "Swap Curve Boundary Crash",
     "S": "Mezzanine spill broken",
+    "SL": "Swap output exceeds slippage",
     "ST": "Terminus spill broken",
     "T": "Price below max tick",
     "TF": "Transfer failed",
