@@ -8,6 +8,8 @@ import { BigNumber } from 'ethers';
 import { toFixedGrowth, toSqrtPrice, fromSqrtPrice, fromFixedGrowth, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
 import { TestKnockoutLiq } from '../typechain/TestKnockoutLiq';
 
+const hre = require("hardhat");
+
 chai.use(solidity);
 
 describe('Knockout Liquidity', () => {

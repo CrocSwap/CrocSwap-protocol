@@ -8,6 +8,8 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
 
+const hre = require("hardhat");
+
 chai.use(solidity);
 
 describe('Pool Knockout Liq', () => {

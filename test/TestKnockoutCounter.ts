@@ -8,6 +8,8 @@ import chai from "chai";
 import { TestKnockoutCounter } from '../typechain/TestKnockoutCounter';
 import { BigNumber } from 'ethers';
 
+const hre = require("hardhat");
+
 chai.use(solidity);
 
 describe('Knockout Counter Mixin', () => {
