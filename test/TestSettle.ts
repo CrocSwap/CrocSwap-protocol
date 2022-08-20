@@ -116,6 +116,13 @@ describe('Settle Layer', () => {
         expect((await test.testQuerySurplus(RECV_ADDR, ZERO_ADDR))).to.eq(0)
     })
 
+    it("debit ether double spend", async() => {
+        await test.setFinal(true);
+        let recvBal = (await test.getBalance(RECV_ADDR)).toNumber()
+        let overrides = { value: BigNumber.from(100000) }
+        await expect(test.connect(sender).testSettleFlowTwo(25000, 35000, ZERO_ADDR, overrides)).to.be.reverted
+    })
+
     it("credit ether shortfall", async() => {
         await test.setFinal(true);
         let overrides = { value: BigNumber.from(84999) }

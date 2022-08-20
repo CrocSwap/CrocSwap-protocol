@@ -23,19 +23,6 @@ let override = { gasPrice: BigNumber.from("10").pow(9).mul(2), gasLimit: 6000000
 
 /* Ropsten */
 /*let addrs = {
-    dex: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
-    cold: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
-    //warm: "0xb2aE163293C82DCF36b0cE704591eDC2f9E2608D",
-    warm: "0x6ef7587858b8118e6c40491523f17d6fefe1eeb5",
-    long: "0x141E224f461a85006b2EF051a7C1c290E449202A",
-    micro: "0xfAfcD1f5530827e7398B6D3C509f450b1b24a209",
-    hot: null,
-    policy: "0xAA391eE82F0C6b406E98cCd76d637CaC2f712228",
-    query: "0x0c4ba0d85b6a93ae8746dbe4bd1e9499d8e61999",
-    shell: "0x0be8385d8cdde8facb54cf52fed856d6c37bb8e3"
-}*/
-
-let addrs = {
     dex: "0x129bcaa67e211bfaf5f2d070405f3437282b5661",
     cold: "0x965a77f99d6aab400d5d13bccf47c63d192b3fa8",
     warm: "0x40ec968eEB324963127D86A5821FDa3379578301",
@@ -45,7 +32,7 @@ let addrs = {
     policy: "0x8dce7b4583d1777671b3db2c80370e8053d4a90a",
     query: "0xc6768b1fb34035af90c0c994baced9ad86671a8c",
     shell: "0x2ee92b38056c28360467880bfa33c78cdbd1cab6"
-}
+}*/
 
 // Kovan
 /*let addrs = {
@@ -60,12 +47,26 @@ let addrs = {
     shell: "0xf19D3dcdF82af0d40Cb3b4AaE4D266c638A3E454"
 }*/
 
+// Goerli
+let addrs = {
+    dex: "0xfafcd1f5530827e7398b6d3c509f450b1b24a209",
+    cold: "0xb2ae163293c82dcf36b0ce704591edc2f9e2608d",
+    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
+    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
+    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
+    hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
+    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
+    query: "0x49281c10c66f217705b4aa108e59785c6b6bc39e",
+    //query: "0x9ea4b2f9b1572ed3ac46b402d9ba9153821033c6",
+    shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861"
+}
+
 // Ropsten
-let tokens = {
+/*let tokens = {
     eth: ZERO_ADDR,
     dai: "0xaD6D458402F60fD3Bd25163575031ACDce07538D",
     usdc: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
-}
+}*/
 
 // Kovan
 /*let tokens = {
@@ -74,6 +75,12 @@ let tokens = {
     usdc: "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede"
 }*/
 
+// Goerli
+let tokens = {
+    eth: ZERO_ADDR,
+    dai: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
+    usdc: "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C"
+}
 
 async function deploy() {
     let authority = (await ethers.getSigners())[0]
@@ -123,7 +130,8 @@ async function deploy() {
     let shell = (addrs.shell ? factory.attach(addrs.shell) :
         await factory.deploy(override)) as CrocShell
 
-    console.log("M")
+    console.log({ warm: warmPath.addrs, long: longPath.addrs, micro: microPath.addrs, hot: hotPath.addrs, 
+        dex: dex.addrs, policy: policy.addrs, query: query.addrs, shell: shell.addrs})
 
     factory = await ethers.getContractFactory("MockERC20")
     let dai = factory.attach(tokens.dai) as MockERC20
@@ -134,10 +142,6 @@ async function deploy() {
 
     tx = await usdc.approve(dex.address, BigNumber.from(10).pow(36))
     await tx.wait()*/
-
-    /*let nonceCmd = dex.protocolCmd(0, 
-        abi.encode(["uint8", "uint256", "uint32"], [80, 0, 0]), false, override)
-    await (await nonceCmd).wait()*/
 
     /*let authCmd = abi.encode(["uint8", "address"], [20, policy.address])
     tx = await dex.protocolCmd(0, authCmd, true, override);
@@ -166,18 +170,18 @@ async function deploy() {
 
     return*/
 
-    console.log("Q")
-    /*let initPoolCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
+    /*console.log("Q")
+    let initPoolCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
         [71, tokens.eth, tokens.dai, 36000, toSqrtPrice(1/3000)])
     tx = await dex.userCmd(0, initPoolCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000})
     console.log(tx)
-    await tx.wait()*/
+    await tx.wait()
 
     let initUsdcCmd = abi.encode(["uint8", "address", "address", "uint256", "uint128"],
-        [71, tokens.usdc, tokens.dai, 36000, toSqrtPrice(Math.pow(10, 12))])
+        [71, tokens.usdc, tokens.dai, 36000, toSqrtPrice(Math.pow(10, -12))])
     tx = await dex.userCmd(0, initUsdcCmd, { gasLimit: 6000000})
     console.log(tx)
-    await tx.wait()
+    await tx.wait()*/
 
     /*let mintCmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
         [31, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
@@ -186,8 +190,8 @@ async function deploy() {
     await tx.wait()*/
 
     /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-        [32, tokens.dai, tokens.usdc, 36000, 0, 0, BigNumber.from(10).pow(8), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
-    tx = await dex.userCmd(2, cmd)
+        [31, tokens.usdc, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(3), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
+    tx = await dex.userCmd(2, cmd, { gasLimit: 6000000})
     console.log(tx)
     await tx.wait()*/
 

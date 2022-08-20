@@ -59,6 +59,12 @@ describe('Pool Multi Path', () => {
             [75, recv, value, baseToken.address])
     }
 
+    function depositEthCmd (recv: string, value: number): BytesLike {
+        let abiCoder = new ethers.utils.AbiCoder()
+        return  abiCoder.encode(["uint8", "address", "int128", "address"],
+            [73, recv, value, ZERO_ADDR])
+    }
+
     function oracleCmd (args: BytesLike): BytesLike {
         let abiCoder = new ethers.utils.AbiCoder()
         return  abiCoder.encode(["uint8", "address", "bytes"],
@@ -190,4 +196,20 @@ describe('Pool Multi Path', () => {
         await expect(pool.userCmd(test.MULTI_PROXY, multiCmd)).to.be.reverted
     })
 
+    it("double spend", async() => {
+        await test.testDeposit(accts[0], accts[0].address, 10000000, ZERO_ADDR, { value: 10000000})
+
+        let cmd1 = depositEthCmd(accts[2].address, 400000)
+        let cmd2 = depositEthCmd(accts[3].address, 600000)
+
+        let abiCoder = new ethers.utils.AbiCoder()
+        let multiCmd = abiCoder.encode(["uint8", "uint8", "bytes", "uint8", "bytes"],
+            [2, test.COLD_PROXY, cmd1, test.COLD_PROXY, cmd2])
+
+        await expect(pool.userCmd(test.MULTI_PROXY, multiCmd)).to.be.reverted
+        await expect(pool.userCmd(test.MULTI_PROXY, multiCmd, { value: 5000000})).to.be.reverted 
+        await expect(pool.userCmd(test.MULTI_PROXY, multiCmd, { value: 6000000})).to.be.reverted 
+        await expect(pool.userCmd(test.MULTI_PROXY, multiCmd, { value: 10000000})).to.be.reverted
+        await expect(pool.userCmd(test.MULTI_PROXY, multiCmd, { value: 15000000})).to.be.reverted       
+    })
 })

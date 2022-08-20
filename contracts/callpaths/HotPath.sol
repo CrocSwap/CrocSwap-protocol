@@ -110,8 +110,9 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
  *         this contract would be attached to hotProxy_ in the main dex contract. */
 contract HotProxy is HotPath {
 
-    function userCmd (bytes calldata input) public payable {
-        swapEncoded(input);
+    function userCmd (bytes calldata input) public payable
+        returns (int128, int128) {
+        return swapEncoded(input);
     }
 }
 

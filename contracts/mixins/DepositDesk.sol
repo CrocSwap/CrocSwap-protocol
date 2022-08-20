@@ -23,7 +23,7 @@ contract DepositDesk is SettleLayer {
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              deposited. */
     function depositSurplus (address recv, uint128 value, address token) internal {
-        debitTransfer(lockHolder_, value, token, msg.value.toUint128());
+        debitTransfer(lockHolder_, value, token, popMsgVal());
         bytes32 key = tokenKey(recv, token);
         userBals_[key].surplusCollateral_ += value;
     }

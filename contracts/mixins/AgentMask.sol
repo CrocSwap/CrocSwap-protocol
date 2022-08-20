@@ -10,7 +10,8 @@ import "../interfaces/ICrocCondOracle.sol";
  * @notice Maps and manages surplus balances, nonces, and external router approvals
  *         based on the wallet addresses of end-users. */
 contract AgentMask is StorageLayout {
-
+    using SafeCast for uint256;
+    
     /* @notice Standard re-entrant gate for an unprivileged order called directly
      *         by the user. */
     modifier reEntrantLock() {
@@ -18,6 +19,7 @@ contract AgentMask is StorageLayout {
         lockHolder_ = msg.sender;
         _;
         lockHolder_ = address(0);
+        resetMsgVal();
     }
 
     /* @notice Re-entrant gate for privileged protocol authority commands. */
@@ -28,6 +30,7 @@ contract AgentMask is StorageLayout {
         _;
         lockHolder_ = address(0);
         sudoMode_ = false;
+        resetMsgVal();
     }
 
     /* @notice Re-entrant gate for an order called by external router on behalf of a
@@ -43,6 +46,7 @@ contract AgentMask is StorageLayout {
         lockHolder_ = client;
         _;
         lockHolder_ = address(0);
+        resetMsgVal();
     }
 
     /* @notice Re-entrant gate for a relayer calling an order that was signed off-chain
@@ -53,6 +57,7 @@ contract AgentMask is StorageLayout {
         lockHolder_ = lockSigner(call, signature);
         _;
         lockHolder_ = address(0);
+        resetMsgVal();
     }
 
     struct CrocRelayerCall {
@@ -62,6 +67,24 @@ contract AgentMask is StorageLayout {
         bytes tip;
     }
 
+    /* @notice Atomically returns the msg.value of the transaction and marks the funds as
+     *         spent. This provides a layer of safety to prevent msg.value from being spent
+     *         twice in a single transaction.
+     * @dev    For safety msg.value should *never* be accessed in any way outside this function.
+     *         This assures that if msg.value is used at one point in the callpath it isn't 
+     *         inadvertantly used at another point, because that would trigger a revert. */
+    function popMsgVal() internal returns (uint128 msgVal) {
+        require(msgValSpent_ == false, "DS");
+        msgVal = msg.value.toUint128();
+        msgValSpent_ = true;
+    }
+
+    /* @dev This should only be called when the top-level contract call is fully out-of-scope.
+     *      Otherwise the risk is msg.val could be double spent. */
+    function resetMsgVal() private {
+        msgValSpent_ = false;
+    }
+    
     /* @notice Given the order, evaluation conditionals, and off-chain signature, recovers
      *         the client address if valid or reverts the transactions. */
     function lockSigner (CrocRelayerCall memory call,
