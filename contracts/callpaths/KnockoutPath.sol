@@ -28,7 +28,7 @@ contract KnockoutFlagPath is KnockoutCounter {
      * @param feeGlobal The global fee odometer for 1 hypothetical unit of liquidity fully
      *                  in range since the inception of the pool. */
     function crossCurveFlag (bytes32 pool, int24 tick, bool isBuy, uint64 feeGlobal)
-        public returns (int128) {
+        public payable returns (int128) {
         // If swap is a sell, then implies we're crossing a resting bid and vice versa
         bool bidCross = !isBuy;
         crossKnockout(pool, bidCross, tick, feeGlobal);
