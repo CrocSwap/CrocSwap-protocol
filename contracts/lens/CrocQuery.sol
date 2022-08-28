@@ -29,6 +29,16 @@ contract CrocQuery {
         curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
+    function queryCurveTick (address base, address quote, uint256 poolIdx) 
+        public view returns (int24) {
+        bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
+        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+        
+        uint128 curvePrice = uint128((valOne << 128) >> 128);
+        return TickMath.getTickAtSqrtRatio(curvePrice);
+    }
+
     function queryLiquidity (address base, address quote, uint256 poolIdx)
         public view returns (uint128) {        
         return queryCurve(base, quote, poolIdx).activeLiquidity();
