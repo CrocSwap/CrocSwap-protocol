@@ -8,7 +8,6 @@ import { MockERC20 } from '../../typechain/MockERC20';
 import { QueryHelper } from '../../typechain/QueryHelper';
 import { CrocSwapDex } from '../../typechain/CrocSwapDex';
 import { IERC20Minimal } from '../../typechain/IERC20Minimal';
-import { MAX_TICK } from './tmpMint';
 import { ColdPath } from '../../typechain/ColdPath';
 import { AddressZero } from '@ethersproject/constants';
 import { WarmPath } from '../../typechain/WarmPath';
@@ -18,6 +17,7 @@ import { CrocPolicy } from '../../typechain/CrocPolicy';
 import { CrocQuery } from '../../typechain/CrocQuery';
 import { CrocShell } from '../../typechain/CrocShell';
 import { HotPath } from '../../typechain/HotPath';
+import { KnockoutFlagPath, KnockoutLiqPath } from '../../typechain';
 
 let override = { gasPrice: BigNumber.from("10").pow(9).mul(2), gasLimit: 6000000 }
 
@@ -56,8 +56,11 @@ let addrs = {
     micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
     hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
     policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
-    query: "0x49281c10c66f217705b4aa108e59785c6b6bc39e",
     //query: "0x9ea4b2f9b1572ed3ac46b402d9ba9153821033c6",
+    //query: "0x49281c10c66f217705b4aa108e59785c6b6bc39e",
+    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518",        
+    knockout: "0x806859d4C974F9dCBB5f77e027062a02fC965987",
+    koCross: "0xa7b87362b5b86f696a8027b409c20dba094744e2",
     shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861"
 }
 
@@ -112,6 +115,14 @@ async function deploy() {
     factory = await ethers.getContractFactory("HotProxy")
     let hotPath = addrs.hot ? factory.attach(addrs.hot) :
         await factory.deploy(override) as HotPath
+
+    factory = await ethers.getContractFactory("KnockoutLiqPath")
+    let knockoutPath = addrs.knockout ? factory.attach(addrs.knockout) :
+        await factory.deploy(override) as KnockoutLiqPath    
+
+    factory = await ethers.getContractFactory("KnockoutFlagPath")
+    let crossPath = addrs.koCross ? factory.attach(addrs.koCross) :
+        await factory.deploy(override) as KnockoutFlagPath    
         
     factory = await ethers.getContractFactory("CrocSwapDex")
     let dex = addrs.dex ? factory.attach(addrs.dex) :
@@ -157,9 +168,17 @@ async function deploy() {
 
     upCmd = abi.encode(["uint8", "address", "uint16"], [21, microPath.address, 5])
     tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
+    await tx.wait() 
+
+    let upCmd = abi.encode(["uint8", "address", "uint16"], [21, knockoutPath.address, 7])
+    tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
     await tx.wait()
 
-    let setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, 10000])
+    upCmd = abi.encode(["uint8", "address", "uint16"], [21, crossPath.address, 3500])
+    tx = await policy.treasuryResolution(dex.address, 0, upCmd, true, override);
+    await tx.wait()*/
+
+    /*let setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, 10000])
     tx = await policy.treasuryResolution(dex.address, 0, setPoolLiqCmd, false)
     await tx.wait()
 
@@ -181,6 +200,23 @@ async function deploy() {
         [71, tokens.usdc, tokens.dai, 36000, toSqrtPrice(Math.pow(10, -12))])
     tx = await dex.userCmd(0, initUsdcCmd, { gasLimit: 6000000})
     console.log(tx)
+    await tx.wait()*/
+
+    // Enable knockout liquidity
+    const knockoutFlag = 32 + 6 // Enabled, on grid, 32-ticks wide
+    let reviseCmd = abi.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
+        [111, tokens.eth, tokens.dai, 36000, 1000, 64, 5, knockoutFlag])
+    tx = await policy.treasuryResolution(dex.address, 0, reviseCmd, false)
+    await tx.wait()
+
+    /*reviseCmd = abi.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
+        [111, tokens.eth, tokens.usdc, 36000, 500, 64, 5, knockoutFlag])
+    tx = await policy.treasuryResolution(dex.address, 0, reviseCmd, false)
+    await tx.wait()
+
+    reviseCmd = abi.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
+        [111, tokens.usdc, tokens.dai, 36000, 500, 64, 5, knockoutFlag])
+    tx = await policy.treasuryResolution(dex.address, 0, reviseCmd, false)
     await tx.wait()*/
 
     /*let mintCmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
