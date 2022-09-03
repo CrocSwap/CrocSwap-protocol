@@ -7,13 +7,13 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, BigNumberish } from 'ethers';
-import { CrocSlippage } from '../typechain';
+import { CrocImpact } from '../typechain';
 
 chai.use(solidity);
 
-describe('Query Slippage', () => {
+describe('Query Impact', () => {
     let pool: TestPool
-    let test: CrocSlippage
+    let test: CrocImpact
     let baseToken: Token
     let quoteToken: Token
     const feeRate = 225 * 100
@@ -27,19 +27,19 @@ describe('Query Slippage', () => {
        pool.liqQty = true
        await pool.initPool(feeRate, 0, 1, 1.5)
 
-       let factory = await ethers.getContractFactory("CrocSlippage")
-       test = await factory.deploy((await pool.dex).address) as CrocSlippage
+       let factory = await ethers.getContractFactory("CrocImpact")
+       test = await factory.deploy((await pool.dex).address) as CrocImpact
     })
 
-    interface SlippageResult {
+    interface ImpactResult {
         baseFlow: number,
         quoteFlow: number,
         finalPrice: number
     }
 
     async function calcSlip (qty: BigNumberish, isBuy: boolean, inBaseQty: boolean): 
-        Promise<SlippageResult> {
-        let slip = await test.calcSlippage(baseToken.address, quoteToken.address, POOL_IDX, 
+        Promise<ImpactResult> {
+        let slip = await test.calcImpact(baseToken.address, quoteToken.address, POOL_IDX, 
             isBuy, inBaseQty, qty, 0, isBuy ? MAX_PRICE : MIN_PRICE)
         return { baseFlow: slip.baseFlow.toNumber(), quoteFlow: slip.quoteFlow.toNumber(),
             finalPrice: fromSqrtPrice(slip.finalPrice) }

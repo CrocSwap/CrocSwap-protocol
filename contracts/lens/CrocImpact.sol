@@ -5,7 +5,7 @@ import "../CrocSwapDex.sol";
 
 import "hardhat/console.sol";
 
-contract CrocSlippage {
+contract CrocImpact {
     using CurveMath for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
     using SwapCurve for CurveMath.CurveState;
@@ -22,9 +22,9 @@ contract CrocSlippage {
         dex_ = dex;
     }
 
-    function calcSlippage (address base, address quote,
-                           uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
-                           uint16 poolTip, uint128 limitPrice) public view  
+    function calcImpact (address base, address quote,
+                         uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                        uint16 poolTip, uint128 limitPrice) public view  
         returns (int128 baseFlow, int128 quoteFlow, uint128 finalPrice) {
 
         PoolSpecs.PoolCursor memory pool = queryPoolCntx

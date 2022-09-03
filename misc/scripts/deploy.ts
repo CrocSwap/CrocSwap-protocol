@@ -17,7 +17,7 @@ import { CrocPolicy } from '../../typechain/CrocPolicy';
 import { CrocQuery } from '../../typechain/CrocQuery';
 import { CrocShell } from '../../typechain/CrocShell';
 import { HotPath } from '../../typechain/HotPath';
-import { KnockoutFlagPath, KnockoutLiqPath } from '../../typechain';
+import { CrocImpact, KnockoutFlagPath, KnockoutLiqPath } from '../../typechain';
 
 let override = { gasPrice: BigNumber.from("10").pow(9).mul(2), gasLimit: 6000000 }
 
@@ -55,12 +55,11 @@ let addrs = {
     long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
     micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
     hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
-    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
-    //query: "0x9ea4b2f9b1572ed3ac46b402d9ba9153821033c6",
-    //query: "0x49281c10c66f217705b4aa108e59785c6b6bc39e",
-    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518",        
     knockout: "0x806859d4C974F9dCBB5f77e027062a02fC965987",
     koCross: "0xa7b87362b5b86f696a8027b409c20dba094744e2",
+    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
+    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518", 
+    impact: "0x142BE02F2A3A27ecD6e2f18a43c2C234F372C831",
     shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861"
 }
 
@@ -137,6 +136,12 @@ async function deploy() {
     let query = (addrs.query ? factory.attach(addrs.query) :
         await factory.deploy(dex.address, override)) as CrocQuery
 
+    factory = await ethers.getContractFactory("CrocImpact")
+    let impact = (addrs.impact ? factory.attach(addrs.impact) :
+        await factory.deploy(dex.address, override)) as CrocImpact
+        
+    console.log(impact.address)
+    
     factory = await ethers.getContractFactory("CrocShell")
     let shell = (addrs.shell ? factory.attach(addrs.shell) :
         await factory.deploy(override)) as CrocShell
@@ -203,11 +208,11 @@ async function deploy() {
     await tx.wait()*/
 
     // Enable knockout liquidity
-    const knockoutFlag = 32 + 6 // Enabled, on grid, 32-ticks wide
+    /*const knockoutFlag = 32 + 6 // Enabled, on grid, 32-ticks wide
     let reviseCmd = abi.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
         [111, tokens.eth, tokens.dai, 36000, 1000, 64, 5, knockoutFlag])
     tx = await policy.treasuryResolution(dex.address, 0, reviseCmd, false)
-    await tx.wait()
+    await tx.wait()*/
 
     /*reviseCmd = abi.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
         [111, tokens.eth, tokens.usdc, 36000, 500, 64, 5, knockoutFlag])
