@@ -216,8 +216,8 @@ contract PoolRegistry is StorageLayout {
         returns (PoolSpecs.PoolCursor memory, uint128) {
         assertPoolFresh(base, quote, poolIdx);
         PoolSpecs.Pool memory template = queryTemplate(poolIdx);
-        PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         template.protocolTake_ = protocolTakeRate_;
+        PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         return (queryPool(base, quote, poolIdx), newPoolLiq_);
     }
 

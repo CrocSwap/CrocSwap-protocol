@@ -217,6 +217,8 @@ export class TestPool {
         price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
 
+        await this.setProtocolTake(protoTake)
+
         if (this.initTemplBefore) {
             await this.initTempl(feeRate, tickSize, poolIdx)
         }
@@ -569,10 +571,8 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
 
         if (protoTake > 0) {
-            let takeCmd = abiCoder.encode(["uint8", "uint8"], [114, protoTake]);
-            (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)
-
-            takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
+            await this.setProtocolTake(protoTake)
+            let takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
                 [115, (await this.base).address, (await this.quote).address, this.poolIdx]);
             (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)              
         }
@@ -583,6 +583,12 @@ export class TestPool {
         return (await this.dex)
             .connect(await this.auth)
             .protocolCmd(0, cmd, false)
+    }
+
+    async setProtocolTake (protoTake: number) {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let takeCmd = abiCoder.encode(["uint8", "uint8"], [114, protoTake]);
+        await (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)
     }
 
     async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {

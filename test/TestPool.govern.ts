@@ -12,7 +12,7 @@ import { CrocSwapDex } from '../typechain/CrocSwapDex';
 
 chai.use(solidity);
 
-describe('Pool Surplus Deposits', () => {
+describe('Pool Governance', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token

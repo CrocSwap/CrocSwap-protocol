@@ -326,6 +326,40 @@ describe('Pool', () => {
         expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
     })
 
+    // Repeat the above protocol fee swap test, but create a new pool object so we can test that
+    // protocol fee is correctly set at initialization time.
+    it("init protocol fee", async() => {
+        test = await makeTokenPool()
+        baseToken = await test.base
+        quoteToken = await test.quote
+ 
+        await test.initPool(feeRate, 43, 1, 1.5)
+        
+        await test.testMint(-5000, 8000, 40000); 
+        await test.testMint(3800, 4300, 30000); 
+        await test.testMint(3400, 4800, 20000); 
+
+        let startQuote = await quoteToken.balanceOf((await test.dex).address)
+        let startBase = await baseToken.balanceOf((await test.dex).address)
+
+        await test.snapStart()
+        let x = await test.testSwap(false, false, 100000*1024, toSqrtPrice(1.25))
+
+        let limitFlow = -5584332
+        let counterFlow = 4109816
+        let liqGrowth = 44217
+
+        expect(await test.snapBaseFlow()).to.equal(limitFlow)
+        expect(await test.snapQuoteFlow()).to.equal(counterFlow)
+
+        expect(await test.liquidity()).to.equal(40000*1024 + liqGrowth)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(limitFlow)
+
+        expect(await (await test.query).queryProtocolAccum((await test.base).address)).to.equal(21377)
+        expect(await (await test.query).queryProtocolAccum((await test.quote).address)).to.equal(0)
+    })
+
     it("burn payout full", async() => {
         await test.testMint(3000, 5000, 10000);
 
