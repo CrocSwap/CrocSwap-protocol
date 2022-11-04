@@ -253,9 +253,9 @@ library CurveMath {
      *   classical constant- product AMM without concentrated liquidity.  */
     function reserveAtPrice (uint128 liq, uint128 price, bool inBaseQty)
         internal pure returns (uint128) {
-        return uint256(inBaseQty ?
-                       FixedPoint.mulQ64(liq, price) :
-                       FixedPoint.divQ64(liq, price)).toUint128();
+        return (inBaseQty ?
+                    uint256(FixedPoint.mulQ64(liq, price)) :
+                    uint256(FixedPoint.divQ64(liq, price))).toUint128();
     }
 
     /* @notice Calculated the amount of concentrated liquidity within a price range
