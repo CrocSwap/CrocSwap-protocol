@@ -114,7 +114,7 @@ describe('CrocPolicy', () => {
     })
 
     it("emergency halt", async() => {
-        const ADMIN_PROXY = 0
+        const ADMIN_PROXY = 3
         await policy.connect(emergency).emergencyHalt(minion.address, "test halt")
 
         let abiCoder = new ethers.utils.AbiCoder()
