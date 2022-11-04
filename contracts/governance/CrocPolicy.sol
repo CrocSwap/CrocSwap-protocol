@@ -4,6 +4,7 @@ pragma solidity >=0.8.4;
 import '../libraries/ProtocolCmd.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../mixins/StorageLayout.sol';
+import './Timelock.sol';
 
 /* @title CrocPolicy
  * @notice Intermediates between the dex mechanism inside CrocSwapDex and the top-level
@@ -83,12 +84,12 @@ contract CrocPolicy {
     address public immutable dex_;
 
     
-    /* @param ops Address of operations authority.
-     * @param treasury Address of treasury authority.
-     * @param emergency Address of emergency authority. */
-    constructor (address dex, address ops, address treasury, address emergency) {
+    /* @param dex Underlying CrocSwapDex contract */
+    constructor (address dex) {
         dex_ = dex;
-        declareAuthority(ops, treasury, emergency);
+        opsAuthority_ = msg.sender;
+        treasuryAuthority_ = msg.sender;
+        emergencyAuthority_ = msg.sender;  
     }
 
     /* @notice Transfers the existing governance authorities to new addresses. Can only
@@ -97,17 +98,20 @@ contract CrocPolicy {
      *         only wants to transfer one or two of the authorities. */
     function transferGovernance (address ops, address treasury, address emergency)
         treasuryAuth public {
-        declareAuthority(ops, treasury, emergency);
+        Timelock(payable(treasury)).acceptAdmin();
+        opsAuthority_ = ops;
+        treasuryAuthority_ = treasury;
+        emergencyAuthority_ = emergency;  
     }
 
     /* @notice The internal authority transfer function. Invoked either at constructor 
      *         time or by transferGovernance(). */
     function declareAuthority (address ops, address treasury,
                                address emergency) private {
+        Timelock(payable(treasury)).acceptAdmin();
         opsAuthority_ = ops;
         treasuryAuthority_ = treasury;
-        emergencyAuthority_ = emergency;
-        emit CrocGovernAuthority(ops, treasury, emergency);
+        emergencyAuthority_ = emergency;  
     }
 
     /* @notice Resolution from the ops authority which calls protocolCmd() on the 
@@ -326,5 +330,6 @@ contract CrocPolicy {
         require(msg.sender == emergencyAuthority_, "Emergency Authority");
         _;
     }
+
 
 }

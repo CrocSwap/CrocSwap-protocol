@@ -8,6 +8,7 @@ import chai from "chai";
 import { MockMinion } from '../typechain/MockMinion';
 import { CrocPolicy } from '../typechain/CrocPolicy';
 import { Wallet, Signer } from 'ethers';
+import { MockERC20, MockTimelock } from '../typechain';
 
 chai.use(solidity);
 
@@ -18,6 +19,7 @@ describe('CrocPolicy', () => {
     let ops: Wallet
     let treasury: Wallet
     let emergency: Wallet
+    let timelock: MockTimelock
 
    beforeEach("deploy", async () => {
       accts = (await (ethers.getSigners() as Promise<Signer[]>)) as unknown as Wallet[]
@@ -29,34 +31,60 @@ describe('CrocPolicy', () => {
       minion = (await factory.deploy()) as MockMinion;
 
       factory = await ethers.getContractFactory("CrocPolicy");
-      policy = (await factory.deploy(minion.address, ops.address, treasury.address, emergency.address)) as CrocPolicy;
+      policy = (await factory.deploy(minion.address)) as CrocPolicy;
+
+      factory = await ethers.getContractFactory("MockTimelock");
+      timelock = (await factory.connect(treasury).deploy(policy.address)) as MockTimelock;
+
+      policy.transferGovernance(ops.address, timelock.address, emergency.address);
     })
 
     it("constructor addresses", async() => {
         expect(await policy.dex_()).to.be.eq(minion.address)
         expect(await policy.opsAuthority_()).to.be.eq(ops.address)
-        expect(await policy.treasuryAuthority_()).to.be.eq(treasury.address)
+        expect(await policy.treasuryAuthority_()).to.be.eq(timelock.address)
         expect(await policy.emergencyAuthority_()).to.be.eq(emergency.address)
     })
 
     it("transfer authority", async() => {
-        await policy.connect(treasury).transferGovernance(accts[3].address, accts[4].address, accts[5].address)
+        let factory = await ethers.getContractFactory("MockTimelock");
+        let timelock2 = (await factory.connect(treasury).deploy(policy.address)) as MockTimelock;
+
+        await timelock.transferGovernance(accts[4].address, timelock2.address, accts[5].address)
         expect(await policy.dex_()).to.be.eq(minion.address)
-        expect(await policy.opsAuthority_()).to.be.eq(accts[3].address)
-        expect(await policy.treasuryAuthority_()).to.be.eq(accts[4].address)
+        expect(await policy.treasuryAuthority_()).to.be.eq(timelock2.address)
+        expect(await policy.opsAuthority_()).to.be.eq(accts[4].address)
         expect(await policy.emergencyAuthority_()).to.be.eq(accts[5].address)
     })
 
     it("authority for transfer authority", async() => {
+        let factory = await ethers.getContractFactory("MockTimelock");
+        let timelock2 = (await factory.connect(treasury).deploy(policy.address)) as MockTimelock;
+
         // Only treasury can transfer authority
-        await expect(policy.connect(ops).transferGovernance(accts[3].address, accts[4].address, accts[5].address)).to.be.reverted
-        await expect(policy.connect(emergency).transferGovernance(accts[3].address, accts[4].address, accts[5].address)).to.be.reverted
-        await expect(policy.connect(accts[3]).transferGovernance(accts[3].address, accts[4].address, accts[5].address)).to.be.reverted
+        await expect(policy.connect(ops).transferGovernance(accts[3].address, timelock2.address, accts[5].address)).to.be.reverted
+        await expect(policy.connect(emergency).transferGovernance(accts[3].address, timelock2.address, accts[5].address)).to.be.reverted
+        await expect(policy.connect(accts[3]).transferGovernance(accts[3].address, timelock2.address, accts[5].address)).to.be.reverted
         
         // After authority transfer, old authroity has no power to transfer
-        await policy.connect(treasury).transferGovernance(accts[3].address, accts[4].address, accts[5].address)
-        await expect(policy.connect(treasury).transferGovernance(accts[3].address, accts[4].address, accts[5].address)).to.be.reverted
+        await timelock.transferGovernance(accts[4].address, timelock2.address, accts[5].address)
+        await expect(timelock.transferGovernance(accts[4].address, timelock2.address, accts[5].address)).to.be.reverted
     })
+
+    it("transfer not accepted", async() => {
+        let factory = await ethers.getContractFactory("MockTimelock");
+        let timelock2 = (await factory.connect(treasury).deploy(accts[3].address)) as MockTimelock;
+
+        // Will reject because the MockTimelock is not set to accept CrocPolicy address
+        await expect(timelock.transferGovernance(accts[4].address, timelock2.address, accts[5].address)).to.be.reverted
+
+        factory = await ethers.getContractFactory("MockERC20");
+        let fakeTimelock = (await factory.connect(treasury).deploy()) as MockERC20;
+
+        // Will reject because the pointed contract has no acceptAdmin() function
+        await expect(timelock.transferGovernance(accts[4].address, fakeTimelock.address, accts[5].address)).to.be.reverted
+    })
+
 
     it("ops resolution", async() => {
         // Only treasury can transfer authority
@@ -70,7 +98,7 @@ describe('CrocPolicy', () => {
 
     it("ops resolution from treasury", async() => {
         // Only treasury can transfer authority
-        policy.connect(treasury).opsResolution(minion.address, 5, "0x1234")
+        timelock.opsResolution(minion.address, 5, "0x1234")
 
         expect(await minion.callers_(0)).to.eq(treasury.address)
         expect(await minion.protoCmds_(0)).to.eq("0x1234")
@@ -95,8 +123,8 @@ describe('CrocPolicy', () => {
 
     it("treasury resolution", async() => {
         // Only treasury can transfer authority
-        await policy.connect(treasury).treasuryResolution(minion.address, 5, "0x1234", true)
-        await policy.connect(treasury).treasuryResolution(minion.address, 5, "0x8796", false)
+        await timelock.treasuryResolution(minion.address, 5, "0x1234", true)
+        await timelock.treasuryResolution(minion.address, 5, "0x8796", false)
 
         expect(await minion.callers_(0)).to.eq(treasury.address)
         expect(await minion.protoCmds_(0)).to.eq("0x1234")
@@ -134,7 +162,7 @@ describe('CrocPolicy', () => {
 
     it("emergency unauthorized", async() => {
         const ADMIN_PROXY = 5
-        await expect(policy.connect(treasury).emergencyHalt(minion.address, "test halt")).to.be.reverted
+        await expect(timelock.emergencyHalt(minion.address, "test halt")).to.be.reverted
         await expect(policy.connect(ops).emergencyHalt(minion.address, "test halt")).to.be.reverted
         await expect(policy.connect(accts[4]).emergencyHalt(minion.address, "test halt")).to.be.reverted
     })
@@ -303,7 +331,7 @@ describe('CrocPolicy', () => {
         await policy.connect(ops).setPolicy(accts[4].address, PROXY_PATH, 
             { cmdFlags_: FLAGS, mandateTime_: expiry, expiryOffset_: 5000})
 
-        await policy.connect(treasury).forcePolicy(accts[4].address, PROXY_PATH, 
+        await timelock.forcePolicy(accts[4].address, PROXY_PATH, 
                 { cmdFlags_: WEAK_FLAGS, mandateTime_: expiry, expiryOffset_: 5000})
                 
         let abiCoder = new ethers.utils.AbiCoder()
@@ -323,7 +351,7 @@ describe('CrocPolicy', () => {
         await policy.connect(ops).setPolicy(accts[4].address, PROXY_PATH, 
             { cmdFlags_: FLAGS, mandateTime_: expiry, expiryOffset_: 5000})
 
-        await policy.connect(treasury).forcePolicy(accts[4].address, PROXY_PATH, 
+        await timelock.forcePolicy(accts[4].address, PROXY_PATH, 
                 { cmdFlags_: FLAGS, mandateTime_: 0, expiryOffset_: expiry})
         await policy.connect(ops).setPolicy(accts[4].address, PROXY_PATH, 
             { cmdFlags_: WEAK_FLAGS, mandateTime_: 0, expiryOffset_: expiry})
