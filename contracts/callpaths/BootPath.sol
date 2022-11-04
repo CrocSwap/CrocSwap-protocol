@@ -55,6 +55,7 @@ contract BootPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (, address proxy, uint16 proxyIdx) =
             abi.decode(cmd, (uint8, address, uint16));
         require(proxyIdx != CrocSlots.BOOT_PROXY_IDX, "Cannot overwrite boot path");
+        require(proxy == address(0) || proxy.code.length > 0, "Proxy address is not a contract");
 
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
         proxyPaths_[proxyIdx] = proxy;        

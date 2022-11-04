@@ -2,7 +2,7 @@ import { TestPool, makeTokenPool, Token } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
@@ -107,6 +107,8 @@ describe('Pool Proxy Paths', () => {
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10240000)
     })
 
+    const DUMMY_SLOT = 500; 
+
     it("cannot upgrade boot path", async() => {
         let factory = await ethers.getContractFactory("ColdPath") as ContractFactory
         let proxy = await factory.deploy() as ColdPath
@@ -115,6 +117,21 @@ describe('Pool Proxy Paths', () => {
         await expect(test.testUpgrade(test.BOOT_PROXY, proxy.address)).to.be.reverted
   
         // Can overwrite other slots...
-        await expect(test.testUpgrade(500, proxy.address))
-      })
+        await expect(test.testUpgrade(DUMMY_SLOT, proxy.address)).to.not.be.reverted
+    })
+
+    it("upgrade requires contract address", async() => {
+        let factory = await ethers.getContractFactory("ColdPath") as ContractFactory
+        let proxy = await factory.deploy() as ColdPath
+        let eoaAddr = await (await test.trader).getAddress()
+
+        // Cannot overwrite a non-contract address to a slot
+        await expect(test.testUpgrade(DUMMY_SLOT, eoaAddr)).to.be.reverted
+        
+        // Can write a valid contract address to a slot
+        await expect(test.testUpgrade(DUMMY_SLOT, proxy.address)).to.not.be.reverted
+
+        // Can delete a slot by setting address to 0
+        await expect(test.testUpgrade(DUMMY_SLOT, ZERO_ADDR)).to.not.be.reverted
+    })
 })
