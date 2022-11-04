@@ -195,6 +195,7 @@ contract AgentMask is StorageLayout {
      * @param nonce The nonce index value the nonce will be reset to. */
     function resetNonce (bytes32 nonceSalt, uint32 nonce) internal {
         UserBalance storage bal = userBals_[nonceKey(lockHolder_, nonceSalt)];
+        require(nonce >= bal.nonce_, "NI");
         bal.nonce_ = nonce;
     }
 
