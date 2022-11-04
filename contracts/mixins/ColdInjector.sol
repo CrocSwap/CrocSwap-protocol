@@ -51,7 +51,7 @@ contract ColdPathInjector is StorageLayout {
 
     function assertProxy (uint16 proxyIdx) private view {
         require(proxyPaths_[proxyIdx] != address(0));
-        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);        
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH || proxyIdx == CrocSlots.BOOT_PROXY_IDX);
     }
 
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
