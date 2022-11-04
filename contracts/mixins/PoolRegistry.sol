@@ -33,8 +33,7 @@ contract PoolRegistry is StorageLayout {
                 ICrocPermitOracle(pool.oracle_)
                 .checkApprovedForCrocSwap(lockHolder_, msg.sender, base, quote,
                                           isBuy, inBaseQty, qty, pool.head_.feeRate_);
-            require(discount > 0, "Z");
-            pool.head_.feeRate_ -= discount;
+            applyDiscount(pool, discount);
         }
     }
 
@@ -78,11 +77,17 @@ contract PoolRegistry is StorageLayout {
             uint16 discount = ICrocPermitOracle(pool.oracle_)
                 .checkApprovedForCrocPool(lockHolder_, msg.sender, base, quote, ambient,
                                           swap, concs, pool.head_.feeRate_);
-            require(discount > 0, "Z");
-            pool.head_.feeRate_ -= discount;
+            applyDiscount(pool, discount);
         }
     }
 
+    function applyDiscount (PoolSpecs.PoolCursor memory pool, uint16 discount) private pure {
+        // Convention from permit oracle is to use 0 for non-approved, 1 for 0 discount, 
+        // and N+1 for N discount. (See ICrocPermitOracle.sol)
+        uint16 DISCOUNT_OFFSET = 1;
+        require(discount > 0, "Z");
+        pool.head_.feeRate_ -= (discount - DISCOUNT_OFFSET);
+    }
     
     /* @notice Tests whether the given burn by the given user is authorized on this
      *         specific pool. If not, reverts the transaction. If pool is permissionless
