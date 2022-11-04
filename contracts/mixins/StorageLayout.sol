@@ -158,10 +158,10 @@ library CrocSlots {
     // covention and should be expanded over time as more sidecars are installed. For
     // backwards compatibility, upgradears should never break existing interface on
     // a pre-existing proxy sidecar.
-    uint16 constant ADMIN_PROXY_IDX = 0;
+    uint16 constant BOOT_PROXY_IDX = 0;
     uint16 constant SWAP_PROXY_IDX = 1;
     uint16 constant LP_PROXY_IDX = 2;
-    uint16 constant BAL_PROXY_IDX = 3;
+    uint16 constant COLD_PROXY_IDX = 3;
     uint16 constant LONG_PROXY_IDX = 4;
     uint16 constant MICRO_PROXY_IDX = 5;
     uint16 constant MULTICALL_PROXY_IDX = 6;

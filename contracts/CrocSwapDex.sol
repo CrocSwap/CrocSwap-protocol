@@ -13,6 +13,7 @@ import './mixins/MarketSequencer.sol';
 import './mixins/ColdInjector.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
+import './callpaths/BootPath.sol';
 import './callpaths/WarmPath.sol';
 import './callpaths/HotPath.sol';
 import './callpaths/LongPath.sol';
@@ -39,10 +40,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     /* @param authority The address of the protocol authority. Only this address will is
      *                  able to call methods related to protocol privileged operations.
      * @param coldPath The address of the pre-deployed ColdPath sidecar contract. */
-    constructor (address authority, address coldPath) {
+    constructor (address authority, address bootPath) {
         authority_ = authority;
         hotPathOpen_ = true;
-        proxyPaths_[CrocSlots.ADMIN_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.BOOT_PROXY_IDX] = bootPath;
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -183,8 +184,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 contract CrocSwapDexSeed  is CrocSwapDex {
     
     constructor (address authority)
-        CrocSwapDex(authority, address(new ColdPath())) {
+        CrocSwapDex(authority, address(new BootPath())) {
         proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
+        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
         proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());

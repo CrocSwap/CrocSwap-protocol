@@ -9,11 +9,11 @@ import { MockERC20 } from '../typechain/MockERC20';
 import { HotProxy } from '../typechain/HotProxy';
 import { ContractFactory } from 'ethers';
 import { MockHotProxy } from '../typechain/MockHotProxy';
+import { ColdPath } from '../typechain';
 
 chai.use(solidity);
 
-// Just a copy of the pool unit tests, but with hot path enabled
-describe('Pool HotPath Proxy', () => {
+describe('Pool Proxy Paths', () => {
     let test: TestPool
     let baseToken: Token
     let quoteToken: Token
@@ -106,4 +106,15 @@ describe('Pool HotPath Proxy', () => {
         expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(counterFlow)
         expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(10240000)
     })
+
+    it("cannot upgrade boot path", async() => {
+        let factory = await ethers.getContractFactory("ColdPath") as ContractFactory
+        let proxy = await factory.deploy() as ColdPath
+  
+        // Cannot overwrite the boot path slot because that could potentially permenately break upgradeability
+        await expect(test.testUpgrade(test.BOOT_PROXY, proxy.address)).to.be.reverted
+  
+        // Can overwrite other slots...
+        await expect(test.testUpgrade(500, proxy.address))
+      })
 })

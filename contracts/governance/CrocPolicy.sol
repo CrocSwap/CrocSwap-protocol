@@ -151,10 +151,10 @@ contract CrocPolicy {
         emit CrocEmergencyHalt(minion, reason);
 
         bytes memory cmd = ProtocolCmd.encodeHotPath(false);
-        ICrocMinion(minion).protocolCmd(CrocSlots.ADMIN_PROXY_IDX, cmd, true);
+        ICrocMinion(minion).protocolCmd(CrocSlots.COLD_PROXY_IDX, cmd, true);
         
         cmd = ProtocolCmd.encodeSafeMode(true);
-        ICrocMinion(minion).protocolCmd(CrocSlots.ADMIN_PROXY_IDX, cmd, true);
+        ICrocMinion(minion).protocolCmd(CrocSlots.COLD_PROXY_IDX, cmd, true);
     }
 
     /* @notice Croc policy rules are set on a per address basis. Each address 

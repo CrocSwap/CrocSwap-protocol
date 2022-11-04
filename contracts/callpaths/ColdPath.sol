@@ -69,8 +69,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             collectProtocol(cmd);
         } else if (cmdCode == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             transferAuthority(cmd);
-        } else if (cmdCode == ProtocolCmd.UPGRADE_DEX_CODE) {
-            upgradeProxy(cmd);
         } else if (cmdCode == ProtocolCmd.HOT_OPEN_CODE) {
             setHotPathOpen(cmd);
         } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {

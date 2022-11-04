@@ -6,9 +6,10 @@ import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR, MAX_
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { BigNumber, Wallet, Signer, BytesLike } from 'ethers';
+import { BigNumber, Wallet, Signer, BytesLike, ContractFactory } from 'ethers';
 import { CrocPolicy } from '../typechain/CrocPolicy';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
+import { BootPath, ColdPath } from '../typechain';
 
 chai.use(solidity);
 
@@ -151,4 +152,5 @@ describe('Pool Governance', () => {
       // And regular operation resumes
       await expect(test.testMintAmbient(10000)).to.not.be.reverted
     })
+
   })
