@@ -71,7 +71,7 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("mint above price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(200, 300, 100), 188000)
+        await expectGas(test.testMintOther(200, 300, 100), 189000)
     })
 
     it("burn partial [@gas-test]", async() => {
@@ -117,7 +117,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 99000)
+        await expectGas(test.testBurn(-100, 100, 100), 100000)
     })
 
     it("burn flipped [@gas-test]", async() => {
@@ -197,7 +197,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 130000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 131000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })

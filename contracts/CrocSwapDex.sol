@@ -18,7 +18,6 @@ import './callpaths/HotPath.sol';
 import './callpaths/LongPath.sol';
 import './callpaths/KnockoutPath.sol';
 import './callpaths/MicroPaths.sol';
-import './callpaths/MultiPath.sol';
 import './callpaths/SafeModePath.sol';
 
 import "hardhat/console.sol";
@@ -190,7 +189,6 @@ contract CrocSwapDexSeed  is CrocSwapDex {
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
         proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
-        proxyPaths_[CrocSlots.MULTICALL_PROXY_IDX] = address(new MultiPath());
         proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath());
     }
 }
