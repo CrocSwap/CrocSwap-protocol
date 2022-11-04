@@ -26,8 +26,7 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     /* @notice Passes through the userCmd call to a sidecar proxy. */
@@ -36,8 +35,7 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     function callProtocolCmdMem (uint16 proxyIdx, bytes memory input) internal
@@ -45,8 +43,7 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     function callUserCmdMem (uint16 proxyIdx, bytes memory input)
@@ -54,13 +51,28 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     function assertProxy (uint16 proxyIdx) private view {
         require(proxyPaths_[proxyIdx] != address(0));
         require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH || proxyIdx == CrocSlots.BOOT_PROXY_IDX);
+    }
+
+    function verifyCallResult (bool success, bytes memory returndata) internal pure returns (bytes memory) {
+        // On success pass through the return data
+        if (success) {
+            return returndata;
+        } else if (returndata.length > 0) {
+            // If DELEGATECALL failed bubble up the error message
+            assembly {
+                 let returndata_size := mload(returndata)
+                revert(add(32, returndata), returndata_size)
+            }
+        } else {
+            // If failed with no  error, then bubble up the empty revert
+            revert();
+        }
     }
 
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */
