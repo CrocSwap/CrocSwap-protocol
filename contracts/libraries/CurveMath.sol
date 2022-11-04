@@ -149,7 +149,7 @@ library CurveMath {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
             deltaBase(liq, curve.priceRoot_, limitPrice) :
-            deltaQuote(liq, limitPrice, curve.priceRoot_);
+            deltaQuote(liq, curve.priceRoot_, limitPrice);
     }
 
     /* @notice Calculates the change to base token reserves associated with a price
