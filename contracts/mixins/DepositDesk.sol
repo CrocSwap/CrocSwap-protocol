@@ -60,8 +60,8 @@ contract DepositDesk is SettleLayer {
 
         // No need to use msg.value, because unlike trading there's no logical reason
         // we'd expect it to be set on this call.
-        creditTransfer(recv, value, token, 0);
         userBals_[key].surplusCollateral_ -= value;
+        creditTransfer(recv, value, token, 0);
     }
 
     /* @notice Transfers surplus collateral from one user to another.
