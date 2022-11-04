@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.4.0;
+pragma solidity >=0.8.4;
 
 /// @title FixedPoint128
 /// @notice A library for handling binary fixed point numbers, see https://en.wikipedia.org/wiki/Q_(number_format)
@@ -33,7 +33,7 @@ library FixedPoint {
     /* @notice Multiplies a Q64.64 by a Q16.48. */
     function mulQ48 (uint128 x, uint64 y) internal pure returns (uint144) {
         unchecked {
-        return uint128((uint256(x) * uint256(y)) >> 48);
+        return uint144((uint256(x) * uint256(y)) >> 48);
         }
     }
 

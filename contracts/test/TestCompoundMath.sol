@@ -39,4 +39,24 @@ contract TestCompoundMath {
     function testDeflate (uint128 x, uint64 y) public pure returns (uint128) {
         return x.deflateLiqSeed(y);
     }
+
+    function testMulQ64 (uint128 x, uint128 y) public pure returns (uint192) {
+        return FixedPoint.mulQ64(x, y);
+    }
+
+    function testMulQ48 (uint128 x, uint64 y) public pure returns (uint144) {
+        return FixedPoint.mulQ48(x, y);
+    }
+
+    function testDivQ64 (uint128 x, uint128 y) public pure returns (uint256) {
+        return FixedPoint.divQ64(x, y);
+    }
+
+    function testDivQ64Sq (uint128 x, uint128 y) public pure returns (uint256) {
+        return FixedPoint.divSqQ64(x, y);
+    }
+
+    function testRecipQ64 (uint128 x) public pure returns (uint128) {
+        return FixedPoint.recipQ64(x);
+    }
 }
