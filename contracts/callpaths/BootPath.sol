@@ -54,11 +54,23 @@ contract BootPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function upgradeProxy (bytes calldata cmd) private {
         (, address proxy, uint16 proxyIdx) =
             abi.decode(cmd, (uint8, address, uint16));
+
         require(proxyIdx != CrocSlots.BOOT_PROXY_IDX, "Cannot overwrite boot path");
         require(proxy == address(0) || proxy.code.length > 0, "Proxy address is not a contract");
 
         emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
         proxyPaths_[proxyIdx] = proxy;        
+
+        if (proxy != address(0)) {
+            bool doesAccept = BootPath(proxy).acceptCrocProxyRole(address(this), proxyIdx);
+            require(doesAccept, "Proxy does not accept role");
+        }
+    }
+
+    /* @notice Conforms to the standard call, but should always reject role because this contract
+     *         should only ever be installled once at construction time and never upgraded after */
+    function acceptCrocProxyRole (address, uint16) public payable virtual returns (bool) {
+        return false;
     }
 }
 

@@ -10,6 +10,7 @@ import { HotProxy } from '../typechain/HotProxy';
 import { ContractFactory } from 'ethers';
 import { MockHotProxy } from '../typechain/MockHotProxy';
 import { ColdPath } from '../typechain';
+import { MockProxySidecar } from '../contracts/typechain';
 
 chai.use(solidity);
 
@@ -110,8 +111,8 @@ describe('Pool Proxy Paths', () => {
     const DUMMY_SLOT = 500; 
 
     it("cannot upgrade boot path", async() => {
-        let factory = await ethers.getContractFactory("ColdPath") as ContractFactory
-        let proxy = await factory.deploy() as ColdPath
+        let factory = await ethers.getContractFactory("MockProxySidecar") as ContractFactory
+        let proxy = await factory.deploy() as MockProxySidecar
   
         // Cannot overwrite the boot path slot because that could potentially permenately break upgradeability
         await expect(test.testUpgrade(test.BOOT_PROXY, proxy.address)).to.be.reverted
@@ -121,8 +122,8 @@ describe('Pool Proxy Paths', () => {
     })
 
     it("upgrade requires contract address", async() => {
-        let factory = await ethers.getContractFactory("ColdPath") as ContractFactory
-        let proxy = await factory.deploy() as ColdPath
+        let factory = await ethers.getContractFactory("MockProxySidecar") as ContractFactory
+        let proxy = await factory.deploy() as MockProxySidecar
         let eoaAddr = await (await test.trader).getAddress()
 
         // Cannot overwrite a non-contract address to a slot
@@ -133,5 +134,22 @@ describe('Pool Proxy Paths', () => {
 
         // Can delete a slot by setting address to 0
         await expect(test.testUpgrade(DUMMY_SLOT, ZERO_ADDR)).to.not.be.reverted
+    })
+
+    it("requires proxy contract accept", async() => {
+        let factory = await ethers.getContractFactory("MockProxySidecar") as ContractFactory
+        let proxy = await factory.deploy() as MockProxySidecar
+        let eoaAddr = await (await test.trader).getAddress()
+
+        // Will reject because the dex address does not match
+        await proxy.setRole(DUMMY_SLOT, eoaAddr);
+        await expect(test.testUpgrade(DUMMY_SLOT, proxy.address)).to.be.reverted
+
+        // Will reject because the slot does not match
+        await proxy.setRole(DUMMY_SLOT, (await test.dex).address);
+        await expect(test.testUpgrade(DUMMY_SLOT+1, proxy.address)).to.be.reverted
+
+        // Will accept because both match
+        await expect(test.testUpgrade(DUMMY_SLOT, proxy.address)).to.not.be.reverted
     })
 })

@@ -94,4 +94,10 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
             roll.prePairBal_ -= querySurplus(lockHolder_, token).toInt128Sign();
         }
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public payable returns (bool) {
+        return slot == CrocSlots.LONG_PROXY_IDX;
+    }
 }

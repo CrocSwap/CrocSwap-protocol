@@ -114,6 +114,13 @@ contract HotProxy is HotPath {
         returns (int128, int128) {
         return swapEncoded(input);
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public payable returns (bool) {
+        return slot == CrocSlots.SWAP_PROXY_IDX;
+    }
+
 }
 
 

@@ -18,5 +18,11 @@ contract SafeModePath is ColdPath {
     function userCmd (bytes calldata) override public payable {
         revert("Emergency Safe Mode");
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public payable override returns (bool) {
+        return slot == CrocSlots.SAFE_MODE_PROXY_PATH;
+    }
 }
 

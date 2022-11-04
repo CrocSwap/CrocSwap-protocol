@@ -337,5 +337,11 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             abi.decode(cmd, (uint8, address, uint32, uint256));
         approveAgent(router, nCalls, salt);
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public payable virtual returns (bool) {
+        return slot == CrocSlots.COLD_PROXY_IDX;
+    }
 }
 
