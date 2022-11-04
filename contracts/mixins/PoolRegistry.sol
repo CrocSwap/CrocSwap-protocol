@@ -304,13 +304,15 @@ contract PoolRegistry is StorageLayout {
      *         that hasn't been disabled. */
     function isPoolInit (PoolSpecs.Pool memory pool)
         private pure returns (bool) {
+        require(pool.schema_ <= PoolSpecs.BASE_SCHEMA, "IPS");
         return pool.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 
     /* @notice Returns true if the pool cursor represents an initailized pool that
      *         hasn't been disabled. */
     function isPoolInit (PoolSpecs.PoolCursor memory pool)
-        private pure returns (bool) {
+        private pure returns (bool) {        
+        require(pool.head_.schema_ <= PoolSpecs.BASE_SCHEMA, "IPS");
         return pool.head_.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 }
