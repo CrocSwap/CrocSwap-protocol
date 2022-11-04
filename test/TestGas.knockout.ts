@@ -59,7 +59,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-10000, 10000, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum
-        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 162000)
+        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 163000)
     })
 
     it("swap cross end of knockout [@gas-test]", async() => {

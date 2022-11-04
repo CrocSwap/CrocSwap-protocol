@@ -110,7 +110,7 @@ describe('Gas Benchmarks Native Eth', () => {
     it("burn liq rewards [@gas-test]", async() => {
         await test.testMint(-100, 100, 100000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 100000)
+        await expectGas(test.testBurn(-100, 100, 100), 101000)
     })
 
     it("burn liq level left [@gas-test]", async() => {
@@ -235,7 +235,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 1000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 257000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 258000)
         expect(await test.liquidity()).to.be.lt(1010*1024)
         expect(await test.liquidity()).to.be.gt(1000*1024)
     })
