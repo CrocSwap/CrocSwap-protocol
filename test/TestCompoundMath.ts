@@ -5,6 +5,7 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import { toFixedGrowth, fromFixedGrowth, toSqrtPrice, fromSqrtPrice } from './FixedPoint';
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -120,4 +121,11 @@ describe('TestCompoundMath', () => {
       expect(resultFour.toNumber()).to.equal(27811);
       expect(resultFive.toNumber()).to.equal(205)
    })
+
+   // Verify that precision doesn't break for liquidity values close to the uint128 limit
+   it("deflate precision", async () => {
+      let result = await comp.testDeflate(BigNumber.from(2).pow(127), toFixedGrowth(0));
+      expect(result).to.equal(BigNumber.from(2).pow(127));
+   })
+
 })

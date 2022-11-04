@@ -156,7 +156,7 @@ library CompoundMath {
         internal pure returns (uint128) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 num = liq << 48;
+        uint256 num = uint256(liq) << 48;
         uint256 deflated = num / (ONE + growth); // Guaranteed to fit in 256-bits
         
         // No need to safe cast-- will allways be smaller than starting
