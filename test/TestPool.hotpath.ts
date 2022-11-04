@@ -28,24 +28,29 @@ describe('Pool HotPath', () => {
     const MINT_BUFFER = 4;
 
     it("mint collection", async() => {
-       await test.testMint(-100, 100, 10000);
-       expect(await test.snapQuoteOwed()).to.equal(0)
-       let CONVEX_ADJ = 5
-       expect(await test.snapBaseOwed()).to.equal(100*1024 - CONVEX_ADJ + MINT_BUFFER)
-
-       await test.testMint(5000, 6000, 10000);
-       CONVEX_ADJ = 193
-       expect(await test.snapQuoteOwed()).to.equal(380*1024 - CONVEX_ADJ + MINT_BUFFER)
-       expect(await test.snapBaseOwed()).to.equal(0)
-
-       await test.testMint(3000, 5000, 10000);
-       CONVEX_ADJ = 143
-       expect(await test.snapQuoteOwed()).to.equal(377*1024 - CONVEX_ADJ + MINT_BUFFER)
-       CONVEX_ADJ = 826
-       expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
-
-       expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 336 + 2*MINT_BUFFER)
+        let initBaseBal = await baseToken.balanceOf((await test.dex).address)
+        let initQuoteBal = await quoteToken.balanceOf((await test.dex).address)
+ 
+        await test.testMint(-100, 100, 10000);
+        expect(await test.snapQuoteOwed()).to.equal(0)
+        let CONVEX_ADJ = 5
+        expect(await test.snapBaseOwed()).to.equal(100*1024 - CONVEX_ADJ + MINT_BUFFER)
+ 
+        await test.testMint(5000, 6000, 10000);
+        CONVEX_ADJ = 193
+        expect(await test.snapQuoteOwed()).to.equal(380*1024 - CONVEX_ADJ + MINT_BUFFER)
+        expect(await test.snapBaseOwed()).to.equal(0)
+ 
+        await test.testMint(3000, 5000, 10000);
+        CONVEX_ADJ = 143
+        expect(await test.snapQuoteOwed()).to.equal(377*1024 - CONVEX_ADJ + MINT_BUFFER)
+        CONVEX_ADJ = 826
+        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
+ 
+        expect(await (await baseToken.balanceOf((await test.dex).address)).sub(initBaseBal)).to.equal
+         (730*1024 - 831 + 2*MINT_BUFFER)
+        expect(await (await quoteToken.balanceOf((await test.dex).address)).sub(initQuoteBal)).to.equal
+         (757*1024 - 336 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {

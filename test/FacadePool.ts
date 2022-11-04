@@ -67,7 +67,7 @@ export async function makeTokenNext (pool: TestPool): Promise<TestPool> {
     return makePoolFrom(pool.quote, tokenZ)
 }
 
-async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
+export async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
     let base = sortBaseToken(tokenX, tokenY)
     let quote = sortQuoteToken(tokenX, tokenY)
 
@@ -88,7 +88,7 @@ export async function makeEtherPool(): Promise<TestPool> {
 export interface Token {
     address: string
     balanceOf: (address: string) => Promise<BigNumber>
-    fund: (s: Signer, dex: string, val: number) => Promise<void>
+    fund: (s: Signer, dex: string, val: BigNumberish) => Promise<void>
     sendEth: boolean
 }
 
@@ -107,7 +107,7 @@ export class ERC20Token implements Token {
         return this.contract.balanceOf(address)
     }
 
-    async fund (s: Signer, dex: string, val: number): Promise<void> {
+    async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         await this.contract.deposit(await s.getAddress(), BigNumber.from(val))
         await this.contract.approveFor(await s.getAddress(), dex, BigNumber.from(val))
     }
@@ -129,7 +129,7 @@ export class NativeEther implements Token {
         return await this.balanceFinder.then(b => b.getBalance(address))
     }
 
-    async fund (s: Signer, dex: string, val: number): Promise<void> {
+    async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         // Signed should already be funded
     }
 }
@@ -199,11 +199,11 @@ export class TestPool {
             { value: BigNumber.from(1000000000).mul(1000000000) } : { }
     }
 
-    async fundTokens() {
-        await this.base.fund(await this.trader, (await this.dex).address, INIT_BAL)
-        await this.quote.fund(await this.trader, (await this.dex).address, INIT_BAL)
-        await this.base.fund(await this.other, (await this.dex).address, INIT_BAL)
-        await this.quote.fund(await this.other, (await this.dex).address, INIT_BAL)
+    async fundTokens (bal: BigNumberish = INIT_BAL) {
+        await this.base.fund(await this.trader, (await this.dex).address, bal)
+        await this.quote.fund(await this.trader, (await this.dex).address, bal)
+        await this.base.fund(await this.other, (await this.dex).address, bal)
+        await this.quote.fund(await this.other, (await this.dex).address, bal)
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
     }
@@ -775,14 +775,20 @@ export class TestPool {
         return (await this.snapQuoteOwed())
     }
 
-    async liquidity(): Promise<BigNumber> {
-        return await (await this.query).queryLiquidity
-            ((await this.base).address, (await this.quote).address, this.poolIdx)
+    async liquidity (subInitLocked: boolean = true): Promise<BigNumber> {
+        return this.liquidityIdx(this.poolIdx, subInitLocked)
     }
 
-    async liquidityIdx (idx: number): Promise<BigNumber> {
-        return await (await this.query).queryLiquidity
+    async liquidityIdx (idx: BigNumberish, subInitLocked: boolean = true): Promise<BigNumber> {
+        const INIT_LIQ = 1; // Default burnt liquidity on every pool
+        let liq = (await this.query).queryLiquidity
             ((await this.base).address, (await this.quote).address, idx)
+
+        if (subInitLocked) {
+            return (await liq).sub(INIT_LIQ);
+        } else {
+            return liq;
+        }
     }
 
     async price(): Promise<BigNumber> {

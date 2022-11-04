@@ -247,7 +247,7 @@ describe('Pool Knockout Liq', () => {
             formProof([merkleOne.pivot, merkleTwo.pivot], [merkleOne.fee, merkleTwo.fee], [hashOne, hashTwo]))
         expect(await test.snapBaseFlow()).to.equal(-60294) // Small claim from rewards
         expect(await test.snapQuoteFlow()).to.equal(-3752189)
-        expect(await test.liquidity()).to.equal(10374514) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10374515) // Slight decrease from pulling ambient rewards
     })
 
     it("bad proof", async() => {

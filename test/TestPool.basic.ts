@@ -27,6 +27,9 @@ describe('Pool', () => {
     const MINT_BUFFER = 4;
 
     it("mint collection", async() => {
+       let initBaseBal = await baseToken.balanceOf((await test.dex).address)
+       let initQuoteBal = await quoteToken.balanceOf((await test.dex).address)
+
        await test.testMint(-100, 100, 10000);
        expect(await test.snapQuoteOwed()).to.equal(0)
        let CONVEX_ADJ = 5
@@ -43,8 +46,10 @@ describe('Pool', () => {
        CONVEX_ADJ = 826
        expect(await test.snapBaseOwed()).to.equal(630*1024 - CONVEX_ADJ + MINT_BUFFER)
 
-       expect(await baseToken.balanceOf((await test.dex).address)).to.equal(730*1024 - 831 + 2*MINT_BUFFER)
-       expect(await quoteToken.balanceOf((await test.dex).address)).to.equal(757*1024 - 336 + 2*MINT_BUFFER)
+       expect(await (await baseToken.balanceOf((await test.dex).address)).sub(initBaseBal)).to.equal
+        (730*1024 - 831 + 2*MINT_BUFFER)
+       expect(await (await quoteToken.balanceOf((await test.dex).address)).sub(initQuoteBal)).to.equal
+        (757*1024 - 336 + 2*MINT_BUFFER)
     })
 
     it("mint liquidity", async() => {
