@@ -413,8 +413,9 @@ library Chaining {
      *         a token quantity amount. Because of fixed-point rounding the latter will
      *         be slightly smaller than the fixed specified amount. For usability and gas
      *         optimization the user will likely want to just pay the full amount. */
-    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 qty, bool inBase)
+    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 uQty, bool inBase)
         internal pure returns (int128, int128) {
+        int128 qty = uQty.toInt128Sign();
         if (inBase && int128(qty) > baseFlow) {
             baseFlow = int128(qty);
         } else if (!inBase && int128(qty) > quoteFlow) {
