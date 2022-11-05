@@ -9,7 +9,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, Wallet, Signer, BytesLike, ContractFactory } from 'ethers';
 import { CrocPolicy } from '../typechain/CrocPolicy';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { BootPath, ColdPath } from '../typechain';
+import { BootPath, ColdPath, MockTimelock } from '../typechain';
 
 chai.use(solidity);
 
@@ -24,6 +24,7 @@ describe('Pool Governance', () => {
     let ops: Wallet
     let treasury: Wallet
     let emergency: Wallet
+    let timelock: MockTimelock
     let pool: CrocSwapDex
     const feeRate = 225 * 100
 
@@ -42,8 +43,12 @@ describe('Pool Governance', () => {
       emergency = accts[6]
 
       let factory = await ethers.getContractFactory("CrocPolicy");
-      policy = (await factory.deploy((await test.dex).address, ops.address, treasury.address, emergency.address)) as CrocPolicy;
+      policy = (await factory.deploy((await test.dex).address)) as CrocPolicy;
       pool = await test.dex
+
+      factory = await ethers.getContractFactory("MockTimelock");
+      timelock = (await factory.connect(treasury).deploy(policy.address)) as MockTimelock;
+      await policy.transferGovernance(ops.address, timelock.address, emergency.address)
 
       test.useHotPath = true
     })
@@ -94,10 +99,10 @@ describe('Pool Governance', () => {
       // Insufficient policy authority to transfer authority
       await expect(policy.connect(ops).opsResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address))).to.be.reverted
       await expect(policy.connect(ops).treasuryResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address), true)).to.be.reverted
-      await expect(policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address), false)).to.be.reverted
+      await expect(timelock.treasuryResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address), false)).to.be.reverted
 
       // Successul transfer
-      await policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address), true)
+      await timelock.treasuryResolution(pool.address, test.COLD_PROXY, transferCmd(accts[0].address), true)
 
       // If worked, should be able to transfer back
       await pool.connect(accts[0]).protocolCmd(test.COLD_PROXY, transferCmd(policy.address), true)
@@ -116,7 +121,7 @@ describe('Pool Governance', () => {
       await expect(policy.connect(ops).treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)).to.be.reverted
 
       // Successful treasury collection
-      await policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)
+      await timelock.treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)
       await pool.connect(accts[5]).userCmd(test.COLD_PROXY, disburseCmd(accts[5].address, 1000))
       expect(await baseToken.balanceOf(accts[5].address)).to.eq(1000)
     })
@@ -133,21 +138,21 @@ describe('Pool Governance', () => {
       await expect(policy.connect(ops).treasuryResolution(pool.address, test.COLD_PROXY, safeModeCmd(true), false)).to.be.reverted
 
       // Turn on safe mode
-      await policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, safeModeCmd(true), true)
+      await timelock.treasuryResolution(pool.address, test.COLD_PROXY, safeModeCmd(true), true)
 
       // Safe mode disables everything outside the safe mode path
       await expect(test.testMintAmbient(10000)).to.be.reverted
       await expect(pool.userCmd(test.COLD_PROXY, disburseCmd(accts[6].address, 10000))).to.be.reverted
-      await expect(policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)).to.be.reverted
+      await expect(timelock.treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)).to.be.reverted
       await expect(policy.connect(ops).opsResolution(pool.address, test.COLD_PROXY, setInitLiqCmd(1000))).to.be.reverted
 
       // Non-sudo and user commands to the Emergency call path will fail
       await expect(pool.userCmd(test.EMERGENCY_PROXY, disburseCmd(accts[6].address, 10000))).to.be.reverted
-      await expect(policy.connect(treasury).treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)).to.be.reverted
+      await expect(timelock.treasuryResolution(pool.address, test.COLD_PROXY, collectCmd(accts[5].address), true)).to.be.reverted
       await expect(policy.connect(ops).treasuryResolution(pool.address, test.EMERGENCY_PROXY, setInitLiqCmd(1000), false)).to.be.reverted
 
       // Safe mode can be disabled on the emergency callpath
-      await policy.connect(treasury).treasuryResolution(pool.address, test.EMERGENCY_PROXY, safeModeCmd(false), true)
+      await timelock.treasuryResolution(pool.address, test.EMERGENCY_PROXY, safeModeCmd(false), true)
 
       // And regular operation resumes
       await expect(test.testMintAmbient(10000)).to.not.be.reverted
