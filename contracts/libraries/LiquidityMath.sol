@@ -106,8 +106,9 @@ library LiquidityMath {
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity, but rounds up to the
      *         next multiple. */
-    function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128) {
+    function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128 result) {
         unchecked {
+        require((liq & 0xfffffffffffffffffffffffffffff800) != 0xfffffffffffffffffffffffffffff800, "overflow");
         return ((liq >> LOT_ACTIVE_BITS) + 1) << LOT_ACTIVE_BITS;
         }
     }
