@@ -41,12 +41,11 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
-        int128 ethBalance = 0;
+        Chaining.ExecCntx memory cntx;
+        int128[] memory flows = new int128[](order.hops_.length); 
 
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-
-            Chaining.ExecCntx memory cntx;
             cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
                                               pairs.baseToken_, pairs.quoteToken_);
 
@@ -63,14 +62,23 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
             }
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
-            int128 settleFlow = pairs.clipFlow();
-            ethBalance += settleLeg(settleFlow, settleChannel);
+            flows[i] = pairs.clipFlow();
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFinal(pairs.closeFlow(), settleChannel, ethBalance);
+        settleFlows(order, flows, pairs.closeFlow());
     }
 
+    function settleFlows (Directives.OrderDirective memory order, int128[] memory flows, int128 closeFlow) internal {
+        Directives.SettlementChannel memory settleChannel = order.open_;
+        int128 ethFlow = 0;
+
+        for (uint i = 0; i < order.hops_.length; ++i) {
+            ethFlow += settleLeg(flows[i], settleChannel);
+            settleChannel = order.hops_[i].settle_;
+        }
+        settleFinal(closeFlow, settleChannel, ethFlow);
+    }
 
     /* @notice Sets the roll target parameters based on the user's directive and the
      *         previously accumulated flow on the pair.

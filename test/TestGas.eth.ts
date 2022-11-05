@@ -61,12 +61,12 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("mint fresh ticks [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-200, 200, 10000), 174000)
+        await expectGas(test.testMintOther(-200, 200, 10000), 175000)
     })
 
     it("mint below price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 166000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 167000)
     })
 
     it("mint above price [@gas-test]", async() => {
@@ -123,7 +123,7 @@ describe('Gas Benchmarks Native Eth', () => {
     it("burn flipped [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 101000)
+        await expectGas(test.testBurn(-100, 100, 100), 102000)
     })
 
     it("burn flipped level left [@gas-test]", async() => {
