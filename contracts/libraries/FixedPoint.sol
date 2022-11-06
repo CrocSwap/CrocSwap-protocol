@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3
+pragma solidity ^0.8.4;
 
 /// @title FixedPoint128
 /// @notice A library for handling binary fixed point numbers, see https://en.wikipedia.org/wiki/Q_(number_format)

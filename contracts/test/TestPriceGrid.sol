@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.5.0;
+// SPDX-License-Identifier: GPL-3
+pragma solidity ^0.8.4;
     
 import "../libraries/PriceGrid.sol";
 import "../libraries/Directives.sol";

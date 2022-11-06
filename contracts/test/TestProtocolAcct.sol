@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "../libraries/CurveMath.sol";

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity >=0.8.4;
+pragma solidity ^0.8.4;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
