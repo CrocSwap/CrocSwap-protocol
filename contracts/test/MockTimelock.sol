@@ -35,7 +35,16 @@ contract MockTimelock {
         return CrocPolicy(policy_).emergencyHalt(minion, reason);
     }
 
+    function emergencyReset (address conduit, uint16 proxyPath, string calldata reason) public {
+        return CrocPolicy(policy_).emergencyReset(conduit, proxyPath, reason);
+    }
+
     function forcePolicy (address conduit, uint16 proxyPath, CrocPolicy.PolicyRule calldata policy) public {
         return CrocPolicy(policy_).forcePolicy(conduit, proxyPath, policy);
     }
+
+    function setPolicy (address conduit, uint16 proxyPath, CrocPolicy.PolicyRule calldata policy) public {
+        return CrocPolicy(policy_).setPolicy(conduit, proxyPath, policy);
+    }
+
 }

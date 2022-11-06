@@ -99,16 +99,8 @@ contract CrocPolicy {
     function transferGovernance (address ops, address treasury, address emergency)
         treasuryAuth public {
         Timelock(payable(treasury)).acceptAdmin();
-        opsAuthority_ = ops;
-        treasuryAuthority_ = treasury;
-        emergencyAuthority_ = emergency;  
-    }
-
-    /* @notice The internal authority transfer function. Invoked either at constructor 
-     *         time or by transferGovernance(). */
-    function declareAuthority (address ops, address treasury,
-                               address emergency) private {
-        Timelock(payable(treasury)).acceptAdmin();
+        Timelock(payable(ops)).acceptAdmin();
+        Timelock(payable(emergency)).acceptAdmin();
         opsAuthority_ = ops;
         treasuryAuthority_ = treasury;
         emergencyAuthority_ = emergency;  
@@ -246,7 +238,7 @@ contract CrocPolicy {
      * @param conduit The address of the conduit oracle this policy rule applies to.
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
-    function emergencyReset (address conduit, uint8 proxyPath,
+    function emergencyReset (address conduit, uint16 proxyPath,
                              string calldata reason) emergencyAuth public {
         bytes32 key = rulesKey(conduit, proxyPath);
         rules_[key].cmdFlags_ = bytes24(0);
