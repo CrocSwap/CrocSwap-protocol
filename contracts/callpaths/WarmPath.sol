@@ -110,8 +110,9 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         } else if (code == 5) {
             return harvest(base, quote, poolIdx, bidTick, askTick, lpConduit,
                            limitLower, limitHigher);
+        } else {
+            revert("Invalid command");
         }
-        return (0, 0);
     }
 
     /* @notice Mints liquidity as a concentrated liquidity range order.

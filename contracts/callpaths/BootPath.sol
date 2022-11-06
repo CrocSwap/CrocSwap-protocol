@@ -41,10 +41,14 @@ contract BootPath is MarketSequencer, DepositDesk, ProtocolAccount {
         uint8 cmdCode = uint8(cmd[31]);
         if (cmdCode == ProtocolCmd.UPGRADE_DEX_CODE) {
             upgradeProxy(cmd);
-        } 
+        } else {
+            revert("Invalid command");
+        }
     }
     
-    function userCmd (bytes calldata) virtual public payable { }
+    function userCmd (bytes calldata) virtual public payable { 
+        revert("Invalid command");
+    }
     
     /* @notice Upgrades one of the existing proxy sidecar contracts.
      * @dev    Be extremely careful calling this, particularly when upgrading the

@@ -73,6 +73,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             setHotPathOpen(cmd);
         } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {
             setSafeMode(cmd);
+        } else {
+            revert("Invalid command");
         }
     }
     
@@ -103,6 +105,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             resetNonceCond(cmd);
         } else if (cmdCode == UserCmd.GATE_ORACLE_COND) {
             checkGateOracle(cmd);
+        } else {
+            revert("Invalid command");
         }
 
     }

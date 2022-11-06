@@ -90,6 +90,8 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
             (baseFlow, quoteFlow) = claimCmd(pool.hash_, curve, loc, args);
         } else if (code == UserCmd.RECOVER_KNOCKOUT) {
             (baseFlow, quoteFlow) = recoverCmd(pool.hash_, loc, args);
+        } else {
+            revert("Invalid command");
         }
 
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
