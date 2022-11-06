@@ -733,26 +733,24 @@ export class TestPool {
             overrides ? overrides : this.overrides)
     }
 
-    async testApproveRouter (from: Signer, router: string, nCalls: number, salt: number): Promise<ContractTransaction> {
+    async testApproveRouter (from: Signer, router: string, nCalls: number, callpaths: number[]): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
-        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
-                [72, router, nCalls, salt])
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint16[]"],
+                [72, router, nCalls, callpaths])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
     }
 
-    async testApproveRouterCond (from: Signer, router: string, nCalls: number, salt: number, ): Promise<ContractTransaction> {
+    async testApproveRouterCond (from: Signer, router: string, nCalls: number, callpaths: number[]): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
-        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
-                [72, router, nCalls, salt])
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint16[]"],
+                [72, router, nCalls, callpaths])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
     }
 
-    async testDisburseAgent (from: Signer, client: string, salt: number, recv: string, value: number | BigNumber, token: string,
+    async testMintAgent (from: Signer, client: string, val: number,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
-        let abiCoder = new ethers.utils.AbiCoder()
-        let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
-                    [74, recv, value, token])
-        return (await this.dex).connect(from).userCmdRouter(this.COLD_PROXY, cmd, client, salt,
+        let cmd = this.encodeMintAmbientPath(val, toSqrtPrice(0.01), toSqrtPrice(1000), 0)
+        return (await this.dex).connect(from).userCmdRouter(this.WARM_PROXY, await cmd, client,
             overrides ? overrides : this.overrides)
     }
 

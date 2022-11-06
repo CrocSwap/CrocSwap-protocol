@@ -331,15 +331,15 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
 
     /* @notice Called by a user to give permissions to an external smart contract router.
      * @notice router The address of the external smart contract that the user is giving
-     *                permission to.
-     * @notice forDebit If true, the user is authorizing the router to pay settlement 
-     *                  debits on its behalf.
-     * @notice forBurn If true, the user is authorizing the router to burn liquidity
-     *                 positions belongining to the user. */
+     *                permission to. */
     function approveRouter (bytes calldata cmd) private {
-        (, address router, uint32 nCalls, uint256 salt) =
-            abi.decode(cmd, (uint8, address, uint32, uint256));
-        approveAgent(router, nCalls, salt);
+        (, address router, uint32 nCalls, uint16[] memory callpaths) =
+            abi.decode(cmd, (uint8, address, uint32, uint16[]));
+
+        for (uint i = 0; i < callpaths.length; ++i) {
+            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "Cannot approve router for privileged calls");
+            approveAgent(router, nCalls, callpaths[i]);
+        }
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

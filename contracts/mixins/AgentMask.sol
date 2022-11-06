@@ -38,10 +38,9 @@ contract AgentMask is StorageLayout {
      *         router.
      *
      * @param client The client who's order the router is calling on behalf of.
-     * @param salt   The approval slot salt to check the user's approval. Allows for a
-     *               user to approve the same router with diferent command sub-types. */
-    modifier reEntrantApproved (address client, uint256 salt) {
-        casAgent(client, msg.sender, salt);
+     * @param salt   The proxy sidecar callpath the agent is requesting to call on the user's behalf */
+    modifier reEntrantApproved (address client, uint16 callPath) {
+        casAgent(client, msg.sender, callPath);
         require(lockHolder_ == address(0));
         lockHolder_ = client;
         _;
@@ -176,13 +175,9 @@ contract AgentMask is StorageLayout {
      * @param router The address of the external agent.
      * @param nCalls The number of calls the external router is authorized to make. Set
      *               to uint32.max for unlimited.
-     * @param salt An arbitrary number corresponding to a specific call track. When the
-     *             external agent calls the dex on the user's behalf it will supply this
-     *             number and nCalls will be checked specifically against it. Depending
-     *             on implementation, this allows users to authorize routers to make
-     *             certain types of calls but not others. */
-    function approveAgent (address router, uint32 nCalls, uint256 salt) internal {
-        bytes32 key = agentKey(lockHolder_, router, salt);
+     * @param callPath The specific proxy sidecar callpath that the router is approved for */
+    function approveAgent (address router, uint32 nCalls, uint16 callPath) internal {
+        bytes32 key = agentKey(lockHolder_, router, callPath);
         UserBalance storage bal = userBals_[key];
         bal.agentCallsLeft_ = nCalls;
     }
@@ -236,9 +231,9 @@ contract AgentMask is StorageLayout {
      *         number of remaining calls.
      * @param client The client the agent is making the call on behalf of.
      * @param agent The address of the external agent making the call.
-     * @param salt The multidimensional nonce dimension the call is being applied to. */
-    function casAgent (address client, address agent, uint256 salt) internal {
-        UserBalance storage bal = userBals_[agentKey(client, agent, salt)];
+     * @param callPath The proxy sidecar the call is being made on. */
+    function casAgent (address client, address agent, uint16 callPath) internal {
+        UserBalance storage bal = userBals_[agentKey(client, agent, callPath)];
         if (bal.agentCallsLeft_ < type(uint32).max) {
             require(bal.agentCallsLeft_ > 0);
             --bal.agentCallsLeft_;
@@ -345,13 +340,9 @@ contract AgentMask is StorageLayout {
 
     /* @notice Returns an agent key given a user, an agent address and an arbitrary 
      *         salt. */
-    function agentKey (address user, address agent, uint256 salt) pure internal
+    function agentKey (address user, address agent, uint16 callPath) pure internal
         returns (bytes32) {
-        if (salt == 0) {
-            return keccak256(abi.encode(user, agent));
-        } else {
-            return keccak256(abi.encode(user, PoolSpecs.virtualizeAddress(agent, salt)));
-        }
+        return keccak256(abi.encode(user, agent, callPath));
     }
 
 }

@@ -156,12 +156,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param callpath The index of the proxy sidecar the command is being called on.
      * @param cmd The arbitrary call data the client is calling the proxy sidecar.
      * @param client The address of the client the router is calling on behalf of.
-     * @param salt The arbitrary salt to check the user's router approval against. In most
-     *             cases this will just be zero, but allows for multidimensional approval
      * @return Arbitrary byte data (if any) returned by the command. */
-    function userCmdRouter (uint16 callpath, bytes calldata cmd, address client,
-                            uint256 salt)
-        reEntrantApproved(client, salt) public payable
+    function userCmdRouter (uint16 callpath, bytes calldata cmd, address client)
+        reEntrantApproved(client, callpath) public payable
         returns (bytes memory) {
         return callUserCmd(callpath, cmd);
     }
