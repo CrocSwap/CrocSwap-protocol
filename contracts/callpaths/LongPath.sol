@@ -37,12 +37,12 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
      * @input  The encoded byte data associated with the user's order directive. See
      *         Encoding.sol and Directives.sol library for information on how to encode
      *         order directives as byte data. */
-    function userCmd (bytes calldata input) public payable {
+    function userCmd (bytes calldata input) public payable returns (int128[] memory) {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
         Chaining.ExecCntx memory cntx;
-        int128[] memory flows = new int128[](order.hops_.length); 
+        int128[] memory flows = new int128[](order.hops_.length+1); 
 
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
@@ -66,10 +66,12 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFlows(order, flows, pairs.closeFlow());
+        flows[order.hops_.length] = pairs.closeFlow();
+        settleFlows(order, flows);
+        return flows;
     }
 
-    function settleFlows (Directives.OrderDirective memory order, int128[] memory flows, int128 closeFlow) internal {
+    function settleFlows (Directives.OrderDirective memory order, int128[] memory flows) internal {
         Directives.SettlementChannel memory settleChannel = order.open_;
         int128 ethFlow = 0;
 
@@ -77,7 +79,7 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
             ethFlow += settleLeg(flows[i], settleChannel);
             settleChannel = order.hops_[i].settle_;
         }
-        settleFinal(closeFlow, settleChannel, ethFlow);
+        settleFinal(flows[order.hops_.length], settleChannel, ethFlow);
     }
 
     /* @notice Sets the roll target parameters based on the user's directive and the
