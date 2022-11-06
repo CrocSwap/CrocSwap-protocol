@@ -288,7 +288,7 @@ describe('Pool Relayer Agent', () => {
        let tip = formTip(0, other)
        let signature = await formSignature(test.COLD_PROXY, cmd, cond, tip)
        
-       await pool.userCmdRelayer(test.COLD_PROXY, cmd, cond, tip, signature)
+       await pool.connect(await test.trader).userCmdRelayer(test.COLD_PROXY, cmd, cond, tip, signature)
 
        let nextBal = await baseToken.balanceOf(other)
        expect(nextBal.sub(initBal)).to.equal(5000)
@@ -549,4 +549,11 @@ describe('Pool Relayer Agent', () => {
        expect(await query.querySurplus(third, baseToken.address)).to.equal(6000)
        expect(await query.queryProtocolAccum(baseToken.address)).to.equal(2000)
     }) 
+
+    it("protocol take rate valid", async() => {
+        // Take rate must be below 50% (128/256)
+        expect(setTakeRate(128)).to.be.reverted
+        expect(setTakeRate(127)).to.be.not.reverted
+
+    })
 })

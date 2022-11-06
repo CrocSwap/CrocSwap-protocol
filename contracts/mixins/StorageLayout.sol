@@ -131,6 +131,9 @@ contract StorageLayout {
     
     mapping(bytes32 => UserBalance) internal userBals_;
     /**************************************************************/
+
+    address treasury_;
+    uint64 treasuryStartTime_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars

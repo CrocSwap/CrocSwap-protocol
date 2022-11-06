@@ -22,3 +22,10 @@ interface ICrocMinion {
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo)
         payable external returns (bytes memory);
 }
+
+/* @notice Interface for a contract that directly governs a CrocSwap dex contract. */
+interface ICrocMaster {
+    /* @notice Used to validate governance contract to prevent authority transfer to an
+     *         an invalid address or contract. */
+    function acceptsCrocAuthority() payable external returns (bool);
+}

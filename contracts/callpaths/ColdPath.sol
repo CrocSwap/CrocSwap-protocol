@@ -13,6 +13,7 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
+import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
 
 import "hardhat/console.sol";
@@ -67,6 +68,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         
         if (cmdCode == ProtocolCmd.COLLECT_TREASURY_CODE) {
             collectProtocol(cmd);
+        } else if (cmdCode == ProtocolCmd.SET_TREASURY_CODE) {
+            setTreasury(cmd);
         } else if (cmdCode == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             transferAuthority(cmd);
         } else if (cmdCode == ProtocolCmd.HOT_OPEN_CODE) {
@@ -168,9 +171,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function setRelayerTakeRate (bytes calldata input) private {
         (, uint8 takeRate) = 
             abi.decode(input, (uint8, uint8));
-        
+
         emit CrocEvents.SetRelayerTakeRate(takeRate);
-        relayerTakeRate_ = takeRate;
+        setRelayerTakeRate(takeRate);
     }
 
     function setNewPoolLiq (bytes calldata input) private {
@@ -217,18 +220,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         setPriceImprove(token, unitTickCollateral, awayTickTol);
     }
 
-    /* @notice Upgrades one of the existing proxy sidecar contracts.
-     * @dev    Be extremely careful calling this, particularly when upgrading the
-     *         cold path contract, since that contains the upgrade code itself.
-     * @param proxy The address of the new proxy smart contract
-     * @param proxyIdx Determines which proxy is upgraded on this call */
-    function upgradeProxy (bytes calldata cmd) private {
-        (, address proxy, uint16 proxyIdx) =
-            abi.decode(cmd, (uint8, address, uint16));
-        emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
-        proxyPaths_[proxyIdx] = proxy;        
-    }
-
     function setHotPathOpen (bytes calldata cmd) private {
         (, bool open) = abi.decode(cmd, (uint8, bool));
         emit CrocEvents.HotPathOpen(open);
@@ -245,15 +236,31 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
     function collectProtocol (bytes calldata cmd) private {
-        (, address recv, address token) =
-            abi.decode(cmd, (uint8, address, address));
-        emit CrocEvents.ProtocolDividend(token, recv);
-        disburseProtocolFees(recv, token);
+        (, address token) = abi.decode(cmd, (uint8, address));
+
+        require(block.timestamp >= treasuryStartTime_, "TL");
+        emit CrocEvents.ProtocolDividend(token, treasury_);
+        disburseProtocolFees(treasury_, token);
+    }
+
+    /* @notice Sets the treasury address to receive protocol fees. Once set, the treasury cannot
+     *         receive fees until 7 days after. */
+    function setTreasury (bytes calldata cmd) private {
+        (, address treasury) = abi.decode(cmd, (uint8, address));
+
+        require(treasury != address(0) && treasury.code.length != 0);
+        treasury_ = treasury;
+        treasuryStartTime_ = uint64(block.timestamp + 7 days);
+        emit CrocEvents.TreasurySet(treasury_, treasuryStartTime_);
     }
 
     function transferAuthority (bytes calldata cmd) private {
         (, address auth) =
             abi.decode(cmd, (uint8, address));
+
+        require(auth != address(0) && auth.code.length > 0 && 
+            ICrocMaster(auth).acceptsCrocAuthority());
+        
         emit CrocEvents.AuthorityTransfer(authority_);
         authority_ = auth;
     }
@@ -337,7 +344,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             abi.decode(cmd, (uint8, address, uint32, uint16[]));
 
         for (uint i = 0; i < callpaths.length; ++i) {
-            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "Cannot approve router for privileged calls");
+            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "RA");
             approveAgent(router, nCalls, callpaths[i]);
         }
     }

@@ -29,3 +29,19 @@ contract MockMinion is ICrocMinion {
         return abi.encode();
     }
 }
+
+contract MockMaster is ICrocMaster {
+
+    address dex_;
+
+    constructor (address dex) {
+        dex_ = dex;
+    }
+
+    function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable
+        returns (bytes memory) {
+        return ICrocMinion(dex_).protocolCmd(proxyPath, cmd, sudo);
+    }
+
+    function acceptsCrocAuthority() override external payable returns (bool) { return true; }
+}

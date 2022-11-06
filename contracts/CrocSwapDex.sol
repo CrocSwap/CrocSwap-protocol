@@ -37,13 +37,12 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    /* @param authority The address of the protocol authority. Only this address will is
-     *                  able to call methods related to protocol privileged operations.
-     * @param coldPath The address of the pre-deployed ColdPath sidecar contract. */
-    constructor (address authority, address bootPath) {
-        authority_ = authority;
+    constructor() {
+        // Authority is originally set to deployer address, which can then transfer to
+        // proper governance contract (if deployer already isn't)
+        authority_ = msg.sender;
         hotPathOpen_ = true;
-        proxyPaths_[CrocSlots.BOOT_PROXY_IDX] = bootPath;
+        proxyPaths_[CrocSlots.BOOT_PROXY_IDX] = address(new BootPath());
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -180,9 +179,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
  *     geth. Useful for testing environments though. */
 contract CrocSwapDexSeed  is CrocSwapDex {
     
-    constructor (address authority)
-        CrocSwapDex(authority, address(new BootPath())) {
-
+    constructor() {
         proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
         proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
         proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());

@@ -113,7 +113,7 @@ library PoolSpecs {
      *         ahead of time if a pool is can be oracled by checking the bits in the pool
      *         index. */
     function oracleForPool (uint256 poolIdx, uint8 oracleFlags)
-        private pure returns (address) {
+        internal pure returns (address) {
         bool oracleEnabled = (oracleFlags & 0x1 == 1);
         return oracleEnabled ?
             address(uint160(poolIdx >> 96)) :

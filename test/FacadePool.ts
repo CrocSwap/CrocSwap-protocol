@@ -180,7 +180,7 @@ export class TestPool {
             this.dex = Promise.resolve(dex)
         } else {
             this.dex = factory.then(f => this.auth.then(a => 
-                f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+                f.connect(a).deploy())) as Promise<CrocSwapDex>
         }
 
         factory = ethers.getContractFactory("CrocQuery")
@@ -225,8 +225,9 @@ export class TestPool {
         }
 
         let gasTx = await (await this.dex)
+            .connect(await this.trader)
             .userCmd(this.COLD_PROXY, await this.encodeInitPool(poolIdx, price), overrides)
-
+        
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
@@ -265,6 +266,7 @@ export class TestPool {
             .protocolCmd(this.COLD_PROXY, cmd, false)
 
         await (await this.dex)
+            .connect(await this.trader)
             .userCmd(this.COLD_PROXY, await this.encodeInitPool(this.poolIdx, price), this.overrides)
     }
 
@@ -517,31 +519,31 @@ export class TestPool {
     async testKnockoutMint (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeMintKnockout(qty, isBid, bidTick, askTick, partial, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutBurn (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, false, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutBurnLiq (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, true, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutClaim (isBid: boolean, bidTick: number, askTick: number, root: BigNumber, proof: BigNumber[], useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeClaimKnockout(isBid, bidTick, askTick, root, proof, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutRecover (isBid: boolean, bidTick: number, askTick: number, pivot: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeRecoverKnockout(isBid, bidTick, askTick, pivot, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,

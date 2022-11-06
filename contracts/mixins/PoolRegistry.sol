@@ -133,6 +133,14 @@ contract PoolRegistry is StorageLayout {
         templ.jitThresh_ = jitThresh;
         templ.knockoutBits_ = knockout;
         templ.oracleFlags_ = oracleFlags;
+
+        // If template is set to use a permissioned oracle, validate that the oracle address is a
+        // valid oracle contract
+        address oracle = PoolSpecs.oracleForPool(poolIdx, oracleFlags);
+        if (oracle != address(0)) {
+            require(oracle.code.length > 0 && ICrocPermitOracle(oracle).acceptsPermitOracle(),
+                "Oracle");    
+        }
     }
 
     function disablePoolTemplate (uint256 poolIdx) internal {
@@ -166,6 +174,13 @@ contract PoolRegistry is StorageLayout {
         pool.knockoutBits_ = knockoutBits;
     }
 
+    // 10 million represents a sensible upper bound on initial pool, considering that the highest
+    // price token per wei is USDC and similar 6-digit stablecoins. So 10 million in that context
+    // represents about $10 worth of burned value. Considering that the initial liquidity commitment
+    // should be economic de minims, because it's permenately locked, we wouldn't want to be much 
+    // higher than this.
+    uint constant MAX_INIT_POOL_LIQ = 10_000_000;
+
     /* @notice The creation of every new pool requires the pool initializer to 
      *         permanetely lock in a token amount of liquidity (possibly zero). This is
      *         set to be economically meaningless for normal cases but prevent the 
@@ -174,11 +189,23 @@ contract PoolRegistry is StorageLayout {
      *         ante value that determines how much liquidity must be locked at 
      *         initialization time. */
     function setNewPoolLiq (uint128 liqAnte) internal {
+        require(liqAnte > 0 && liqAnte < MAX_INIT_POOL_LIQ, "Init liq");
         newPoolLiq_ = liqAnte;
+
     }
 
+    // Since take rate is represented in 1/256, this represents a maximum possible take 
+    // rate of 50%.
+    uint8 MAX_TAKE_RATE = 128;
+
     function setProtocolTakeRate (uint8 takeRate) internal {
+        require(takeRate <= MAX_TAKE_RATE, "TR");
         protocolTakeRate_ = takeRate;
+    }
+
+    function setRelayerTakeRate (uint8 takeRate) internal {
+        require(takeRate <= MAX_TAKE_RATE, "TR");
+        relayerTakeRate_ = takeRate;
     }
 
     function resyncProtocolTake (address base, address quote,

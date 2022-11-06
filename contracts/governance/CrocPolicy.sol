@@ -14,7 +14,7 @@ import './Timelock.sol';
  *         which directly call protocolCmd() with a preset command. Or policy can be
  *         set based on rules, which allow arbitrary oracles to independently invoke 
  *         protocolCmd() for some restricted subset of command types. */
-contract CrocPolicy {
+contract CrocPolicy is ICrocMaster {
     using ProtocolCmd for bytes;
 
 
@@ -299,6 +299,8 @@ contract CrocPolicy {
     function isFlagSet (bytes24 cmdFlags, uint8 flagIdx) private pure returns (bool) {
         return (bytes24(uint192(1)) << flagIdx) & cmdFlags > 0;         
     }
+
+    function acceptsCrocAuthority() public payable override returns (bool) { return true; }
 
     /* @notice Permissions gate for normal day-to-day operations. */
     modifier opsAuth() {

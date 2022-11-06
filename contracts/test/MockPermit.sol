@@ -97,5 +97,8 @@ contract MockPermit is ICrocPermitOracle {
          poolIdx_ = poolIdx;
          return user == user_ && base == base_ && quote_ == quote;
      }
+
+     /* @notice Just used to validate the contract address at pool creation time. */
+    function acceptsPermitOracle() external payable override returns (bool) { return true; }
 }
 

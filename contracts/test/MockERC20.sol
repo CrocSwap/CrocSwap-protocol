@@ -3,6 +3,7 @@
 pragma solidity ^0.8.4;
 
 import "../interfaces/IERC20Minimal.sol";
+import "hardhat/console.sol";
 
 contract MockERC20 is IERC20Permit {
     mapping(address => uint256) public override balanceOf;
@@ -35,7 +36,7 @@ contract MockERC20 is IERC20Permit {
         external override returns (bool) {
         require(allowance[from][msg.sender] >= qty, "Insufficent Allowance");
         allowance[from][msg.sender] -= qty;
-        
+
         require(balanceOf[from] >= qty, "Insufficient Balance");
         balanceOf[from] -= qty;
         balanceOf[to] += qty;

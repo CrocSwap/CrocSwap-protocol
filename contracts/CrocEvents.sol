@@ -23,6 +23,7 @@ library CrocEvents {
     event PriceImproveThresh (address indexed token, uint128 unitTickCollateral,
                               uint16 awayTickTol);
     
+    event TreasurySet (address indexed treasury, uint64 indexed startTime);
     event ProtocolDividend (address indexed token, address recv);
 
     event UpgradeProxy (address indexed proxy, uint16 proxyIdx);

@@ -113,4 +113,7 @@ interface ICrocPermitOracle {
     function checkApprovedForCrocInit (address user, address sender,
                                        address base, address quote, uint256 poolIdx)
         external returns (bool);
+
+    /* @notice Just used to validate the contract address at pool creation time. */
+    function acceptsPermitOracle() external payable returns (bool);
 }

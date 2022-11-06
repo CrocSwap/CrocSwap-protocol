@@ -23,6 +23,8 @@ library ProtocolCmd {
     uint8 constant SAFE_MODE_CODE = 23;
     // Code to collect accumulated protocol fees for the treasury.
     uint8 constant COLLECT_TREASURY_CODE = 40;
+    // Code to set the protocol treasury
+    uint8 constant SET_TREASURY_CODE = 41;
     ////////////////////////////////////////////////////////////////////////////
 
     
