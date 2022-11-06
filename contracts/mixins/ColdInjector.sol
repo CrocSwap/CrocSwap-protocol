@@ -38,14 +38,6 @@ contract ColdPathInjector is StorageLayout {
         return verifyCallResult(success, output);
     }
 
-    function callProtocolCmdMem (uint16 proxyIdx, bytes memory input) internal
-        returns (bytes memory) {
-        assertProxy(proxyIdx);
-        (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
-            abi.encodeWithSignature("protocolCmd(bytes)", input));
-        return verifyCallResult(success, output);
-    }
-
     function callUserCmdMem (uint16 proxyIdx, bytes memory input)
         internal returns (bytes memory) {
         assertProxy(proxyIdx);

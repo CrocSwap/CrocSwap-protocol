@@ -185,24 +185,14 @@ contract CrocSwapDexSeed  is CrocSwapDex {
     
     constructor (address authority)
         CrocSwapDex(authority, address(new BootPath())) {
-        sudoMode_ = true;
-        
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new WarmPath(), CrocSlots.LP_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new ColdPath(), CrocSlots.COLD_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new LongPath(), CrocSlots.LONG_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new MicroPaths(), CrocSlots.MICRO_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new KnockoutFlagPath(), CrocSlots.FLAG_CROSS_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new KnockoutLiqPath(), CrocSlots.KNOCKOUT_LP_PROXY_IDX));
-        callProtocolCmdMem(CrocSlots.BOOT_PROXY_IDX, 
-            abi.encode(ProtocolCmd.UPGRADE_DEX_CODE, new SafeModePath(), CrocSlots.SAFE_MODE_PROXY_PATH));
 
-        sudoMode_ = false;
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
+        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
+        proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
+        proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
+        proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
+        proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath());
     }
 }
 
