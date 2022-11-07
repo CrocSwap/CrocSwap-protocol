@@ -79,6 +79,26 @@ library UserCmd {
     uint8 constant GATE_ORACLE_COND = 82;
     uint8 constant DEPOSIT_PERMIT_CODE = 83;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // LP action warm path command codes
+    ////////////////////////////////////////////////////////////////////////////
+    uint8 constant MINT_RANGE_LIQ_LP = 1;
+    uint8 constant MINT_RANGE_BASE_LP = 11;
+    uint8 constant MINT_RANGE_QUOTE_LP = 12;
+    uint8 constant BURN_RANGE_LIQ_LP = 2;
+    uint8 constant BURN_RANGE_BASE_LP = 21;
+    uint8 constant BURN_RANGE_QUOTE_LP = 22;
+    uint8 constant MINT_AMBIENT_LIQ_LP = 3;
+    uint8 constant MINT_AMBIENT_BASE_LP = 31;
+    uint8 constant MINT_AMBIENT_QUOTE_LP = 32;
+    uint8 constant BURN_AMBIENT_LIQ_LP = 4;
+    uint8 constant BURN_AMBIENT_BASE_LP = 41;
+    uint8 constant BURN_AMBIENT_QUOTE_LP = 42;
+    uint8 constant HARVEST_LP = 5;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Knockout LP command codes
+    ////////////////////////////////////////////////////////////////////////////
     uint8 constant MINT_KNOCKOUT = 91;
     uint8 constant BURN_KNOCKOUT = 92;
     uint8 constant CLAIM_KNOCKOUT = 93;

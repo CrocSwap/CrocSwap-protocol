@@ -6,6 +6,7 @@ import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
 import '../libraries/TokenFlow.sol';
 import '../libraries/PriceGrid.sol';
+import '../libraries/ProtocolCmd.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
@@ -69,45 +70,45 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
                        uint128 limitLower, uint128 limitHigher,
                        address lpConduit)
         private returns (int128, int128) {
-        if (code == 1) {
+        if (code == UserCmd.MINT_RANGE_LIQ_LP) {
             return mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                         limitLower, limitHigher);
-        } else if (code == 11) {
+        } else if (code == UserCmd.MINT_RANGE_BASE_LP) {
             return mintQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
                            limitLower, limitHigher);
-        } else if (code == 12) {
+        } else if (code == UserCmd.MINT_RANGE_QUOTE_LP) {
             return mintQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
                            limitLower, limitHigher);
             
-        } else if (code == 2) {
+        } else if (code == UserCmd.BURN_RANGE_LIQ_LP) {
             return burn(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                         limitLower, limitHigher);
-        } else if (code == 21) {
+        } else if (code == UserCmd.BURN_RANGE_BASE_LP) {
             return burnQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
                            limitLower, limitHigher);
-        } else if (code == 22) {
+        } else if (code == UserCmd.BURN_RANGE_QUOTE_LP) {
             return burnQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
                            limitLower, limitHigher);
             
-        } else if (code == 3) {
+        } else if (code == UserCmd.MINT_AMBIENT_LIQ_LP) {
             return mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
-        } else if (code == 31) {
+        } else if (code == UserCmd.MINT_AMBIENT_BASE_LP) {
             return mintQty(base, quote, poolIdx, true, liq, lpConduit,
                            limitLower, limitHigher);
-        } else if (code == 32) {
+        } else if (code == UserCmd.MINT_AMBIENT_QUOTE_LP) {
             return mintQty(base, quote, poolIdx, false, liq, lpConduit,
                            limitLower, limitHigher);
             
-        } else if (code == 4) {
+        } else if (code == UserCmd.BURN_AMBIENT_LIQ_LP) {
             return burn(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
-        } else if (code == 41) {
+        } else if (code == UserCmd.BURN_AMBIENT_BASE_LP) {
             return burnQty(base, quote, poolIdx, true, liq, lpConduit,
                            limitLower, limitHigher);
-        } else if (code == 42) {
+        } else if (code == UserCmd.BURN_AMBIENT_QUOTE_LP) {
             return burnQty(base, quote, poolIdx, false, liq, lpConduit,
                            limitLower, limitHigher);
             
-        } else if (code == 5) {
+        } else if (code == UserCmd.HARVEST_LP) {
             return harvest(base, quote, poolIdx, bidTick, askTick, lpConduit,
                            limitLower, limitHigher);
         } else {
