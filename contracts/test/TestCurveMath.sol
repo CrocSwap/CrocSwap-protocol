@@ -164,4 +164,16 @@ contract TestCurveMath {
         private pure returns (CurveMath.CurveState memory) {
         return CurveMath.CurveState(price, seed, conc, growth, 0);
     }
+
+    function testTokenPrecision (uint128 liq, uint128 price,
+                                 bool inBase) public view returns (uint128) {
+        uint256 termA = FixedPoint.divQ64(liq, price - 1);
+        uint256 termB = FixedPoint.divQ64(liq, price);
+        console.log();
+        console.log("TermA", termA);
+        console.log("TermB", termB);
+
+        //return uint128(termA - termB);
+        return CurveMath.priceToTokenPrecision(liq, price, inBase);
+    }
 }

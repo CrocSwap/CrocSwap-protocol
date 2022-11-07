@@ -359,36 +359,22 @@ library CurveMath {
             return (liq >> 64) + 1; 
             
         } else {
-            // Proivde quote token collateral to buffer price precision roudning:
-            //    delta(Q) >= L * delta(1/P)
-            //    delta(P) <= 2^-64  (64 bit precision rounding)
-            //          P  >= 2^-64  (minimum precision)
-            //    delta(Q) >= L * (1/(P-2^-64) - 1/P)
-            //             >= L * 2^-64/(P^2 - P * 2^-64)
-            //             >= L * 2^-64/(P - 2^-64)^2        (upper bound to above)
-            if (price <= FixedPoint.Q64) {
-                // The fixed point representation of Price in bits is
-                //    Pb = P * 2^64
-                // Therefore
-                //    delta(Q) >= L * 2^-64/(P/2^64)^2
-                //             >= L * 2^64/Pb^2
+            // Calculate the quote reservs at the current price and a one unit price step,
+            // then take the difference as the minimum required quote tokens needed to
+            // buffer that price step.
+            uint192 step = FixedPoint.divQ64(liq, price - 1);
+            uint192 start = FixedPoint.divQ64(liq, price);
 
-                // Curve price is always well above 1
-                // Since divSq64 is uint192, adding 1 can never overflow 256 bits
-                uint256 calc = uint256(FixedPoint.divSqQ64(liq, price-1)) + 1; 
+            // next reserves will always be equal or greater than start reserves, so the 
+            // subtraction will never underflow. 
+            uint192 delta = step - start;
 
-                if (calc > type(uint128).max) { return type(uint128).max; }
-                return uint128(calc);
-                
-            } else {
-                // If price is greater than 1, Can reduce to this (potentially loose,
-                // but still economically small) upper bound:
-                //           P >= 1
-                //    delta(Q) >= L * 2^-64/P^2
-                //             >= L * 2^-64
-                // Since liq is shifted right by 64 bits, adding one can never overflow
-                return (liq >> 64) + 1;
-            }
+            // Round tokens up conservative.
+            // This will never overflow because 192 bit nums incremented by 1 will always fit in
+            // 256 bits.
+            uint256 deltaRound = uint256(delta) + 1;
+
+            return deltaRound.toUint128();
         }
         }
     }
