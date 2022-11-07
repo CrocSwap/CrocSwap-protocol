@@ -193,15 +193,33 @@ library SwapCurve {
     }
 
     /* @notice Finds the effective max (min) swap limit price giving a bump tick index
-     *         boundary and a user specified limitPrice. */
+     *         boundary and a user specified limitPrice.
+     * 
+     * @dev Because the mapping from ticks to bumps always occur at the lowest price unit
+     *      inside a tick, there is an asymettry between the lower and upper bump tick arg. 
+     *      The lower bump tick is the lowest tick *inclusive* for which liquidity is active.
+     *      The upper bump tick is the *next* tick above where liquidity is active. Therefore
+     *      the lower liquidity price maps to the bump tick price, whereas the upper liquidity
+     *      price bound maps to one unit less than the bump tick price.
+     *
+     *     Lower bump price                             Upper bump price
+     *            |                                           |
+     *      ------X******************************************+X-----------------
+     *            |                                          |
+     *     Min liquidity prce                         Max liquidity price
+     */ 
     function boundLimit (int24 bumpTick, uint128 limitPrice, bool isBuy)
         pure private returns (uint128) {
         unchecked {
         if (bumpTick <= TickMath.MIN_TICK || bumpTick >= TickMath.MAX_TICK) {
             return limitPrice;
         } else if (isBuy) {
+            /* See comment above. Upper bound liquidity is last active at the price one unit
+             * below the upper tick price. */
+            uint128 TICK_STEP_SHAVE_DOWN = 1;
+
             // Valid uint128 root prices are always well above 0.
-            uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - 1;
+            uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick) - TICK_STEP_SHAVE_DOWN;
             return bumpPrice < limitPrice ? bumpPrice : limitPrice;
         } else {
             uint128 bumpPrice = TickMath.getSqrtRatioAtTick(bumpTick);

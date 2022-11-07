@@ -332,11 +332,17 @@ contract MarketSequencer is TradeMatcher {
                                                    bend.liquidity_,
                                                    cntx.pool_.head_.tickSize_,
                                                    curve.pullPriceTick());
+
+            // Off-grid positions are only eligible when the LP has committed
+            // to a minimum liquidity commitment above some threshold. This opens
+            // up the possibility of a user minting an off-grid LP position above the
+            // the threshold, then partially burning the position to resize the position *below*
+            // the threhsold. 
+            // To prevent this all off-grid positions are marked as atomic which prevents partial 
+            // (but not full) burns. An off-grid LP wishing to reduce their position must fully 
+            // burn the position, then mint a new position, which will be checked that it meets 
+            // the size threshold at mint time.
             if (offGrid) {
-                // Off-grid positions are set with atomic liquidity. That prevents
-                // partial burns on these positions. Since off-grid size eligibility
-                // is only checked at mint time this is necessary to prevent under-sized
-                // off-grid orders.
                 markPosAtomic(lockHolder_, cntx.pool_.hash_,
                               bend.lowTick_, bend.highTick_);
             }

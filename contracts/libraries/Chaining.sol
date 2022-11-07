@@ -350,6 +350,34 @@ library Chaining {
         bidPrice = lowTick.getSqrtRatioAtTick();
         askPrice = highTick.getSqrtRatioAtTick();
 
+        /* The requires reserve collateral for a range order is a function of whether
+         * the order is in-range or out-of-range. For in range orders the reserves are
+         * determined based on the distance between the current price and range boundary
+         * price:
+         *           Lower range        Curve Price        Upper range
+         *                |                  |                  | 
+         *    <-----------*******************O*******************------------->
+         *                --------------------
+         *                 Base token reserves
+         *
+         * For out of range orders the reserve collateral is a function of the entire
+         * width of the range.
+         *
+         *           Lower range              Upper range       Curve Price
+         *                |                        |                 |
+         *    <-----------**************************-----------------O---->
+         *                --------------------------
+         *                   Base token reserves
+         *
+         * And if the curve is out of range on the opposite side, the reserve collateral
+         * would be zero, and therefore it's impossible to map a non-zero amount of tokens
+         * to liquidity (and function reverts)
+         *
+         *        Curve Price          Lower range              Upper range       
+         *           |                     |                        |                 
+         *    <------O---------------------**************************---------------------->
+         *                                      ZERO base tokens
+         */                  
         if (curvePrice <= bidPrice) {
             require(!inBase);
         } else if (curvePrice >= askPrice) {
