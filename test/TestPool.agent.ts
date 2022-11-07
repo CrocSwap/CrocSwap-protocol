@@ -552,8 +552,7 @@ describe('Pool Relayer Agent', () => {
 
     it("protocol take rate valid", async() => {
         // Take rate must be below 50% (128/256)
-        expect(setTakeRate(128)).to.be.reverted
-        expect(setTakeRate(127)).to.be.not.reverted
-
+        await expect(setTakeRate(129)).to.be.reverted
+        await expect(setTakeRate(128)).to.be.not.reverted
     })
 })

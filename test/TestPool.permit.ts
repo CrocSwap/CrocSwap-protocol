@@ -32,10 +32,6 @@ describe('permissioned pool', () => {
        test.useHotPath = true
     })
 
-    it("invalid oracle", async() => {
-        await test.initPermitPool(feeRate, 0, 1, 1.5)
-    })
-
     it("permit oracle", async() => {
         await (await test.permit).setPassThru(false)
         await (await test.permit).setMatching(await (await test.trader).getAddress(),
