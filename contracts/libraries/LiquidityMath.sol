@@ -11,7 +11,7 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function addDelta(uint128 x, int128 y) internal pure returns (uint128 z) {
-        unchecked {
+        unchecked { // Arithmetic checks done explicitly
         if (y < 0) {
             require((z = x - uint128(-y)) < x);
         } else {
@@ -25,7 +25,7 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function addLiq(uint128 x, uint128 y) internal pure returns (uint128 z) {
-        unchecked {
+        unchecked { // Arithmetic checks done explicitly
         require((z = x + y) >= x);
         }
     }
@@ -35,7 +35,7 @@ library LiquidityMath {
     /// @param y The delta by which liquidity should be changed
     /// @return z The liquidity delta
     function addLots(uint96 x, uint96 y) internal pure returns (uint96 z) {
-        unchecked {
+        unchecked { // Arithmetic checks done explicitly
         require((z = x + y) >= x);
         }
     }
@@ -74,7 +74,6 @@ library LiquidityMath {
     /* @notice Converts raw liquidity to lots of resting liquidity. (See comment above 
      *         defining lots. */
     function liquidityToLots (uint128 liq) internal pure returns (uint96) {
-        unchecked {
             uint256 lots = liq >> LOT_SIZE_BITS;
             uint256 liqTrunc = lots << LOT_SIZE_BITS;
             bool hasEmptyMask = (lots & KNOCKOUT_FLAG_MASK == 0);
@@ -82,7 +81,6 @@ library LiquidityMath {
                     liqTrunc == liq &&
                     lots < type(uint96).max, "FD");
             return uint96(lots);
-        }
     }
 
     /* @notice Checks if an aggergate lots counter contains a knockout liquidity component
@@ -98,9 +96,7 @@ library LiquidityMath {
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
      *         of the 1024-multiplier defining lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
-        unchecked {
         return (liq >> LOT_ACTIVE_BITS) << LOT_ACTIVE_BITS;
-        }
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
@@ -109,16 +105,17 @@ library LiquidityMath {
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128 result) {
         unchecked {
         require((liq & 0xfffffffffffffffffffffffffffff800) != 0xfffffffffffffffffffffffffffff800, "overflow");
-        return ((liq >> LOT_ACTIVE_BITS) + 1) << LOT_ACTIVE_BITS;
+
+        // By shifting down 11 bits, adding the one will always fit in 128 bits
+        uint128 roundUp = (liq >> LOT_ACTIVE_BITS) + 1;
+        return (roundUp << LOT_ACTIVE_BITS);
         }
     }
 
     /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
-        unchecked {
         uint96 realLots = lots & ~KNOCKOUT_FLAG_MASK;
         return uint128(realLots) << LOT_SIZE_BITS;
-        }
     }
 
     /* @notice Given a positive and negative detla lots value net out the raw liquidity
@@ -126,6 +123,7 @@ library LiquidityMath {
     function netLotsOnLiquidity (uint96 incrLots, uint96 decrLots) internal pure
         returns (int128) {
         unchecked {
+        // Original values are 96-bits, every possible difference will fit in signed-128 bits
         return lotToNetLiq(incrLots) - lotToNetLiq(decrLots);
         }
     }
@@ -133,9 +131,7 @@ library LiquidityMath {
     /* @notice Given an amount of lots of liquidity converts to a signed raw liquidity
      *         delta. (Which by definition is always positive.) */
     function lotToNetLiq (uint96 lots) internal pure returns (int128) {
-        unchecked {
         return int128(lotsToLiquidity(lots));
-        }
     }
 
     
@@ -166,7 +162,7 @@ library LiquidityMath {
     /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
         private pure returns (uint64) {
-        unchecked {
+        unchecked { // Intermediate results will always fit in 256-bits
         // Can safely cast, because result will always be smaller than origina since
         // weight is less than total.
         return uint64(uint256(mileage) * uint256(weight) / uint256(total));
@@ -177,13 +173,11 @@ library LiquidityMath {
      *      a beggining and end mileage counter. */
     function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) internal pure
         returns (uint64) {
-        unchecked {
         uint64 REWARD_ROUND_DOWN = 2;
         if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {
             return feeMileage - oldMileage - REWARD_ROUND_DOWN;
         } else {
             return 0;
-        }
         }
     }
 }

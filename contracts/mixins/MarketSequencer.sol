@@ -296,7 +296,7 @@ contract MarketSequencer is TradeMatcher {
                                  Directives.ConcentratedDirective[] memory dirs,
                                  CurveCache.Cache memory curve,
                                  Chaining.ExecCntx memory cntx) private {
-        unchecked { // Only arithmetic in block is ++i/++j which will never overflow
+        unchecked { // Only arithmetic in block is ++i which will never overflow
         for (uint i = 0; i < dirs.length; ++i) {
             (int128 nextBase, int128 nextQuote) = applyConcentrated
                 (curve, flow, cntx, dirs[i]);

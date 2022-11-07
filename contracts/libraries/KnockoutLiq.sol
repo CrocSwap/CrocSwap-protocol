@@ -215,6 +215,7 @@ library KnockoutLiq {
         private pure returns (uint32, uint64) {
         uint160 incrRoot = proofRoot;
         unchecked {
+            // Iterate by 1 loop will run out of gas far before overflowing 256 bits
             for (uint i = 0; i < proof.length; ++i) {
                 incrRoot = rootLink(incrRoot, proof[i]);
             }
@@ -294,7 +295,6 @@ library KnockoutLiq {
      *                (below) the current price tick. */
     function unpackBits (uint8 knockoutBits) private pure returns
         (bool enabled, uint8 widthBits, bool inside, bool yonder, bool onGrid) {
-        unchecked {
         widthBits = uint8(knockoutBits & 0x0F);
         uint8 flagBits = uint8(knockoutBits & 0x30) >> 4;
 
@@ -303,6 +303,5 @@ library KnockoutLiq {
         inside = flagBits >= 2;
 
         onGrid = knockoutBits & 0x40 > 0;
-        }
     }
 }

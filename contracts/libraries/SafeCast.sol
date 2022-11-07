@@ -8,7 +8,7 @@ library SafeCast {
     /// @param y The uint256 to be downcasted
     /// @return z The downcasted integer, now type uint160
     function toUint160(uint256 y) internal pure returns (uint160 z) {
-        unchecked {
+        unchecked { // Explicit bounds check
         require((z = uint160(y)) == y);
         }
     }
@@ -17,7 +17,7 @@ library SafeCast {
     /// @param y The uint256 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128(uint256 y) internal pure returns (uint128 z) {
-        unchecked {
+        unchecked { // Explicit bounds check
         require((z = uint128(y)) == y);
         }
     }
@@ -26,7 +26,7 @@ library SafeCast {
     /// @param y The uint182 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128By192(uint192 y) internal pure returns (uint128 z) {
-        unchecked {
+        unchecked { // Explicit bounds check
         require((z = uint128(y)) == y);
         }
     }
@@ -35,7 +35,7 @@ library SafeCast {
     /// @param y The uint144 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128By144(uint144 y) internal pure returns (uint128 z) {
-        unchecked{
+        unchecked{ // Explicit bounds check
         require((z = uint128(y)) == y);
         }
     }
@@ -44,7 +44,7 @@ library SafeCast {
     /// @param y The uint128 to be casted
     /// @return z The casted integer, now type int128
     function toInt128Sign(uint128 y) internal pure returns (int128 z) {
-        unchecked {
+        unchecked { // Explicit bounds check
         require(y < 2**127);
         return int128(y);
         }
@@ -54,7 +54,7 @@ library SafeCast {
     // stored timestamps will stop increasing. Deployed contracts relying on this function
     // should be re-evaluated before that date.
     function timeUint32() internal view returns (uint32) {
-        unchecked {
+        unchecked { // Explicit bounds check
         uint time = block.timestamp;
         if (time > type(uint32).max) { return type(uint32).max; }
         return uint32(time);

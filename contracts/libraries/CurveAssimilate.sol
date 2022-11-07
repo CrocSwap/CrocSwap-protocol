@@ -113,7 +113,7 @@ library CurveAssimilate {
             (liq, price, isFeesInBase);
         unchecked {
         return feesPaid <= bufferTokens ?
-            0 : feesPaid - bufferTokens;
+            0 : feesPaid - bufferTokens; // Condition assures never underflow
         }
     }
 

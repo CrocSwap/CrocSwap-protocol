@@ -33,7 +33,7 @@ library OrderEncoding {
         (schemaType, dir.open_.token_, dir.open_.limitQty_, dir.open_.dustThresh_,
             dir.open_.useSurplus_, cnt) = abi.decode(input[offset:(offset+32*6)],
             (uint8, address, int128, uint128, bool, uint8));
-        unchecked {
+        unchecked { // 0 + 32*6 is well with bounds of 256 bits
         offset += 32*6;
         }
  
@@ -41,6 +41,7 @@ library OrderEncoding {
         
         dir.hops_ = new Directives.HopDirective[](cnt);
         unchecked {
+        // An iterate by 1 loop will run out of gas far before overflowing 256 bits
         for (uint i = 0; i < cnt; ++i) {
             offset = parseHop(dir.hops_[i], input, offset);
         }
@@ -57,11 +58,13 @@ library OrderEncoding {
         uint8 poolCnt;
         poolCnt = abi.decode(input[next:(next+32)], (uint8));
         unchecked {
+        // Adding 32 at a time should never overflow 256 bits
         next += 32;
         }
 
         hop.pools_ = new Directives.PoolDirective[](poolCnt);
         unchecked {
+        // An iterate by 1 loop will run out of gas far before overflowing 256 bits
         for (uint i = 0; i < poolCnt; ++i) {
             next = parsePool(hop.pools_[i], input, next);
         }
@@ -76,7 +79,9 @@ library OrderEncoding {
         (hop.settle_.token_, hop.settle_.limitQty_, hop.settle_.dustThresh_,
             hop.settle_.useSurplus_, hop.improve_.isEnabled_, hop.improve_.useBaseSide_) =
             abi.decode(input[offset:(offset+32*6)], (address, int128, uint128, bool, bool, bool));
+
         unchecked {
+        // Incrementing by 32 at a time should never overflow 256 bits
         return offset + 32*6;
         }        
     }
@@ -93,11 +98,13 @@ library OrderEncoding {
             concCnt) = abi.decode(input[next:(next+32*5)], (uint256, bool, uint8, uint128, uint8));
 
         unchecked {
+        // Incrementing by 32 at a time should never overflow 256 bits
         next += 32*5;
         }
         pair.conc_ = new Directives.ConcentratedDirective[](concCnt);
 
         unchecked {
+        // An iterate by 1 loop will run out of gas far before overflowing 256 bits
         for (uint i = 0; i < concCnt; ++i) {
             next = parseConcentrated(pair.conc_[i], input, next);
         }

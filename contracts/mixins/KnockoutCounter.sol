@@ -250,7 +250,6 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function removePosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime)
         private returns (uint64 feeRewards) {
-        unchecked {
         bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
@@ -265,7 +264,6 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
             pos.timestamp_ = 0;
         } else {
             pos.lots_ -= lots;
-        }
         }
     }
 
@@ -349,7 +347,6 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
     function recallPivot (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                           uint96 lots) private returns
         (uint32 pivotTime, bool killsPivot) {
-        unchecked {
         bytes32 lvlKey = KnockoutLiq.encodePivotKey(pool, loc.isBid_,
                                                     loc.knockoutTick());
         KnockoutLiq.KnockoutPivot storage pivot = knockoutPivots_[lvlKey];
@@ -365,7 +362,6 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
 
         } else {
             pivot.lots_ -= lots;
-        }
         }
     }
 

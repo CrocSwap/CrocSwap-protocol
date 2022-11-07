@@ -67,7 +67,7 @@ describe('Gas Benchmarks Knockout', () => {
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.004)) // Move into range of knockout range
-        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 145000)
+        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 146000)
     })
 
 })

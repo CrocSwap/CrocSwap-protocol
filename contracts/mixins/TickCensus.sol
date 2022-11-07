@@ -256,7 +256,7 @@ contract TickCensus is StorageLayout {
         private view returns (int24) {
         uint8 MAX_MEZZ = 0;
         unchecked {
-            // Because it's unchecked idx will wrap around to 0 when it checks all bits
+            // Unchecked because we want idx to wrap around to 0, to check all 256 bits
             for (uint8 i = lobbyBit + 1; i > 0; ++i) {
                 (int24 tick, bool spills) = seekAtMezz(poolIdx, i, MAX_MEZZ, true);
                 if (!spills) { return tick; }
@@ -270,7 +270,7 @@ contract TickCensus is StorageLayout {
         private view returns (int24) {
         uint8 MIN_MEZZ = 255;
         unchecked {
-            // Because it's unchecked idx will wrap around to 255 when it checks all bits
+            // Unchecked because we want idx to wrap around to 255, to check all 256 bits
             for (uint8 i = lobbyBit - 1; i < 255; --i) {
                 (int24 tick, bool spills) = seekAtMezz(poolIdx, i, MIN_MEZZ, false);
                 if (!spills) { return tick; }

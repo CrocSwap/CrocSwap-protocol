@@ -138,7 +138,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
         await test.testSwapOther(false, true, 1000000, toSqrtPrice(1.0))
-        await expectGas(test.testHarvest(-100, 100), 89000)
+        await expectGas(test.testHarvest(-100, 100), 90000)
     })
 
     it("swap no pre-warm [@gas-test]", async() => {

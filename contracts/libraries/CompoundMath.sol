@@ -26,7 +26,7 @@ library CompoundMath {
         unchecked {
         uint256 x = uint256(x64);
         // Shift by 48, to bring x^2 back in fixed point precision
-        uint256 xSq = (x * x) >> 48;
+        uint256 xSq = (x * x) >> 48; // x * x never overflows 256 bits, because x is 64 bits
         uint256 linear = x >> 1; // Linear Taylor series term is x/2
         uint256 quad = xSq >> 3; // Quadratic Tayler series term ix x^2/8;
 
@@ -47,7 +47,7 @@ library CompoundMath {
         pure returns (uint64) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 num = (ONE + x) * (ONE + y);
+        uint256 num = (ONE + x) * (ONE + y); // Never overflows 256-bits because x and y are 64 bits
         uint256 term = num >> 48;  // Divide by 48-bit ONE
         uint256 z = term - ONE; // term will always be >= ONE
         if (z >= type(uint64).max) { return type(uint64).max; }
@@ -68,9 +68,9 @@ library CompoundMath {
         pure returns (uint64) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 multFactor = ONE + deflator;
+        uint256 multFactor = ONE + deflator; // Never overflows because both fit inside 64 bits
         uint256 num = uint256(val) << 48; // multiply by 48-bit ONE
-        uint256 z = num / multFactor;
+        uint256 z = num / multFactor; // multFactor will never be zero because it's bounded by 1
         return uint64(z); // Will always fit in 64-bits because shrink can only decrease
         }
     }
@@ -92,7 +92,7 @@ library CompoundMath {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
         uint256 num = uint256(inflated) << 48;
-        uint256 z = (num / seed) - ONE; 
+        uint256 z = (num / seed) - ONE; // Never underflows because num is always greater than seed
 
         if (z >= ONE) { return uint64(ONE); }
         return uint64(z);

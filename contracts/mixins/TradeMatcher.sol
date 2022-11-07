@@ -423,13 +423,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (int128 paidBase, int128 paidQuote, uint128 burnSwap) =
             curve.shaveAtBump(swap.inBaseQty_, swap.isBuy_, swap.qty_);
         accum.accumFlow(paidBase, paidQuote);
+
+        // burn down qty from shaveAtBump is always validated to be less than remaining swap.qty_
+        // so this will never underflow
         swap.qty_ -= burnSwap;
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick.
         return swap.isBuy_ ?
             bumpTick :
-            bumpTick - 1; // Valid ticks are well above {min(int128)-1}
+            bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
         }
     }
 

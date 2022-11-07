@@ -162,7 +162,7 @@ library CurveMath {
         internal pure returns (uint128) {
         unchecked {
         uint128 priceDelta = priceX > priceY ?
-            priceX - priceY : priceY - priceX;
+            priceX - priceY : priceY - priceX; // Condition assures never underflows
         return reserveAtPrice(liq, priceDelta, true);
         }
     }
@@ -280,7 +280,7 @@ library CurveMath {
         } else {
             unchecked {
             uint128 priceDelta = priceX > priceY ?
-                priceX - priceY : priceY - priceX;
+                priceX - priceY : priceY - priceX; // Conditional assures never underflows
             return liquiditySupported(collateral, true, priceDelta);
             }
         }
@@ -349,14 +349,14 @@ library CurveMath {
     function priceToTokenPrecision (uint128 liq, uint128 price,
                                     bool inBase) internal pure returns (uint128) {
         unchecked {
-
         // To provide more base token collateral than price precision rounding:
         //     delta(B) >= L * delta(P)
         //     delta(P) <= 2^-64  (64 bit precision rounding)
         //     delta(B) >= L * 2^-64
         //  (where L is liquidity, B is base token reserves, P is price)
         if (inBase) {
-            return (liq >> 64) + 1;
+            // Since liq is shifted right by 64 bits, adding one can never overflow
+            return (liq >> 64) + 1; 
             
         } else {
             // Proivde quote token collateral to buffer price precision roudning:
@@ -374,7 +374,9 @@ library CurveMath {
                 //             >= L * 2^64/Pb^2
 
                 // Curve price is always well above 1
+                // Since divSq64 is uint192, adding 1 can never overflow 256 bits
                 uint256 calc = uint256(FixedPoint.divSqQ64(liq, price-1)) + 1; 
+
                 if (calc > type(uint128).max) { return type(uint128).max; }
                 return uint128(calc);
                 
@@ -384,6 +386,7 @@ library CurveMath {
                 //           P >= 1
                 //    delta(Q) >= L * 2^-64/P^2
                 //             >= L * 2^-64
+                // Since liq is shifted right by 64 bits, adding one can never overflow
                 return (liq >> 64) + 1;
             }
         }

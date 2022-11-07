@@ -187,7 +187,7 @@ library SwapCurve {
         unchecked {
         uint128 bounded = boundLimit(bumpTick, limitPrice, isBuy);
         if (bounded < TickMath.MIN_SQRT_RATIO)  return TickMath.MIN_SQRT_RATIO;
-        if (bounded >= TickMath.MAX_SQRT_RATIO)  return TickMath.MAX_SQRT_RATIO - 1;
+        if (bounded >= TickMath.MAX_SQRT_RATIO) return TickMath.MAX_SQRT_RATIO - 1; // Well above 0, cannot underflow
         return bounded;
         }
     }
