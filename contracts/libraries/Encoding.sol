@@ -113,13 +113,13 @@ library OrderEncoding {
         (pair.swap_.isBuy_, pair.swap_.inBaseQty_, 
             pair.swap_.rollType_, pair.swap_.qty_, pair.swap_.limitPrice_) =
             abi.decode(input[next:(next+32*5)], (bool, bool, uint8, uint128, uint128));
-        unchecked {
+        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
         next += 32*5;
         }
 
         (pair.chain_.rollExit_, pair.chain_.swapDefer_,
             pair.chain_.offsetSurplus_) = abi.decode(input[next:(next+32*3)], (bool, bool, bool));
-        unchecked {
+        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
         next += 32*3;
         }
     }
@@ -132,7 +132,8 @@ library OrderEncoding {
         (pass.lowTick_, pass.highTick_, pass.isTickRel_, pass.isAdd_,
             pass.rollType_, pass.liquidity_) = abi.decode(input[offset:(offset+32*6)], 
             (int24, int24, bool, bool, uint8, uint128));
-        unchecked {
+
+        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
         next = offset + 32*6;
         }
     }
