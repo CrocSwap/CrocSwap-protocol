@@ -12,12 +12,39 @@ library CompoundMath {
     using SafeCast for uint256;
 
     /* @notice Provides a safe lower-bound approximation of the square root of (1+x)
-     *         based on a two-term Taylor series expansion.
+     *         based on a two-term Taylor series expansion. The purpose is to calculate
+     *         the square root for small compound growth rates. 
+     * 
+     *         Both the input and output values are passed as the growth rate *excluding*
+     *         the 1.0 multiplier base. For example assume the input (X) is 0.1, then the
+     *         output Y is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.1)
+     *             (1 + Y) = 1.0488 (approximately)
+     *                   Y = 0.0488 (approximately)
+     *         In the example the square root of 10% compound growth is 4.88%
+     *
+     *         Another example, assume the input (X) is 0.6, then the output (Y) is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.6)
+     *             (1 + Y) = 1.264 (approximately)
+     *                   Y = 0.264 (approximately)
+     *         In the example the square root of 60% growth is 26.4% compound growth
+     *
+     *         Another example, assume the input (X) is 0.018, then the output (Y) is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.018)
+     *             (1 + Y) = 1.00896 (approximately)
+     *                   Y = 0.00896 (approximately)
+     *         In the example the square root of 1.8% growth is 0.896% compound growth
+     *
      * @dev    Due to approximation error, only safe to use on input in the range of 
      *         [0,1). Will always round down from the true real value.
+     *
      * @param x  The value of x in (1+x). Represented as a Q16.48 fixed-point
      * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
-     *            fixed point. */
+     *            fixed point.
+     * */
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
         // but the angel's share becomes unreasonble. 

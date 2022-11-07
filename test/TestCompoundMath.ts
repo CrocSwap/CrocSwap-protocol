@@ -17,17 +17,21 @@ describe('TestCompoundMath', () => {
       comp = (await libFactory.deploy()) as TestCompoundMath;
    })
 
-   it("sqrt", async () => {
-      let result = await comp.testSqrt(toFixedGrowth(0));
+   it("approx sqrt", async () => {
+      let result = await comp.testApproxSqrt(toFixedGrowth(0));
       expect(fromFixedGrowth(result)).to.equal(0);
 
-      result = await comp.testSqrt(toFixedGrowth(0.01));
+      result = await comp.testApproxSqrt(toFixedGrowth(0.01));
       expect(fromFixedGrowth(result)).to.lte(0.005);
       expect(fromFixedGrowth(result)).to.gte(0.004987);
 
-      result = await comp.testSqrt(toFixedGrowth(0.5));
+      result = await comp.testApproxSqrt(toFixedGrowth(0.5));
       expect(fromFixedGrowth(result)).to.lte(0.25);
       expect(fromFixedGrowth(result)).to.gte(0.21875); 
+
+      // approxSqrt does not support above 1.0
+      await expect(comp.testApproxSqrt(toFixedGrowth(1.0))).to.be.reverted
+      await expect(comp.testApproxSqrt(toFixedGrowth(1.5))).to.be.reverted
    })
 
 

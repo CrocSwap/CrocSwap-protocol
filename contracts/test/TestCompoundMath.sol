@@ -11,7 +11,7 @@ contract TestCompoundMath {
     using CompoundMath for uint128;
     using CompoundMath for uint64;
     
-    function testSqrt (uint64 x) public pure returns (uint64) {
+    function testApproxSqrt (uint64 x) public pure returns (uint64) {
         return x.approxSqrtCompound();
     }
 
