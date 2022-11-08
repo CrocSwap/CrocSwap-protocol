@@ -16,7 +16,7 @@ interface ICrocMinion {
      * @param cmd       The underlying command content to pass to the proxy sidecar call.
      *                  Will DELEGATECALL (protocolCmd(cmd) on the sidecar proxy.
      * @param sudo      Set to true for commands that require escalated privilege (e.g. 
-     *                  authority transers or upgrades.) The ability to call with sudo 
+     *                  authority transfers or upgrades.) The ability to call with sudo 
      *                  true should be reserved for privileged callpaths in the governance
      *                  controller contract.
      * @return Arbitrary byte data (if any) returned by the command. */

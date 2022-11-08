@@ -13,7 +13,7 @@ library ProtocolCmd {
     ////////////////////////////////////////////////////////////////////////////
     // Privileged commands invokable by direct governance only.
     ////////////////////////////////////////////////////////////////////////////
-    // Code for transfering authority in the underlying CrocSwapDex contract.
+    // Code for transferring authority in the underlying CrocSwapDex contract.
     uint8 constant AUTHORITY_TRANSFER_CODE = 20;
     // Code to upgrade one of the sidecar proxy contracts on CrocSwapDex.
     uint8 constant UPGRADE_DEX_CODE = 21;

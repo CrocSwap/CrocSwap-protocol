@@ -89,7 +89,7 @@ contract PoolRegistry is StorageLayout {
         pool.head_.feeRate_ -= (discount - DISCOUNT_OFFSET);
     }
     
-    /* @notice Tests whether the given burn by the given user is authorized on this
+    /* @notice Tests whether the given initialization by the given user is authorized on this
      *         specific pool. If not, reverts the transaction. If pool is permissionless
      *         this function will just noop. */
     function verifyPermitInit (PoolSpecs.PoolCursor memory pool,
@@ -150,7 +150,7 @@ contract PoolRegistry is StorageLayout {
     /* @notice Resets the parameters on a previously existing pool in a specific pair.
      *
      * @dev We do not allow the permitOracle to be changed after the pool has been 
-     *      initialized. That would give the protocol authority to much power to 
+     *      initialized. That would give the protocol authority too much power to 
      *      arbitrarily lock LPs out of their funds. 
      *
      * @param base The base-side token specification of the pair containing the pool.

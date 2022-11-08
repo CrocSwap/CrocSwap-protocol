@@ -14,11 +14,11 @@ contract DepositDesk is SettleLayer {
      *         account.
      *
      * @dev    This call can be used both for token and native Ether collateral. For the
-     *         lateral the user must set msg.value with the corresponding amount. Because
+     *         latter the user must set msg.value with the corresponding amount. Because
      *         it deals with msg.value, this function must *never* be called twice in the
      *         same transaction, to avoid the risk of double-spend.
      *
-     * @param owner The address of the owner associated with the account.
+     * @param recv The address of the owner associated with the account.
      * @param value The amount to be collected from owner and deposited.
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              deposited. */
@@ -115,7 +115,7 @@ contract DepositDesk is SettleLayer {
         userBals_[toKey].surplusCollateral_ += value;
     }
 
-    /* @notice Converts an encoded trasnfer argument to the actual quantity to transfer.
+    /* @notice Converts an encoded transfer argument to the actual quantity to transfer.
      *         Includes syntactic sugar for special transfer types including:
      *            Positive Value - Transfer this specified amount
      *            Zero Value - Transfer the full balance

@@ -172,7 +172,7 @@ library CurveMath {
      * 
      * @dev Result is almost always within a fixed-point precision unit from the true
      *   real value. However in certain rare cases, the result could be up to 2 wei
-     *   below the true true mathematical value. Caller should account for this */
+     *   below the true mathematical value. Caller should account for this */
     function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint128) {
         // For purposes of downstream calculations, we make sure that limit price is
@@ -189,7 +189,7 @@ library CurveMath {
      *   (where F is the flow to the limit price, where L is liquidity, d is delta, 
      *    P is price and P' is limit price)
      *
-     * Calculating this requires two stacked mulDiv. To meet the function' contract
+     * Calculating this requires two stacked mulDiv. To meet the function's contract
      * we need to compute the result with tight fixed point boundaries at or below
      * 2 wei to conform to the function's contract.
      * 

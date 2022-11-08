@@ -8,7 +8,7 @@ pragma solidity ^0.8.4;
  *         CrocSwapDex, in a way that isn't tied to the ERC20 implementation. Virtual
  *         tokens require all trading inside Croc to be done with the user's surplus 
  *         collateral balance. Any direct deposits or withdraws run through this
- *         virtual token token tracker, which gives implementations total freedom to
+ *         virtual token tracker, which gives implementations total freedom to
  *         define how virtual token balances assigned. */
 interface ICrocVirtualToken {
 

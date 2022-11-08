@@ -9,7 +9,7 @@ library FixedPoint {
     uint256 internal constant Q64 = 0x10000000000000000;
     uint256 internal constant Q48 = 0x1000000000000;
 
-    /* @notice Multiplex two Q64.64 numbers by each other. */
+    /* @notice Multiplies two Q64.64 numbers by each other. */
     function mulQ64 (uint128 x, uint128 y) internal pure returns (uint192) {
         unchecked { // 128 bit integers squared will always fit in 256-bits
         return uint192((uint256(x) * uint256(y)) >> 64);
@@ -23,7 +23,7 @@ library FixedPoint {
         }
     }
 
-    /* @notice Dives a Q64.64 numerator by the square of another Q64.64 fixed point. */
+    /* @notice Divides a Q64.64 numerator by the square of another Q64.64 fixed point. */
     function divSqQ64 (uint128 x, uint128 y) internal pure returns (uint256) {
         unchecked { // 128 bit integers squared will always fit in 256-bits
         return (uint192(x) << 64) / (uint256(y)*uint256(y));

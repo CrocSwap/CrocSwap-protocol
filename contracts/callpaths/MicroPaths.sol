@@ -78,7 +78,7 @@ contract MicroPaths is MarketSequencer {
      * @param concGrowth The cumulative concentrated reward growth on the current curve.
      * @param lowTick The price tick index of the lower barrier.
      * @param highTick The price tick index of the upper barrier.
-     * @param liq The amount of liquidity to burn.
+     * @param liq The amount of liquidity to mint.
      * @param poolHash The key hash of the pool the curve belongs to.
      *
      * @return baseFlow The user<->pool flow on the base-side token associated with the 
@@ -148,7 +148,7 @@ contract MicroPaths is MarketSequencer {
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.
      * @param concGrowth The cumulative concentrated reward growth on the current curve.
-     * @param liq The amount of liquidity to burn.
+     * @param liq The amount of liquidity to mint.
      * @param poolHash The key hash of the pool the curve belongs to.
      *
      * @return baseFlow The user<->pool flow on the base-side token associated with the 

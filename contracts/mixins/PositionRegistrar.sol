@@ -23,14 +23,14 @@ contract PositionRegistrar is PoolRegistry {
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
      *    2) The pool the position is on.
-     *    2) Lower tick bound on the range
-     *    3) Upper tick bound on the range
-     *    4) Total liquidity
-     *    5) Fee accumulation mileage for the position's range checkpointed at the last
+     *    3) Lower tick bound on the range
+     *    4) Upper tick bound on the range
+     *    5) Total liquidity
+     *    6) Fee accumulation mileage for the position's range checkpointed at the last
      *       update. Used to correctly distribute in-range liquidity rewards.
-     * Of these 1-3 constitute the unique key. If a user adds a new position with the
-     * same owner and the same range, it can be represented by incrementing 4 and 
-     * updating 5. */
+     * Of these 1-4 constitute the unique key. If a user adds a new position with the
+     * same owner and the same range, it can be represented by incrementing 5 and 
+     * updating 6. */
 
     /* @notice Hashes the owner and concentrated liquidity range to the position key. */
     function encodePosKey (address owner, bytes32 poolIdx)

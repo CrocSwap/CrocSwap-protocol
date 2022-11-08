@@ -15,7 +15,7 @@ library Directives {
     /* @notice Defines a single requested swap on a pre-specified pool.
      *
      * @dev A directive indicating no swap action must set *both* qty and limitPrice to
-     *      zero. qty=0 alone will indicate the use of a flxeible back-filled rolling 
+     *      zero. qty=0 alone will indicate the use of a flexible back-filled rolling 
      *      quantity. 
      *
      * @param isBuy_ If true, swap converts base-side token to quote-side token.
@@ -105,7 +105,7 @@ library Directives {
 
     /* @param rollExit_ If set to true, use the exit side of the pair's tokens when
      *                  calculating rolling back-fill quantities.
-     * @param swapDeer_ If set to true, execute the swap directive *after* the passive
+     * @param swapDefer_ If set to true, execute the swap directive *after* the passive
      *                  mint/burn directives for the pool. If false, swap executes first.
      * @param offsetSurplus_ If set to true offset any rolling back-fill quantities with
      *                       the client's pre-existing surplus collateral at the dex. */
@@ -137,7 +137,7 @@ library Directives {
      *         pairs. The same struct is used for the entry/exit terminal tokens as
      *         well as intermediate tokens between pairs.
      *
-     * @param token_ The tracker address ot the token in the pair. (If set to zero 
+     * @param token_ The tracker address to the token in the pair. (If set to zero 
      *              specifies native Ethereum as the pair asset.)
      * @param limitQty_ A net flow limit that the user expects the execution to meet
      *    or exceed. Otherwise the transaction is reverted. Negative specifies a minimum
@@ -170,7 +170,7 @@ library Directives {
 
     /* @notice Defines a full directive related to a single hop in a sequence of pairs.
      * @param pools_ Defines directives on one or more pools on the pair.
-     * @param settle_ Defines the settlement for the token on the *exit* side of the hot.
+     * @param settle_ Defines the settlement for the token on the *exit* side of the hop.
      *         (The entry side is defined in the previous hop, or the open directive if
      *          this is the first hop in the sequence.)
      * @param improve_ Off-grid price improvement settings. */

@@ -71,7 +71,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                   price will always be equal or better, because this is calculated
      *                   at the marginal unit of quantity.
      * @param minOut The minimum output the user expects from the swap. If less is 
-     *               returned, the transaction will revery. (Alternatively if the swap
+     *               returned, the transaction will revert. (Alternatively if the swap
      *               is fixed in terms of output, this is the maximum input.)
      * @param reserveFlags Bitwise flags to indicate if the user wants to pay/receive in
      *                     terms of surplus collateral balance held at the dex contract.
@@ -175,7 +175,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 }
 
 
-/* @notice Alternative contrurctor to CrocSwapDex that's more convenient. However
+/* @notice Alternative constructor to CrocSwapDex that's more convenient. However
  *     the deploy transaction is several hundred kilobytes and will get droppped by 
  *     geth. Useful for testing environments though. */
 contract CrocSwapDexSeed  is CrocSwapDex {

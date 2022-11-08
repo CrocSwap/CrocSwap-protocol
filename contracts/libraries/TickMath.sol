@@ -15,7 +15,7 @@ library TickMath {
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint128 internal constant MAX_SQRT_RATIO = 21267430153580247136652501917186561138;
 
-    /// @notice Calculates sqrt(1.0001^tick) * 2^96
+    /// @notice Calculates sqrt(1.0001^tick) * 2^64
     /// @dev Throws if |tick| > max tick
     /// @param tick The input tick for the above formula
     /// @return sqrtPriceX64 A Fixed point Q64.64 number representing the sqrt of the ratio of the two assets (token1/token0)

@@ -42,7 +42,7 @@ contract StorageLayout {
 
     bool internal msgValSpent_;
 
-    // If set to true, than the embedded hot-path (swap()) is not enabled and
+    // If set to true, then the embedded hot-path (swap()) is not enabled and
     // users must use the hot proxy for the hot-path. By default set to false.
     bool internal hotPathOpen_;
     bool internal inSafeMode_;
@@ -53,7 +53,7 @@ contract StorageLayout {
     // Slots for sidecar proxy contracts
     address[65536] internal proxyPaths_;
         
-    // Address of the current dex protocol authority. Can be transfered
+    // Address of the current dex protocol authority. Can be transferred
     address internal authority_;
 
     /**************************************************************/
@@ -172,7 +172,7 @@ library CrocSlots {
         
     // The slots of the currently attached sidecar proxy contracts. These are set by
     // covention and should be expanded over time as more sidecars are installed. For
-    // backwards compatibility, upgradears should never break existing interface on
+    // backwards compatibility, upgraders should never break existing interface on
     // a pre-existing proxy sidecar.
     uint16 constant BOOT_PROXY_IDX = 0;
     uint16 constant SWAP_PROXY_IDX = 1;

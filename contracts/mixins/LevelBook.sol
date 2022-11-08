@@ -220,7 +220,7 @@ contract LevelBook is TickCensus {
      * @param poolIdx The hash key specifying the pool being operated on.
      * @param currentTick The price tick of the curve's current price
      * @param lowerTick The prick tick of the lower boundary of the range order
-     * @param lowerTick The prick tick of the upper boundary of the range order
+     * @param upperTick The prick tick of the upper boundary of the range order
      * @param feeGlobal The cumulative rewards accumulated to a single unit of 
      *                  concentrated liquidity that was active since pool inception.
      *

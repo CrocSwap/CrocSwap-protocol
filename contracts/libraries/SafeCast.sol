@@ -23,7 +23,7 @@ library SafeCast {
     }
 
     /// @notice Cast a uint192 to a uint128, revert on overflow
-    /// @param y The uint182 to be downcasted
+    /// @param y The uint192 to be downcasted
     /// @return z The downcasted integer, now type uint128
     function toUint128By192(uint192 y) internal pure returns (uint128 z) {
         unchecked { // Explicit bounds check

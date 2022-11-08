@@ -163,7 +163,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
     /* @notice Like claim, but ignores the Merkle proof (either because the user wants to
      *         avoid the gas cost or isn't bothered to recover the history). This results
      *         in the earned liquidity fees being forfeit, but the user still recovers the
-     *         full principal of the undrlying order.
+     *         full principal of the underlying order.
      *
      * @param pool The pool index.
      * @param loc The location the knockout liquidity is being claimed from
@@ -176,7 +176,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         (int128 baseFlow, int128 quoteFlow) {
         (uint32 pivotTime) = abi.decode(args, (uint32));
         (baseFlow, quoteFlow) = recoverKnockout(loc, pivotTime, pool);
-        // No need to commit curve becuase recover doesn't touch curve.
+        // No need to commit curve because recover doesn't touch curve.
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

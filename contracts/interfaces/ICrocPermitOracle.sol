@@ -25,7 +25,7 @@ interface ICrocPermitOracle {
      *                a swap fee equivalent to @poolFee minus [value-1]. (I.e. a return value
      *                of 1 indicates the swap is allowed but with 0 discount, a return value of 101
      *                is a swap fee discount of [101 - 1] = 100) This allows a permit oracle to 
-     *                disriminate swap fees on a per call or user basis. */
+     *                discriminate swap fees on a per call or user basis. */
     function checkApprovedForCrocPool (address user, address sender,
                                        address base, address quote,
                                        Directives.AmbientDirective calldata ambient,

@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "hardhat/console.sol";
 
-/* @notice Defines structures and functions necessary track to knockout liquidity. 
+/* @notice Defines structures and functions necessary to track knockout liquidity. 
  *         Knockout liquidity works like standard concentrated range liquidity, *except*
  *         the position becomes inactive once the price of the curve breaches a certain
  *         tick pivot. In that sense knockout liquidity behaves like a "non-reversible
@@ -114,7 +114,7 @@ library KnockoutLiq {
     /* @notice Encodes a hash key for a knockout position. 
      * @param loc The location of the knockout position
      * @param pool The hash index of the AMM pool.
-     * @param owner The claimint of the liquidity position.
+     * @param owner The claimant of the liquidity position.
      * @param pivotTime The timestamp of when the pivot tranche was created
      * @return Unique hash key to position. */
     function encodePosKey (KnockoutPosLoc memory loc,
@@ -149,7 +149,7 @@ library KnockoutLiq {
      *      Even if an attacker is the block builder and can manipulate blockhash, they 
      *      can only control as many bits of blockhash entropy as SHA256 hashes they can 
      *      calculate in O(block time). Practically speaking an attacker will not be able
-     *      to calculate more than 2^100 hashes hashes at the scale of block times. 
+     *      to calculate more than 2^100 hashes at the scale of block times. 
      *      Therefore this salt injects a minimum of 60 bits of uncontrollable entropy, 
      *      and raises the cost of a long-range collision attack to 2^140 hashes, which 
      *      is outright infeasible. */
@@ -199,7 +199,7 @@ library KnockoutLiq {
      *              and includes the encoded 96-bit chain entries (see encodeChainLink())
      *              up to the current Merkle state.
      *
-     * @return The 32-bit Knockout tranche pivot and 64-bit fee mileage at the start of
+     * @return The 32-bit Knockout tranche pivot time and 64-bit fee mileage at the start of
      *         the proof. */
     function proveHistory (KnockoutMerkle memory merkle, uint160 proofRoot,
                            uint256[] memory proof)
@@ -230,10 +230,10 @@ library KnockoutLiq {
 
     /* @notice Verifies that a given knockout location is valid relative to the curve
      *         price and the pool's current knockout parameters. If not, the call will
-     *         reverty
+     *         revert
      *
      * @param loc The location for the proposed knockout liquidity candidate.
-     * @param priceTick The tick index of the curv'es current price.
+     * @param priceTick The tick index of the curves current price.
      *
      * @param loc The tightly packed knockout parameters related to the pool. The fields
      *            are set in the following order from most to least significant bit:
@@ -260,7 +260,7 @@ library KnockoutLiq {
                 spreadOkay(loc, priceTick, inside, yonder), "KV");
     }
 
-    /* @notice Evaluates whether the placement and width of a knockout pivot candidates
+    /* @notice Evaluates whether the placement and width of a knockout pivot candidate
      *         conforms to the grid parameters. */
     function gridOkay (KnockoutPosLoc memory loc, uint8 widthBits, bool mustBeOnGrid)
         private pure returns (bool) {

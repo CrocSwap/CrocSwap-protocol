@@ -370,7 +370,7 @@ library CurveRoll {
         counter = counter + ROUND_PRECISION_WEI;
     }
 
-    /* @notice Same as signFixed, but used for the flow from a price target swap leg. */
+    /* @notice Same as signFlow, but used for the flow from a price target swap leg. */
     function signFixed (uint128 flowMagn, uint128 counterMagn,
                         bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {
@@ -382,7 +382,7 @@ library CurveRoll {
     }
 
     /* @notice Takes an unsigned flow magntiude and correctly signs it based on the
-     *         directiona and denomination of the flows. */
+     *         directional and denomination of the flows. */
     function signMagn (uint128 flowMagn, uint128 counterMagn,
                        bool inBaseQty, bool isBuy)
         private pure returns (int128 flow, int128 counter) {

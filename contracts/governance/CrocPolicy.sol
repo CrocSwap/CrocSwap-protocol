@@ -10,7 +10,7 @@ import '../vendor/compound/Timelock.sol';
  * @notice Intermediates between the dex mechanism inside CrocSwapDex and the top-level
  *         protocol governance. Governance sets policy, which controls the parameters
  *         inside the dex mechanism. All policy routes through calls to protocolCmd() 
- *         method in CrocSwapDex. Policy an be either through governance resolutions, 
+ *         method in CrocSwapDex. Policy can be either through governance resolutions, 
  *         which directly call protocolCmd() with a preset command. Or policy can be
  *         set based on rules, which allow arbitrary oracles to independently invoke 
  *         protocolCmd() for some restricted subset of command types. */
@@ -160,14 +160,14 @@ contract CrocPolicy is ICrocMaster {
     }
 
     /* @notice Croc policy rules are set on a per address basis. Each address 
-     *         corresponds to a smart contract, which is authorized to invoke one of 
+     *         corresponds to a smart contract, which is authorized to invoke one or 
      *         more protocol commands on the underlying CrocSwapDex contract. 
      * 
      * @param cmdFlags_ A vector of boolean flags. true entry at index X indicates
      *                  that the policy conduit is authorized to invoke protocol
      *                  command code X (192 possible codes).
-     * @param mandateTime_ A pre-commited time that the policy will remain in place. Zero
-     *                     indicates no mandata and can be changed by ops governance at
+     * @param mandateTime_ A pre-committed time that the policy will remain in place. Zero
+     *                     indicates no mandate and can be changed by ops governance at
      *                     any time. Policy can be strengthened in a mandate, but only
      *                     weakened by treasury governance. 
      * @param expiryOffset_ A maximum TTL for the policy to be in place relative to 
@@ -201,7 +201,7 @@ contract CrocPolicy is ICrocMaster {
     }
 
     /* @notice Called by ops authority to set or update a new policy rules. The only
-     *         restriction is that authroity to set a protocol command type cannot be
+     *         restriction is that authority to set a protocol command type cannot be
      *         revoked before the mandate time.
      *
      * @param conduit The address of the conduit oracle this policy rule applies to.

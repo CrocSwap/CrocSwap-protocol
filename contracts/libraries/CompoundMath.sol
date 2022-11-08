@@ -46,7 +46,7 @@ library CompoundMath {
      * */
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
-        // but the angel's share becomes unreasonble. 
+        // but the angel's share becomes unreasonable. 
         require(x64 < FixedPoint.Q48);
 
         unchecked {
@@ -63,7 +63,7 @@ library CompoundMath {
     }
 
     /* @notice Computes the result from compounding two cumulative growth rates.
-     * @dev    Rounds down from the real value. Caps teh result if type exceeds the max
+     * @dev    Rounds down from the real value. Caps the result if type exceeds the max
      *         fixed-point value.
      * @param x The compounded growth rate as in (1+x). Represted as Q16.48 fixed-point.
      * @param y The compounded growth rate as in (1+y). Represted as Q16.48 fixed-point.
@@ -87,7 +87,7 @@ library CompoundMath {
      * @param val The fixed price representing the starting value that we want
      *            to back out a pre-growth seed from.
      * @param deflator The compounded growth rate to back out, as in (1+g). Represented
-     *                  as Q16.48 fixed-point
+     *                 as Q16.48 fixed-point
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */
     function compoundShrink (uint64 val, uint64 deflator) internal
@@ -125,7 +125,7 @@ library CompoundMath {
         }
     }
 
-    /* @notice Calculates an final price from applying a growth rate to a starting price.
+    /* @notice Calculates a final price from applying a growth rate to a starting price.
      * @dev    Always rounds in the direction of @shiftUp
      * @param price The starting price to be compounded. Q64.64 fixed point.
      * @param growth The compounded growth rate to apply, as in (1+g). Represented
@@ -134,7 +134,7 @@ library CompoundMath {
      *                greater. If false, compounds the price down so the result will be
      *                smaller than the original price.
      * @returns The post-growth price as in price*(1+g) (or price*(1-g) if shiftUp is 
-     *          false). Q64.64 always founded in the direction of shiftUp. */
+     *          false). Q64.64 always rounded in the direction of shiftUp. */
     function compoundPrice (uint128 price, uint64 growth, bool shiftUp) internal
         pure returns (uint128) {
         unchecked {
@@ -176,7 +176,7 @@ library CompoundMath {
      * @dev    Rounds down from the real value.
      * @param liq The post-inflated liquidity as unsigned integer
      * @param growth Cumulative growth rate as Q16.48 fixed-point
-     * @return The ending value = liq/* (1 + growth). Rounded down to nearest
+     * @return The ending value = liq / (1 + growth). Rounded down to nearest
      *         integer value */
     function deflateLiqSeed (uint128 liq, uint64 growth)
         internal pure returns (uint128) {

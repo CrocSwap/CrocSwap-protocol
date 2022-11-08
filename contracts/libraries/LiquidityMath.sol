@@ -99,13 +99,13 @@ library LiquidityMath {
         return lots & KNOCKOUT_FLAG_MASK > 0;
     }
 
-    /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
+    /* @notice Truncates an existing liquidity quantity into a quantity that's a multiple
      *         of the 2048-multiplier defining even-sized lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
         return (liq >> LOT_ACTIVE_BITS) << LOT_ACTIVE_BITS;
     }
 
-    /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
+    /* @notice Truncates an existing liquidity quantity into a quantity that's a multiple
      *         of the 2048-multiplier defining even-sized lots of liquidity, but rounds up 
      *         to the next multiple of 2048. */
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128 result) {
@@ -118,13 +118,13 @@ library LiquidityMath {
         }
     }
 
-    /* @notice Gives a number of lots of liquidity converts to raw liquidity value. */
+    /* @notice Given a number of lots of liquidity converts to raw liquidity value. */
     function lotsToLiquidity (uint96 lots) internal pure returns (uint128) {
         uint96 realLots = lots & ~KNOCKOUT_FLAG_MASK;
         return uint128(realLots) << LOT_SIZE_BITS;
     }
 
-    /* @notice Given a positive and negative detla lots value net out the raw liquidity
+    /* @notice Given a positive and negative delta lots value net out the raw liquidity
      *         delta. */
     function netLotsOnLiquidity (uint96 incrLots, uint96 decrLots) internal pure
         returns (int128) {
@@ -169,14 +169,14 @@ library LiquidityMath {
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
         private pure returns (uint64) {
         unchecked { // Intermediate results will always fit in 256-bits
-        // Can safely cast, because result will always be smaller than origina since
+        // Can safely cast, because result will always be smaller than original since
         // weight is less than total.
         return uint64(uint256(mileage) * uint256(weight) / uint256(total));
         }
     }
 
     /* @dev Computes a rounding safe calculation of the accumulated rewards rate based on
-     *      a beggining and end mileage counter. */
+     *      a beginning and end mileage counter. */
     function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) internal pure
         returns (uint64) {
         uint64 REWARD_ROUND_DOWN = 2;

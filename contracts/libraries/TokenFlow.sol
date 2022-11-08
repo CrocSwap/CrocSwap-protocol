@@ -7,7 +7,7 @@ import './Chaining.sol';
 
 /* @title Token flow library
  * @notice Provides a facility for joining token flows for trades that occur on an 
- *         arbitrary length chain of overlapping pairs. */
+ *         arbitrary long chain of overlapping pairs. */
 library TokenFlow {
 
     /* @notice Represents the current hop within a chain of pair hops.
@@ -28,8 +28,8 @@ library TokenFlow {
 
     /* @notice Moves the PairSeq cursor object onto the next pair in a hop.
      *
-     * @dev    Note tthat this doesn't process, roll or reset flows. All of the 
-     *         bookeeping related to this and settlement should be done *before* calling
+     * @dev    Note that this doesn't process, roll or reset flows. All of the 
+     *         bookkeeping related to this and settlement should be done *before* calling
      *         this on the next pair. 
      *
      * @param seq The cursor object, pair tokens will be updated after call.

@@ -10,16 +10,16 @@ library PoolSpecs {
 
     /* @notice Specifcations of the parameters of a single pool type. Any given pair
      *         may have many different pool types, each of which may operate as segmented
-     *         markts with different underlying behavior to the AMM. 
+     *         markets with different underlying behavior to the AMM. 
      *
      * @param schema_ Placeholder that defines the structure of the poolSpecs object in
-     *                in storage. Becuase slots initialize zero, 0 is used for an 
-     *                unitializez or disabled pool. 1 is the only currently used schema
+     *                in storage. Because slots initialize zero, 0 is used for an 
+     *                unitialized or disabled pool. 1 is the only currently used schema
      *                (for the below struct), but allows for upgradeability in the future
      *
      * @param feeRate_ The overall fee (liquidity fees + protocol fees inclusive) that
      *            swappers pay to the pool as a fraction of notional. Represented as an 
-     *            integer representing hundredeths of a basis point. I.e. a 0.25% fee 
+     *            integer representing hundredths of a basis point. I.e. a 0.25% fee 
      *            would be 250000
      *
      * @param protocolTake_ The fraction of the fee rate that goes to the protocol fee 
@@ -37,7 +37,7 @@ library PoolSpecs {
      *                   E.g. a value of 5 equates to a minimum TTL of 50 seconds.
      *                   Attempts to burn or partially burn an LP position in less than
      *                   N seconds (as measured in block.timestamp) after a position was
-     *                   minted (or had its liquidity increased) will revent. If set to
+     *                   minted (or had its liquidity increased) will revert. If set to
      *                   0, atomically flashed liquidity that mints->burns in the same
      *                   block is enabled.
      *
@@ -116,7 +116,7 @@ library PoolSpecs {
      *
      * @dev    The oracle (if enabled on pool settings) is always deterministically based
      *         on the first 160-bits of the pool type value. This means users can know 
-     *         ahead of time if a pool is can be oracled by checking the bits in the pool
+     *         ahead of time if a pool can be oracled by checking the bits in the pool
      *         index. */
     function oracleForPool (uint256 poolIdx, uint8 oracleFlags)
         internal pure returns (address) {

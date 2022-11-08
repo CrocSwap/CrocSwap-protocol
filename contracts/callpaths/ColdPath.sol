@@ -113,7 +113,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     /* @notice Initializes the pool type for the pair.
      * @param base The base token in the pair.
      * @param quote The quote token in the pair.
-     * @param poolIdx The index of the pool type to initialiaze.
+     * @param poolIdx The index of the pool type to initialize.
      * @param price The price to initialize the pool. Represented as square root price in
      *              Q64.64 notation. */
     function initPool (bytes calldata cmd) private {
@@ -129,7 +129,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
     }
 
-    /* @notice Disables an existing pool template. Any previously insatiated pools on
+    /* @notice Disables an existing pool template. Any previously instantiated pools on
      *         this template will continue exist, but calling this will prevent any new
      *         pools from being created on this template. */
     function disableTemplate (bytes calldata input) private {

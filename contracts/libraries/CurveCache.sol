@@ -19,8 +19,8 @@ library CurveCache {
      *         cache, and associated bookeeping.
      * 
      * @param curve_ The underlying CurveState object.
-     * @params isTickClean_ If true, than the current price tick value is valid to use.
-     * @params unsafePriceTick_ The prick tick value (if previously cached). User should
+     * @params isTickClean_ If true, then the current price tick value is valid to use.
+     * @params unsafePriceTick_ The price tick value (if previously cached). User should
      *              not access directly, but use the pullPriceTick() helper function. */
     struct Cache {
         CurveMath.CurveState curve_;
@@ -28,7 +28,7 @@ library CurveCache {
         int24 unsafePriceTick_;
     }
 
-    /* @notice Give a curve cache instance retrieves the price tick, if cached, or 
+    /* @notice Given a curve cache instance retrieves the price tick, if cached, or 
      *         calculates and cached if cache is dirty. */
     function pullPriceTick (Cache memory cache) internal pure returns (int24) {
         if (!cache.isTickClean_) {
@@ -39,7 +39,7 @@ library CurveCache {
     }
 
     /* @notice Call on a curve cache object, when the underlying price has changed, and
-     *         thereore the cache should be conisdered dirty. */
+     *         therefore the cache should be conisdered dirty. */
     function dirtyPrice (Cache memory cache) internal pure {
         cache.isTickClean_ = false;
     }
