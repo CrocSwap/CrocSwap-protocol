@@ -48,7 +48,7 @@ contract AgentMask is StorageLayout {
      * @param client The client who's order the router is calling on behalf of.
      * @param salt   The proxy sidecar callpath the agent is requesting to call on the user's behalf */
     modifier reEntrantApproved (address client, uint16 callPath) {
-        casAgent(client, msg.sender, callPath);
+        stepAgentNonce(client, msg.sender, callPath);
         require(lockHolder_ == address(0));
         lockHolder_ = client;
         _;
@@ -130,7 +130,7 @@ contract AgentMask is StorageLayout {
         require(block.timestamp <= deadline);
         require(block.timestamp >= alive);
         require(relayer == address(0) || relayer == msg.sender || relayer == tx.origin);
-        casNonce(client, salt, nonce);
+        stepNonce(client, salt, nonce);
     }
 
     /* @notice Verifies the supplied signature matches the EIP-712 compatible data.
@@ -257,7 +257,7 @@ contract AgentMask is StorageLayout {
      * @param client The client the agent is making the call on behalf of.
      * @param agent The address of the external agent making the call.
      * @param callPath The proxy sidecar the call is being made on. */
-    function casAgent (address client, address agent, uint16 callPath) internal {
+    function stepAgentNonce (address client, address agent, uint16 callPath) internal {
         UserBalance storage bal = userBals_[agentKey(client, agent, callPath)];
         if (bal.agentCallsLeft_ < type(uint32).max) {
             require(bal.agentCallsLeft_ > 0);
@@ -272,7 +272,7 @@ contract AgentMask is StorageLayout {
      * @param salt The multidimensional nonce dimension the call is being applied to.
      * @param nonce The nonce the EIP-712 message is signed for. This must match the 
      *              current nonce or the transaction will fail. */
-    function casNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
+    function stepNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
         UserBalance storage bal = userBals_[nonceKey(client, nonceSalt)];
         require(bal.nonce_ == nonce);
         ++bal.nonce_;

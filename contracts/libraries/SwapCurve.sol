@@ -90,12 +90,12 @@ library SwapCurve {
      *                to liquidity providers in the pool (in the opposite side tokens of
      *                the swap denomination).
      * @return protoFee The total fee accumulated as CrocSwap protocol fees. */
-    function vigOverSwap (CurveMath.CurveState memory curve, uint128 swapQty,
-                          uint16 feeRate, uint8 protoTake,
-                          bool inBaseQty, uint128 limitPrice)
+    function calcFeeOverSwap (CurveMath.CurveState memory curve, uint128 swapQty,
+                              uint16 feeRate, uint8 protoTake,
+                              bool inBaseQty, uint128 limitPrice)
         internal pure returns (uint128 liqFee, uint128 protoFee) {
         uint128 flow = curve.calcLimitCounter(swapQty, inBaseQty, limitPrice);
-        (liqFee, protoFee) = vigOverFlow(flow, feeRate, protoTake);
+        (liqFee, protoFee) = calcFeeOverFlow(flow, feeRate, protoTake);
     }
 
     /* @notice Give a pre-determined price limit, executes a fixed amount of swap 
@@ -243,7 +243,7 @@ library SwapCurve {
                            uint128 swapQty, PoolSpecs.Pool memory pool,
                            bool inBaseQty, uint128 limitPrice) pure private
         returns (int128, int128, uint128) {
-        (uint128 liqFees, uint128 exchFees) = vigOverSwap
+        (uint128 liqFees, uint128 exchFees) = calcFeeOverSwap
             (curve, swapQty, pool.feeRate_, pool.protocolTake_, inBaseQty, limitPrice);
                 
         /* We can guarantee that the price shift associated with the liquidity
@@ -278,7 +278,7 @@ library SwapCurve {
 
     /* @notice Given a fixed flow and a fee rate, calculates the owed liquidty and 
      *         protocol fees. */
-    function vigOverFlow (uint128 flow, uint16 feeRate, uint8 protoProp)
+    function calcFeeOverFlow (uint128 flow, uint16 feeRate, uint8 protoProp)
         private pure returns (uint128 liqFee, uint128 protoFee) {
         unchecked {
             uint256 FEE_BP_MULT = 1_000_000;
