@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Concentrated liquidity AMMs running on open blockchains are subject to a particular attack vector known as ***just-in-time (JIT) liquidity***. In this model a JIT attacker observes a pending swap order in the mempool. The JIT attacker then colludes with the block builder to mint a highly concentrated liquidity in the pool immediately before the swap, then burn that liquidity position immediately after the swap. This is process constitutes a ************JIT sandwich************.
+Concentrated liquidity AMMs running on open blockchains are subject to a particular attack vector known as *just-in-time (JIT) liquidity*. In this model a JIT attacker observes a pending swap order in the mempool. The JIT attacker then colludes with the block builder to mint a highly concentrated liquidity in the pool immediately before the swap, then burn that liquidity position immediately after the swap. This is process constitutes a *JIT sandwich*.
 
 Concentrated liquidity is highly capital efficient, especially for very narrow range orders that can be used when the JIT attacker knows the next swap price ahead of time. Therefore with a relatively small amount of capital, the JIT liquidity can temporarily make up a large fraction of the active liquidity at the time of the swap, earning a large fraction of the pro-rata fees paid by the swap. 
 
@@ -16,7 +16,7 @@ Since every transaction in a classical JIT sandwich occurs in the same block, an
 
 ## Multiblock JIT
 
-A ************************multi-block JIT sandwich************************ is similar to a classical *******JIT sandwich******* but occurs when the JIT attacker coordinates with a block builder who has control over multiple sequential blocks. This is common in PoS consensus systems such as Ethereum, since any validator will probabilistically be assigned sequential blocks some fraction of the time based on their stake weight. 
+A *multi-block JIT sandwich* is similar to a classical *JIT sandwich* but occurs when the JIT attacker coordinates with a block builder who has control over multiple sequential blocks. This is common in PoS consensus systems such as Ethereum, since any validator will probabilistically be assigned sequential blocks some fraction of the time based on their stake weight. 
 
 Multi-block JIT is still risk free, because the block builder can guarantee that no swaps on the pool occur between the mint and burn part of the transaction. Unlike a single-block JIT sandwich the blocktime of the burn will be greater than the mint blocktime since it occurs in a later block.
 
