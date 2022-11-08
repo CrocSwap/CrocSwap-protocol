@@ -53,7 +53,10 @@ contract DepositDesk is SettleLayer {
      *
      * @param recv  The receiver where the collateral will be sent to.
      * @param size  The amount to be paid out. Owner's balance will be decremented 
-     *              accordingly.
+     *              accordingly. Be aware this uses the following convention:
+     *                  Positive - pay out the fixed size amount
+     *                  Zero     - pays out the entire balance
+     *                  Negative - pays out the entire balance *excluding* the size amount
      * @param token The ERC20 address of the token (or native Ether if set to 0x0) being
      *              disbursed. */
     function disburseSurplus (address recv, int128 size, address token) internal {
@@ -69,9 +72,11 @@ contract DepositDesk is SettleLayer {
 
     /* @notice Transfers surplus collateral from one user to another.
      * @param to The user account the surplus collateral will be sent from
-     * @param size The total amount of surplus collateral to send. This can also be
-     *             set to 0 to send the entire balance, or to a negative number to send
-     *             the entire balance *except* for some remaining amount.
+     * @param size The total amount of surplus collateral to send. 
+     *             Be aware this uses the following convention:
+     *                  Positive - pay out the fixed size amount
+     *                  Zero     - pays out the entire balance
+     *                  Negative - pays out the entire balance *excluding* the size amount
      * @param token The address of the token (or virtual token) the surplus collateral
      *              is sent for. */
     function transferSurplus (address to, int128 size, address token) internal {
@@ -91,9 +96,11 @@ contract DepositDesk is SettleLayer {
      *                 0 for the primary surplus collateral balance. 
      * @param toSalt The side pocket salt the surplus balance is being moved to. Use 0 for
      *               the primary surplus collateral balance.
-     * @param size The total amount of surplus collateral to send. This can also be
-     *             set to 0 to send the entire balance, or to a negative number to send
-     *             the entire balance *except* for some remaining amount.
+     * @param size The total amount of surplus collateral to send.  
+     *             Be aware this uses the following convention:
+     *                  Positive - pay out the fixed size amount
+     *                  Zero     - pays out the entire balance
+     *                  Negative - pays out the entire balance *excluding* the size amount
      * @param token The address of the token (or virtual token) the surplus collateral
      *              is sent for. */
     function sidePocketSurplus (uint256 fromSalt, uint256 toSalt, int128 size,
