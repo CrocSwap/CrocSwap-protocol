@@ -294,8 +294,8 @@ contract AgentMask is StorageLayout {
      * @param recv The receiver of the tip. This will always be paid to this account's
      *             surplus collateral balance. Also supports generic magic values for 
      *             generic relayer payment:
-     *                 0x10 - Paid to the msg.sender, regardless of who made the dex call
-     *                 0x20 - Paid to the tx.origin, regardless of who sent tx. */
+     *                 0x100 - Paid to the msg.sender, regardless of who made the dex call
+     *                 0x200 - Paid to the tx.origin, regardless of who sent tx. */
     function tipRelayer (bytes memory tipCmd) internal {
         if (tipCmd.length == 0) { return; }
         
