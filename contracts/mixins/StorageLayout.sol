@@ -20,7 +20,20 @@ import '../libraries/KnockoutLiq.sol';
  *    contracts. */
 contract StorageLayout {
 
-    // Re-entant lock. Should always be 0x0 at rest
+    // Re-entrant lock. Should always be reset to 0x0 after the end of every
+    // top-level call. Any top-level call should fail on if this value is non-
+    // zero.
+    //
+    // Inside a call this address is always set to the beneficial owner that
+    // the call is being made on behalf of. Therefore any positions, tokens,
+    // or liquidity can only be accessed if and only if they're owned by the
+    // value lockHolder_ is currently set to.
+    //
+    // In the case of third party relayer or router calls, this value should
+    // always be set to the *client* that the call is being made for, and never
+    // the msg.sender caller that is acting on the client behalf's. (Of course
+    // for security, third party calls made on a client's behalf must always
+    // be authorized by the client either by pre-approval or signature.)
     address internal lockHolder_;
 
     // Indicates whether a given protocolCmd() call is operating in escalated

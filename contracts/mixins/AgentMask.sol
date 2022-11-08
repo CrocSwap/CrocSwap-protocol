@@ -13,7 +13,10 @@ contract AgentMask is StorageLayout {
     using SafeCast for uint256;
     
     /* @notice Standard re-entrant gate for an unprivileged order called directly
-     *         by the user. */
+     *         by the user.
+     *
+     * @dev    lockHolder_ account is set to msg.sender, and therefore this call will
+     *         touch the positions, tokens and owned by msg.sender. */
     modifier reEntrantLock() {
         require(lockHolder_ == address(0));
         lockHolder_ = msg.sender;
@@ -37,6 +40,11 @@ contract AgentMask is StorageLayout {
      *         third party client. Requires the user to have previously approved the 
      *         router.
      *
+     * @dev    lockHolder_ is set to the client address directly supplied by the caller.
+     *         (The client address must always directly approve the msg.sender contract to
+     *         act on its behalf.) Therefore this call (if approved) will touch the positions,
+     *         tokens, and liquidity owned by client address.
+     *
      * @param client The client who's order the router is calling on behalf of.
      * @param salt   The proxy sidecar callpath the agent is requesting to call on the user's behalf */
     modifier reEntrantApproved (address client, uint16 callPath) {
@@ -49,7 +57,12 @@ contract AgentMask is StorageLayout {
     }
 
     /* @notice Re-entrant gate for a relayer calling an order that was signed off-chain
-     *         using the EIP-712 standard. */
+     *         using the EIP-712 standard.
+     *
+     * @dev    lockHolder_ is set to the address whose private key signed the ECDSA 
+     *         signature. Regardless of which address is msg.sender, all operations inside
+     *         this call will touch the positions, tokens, and liquidity owned by the
+     *         signing address.  */
     modifier reEntrantAgent (CrocRelayerCall memory call,
                              bytes calldata signature) {
         require(lockHolder_ == address(0));
@@ -120,7 +133,18 @@ contract AgentMask is StorageLayout {
         casNonce(client, salt, nonce);
     }
 
-    /* @notice Verifies the supplied signature matches the EIP-712 compatible data. */
+    /* @notice Verifies the supplied signature matches the EIP-712 compatible data.
+     *
+     * @dev Note that the ECDSA signature is malleable, because (v, r, s) are unrestricted.
+     *      However this is not an issue, because the raw signature itself is not used as an
+     *      index or nonce in any form. A malicious attacker *could* change the signature, but
+     *      could not change the plaintext checksum being signed. 
+     * 
+     *      If a malleable signature was submitted, either it would arrive before the honest 
+     *      signature, in which case the call parameters would be identical. Or it would arrive after
+     *      the honest signature, in which case the call parameter would be rejected becaue it
+     *      used an expired nonce. In no state of the world does a malleable signature make a 
+     *      replay attack possible. */
     function verifySignature (CrocRelayerCall memory call,
                               bytes calldata signature)
         internal view returns (address client) {
