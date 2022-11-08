@@ -57,7 +57,10 @@ library LiquidityMath {
     /* In certain contexts we need to represent liquidity, but don't have the full 128 
      * bits or precision. The compromise is to use "lots" of liquidity, which is liquidity
      * represented as multiples of 1024. Usually in those contexts, max lots is capped at
-     * 2^96 (equivalent to 2^108 of liquidity.) */
+     * 2^96 (equivalent to 2^108 of liquidity.) 
+     *
+     * More explanation, along with examples can be found in the documentation at 
+     * docs/LiquidityLots.md in the project respository. */
     uint16 constant LOT_SIZE = 1024;
     uint8 constant LOT_SIZE_BITS = 10;
     
@@ -67,7 +70,10 @@ library LiquidityMath {
      * calls. The aggregate knockout liquidity will always sum to an odd number of lots
      * whereas all vanilla resting liquidity will have an even number of lots. That
      * means we can test whether any level has knockout liquidity simply by seeing if the
-     * the total sum is an odd number. */
+     * the total sum is an odd number. 
+     *
+     * More explanation, along with examples can be found in the documentation at 
+     * docs/LiquidityLots.md in the project respository. */
     uint96 constant KNOCKOUT_FLAG_MASK = 0x1;
     uint8 constant LOT_ACTIVE_BITS = 11;
 
@@ -94,14 +100,14 @@ library LiquidityMath {
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
-     *         of the 1024-multiplier defining lots of liquidity. */
+     *         of the 2048-multiplier defining even-sized lots of liquidity. */
     function shaveRoundLots (uint128 liq) internal pure returns (uint128) {
         return (liq >> LOT_ACTIVE_BITS) << LOT_ACTIVE_BITS;
     }
 
     /* @notice Trunacates an existing liquidity quantity into a quantity that's a multiple
-     *         of the 1024-multiplier defining lots of liquidity, but rounds up to the
-     *         next multiple. */
+     *         of the 2048-multiplier defining even-sized lots of liquidity, but rounds up 
+     *         to the next multiple of 2048. */
     function shaveRoundLotsUp (uint128 liq) internal pure returns (uint128 result) {
         unchecked {
         require((liq & 0xfffffffffffffffffffffffffffff800) != 0xfffffffffffffffffffffffffffff800, "overflow");
