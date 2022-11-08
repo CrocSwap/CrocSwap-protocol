@@ -163,6 +163,7 @@ library Chaining {
      *
      * @param roll Indicates the context for the type of roll target that the call 
      *   should target. (See RollTarget struct above.)
+     * @param dir The ambient liquidity directive the liquidity is applied to
      * @param curve The liquidity curve that is being minted or burned against.
      * @param flow The previously accumulated flow on this pair. Based on the context 
      *   above, this function will target the accumulated flow contained herein.
@@ -196,6 +197,7 @@ library Chaining {
      *
      * @param roll Indicates the context for the type of roll target that the call 
      *   should target. (See RollTarget struct above.)
+     * @param bend The concentrated range order directive the liquidity is applied to
      * @param curve The liquidity curve that is being minted or burned against.
      * @param flow The previously accumulated flow on this pair. Based on the context 
      *   above, this function will target the accumulated flow contained herein.
@@ -233,7 +235,7 @@ library Chaining {
      * @param isAdd Indicates whether the liquidity is being added or removed. Necessary
      *              to make sure that we round conservatively.
      * @param priceRoot The current price in the pool.
-     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     * @param inBaseQty True if the collateral is a base token value, false if quote 
      *                  token.
      * @return The amount of liquidity, in sqrt(X*Y) units, supported by this 
      *         collateral. */
@@ -255,7 +257,7 @@ library Chaining {
      * @param lowTick The tick index of the lower bound of the concentrated liquidity 
      *                range.
      * @param highTick The tick index of the upper bound.
-     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     * @param inBaseQty True if the collateral is a base token value, false if quote 
      *                  token.
      * @return The amount of concentrated liquidity (in sqrt(X*Y) units) supported in
      *         the given tick range. */
@@ -416,7 +418,7 @@ library Chaining {
     /* @notice Given a fixed rolling gap, scales the next incremental size to achieve
      *         a specific user-defined target.
      *
-     * @param roll The rolling gap that exists prior to this leg of the long-form order.
+     * @param rollGap The rolling gap that exists prior to this leg of the long-form order.
      * @param rollType The type of rolling gap-fill to target (see indicator comments 
      *                 above)
      * @param target   The rolling gap-fill target, contextualized by rollType value.

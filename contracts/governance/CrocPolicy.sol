@@ -31,6 +31,7 @@ contract CrocPolicy is ICrocMaster {
     /* @notice Emitted whenever treasury authority runs a protocol command. 
      * @param minion The underlying receiver of the protocol command (i.e. the 
      *               CrocSwapDex contract).
+     * @param sudo If true, calls the command on CrocSwapDex with elevated privilege
      * @param cmd The command being called on the minion's protocolCmd() function. */
     event CrocResolutionTreasury (address minion, bool sudo, bytes cmd);
 
@@ -42,6 +43,7 @@ contract CrocPolicy is ICrocMaster {
 
     /* @notice Emitted when a new policy rule is set or updated.
      * @param conduit The policy conduit the rule applies to
+     * @param proxyPath The proxy sidecar index the policy can call
      * @param PolicyRule The policy rules set for this conduit (see PolicyRule comments
      *                   below). */
     event CrocPolicySet (address conduit, uint16 proxyPath, PolicyRule);
@@ -50,6 +52,7 @@ contract CrocPolicy is ICrocMaster {
      *         but can override a policy mandate time. Should not be called in normal
      *         course of operations.
      * @param conduit The policy conduit the rule applies to
+     * @param proxyPath The proxy sidecar index the policy can call
      * @param PolicyRule The policy rules set for this conduit (see PolicyRule comments
      *                   below). */
     event CrocPolicyForce (address conduit, uint16 proxyPath, PolicyRule);
@@ -111,6 +114,7 @@ contract CrocPolicy is ICrocMaster {
      *
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
+     * @param proxyPath The proxy sidecar index the policy calls
      * @param cmd    The content of the command passed to the protocolCmd() method. */
     function opsResolution (address minion, uint16 proxyPath,
                             bytes calldata cmd) opsAuth public {
@@ -123,6 +127,8 @@ contract CrocPolicy is ICrocMaster {
      *
      * @param minion The address of the underlying CrocSwapDex contract the command is
      *               called on.
+     * @param proxyPath The proxy sidecar index the policy calls
+     * @param sudo   If true, runs the call on CrocSwapDex with elevated privilege
      * @param cmd    The content of the command passed to the protocolCmd() method. */
     function treasuryResolution (address minion, uint16 proxyPath,
                                  bytes calldata cmd, bool sudo)
@@ -185,6 +191,7 @@ contract CrocPolicy is ICrocMaster {
      *         policy rules set.
      *
      * @param minion The address of the underlying CrocSwapDex contract
+     * @param proxyPath The proxy sidecar index for the policy being invoked
      * @param cmd    The content of the command passed to protocolCmd() */
     function invokePolicy (address minion, uint16 proxyPath, bytes calldata cmd) public {
         bytes32 ruleKey = keccak256(abi.encode(msg.sender, proxyPath));
@@ -198,6 +205,7 @@ contract CrocPolicy is ICrocMaster {
      *         revoked before the mandate time.
      *
      * @param conduit The address of the conduit oracle this policy rule applies to.
+     * @param proxyPath The proxy sidecar index the policy calls
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule (if any), assuming the transition is legal
      *                relative to the mandate. */    
@@ -222,6 +230,7 @@ contract CrocPolicy is ICrocMaster {
      *         mandate time. As such this should only be called in unusual circumstances.
      *
      * @param conduit The address of the conduit oracle this policy rule applies to.
+     * @param proxyPath The proxy sidecar index the policy calls
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
     function forcePolicy (address conduit, uint16 proxyPath, PolicyRule calldata policy)
@@ -236,6 +245,7 @@ contract CrocPolicy is ICrocMaster {
      *         mandate time. As such this should only be called in unusual circumstances.
      *
      * @param conduit The address of the conduit oracle this policy rule applies to.
+     * @param proxyPath The proxy sidecar index the policy calls
      * @param policy  The content of the updated policy rule. This will fully overwrite
      *                the previous policy rule. */
     function emergencyReset (address conduit, uint16 proxyPath,

@@ -53,9 +53,9 @@ library CurveMath {
      *
      * @param priceRoot_ The square root of the price ratio exchange rate between the
      *   base and quote-side tokens in the AMM curve. (represented in Q64.64 fixed point)
-     * @param ambientSeed_ The total ambient liquidity seeds in the current curve. 
+     * @param ambientSeeds_ The total ambient liquidity seeds in the current curve. 
      *   (Inflated by seed deflator to get efective ambient liquidity)
-     * @param concentrated_ The total concentrated liquidity active and in range at the
+     * @param concLiq_ The total concentrated liquidity active and in range at the
      *   current state of the curve.
      * @param seedDeflator_ The cumulative growth rate (represented as Q16.48 fixed
      *    point) of a hypothetical 1-unit of ambient liquidity held in the pool since
@@ -268,7 +268,7 @@ library CurveMath {
      * @param inBase If true, the collateral represents the base-side token in the pair.
      *               If false the quote side token.
      * @param priceX The price boundary of the concentrated liquidity position.
-     * @param priceX The price boundary of the concentrated liquidity position.
+     * @param priceY The other price boundary of the concentrated liquidity position.
      * @returns The total amount of liquidity supported by the collateral. */
     function liquiditySupported (uint128 collateral, bool inBase,
                                  uint128 priceX, uint128 priceY)

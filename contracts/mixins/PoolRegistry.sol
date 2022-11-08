@@ -118,11 +118,10 @@ contract PoolRegistry is StorageLayout {
      *                Represented as a multiple of 0.0001%.
      * @param tickSize The tick grid size for range orders in the pool. (Template can
      *                 also be disabled by setting this to zero.)
-     * @param permitOracle The address of the external permission oracle contract that
-     *                governs who and how can use the pool. If zero, the pool is 
-     *                permissionless.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
-     *                  rest before it can be burned. */
+     *                  rest before it can be burned.
+     * @param knockout  The knockout liquidity bit flags for the pool. (See KnockoutLiq library)
+     * @param oracleFlags The permissioned oracle flags for the pool. */
     function setPoolTemplate (uint256 poolIdx, uint16 feeRate, uint16 tickSize,
                               uint8 jitThresh, uint8 knockout, uint8 oracleFlags)
         internal {
@@ -156,14 +155,13 @@ contract PoolRegistry is StorageLayout {
      *
      * @param base The base-side token specification of the pair containing the pool.
      * @param quote The quote-side token specification of the pair containing the pool.
+     * @param poolIdx The pool type index value. 
      * @param feeRate The pool's exchange fee as a percent of notional swapped. 
      *                Represented as a multiple of 0.0001%.
-     * @param protocolTake The protocol's take rate on the pool's fees. (The rest goes to
-     *                liquidity rewards.) Specified as a fraction 1/n. Zero is a special
-     *                case that indicates the protocol fee is turned off.
      * @param tickSize The tick grid size for range orders in the pool.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
-     *                  rest before it can be burned. */
+     *                  rest before it can be burned.
+     * @param knockoutBits The knockout liquiidity parameter bit flags for the pool. */
     function setPoolSpecs (address base, address quote, uint256 poolIdx,
                            uint16 feeRate, uint16 tickSize, uint8 jitThresh,
                            uint8 knockoutBits) internal {
@@ -259,7 +257,9 @@ contract PoolRegistry is StorageLayout {
      *
      * @param req The user specificed price improvement request.
      * @param base The base-side token defining the pair.
-     * @param quote The quote-side token defining the pair. */
+     * @param quote The quote-side token defining the pair.
+     * @return The price grid improvement thresholds (if any) for off-grid liquidity 
+     *         positions. */
     function queryPriceImprove (Directives.PriceImproveReq memory req,
                                 address base, address quote)
         view internal returns (PriceGrid.ImproveSettings memory dest) {
@@ -277,7 +277,8 @@ contract PoolRegistry is StorageLayout {
      *
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
-     * @param poolIdx The pool type index. */
+     * @param poolIdx The pool type index.
+     * @return The current spec parameters for the pool. */
     function queryPool (address base, address quote, uint256 poolIdx)
         internal view returns (PoolSpecs.PoolCursor memory pool) {
         pool = PoolSpecs.queryPool(pools_, base, quote, poolIdx);
@@ -314,7 +315,8 @@ contract PoolRegistry is StorageLayout {
      *
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
-     * @param poolIdx The pool type index. */
+     * @param poolIdx The pool type index.
+     * @return Storage reference to the specs for the pool. */
     function selectPool (address base, address quote, uint256 poolIdx)
         private view returns (PoolSpecs.Pool storage pool) {
         pool = PoolSpecs.selectPool(pools_, base, quote, poolIdx);

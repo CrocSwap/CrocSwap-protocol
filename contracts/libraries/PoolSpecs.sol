@@ -41,6 +41,10 @@ library PoolSpecs {
      *                   0, atomically flashed liquidity that mints->burns in the same
      *                   block is enabled.
      *
+     * @param knockoutBits_ Defines the parameters for where and how knockout liquidity
+     *                      is allowed in the pool. (See KnockoutLiq library for a full
+     *                      description of the bit field.)
+     *
      * @param oracleFlags_ Bitmap flags to indicate the pool's oracle permission 
      *                     requirements. Current implementation only uses the least 
      *                     significant bit, which if on checks oracle permission on every

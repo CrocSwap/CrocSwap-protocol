@@ -55,8 +55,8 @@ library KnockoutLiq {
      * @param lots_ The total number of liquidity lots in the position. 
      * @param feeMileage_ The in-range cumulative fee mileage at the time the position was
      *                    created.
-     * @param timetamp_ The block time the position was created (or when liquidity was
-     *                  added to the position). */
+     * @param timestamp_ The block time the position was created (or when liquidity was
+     *                   added to the position). */
     struct KnockoutPos {
         uint96 lots_;
         uint64 feeMileage_;
@@ -86,7 +86,8 @@ library KnockoutLiq {
     /* @notice Encodes a hash key for a given knockout pivot point.
      * @param pool The hash index of the AMM pool.
      * @param isBid If true indicates the knockout pivot is on the bid side.
-     * @param tick The tick index of the knockout pivot. */
+     * @param tick The tick index of the knockout pivot.
+     * @return Unique hash key mapping to the pivot struct. */
     function encodePivotKey (bytes32 pool, bool isBid, int24 tick)
         internal pure returns (bytes32) {
         return keccak256(abi.encode(pool, isBid, tick));
@@ -112,9 +113,10 @@ library KnockoutLiq {
 
     /* @notice Encodes a hash key for a knockout position. 
      * @param loc The location of the knockout position
-     * @param pivotTime The timestamp of when the pivot tranche was created
      * @param pool The hash index of the AMM pool.
-     * @param owner The claimint of the liquidity position. */
+     * @param owner The claimint of the liquidity position.
+     * @param pivotTime The timestamp of when the pivot tranche was created
+     * @return Unique hash key to position. */
     function encodePosKey (KnockoutPosLoc memory loc,
                            bytes32 pool, address owner, uint32 pivotTime)
         internal pure returns (bytes32) {

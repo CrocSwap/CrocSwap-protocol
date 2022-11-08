@@ -30,6 +30,7 @@ contract MicroPaths is MarketSequencer {
      *
      * @param price The price of the curve. Represented as the square root of the exchange
      *              rate in Q64.64 fixed point
+     * @param priceTick The price tick index of the current price of the curve
      * @param seed The ambient liquidity seeds in the current curve.
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.
@@ -70,6 +71,7 @@ contract MicroPaths is MarketSequencer {
      *
      * @param price The price of the curve. Represented as the square root of the exchange
      *              rate in Q64.64 fixed point
+     * @param priceTick The price tick index of the current price of the curve
      * @param seed The ambient liquidity seeds in the current curve.
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.

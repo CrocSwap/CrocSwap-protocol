@@ -68,8 +68,8 @@ library PriceGrid {
     }
 
     /* @notice Returns true if the boundaries of a range order occur on the tick grid.
-     * @param lowTick The lower tick index of the range order.
-     * @param highTick The upper tick index of the range order.
+     * @param lowerTick The lower tick index of the range order.
+     * @param upperTick The upper tick index of the range order.
      * @param gridSize The grid size associated with the pool in ticks. */
     function isOnGrid (int24 lowerTick, int24 upperTick, uint16 gridSize)
         internal pure returns (bool) {

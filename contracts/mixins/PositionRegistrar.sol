@@ -147,6 +147,7 @@ contract PositionRegistrar is PoolRegistry {
      * @param poolIdx The hash key of the pool the position lives on.
      * @param lowerTick The lower tick of the LP position
      * @param upperTick The upper tick of the LP position.
+     * @param feeMileage The current accumulated fee rewards rate for the position range
      *
      * @return rewards The total number of ambient seeds to collect as rewards */
     function harvestPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
@@ -239,9 +240,9 @@ contract PositionRegistrar is PoolRegistry {
     /* @notice Changes the owner of an existing position without altering its properties
      *         in any other way. This has no impact from an aggregate liquidity and fee
      *         accumulation standpoint, and can otherwise be ignored downstream.
-     * @param poolIdx The index of the pool the position belongs to.
      * @param owner The bytes32 which currently owns the position.
      * @param receiver The bytes32 that ownership is being transferred to.
+     * @param poolIdx The index of the pool the position belongs to.
      * @param lowerTick The tick index of the lower boundary of the position. This
      *                  does *not* change during the ownership process.
      * @param upperTick The tick index of the upper boundary of the position. This

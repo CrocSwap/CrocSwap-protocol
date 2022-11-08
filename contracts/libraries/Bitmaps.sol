@@ -48,7 +48,8 @@ library Bitmaps {
 
     /* @notice Returns true if the bitmap's Nth bit slot is set.
      * @param bitmap - The 256 bit bitmap object.
-     * @param pos - The bitmap index to check. Value is left indexed starting at zero. */
+     * @param pos - The bitmap index to check. Value is left indexed starting at zero.
+     * @return True if the bit is set. */
     function isBitSet (uint256 bitmap, uint8 pos) pure internal returns (bool) {
         (uint idx, bool spill) = bitAfterTrunc(bitmap, pos, true);
         return !spill && idx == pos;
@@ -179,6 +180,7 @@ library Bitmaps {
     /* @notice The minimum and maximum 24-bit integers are used to represent -/+ 
      *   infinity range. We have to reserve these bits as non-standard range for when
      *   price shifts past the last representable tick.
+     * @param tick The tick index value being tested
      * @return True if the tick index represents a positive or negative infinity. */
     function isTickFinite (int24 tick) internal pure returns (bool) {
         return tick > type(int24).min &&

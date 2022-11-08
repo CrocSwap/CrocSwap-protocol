@@ -51,6 +51,12 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     /* @notice Final check at swap completion to verify that the non-fixed side of the 
      *         swap meets the user's minimum execution standards: minimum floor if output,
      *         maximum ceiling if input. 
+     * @param flow The resulting final token flows from the swap
+     * @param minOutput The minimum output (if sell-side token is fixed) *or* maximum inout
+     *                  (if buy-side token is fixed)
+     * @param isBuy  If true indicates the swap was a buy, i.e. paid base tokens to receive
+     *               quote tokens
+     * @param inBaseQty If true indicates the base-side was the fixed leg of the swap.
      * @return outFlow Returns the non-fixed side of the swap flow. */
     function pivotOutFlow (Chaining.PairFlow memory flow, uint128 minOutput,
                            bool isBuy, bool inBaseQty) private pure

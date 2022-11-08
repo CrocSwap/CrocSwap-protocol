@@ -100,7 +100,9 @@ contract LiquidityCurve is StorageLayout {
      * @param seeds The number of ambient seeds being added. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
-     *              rate on the curve. (See CurveMath.sol.) */
+     *              rate on the curve. (See CurveMath.sol.)
+     * @return  The base and quote token flows from the user required to add this amount
+     *          of liquidity to the curve. */
     function liquidityReceivable (CurveMath.CurveState memory curve, uint128 seeds) 
         internal pure returns (uint128, uint128) {
         (uint128 base, uint128 quote) = liquidityFlows(curve, seeds);

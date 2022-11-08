@@ -13,6 +13,7 @@ interface ICrocPermitOracle {
      * @param user The address of the caller to the contract.
      * @param sender The value of msg.sender for the caller of the action. Will either
      *               be same as user, the calling router, or the off-chain relayer.
+     * @param base  The base-side token in the pair.
      * @param quote The quote-side token in the pair.
      * @param ambient The ambient liquidity directive for the pool action (possibly zero)
      * @param swap    The swap directive for the pool (possibly zero)

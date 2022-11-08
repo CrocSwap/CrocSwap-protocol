@@ -48,6 +48,10 @@ library Directives {
      *                  order.
      * @param isAdd_ If true, the action mints new concentrated liquidity. If false, it
      *               burns pre-existing concentrated liquidity. 
+     * @param isTickRel_  If true indicates the low and high tick value should be take
+     *                    relative to the current price tick. E.g. -5 indicates 5 ticks
+     *                    below the current tick. Otherwise, high and low tick values are
+     *                    absolute tick index values.
      * @param rollType_  The flavor of rolling gap fill that should be applied (if any)
      *                   to this leg of the directive. See Chaining.sol for list of
      *                   rolling type codes.
@@ -81,7 +85,8 @@ library Directives {
      *                   rolling type codes.
      * @param liquidity_ The total amount of ambient liquidity to add/remove.
      *                   Represented as the equivalent of sqrt(X*Y) liquidity for a
-     *                   constant-product AMM curve. (If zero, this is a non-action.) */
+     *                   constant-product AMM curve. (If this and rollType_ are zero,
+     *                   this is a non-action.) */
     struct AmbientDirective {
         bool isAdd_;
         uint8 rollType_;

@@ -18,7 +18,8 @@ interface ICrocMinion {
      * @param sudo      Set to true for commands that require escalated privilege (e.g. 
      *                  authority transers or upgrades.) The ability to call with sudo 
      *                  true should be reserved for privileged callpaths in the governance
-     *                  controller contract. */
+     *                  controller contract.
+     * @return Arbitrary byte data (if any) returned by the command. */
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo)
         payable external returns (bytes memory);
 }

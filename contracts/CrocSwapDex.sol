@@ -102,7 +102,8 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param cmd      The arbitrary byte calldata corresponding to the command. Format
      *                 dependent on the specific callpath.
      * @param sudo     If true, indicates that the command should be called with elevated
-     *                 privileges. */
+     *                 privileges.
+     * @return Arbitrary byte data (if any) returned by the command. */
     function protocolCmd (uint16 callpath, bytes calldata cmd, bool sudo)
         protocolOnly(sudo) public payable override returns (bytes memory) {
         return callProtocolCmd(callpath, cmd);

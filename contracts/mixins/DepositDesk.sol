@@ -32,6 +32,10 @@ contract DepositDesk is SettleLayer {
      *         a permit function. Allows the user to avoid needing to approve() the DEX
      *         contract.
      *
+     * @param recv  The address which will receive the surplus collateral balance
+     * @param value The amount of tokens being deposited
+     * @param token The address of the token deposited
+     * @param deadline The deadline that this ERC20 permit call is valid for
      * @param v,r,s  The EIP-712 signature approviing Permit of the token underlying 
      *               token to be deposited. */
     function depositSurplusPermit (address recv, uint128 value, address token,
@@ -47,7 +51,6 @@ contract DepositDesk is SettleLayer {
      *      responsibility of the caller to make sure the receiver is authorized to
      *      to collect the owner's balance.
      *
-     * @param owner The address of the owner associated with the account.
      * @param recv  The receiver where the collateral will be sent to.
      * @param size  The amount to be paid out. Owner's balance will be decremented 
      *              accordingly.

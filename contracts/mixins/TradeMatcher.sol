@@ -54,8 +54,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
      *                 sqrt(X*Y) where X,Y are the collateral reserves in a constant-
      *                 product AMM
      * @param poolHash The hash indexing the pool this liquidity curve applies to.
-     * @param lpConduit The address of the ICrocLpConduit the LP position will be 
-     *                  assigned to. (If zero the user will directly own the LP.)
+     * @param lpOwner The address of the ICrocLpConduit the LP position will be 
+     *                assigned to. (If zero the user will directly own the LP.)
      *
      * @return baseFlow The amount of base-side token collateral required by this
      *                  operations. Will always be positive indicating, a debit from

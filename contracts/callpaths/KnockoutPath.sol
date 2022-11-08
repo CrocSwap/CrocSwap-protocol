@@ -26,7 +26,8 @@ contract KnockoutFlagPath is KnockoutCounter {
      * @param tick The 24-bit index of the tick where the knockout pivot exists.
      * @param isBuy If true indicates that the swap direction is a buy.
      * @param feeGlobal The global fee odometer for 1 hypothetical unit of liquidity fully
-     *                  in range since the inception of the pool. */
+     *                  in range since the inception of the pool.
+     * @return Returns the net additional amount the curve liquidity should be adjusted by. */
     function crossCurveFlag (bytes32 pool, int24 tick, bool isBuy, uint64 feeGlobal)
         public payable returns (int128) {
         // If swap is a sell, then implies we're crossing a resting bid and vice versa
@@ -167,7 +168,9 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
      * @param pool The pool index.
      * @param loc The location the knockout liquidity is being claimed from
      * @params args Corresponds to a flat ABI encoding of the pivot's origin in block 
-     *              time. */
+     *              time. 
+     * @return baseFlow The total base token flow from the pool to the user
+     * @return quoteFlow The total base token flow from the pool to the user */
     function recoverCmd (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                          bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {

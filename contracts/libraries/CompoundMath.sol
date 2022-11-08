@@ -42,8 +42,7 @@ library CompoundMath {
      *         [0,1). Will always round down from the true real value.
      *
      * @param x  The value of x in (1+x). Represented as a Q16.48 fixed-point
-     * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
-     *            fixed point.
+     * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as Q16.48 fixed point
      * */
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
@@ -85,10 +84,10 @@ library CompoundMath {
     /* @notice Computes the result from backing out a compounded growth value from
      *         an existing value. The inverse of compoundStack().
      * @dev    Rounds down from the real value.
-     * @param price The fixed price representing the starting value that we want
-     *              to back out a pre-growth seed from.
-     * @param growth The compounded growth rate to back out, as in (1+g). Represented
-     *                as Q16.48 fixed-point
+     * @param val The fixed price representing the starting value that we want
+     *            to back out a pre-growth seed from.
+     * @param deflator The compounded growth rate to back out, as in (1+g). Represented
+     *                  as Q16.48 fixed-point
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */
     function compoundShrink (uint64 val, uint64 deflator) internal

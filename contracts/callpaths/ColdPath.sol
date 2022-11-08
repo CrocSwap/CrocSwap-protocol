@@ -141,11 +141,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     /* @notice Sets template parameters for a pool type index.
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
-     * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks.
-     * @param permitOracle The external oracle that permissions pool users (or if set to
-     *                     0x0 address pool type is permissionless).
-     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs. */
+     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs.
+     * @param knockout The knockout bits for the pool template.
+     @ @param oracleFlags The oracle bit flags if a permissioned pool. */
     function setTemplate (bytes calldata input) private {
         (, uint256 poolIdx, uint16 feeRate, uint16 tickSize, uint8 jitThresh,
          uint8 knockout, uint8 oracleFlags) =
@@ -193,10 +192,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param quote The quote-side token defining the pool's pair.
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
-     * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks.
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs in
-     *                  in the pool. */
+     *                  in the pool.
+     * @param knockout The knockout bit flags for the pool. */
     function revisePool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx,
          uint16 feeRate, uint16 tickSize, uint8 jitThresh, uint8 knockout) =
@@ -267,9 +266,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param value The amount of surplus collateral being paid or received. If negative
      *              paid from the user into the pool, increasing their balance.
      * @param token The token to which the surplus collateral is applied. (If 0x0, then
-     *              native Ethereum)
-     * @param isTransfer If set to true, disburse calls will transfer the surplus 
-     *                   collateral balance to the recv address instead of paying. */
+     *              native Ethereum) */
     function depositSurplus (bytes calldata cmd) private {
         (, address recv, uint128 value, address token) =
             abi.decode(cmd, (uint8, address, uint128, address));
@@ -321,8 +318,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.
-     * @notice router The address of the external smart contract that the user is giving
-     *                permission to. */
+     * @param router The address of the external smart contract that the user is giving
+     *                permission to.
+     * @param nCalls The number of calls the router agent is approved for.
+     * @param callpaths The proxy sidecar indexes the router is approved for */
     function approveRouter (bytes calldata cmd) private {
         (, address router, uint32 nCalls, uint16[] memory callpaths) =
             abi.decode(cmd, (uint8, address, uint32, uint16[]));
