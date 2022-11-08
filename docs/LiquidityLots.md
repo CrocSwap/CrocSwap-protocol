@@ -30,10 +30,10 @@ The stored value of liquidity lots at any given tick is a cumulative sum of the 
 
 ![Binary Addition.jpeg](./Binary_Addition.jpeg)
 
-Therefore every liquidity value supplied to mint or burn a concentrated liquidity position must be converted be converted not just to a liquidity lots value, but an ***************even valued lots*************** position. To avoid loss of precision the liquidity value must be zero in the least significant *********11 digits********* of the raw liquidity value. This is equivalent to being divisible 2048.
+Therefore every liquidity value supplied to mint or burn a concentrated liquidity position must be converted be converted not just to a liquidity lots value, but an *even valued lots* position. To avoid loss of precision the liquidity value must be zero in the least significant *11 digits* of the raw liquidity value. This is equivalent to being divisible 2048.
 
 For example 4096 is a valid liquidity argument because it is divisible by 2048. It converts to 4 liquidity lots which can be cleanly stored in the storage schema without loss of precision.
 
-Another example: 5120 is ***not*** a valid liquidity argument. It is not divisible by 2048. It is divisible by 1024 and cleanly converts to 5 liquidity lots. But the liquidity lots is odd-valued, and therefore cannot be written to the storage schema without loss of precision.
+Another example: 5120 is *not* a valid liquidity argument. It is not divisible by 2048. It is divisible by 1024 and cleanly converts to 5 liquidity lots. But the liquidity lots is odd-valued, and therefore cannot be written to the storage schema without loss of precision.
 
-Another example: 4500 is ***not*** a valid liquidity argument. It is not divisible by 1024 (or 2048). Therefore it cannot be cleanly converted to liquidity lots representation without loss of precision.
+Another example: 4500 is *not* a valid liquidity argument. It is not divisible by 1024 (or 2048). Therefore it cannot be cleanly converted to liquidity lots representation without loss of precision.
