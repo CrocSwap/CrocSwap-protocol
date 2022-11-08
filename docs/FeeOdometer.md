@@ -6,7 +6,7 @@ Calculating the accumulated rewards for a range order involves determining the c
 
 The below illustrates an example of how rewards would accumulate to a range order over its lifetime:
 
-![Range Order Fees-2.jpeg](./Range_Order_Fees-2.jpeg)
+![Range Order Fees-2.jpeg](./assets/Range_Order_Fees-2.jpeg)
 
 Even though the whole pool accumulated 575 units of reward during the above timeline, the range order only accumulated 150 units of reward, representing the time and price range it was active at. 
 
@@ -16,7 +16,7 @@ The first step to calculating accumulated rewards for a range order is to calcul
 
 The below illustrates an example of how an order’s accumulated rewards can be calculated based off the cumulative rewards for its corresponding range:
 
-![Range Reward Lifetime.jpeg](./Range_Reward_Lifetime.jpeg)
+![Range Reward Lifetime.jpeg](./assets/Range_Reward_Lifetime.jpeg)
 
 Therefore once we can track a range’s cumulative rewards over time, we can use that to assign a specific range order’s accumulated rewards over its lifetime.
 
@@ -26,7 +26,7 @@ The cumulative rewards in any given range can be reduced to tracking the cumulat
 
 The below illustrates an example of how this works in practice:
 
-![Range Bound Cumulative.jpeg](./Range_Bound_Cumulative.jpeg)
+![Range Bound Cumulative.jpeg](./assets/Range_Bound_Cumulative.jpeg)
 
 In the above example the cumulative rewards for the range is calculated as the cumulative rewards below the upper boundary (250) minus the cumulative rewards below the lower boundary.
 
@@ -44,4 +44,4 @@ Calculating the cumulative rewards below the tick, when the curve price is below
 
 The below illustration is an example of how the fee odometer would evolve over time as it’s crossed, and how at any give time the cumulative rewards below the tick can be calculated from the fee odometer.
 
-![Rewards Odometer.jpeg](./Rewards_Odometer.jpeg)
+![Rewards Odometer.jpeg](./assets/Rewards_Odometer.jpeg)
