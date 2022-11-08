@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import '../libraries/ProtocolCmd.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../mixins/StorageLayout.sol';
-import './Timelock.sol';
+import '../vendor/compound/Timelock.sol';
 
 /* @title CrocPolicy
  * @notice Intermediates between the dex mechanism inside CrocSwapDex and the top-level
