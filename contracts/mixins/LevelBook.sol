@@ -207,6 +207,11 @@ contract LevelBook is TickCensus {
      *         liquidity tick range. The difference between this value at two different
      *         times is guaranteed to reflect the accumulated rewards in the tick range
      *         between those two times.
+     *
+     *         For more explanation on how the fee rewards accumulated is calculated for
+     *         a given range order, reference the documenation at [docs/FeeOdometer.md]
+     *         in the project repository.
+     *
      * @dev This returned result only has meaning when compared against the result
      *      from the same method call on the same range at a different time. Any
      *      given range could have an arbitrary offset relative to the pool's actual
@@ -243,7 +248,11 @@ contract LevelBook is TickCensus {
      *      on the outside of the tick level. (Though this may be faked for fees that
      *      that accumulated prior to level initialization. It doesn't matter, because
      *      all we use this value for is calculating the delta of fee accumulation 
-     *      between two different post-initialization points in time.) */
+     *      between two different post-initialization points in time.)
+     *
+     *      For more explanation on how the fee rewards accumulated is calculated for
+     *      a given range order, reference the documenation at [docs/FeeOdometer.md]
+     *      in the project repository. */
     function pivotFeeBelow (bytes32 poolIdx, int24 lvlTick,
                             int24 currentTick, uint64 feeGlobal)
         private view returns (uint64) {
