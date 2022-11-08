@@ -5,8 +5,14 @@ pragma solidity ^0.8.4;
 import './SafeCast.sol';
 
 /* @title Protocol Command library.
+ *
  * @notice To allow for flexibility and upgradeability the top-level interface to the Croc
- *         dex contract contains a general purpose */
+ *         dex contract contains a general purpose encoding scheme. User commands specify a
+ *         proxy contract index, and input is passed raw and unformatted. Each proxy contract
+ *         is free to specify its own input format, but by convention many proxy contracts
+ *         adhere to a specification where the first 32 bytes of the input encodes a sub-command
+ *         code. This library contains all of these sub-command codes in a single location for
+ *         easy lookup. */
 library ProtocolCmd {
     
     
@@ -19,7 +25,7 @@ library ProtocolCmd {
     uint8 constant UPGRADE_DEX_CODE = 21;
     // Code to force hot path to use the proxy contract
     uint8 constant HOT_OPEN_CODE = 22;
-    // Code to force hot path to use the proxy contract
+    // Code to toggle on or off emergency safe mode 
     uint8 constant SAFE_MODE_CODE = 23;
     // Code to collect accumulated protocol fees for the treasury.
     uint8 constant COLLECT_TREASURY_CODE = 40;

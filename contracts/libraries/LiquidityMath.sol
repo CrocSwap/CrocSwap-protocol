@@ -57,7 +57,7 @@ library LiquidityMath {
     /* In certain contexts we need to represent liquidity, but don't have the full 128 
      * bits or precision. The compromise is to use "lots" of liquidity, which is liquidity
      * represented as multiples of 1024. Usually in those contexts, max lots is capped at
-     * 2^96 (equivalent to 2^108 of liquidity.) 
+     * 2^96 (equivalent to 2^106 of liquidity.) 
      *
      * More explanation, along with examples can be found in the documentation at 
      * docs/LiquidityLots.md in the project respository. */

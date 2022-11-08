@@ -109,10 +109,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         return callProtocolCmd(callpath, cmd);
     }
 
-    /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
-     *         none are in use (all slots are set to 0 and therefore calls will fail).
-     *         But this lets protocol governance add new functionality in additional 
-     *         sidecars, which can then be accessed by users through this command.
+    /* @notice Calls an arbitrary command on one of the sidecar proxy contracts at a specific
+     *         index. Not all proxy slots may have a contract attached. If so, this call will
+     *         fail.
      *
      * @param callpath The index of the proxy sidecar the command is being called on.
      * @param cmd The arbitrary call data the client is calling the proxy sidecar.

@@ -130,7 +130,8 @@ contract SettleLayer is AgentMask {
      * @param base The ERC20 address of the base token collateral in the pair (if 0x0 
      *             indicates that the collateral is native Eth).
      * @param baseFlow The amount of flow associated with the base side of the pair. 
-     *                 Negative for credits paid to user, positive for debits.
+     *                 By convention negative for credits paid to user, positive for debits,
+     *                 but will always be positive/debit for this operation.
      * @param quote The ERC20 address of the quote token collateral in the pair.
      * @param quoteFlow The flow associated with the quote side of the pair. */
     function settleInitFlow (address recv,
@@ -163,14 +164,16 @@ contract SettleLayer is AgentMask {
     }
 
     function useReservesBase (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & 0x1 > 0;
+        return reserveFlags & BASE_RESERVE_FLAG > 0;
     }
     
     function useReservesQuote (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & 0x2 > 0;
+        return reserveFlags & QUOTE_RESERVE_FLAG > 0;
     }
 
     uint8 constant NO_RESERVE_FLAGS = 0x0;
+    uint8 constant BASE_RESERVE_FLAG = 0x1;
+    uint8 constant QUOTE_RESERVE_FLAG = 0x2;    
     uint8 constant BOTH_RESERVE_FLAGS = 0x3;
 
     /* @notice Performs check to make sure the new balance matches the expected 

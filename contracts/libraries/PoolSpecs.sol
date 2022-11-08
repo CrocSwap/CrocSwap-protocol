@@ -120,7 +120,8 @@ library PoolSpecs {
      *         index. */
     function oracleForPool (uint256 poolIdx, uint8 oracleFlags)
         internal pure returns (address) {
-        bool oracleEnabled = (oracleFlags & 0x1 == 1);
+        uint8 ORACLE_ENABLED_MASK = 0x1;
+        bool oracleEnabled = (oracleFlags & ORACLE_ENABLED_MASK == 1);
         return oracleEnabled ?
             address(uint160(poolIdx >> 96)) :
             address(0);

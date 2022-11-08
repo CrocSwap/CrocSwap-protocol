@@ -77,6 +77,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         dir.inBaseQty_ = inBaseQty;
         dir.qty_ = qty;
         dir.limitPrice_ = limitPrice;
+        dir.rollType_ = 0;
         return swapOverPool(dir, pool);
         
     }

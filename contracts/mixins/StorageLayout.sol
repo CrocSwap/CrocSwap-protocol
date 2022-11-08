@@ -42,9 +42,10 @@ contract StorageLayout {
 
     bool internal msgValSpent_;
 
-    // If set to true, then the embedded hot-path (swap()) is not enabled and
-    // users must use the hot proxy for the hot-path. By default set to false.
+    // If set to false, then the embedded hot-path (swap()) is not enabled and
+    // users must use the hot proxy for the hot-path. By default set to true.
     bool internal hotPathOpen_;
+    
     bool internal inSafeMode_;
 
     // The protocol take rate for relayer tips. Represented in 1/256 fractions

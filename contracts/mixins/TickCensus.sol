@@ -124,9 +124,9 @@ contract TickCensus is StorageLayout {
      * @return boundTick - The tick index that we can conservatively move to without 
      *    potentially hitting any currently active liquidity bump points.
      * @return isSpill - If true indicates that the boundary represents the end of the
-     *    terminus bitmap. Could or could not also still be an active bump, but only
-     *    at the lower bound. (Lower bounds exist in the bitmap, but upper bounds
-     *    exist at the next bitmap over, which is beyond the horizon). */
+     *    inner terminus bitmap neighborhood. Based on this we have to actually check whether
+     *     we've reached teh true end of the liquidity range, or just the end of the known
+     *     neighborhood.  */
     function pinBitmap (bytes32 poolIdx,
                         bool isUpper, int24 startTick)
         internal view returns (int24 boundTick, bool isSpill) {
@@ -150,9 +150,10 @@ contract TickCensus is StorageLayout {
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
-    /* @notice Returns true if the tick seek spills out of the terminus neighborhood.
-     *         Which indicates to the user that the returned value represents a censored
-     *         horizon not a genuine liquidity bump point. */
+    /* @notice Returns true if the tick seek reaches the end of the inner terminus 
+     *      bitmap neighborhood. If that happens, it's like reaching the end of the map.
+     *      It's returned as the boundary point, but the the user must be aware that the tick
+     *      may or may not represent an active liquidity tick and check accordingly. */
     function doesSpillBit (bool isUpper, bool spillTrunc, uint256 termBitmap)
         private pure returns (bool spillBit) {
         if (isUpper) {

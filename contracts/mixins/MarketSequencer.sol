@@ -257,7 +257,7 @@ contract MarketSequencer is TradeMatcher {
             applySwap(flow, dir.swap_, curve, cntx);
         }
         applyAmbient(flow, dir.ambient_, curve, cntx);
-        applyConcentrateds(flow, dir.conc_, curve, cntx);
+        applyConcentrated(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
@@ -292,7 +292,7 @@ contract MarketSequencer is TradeMatcher {
 
     /* @notice Applies zero, one or a series of concentrated liquidity directives to a 
      *         pre-loaded liquidity curve. */
-    function applyConcentrateds (Chaining.PairFlow memory flow,
+    function applyConcentrated (Chaining.PairFlow memory flow,
                                  Directives.ConcentratedDirective[] memory dirs,
                                  CurveCache.Cache memory curve,
                                  Chaining.ExecCntx memory cntx) private {

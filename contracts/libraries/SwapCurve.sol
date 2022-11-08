@@ -36,7 +36,7 @@ library SwapCurve {
      *    fee accumulation will be adjusted based on the swap processed in this leg.
      * @param accum - An accumulator for the asset pair the swap/curve applies to.
      *    This object will be incremented with the flow processed on this leg. The swap
-     *    may or may not be fully exhausted. Caller should check qtyLeft_ field.
+     *    may or may not be fully exhausted. Caller should check the swap.qty_ field.
      @ @param swap - The user directive specifying the swap to execute on this curve.
      *    Defines the direction, size, and limit price. After calling, the swapQty will
      *    be decremented with the amount of size executed in this leg.
@@ -281,7 +281,7 @@ library SwapCurve {
     function vigOverFlow (uint128 flow, uint16 feeRate, uint8 protoProp)
         private pure returns (uint128 liqFee, uint128 protoFee) {
         unchecked {
-            uint256 FEE_BP_MULT = 1000000;
+            uint256 FEE_BP_MULT = 1_000_000;
             
             // Guaranteed to fit in 256 bit arithmetic. Safe to cast back to uint128
             // because fees will never be larger than the underlying flow.            

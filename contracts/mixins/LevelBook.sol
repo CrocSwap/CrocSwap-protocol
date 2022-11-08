@@ -92,7 +92,7 @@ contract LevelBook is TickCensus {
      * @param midTick - The tick index associated with the current price of the AMM curve
      * @param bidTick - The tick index for the lower bound of the range order.
      * @param askTick - The tick index for the upper bound of the range order.
-     * @param liq - The amount of liquidity being added by the range order.
+     * @param lots - The amount of liquidity (in 1024 unit lots) being added by the range order.
      * @param feeGlobal - The up-to-date global fee rewards growth accumulator. 
      *    Represented as 128-bit fixed point growth rate.
      *

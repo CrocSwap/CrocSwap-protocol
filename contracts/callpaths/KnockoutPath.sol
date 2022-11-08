@@ -107,7 +107,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         (uint128 qty, bool insideMid) = abi.decode(args, (uint128,bool));
         
         int24 priceTick = curve.priceRoot_.getTickAtSqrtRatio();
-        require(loc.spreadOkay(priceTick, insideMid, false), "KL");
+        require(loc.spreadOkay(priceTick, insideMid), "KL");
 
         uint128 liq = Chaining.sizeConcLiq(qty, true, curve.priceRoot_,
                                            loc.lowerTick_, loc.upperTick_, loc.isBid_);
@@ -130,7 +130,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
             abi.decode(args, (uint128,bool,bool));
 
         int24 priceTick = curve.priceRoot_.getTickAtSqrtRatio();
-        require(loc.spreadOkay(priceTick, insideMid, false), "KL");
+        require(loc.spreadOkay(priceTick, insideMid), "KL");
 
         uint128 liq = inLiqQty ? qty :
             Chaining.sizeConcLiq(qty, false, curve.priceRoot_,

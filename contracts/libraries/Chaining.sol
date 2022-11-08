@@ -343,8 +343,8 @@ library Chaining {
     }
 
     /* @notice Calculates the effective bid/ask committed collateral range related
-     *   to a concentrated liquidity range order. Based on whether the curve's current
-     *   price is sitting in range or not, this results will be different. */
+     *   to a concentrated liquidity range order. The calculation is different depending on
+     *   whether the curve price is inside or outside the specified tick range. (See below) */
     function determinePriceRange (uint128 curvePrice, int24 lowTick, int24 highTick,
                                   bool inBase) private pure
         returns (uint128 bidPrice, uint128 askPrice) {

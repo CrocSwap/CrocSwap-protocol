@@ -124,15 +124,13 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      * @param askTick The price tick index of the upper boundary of the range order.
      * @param liq The total amount of liquidity being minted. Represented as sqrt(X*Y)
      *            for the equivalent constant-product AMM.
-     @ @param lpConduit The address of the LP conduit to deposit the minted position at
+     * @param lpConduit The address of the LP conduit to deposit the minted position at
      *                  (direct owned liquidity if 0)
      * @param limitLower Exists to make sure the user is happy with the price the 
      *                   liquidity is minted at. Transaction fails if the curve price
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
-     *                   threshold.
-     * @param reserveFlags If true, settlement is first attempted with the surplus 
-     *                   collateral (if any) that the user holds at the exchange. */    
+     *                   threshold.  */    
     function mint (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher) internal returns
@@ -152,13 +150,13 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      * @param askTick The price tick index of the upper boundary of the range order.
      * @param liq The total amount of liquidity being burned. Represented as sqrt(X*Y)
      *            for the equivalent constant-product AMM.
+     * @param lpConduit The address of the LP conduit to deposit the minted position at
+     *                  (direct owned liquidity if 0)
      * @param limitLower Exists to make sure the user is happy with the price the 
      *                   liquidity is burned at. Transaction fails if the curve price
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
-     *                   threshold. 
-     * @param reserveFlags If true, settlement is first attempted with the surplus 
-     *                   collateral (if any) that the user holds at the exchange. */
+     *                   threshold. */
     function burn (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher)
@@ -176,13 +174,13 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      * @param poolIdx The index of the pool type being burned on.
      * @param bidTick The price tick index of the lower boundary of the range order.
      * @param askTick The price tick index of the upper boundary of the range order.
+     * @param lpConduit The address of the LP conduit to deposit the minted position at
+     *                  (direct owned liquidity if 0)
      * @param limitLower Exists to make sure the user is happy with the price the 
      *                   liquidity is burned at. Transaction fails if the curve price
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
-     *                   threshold. 
-     * @param reserveFlags If true, settlement is first attempted with the surplus 
-     *                   collateral (if any) that the user holds at the exchange. */
+     *                   threshold. */
     function harvest (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, address lpConduit,
                       uint128 limitLower, uint128 limitHigher)
@@ -210,9 +208,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *                   liquidity is minted at. Transaction fails if the curve price
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
-     *                   threshold. 
-     * @param reserveFlags If true, settlement is first attempted with the surplus 
-     *                   collateral (if any) that the user holds at the exchange. */
+     *                   threshold.  */
     function mint (address base, address quote, uint256 poolIdx, uint128 liq,
                    address lpConduit, uint128 limitLower, uint128 limitHigher) internal
         returns (int128, int128) {

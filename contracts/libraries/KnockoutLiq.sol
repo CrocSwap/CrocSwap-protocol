@@ -68,8 +68,8 @@ library KnockoutLiq {
      *
      * @param isBid_ If true, indicates that the knockout is on the bid side, i.e. will
      *                knockout when price falls below the tick.
-     * @param tick_ The 24-bit tick index the knockout pivot is placed at.
-     * @param rangeTicks_ The number of ticks wide the corresponding range order is. */
+     * @param lowerTick The 24-bit tick index of the lower boundary of the knockout range order
+     * @param upperTick The 24-bit tick index of the upper boundary of the knockout range order */
     struct KnockoutPosLoc {
         bool isBid_;
         int24 lowerTick_;
@@ -176,7 +176,7 @@ library KnockoutLiq {
         return uint160(uint256(hash) >> 96);
     }
 
-    /* @notice Tightly packs the 32-bit pivot time with the 64-bit fee mileage. */
+    /* @notice Tightly packs the 32-bit pivot time with the 64-bit fee mileage and the salt. */
     function encodeChainLink (uint32 pivotTime, uint64 feeMileage, uint160 salt)
         private pure returns (uint256)  {
         return (uint256(salt) << 96) +
@@ -237,8 +237,8 @@ library KnockoutLiq {
      *
      * @param loc The tightly packed knockout parameters related to the pool. The fields
      *            are set in the following order from most to least significant bit:
-     *                [8][7]            [6][5]           [4][3][2][1]
-     *               Unusued          PlaceType           OrderWidth
+     *         [8]             [7]            [6][5]          [4][3][2][1]
+     *        Unusued      On-Grid Flag      PlaceType         OrderWidth
      *            
      *            The field types are as follows:
      *               OrderWidth - The width of new knockout pivots in ticks represented by
@@ -250,14 +250,18 @@ library KnockoutLiq {
      *                        below (above) the current curve price.
      *                    2 - Knockout bids (asks) must be placed with lower (upper) tick
      *                        below (above) the current curve price.
-     *                    3 - Knockout pivots can be placed anywhere relative to price. */
+     *
+     *              On-Grid Flag - If set requires that any new knockout range order can only
+     *                             be placed on a tick index that's a multiple of the width. 
+     *                             Can be used to restrict density of knockout orders, beyond 
+     *                             the normal pool tick size. */
     function assertValidPos (KnockoutPosLoc memory loc, int24 priceTick, 
                              uint8 knockoutBits) internal pure {
-        (bool enabled, uint8 width, bool inside, bool yonder, bool onGrid) =
+        (bool enabled, uint8 width, bool inside, bool onGrid) =
             unpackBits(knockoutBits);
 
         require(enabled && gridOkay(loc, width, onGrid) &&
-                spreadOkay(loc, priceTick, inside, yonder), "KV");
+                spreadOkay(loc, priceTick, inside), "KV");
     }
 
     /* @notice Evaluates whether the placement and width of a knockout pivot candidate
@@ -277,9 +281,13 @@ library KnockoutLiq {
     /* @notice Evaluates whether the placement of a knockout pivot candidates conforms
      *         to the parameters relative to the curve's current price tick. */
     function spreadOkay (KnockoutPosLoc memory loc, int24 priceTick,
-                         bool inside, bool yonder) internal pure returns (bool) {
-        if (yonder) { return true; }
-        else if (loc.isBid_) {
+                         bool inside) internal pure returns (bool) {
+        // Checks to see whether the range order is placed directionally correct relative
+        // to the current tick price. If inside is true, then the range order can be placed
+        // with the curve price inside the range. 
+        // Otherwise bids must have the entire range below the curve price, and asks must
+        // have the entire range above the curve price.
+        if (loc.isBid_) {
             int24 refTick = inside ? loc.lowerTick_ : loc.upperTick_;
             return refTick < priceTick;
         } else {
@@ -291,17 +299,18 @@ library KnockoutLiq {
     /* @notice Decodes the tightly packed bits in pool knockout parameters.
      * @return enabled True if new knockout pivots are enabled at all.
      * @return widthBits The width of new knockout pivots in ticks to the power of two.
-     * @return inside True if bids (asks) can be placed with upper (lower) tick above 
-     *                (below) the current price tick.
-     * @return yonder True if bids (asks) can be placed with lower (upper) tick above 
-     *                (below) the current price tick. */
+     * @return inside  True if knockout range order can be minted with the current curve
+     *                 price inside the tick range. If false, knockout range orders can
+     *                 only be minted with the full range is outside the current curve 
+     *                 price.
+     * @return onGrid True if new knockout range orders are restricted to ticks that
+     *                are multiples of the width size. */
     function unpackBits (uint8 knockoutBits) private pure returns
-        (bool enabled, uint8 widthBits, bool inside, bool yonder, bool onGrid) {
+        (bool enabled, uint8 widthBits, bool inside, bool onGrid) {
         widthBits = uint8(knockoutBits & 0x0F);
         uint8 flagBits = uint8(knockoutBits & 0x30) >> 4;
 
         enabled = flagBits > 0;
-        yonder = flagBits >= 3;
         inside = flagBits >= 2;
 
         onGrid = knockoutBits & 0x40 > 0;
