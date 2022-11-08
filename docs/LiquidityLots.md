@@ -4,7 +4,7 @@ For all end-user facing interfaces CrocSwap represents both ambient and concentr
 
 Internally however, CrocSwap stores a truncated representation for concentrated liquidity in the context of individual ticks and liquidity positions. (Full precision `uint128` liquidity is still used for aggregate concentrated liquidity on any given curve.) This representation truncates the least significant 10 digits and the most significant 22 digits from the standard `uint128` liquidity representation.
 
-![Liquidity Bits-3.jpeg](./Liquidity_Bits-3.jpeg)
+![Liquidity Bits-3.jpeg](./assets/Liquidity_Bits-3.jpeg)
 
 To convert liquidity units to liquidity lots, one can shift right by 10 bits. Equivalent to multiplying by 1024). Therefore to avoid loss of precision, any liquidity argument that will be stored as liquidity lots should be passed as a multiple of 1024. 
 
@@ -24,11 +24,11 @@ Inside the tick data structure, the least significant bit of the liquidity lots 
 
 Therefore. when the liquidity change associated with a tick crossing is written to storage, the least significant bit must always be zero to avoid loss of precision. Similarly, when reading from storage, the least significant bit will be masked to zero in the returned value
 
-![Liquidity Lots Storage.jpeg](./Liquidity_Lots_Storage.jpeg)
+![Liquidity Lots Storage.jpeg](./assets/Liquidity_Lots_Storage.jpeg)
 
 The stored value of liquidity lots at any given tick is a cumulative sum of the liquidity of all the active range orders with a boundary at that tick. Therefore whenever concentrated liquidity is minted or burned, its liquidity lots value must always have a zero in the least significant digit. Since the sum or difference of any even value is also even, this guarantees that the cumulative liquidity lots value in storage is also even (i.e. has a zero in the least significant digit).
 
-![Binary Addition.jpeg](./Binary_Addition.jpeg)
+![Binary Addition.jpeg](./assets/Binary_Addition.jpeg)
 
 Therefore every liquidity value supplied to mint or burn a concentrated liquidity position must be converted be converted not just to a liquidity lots value, but an *even valued lots* position. To avoid loss of precision the liquidity value must be zero in the least significant *11 digits* of the raw liquidity value. This is equivalent to being divisible 2048.
 
