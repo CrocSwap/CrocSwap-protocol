@@ -58,7 +58,6 @@ describe('Token Precision', () => {
    function neededBaseReserves (liq: BigNumber, price: BigNumber) {
       let startReserves = deriveBaseReserves(liq, price)
       let nextReserves = deriveBaseReserves(liq, shiftPriceUp(price))
-      console.log(nextReserves.sub(startReserves).toString())
       return nextReserves.sub(startReserves)
    }
 
@@ -67,9 +66,6 @@ describe('Token Precision', () => {
    function neededQuoteReserves (liq: BigNumber, price: BigNumber) {
       let startReserves = deriveQuoteReserves(liq, price)
       let nextReserves = deriveQuoteReserves(liq, shiftPriceDown(price))
-      console.log(startReserves.toString())
-      console.log(nextReserves.toString())
-      console.log(nextReserves.sub(startReserves).toString())
       return nextReserves.sub(startReserves)
    }
 
