@@ -176,7 +176,7 @@ contract CrocPolicy is ICrocMaster {
      *                      and the conduit will have no protocolCmd powers until 
      *                      refreshed by governance. */
     struct PolicyRule {
-        bytes24 cmdFlags_;
+        bytes32 cmdFlags_;
         uint32 mandateTime_;
         uint32 expiryOffset_;
     }
@@ -251,7 +251,7 @@ contract CrocPolicy is ICrocMaster {
     function emergencyReset (address conduit, uint16 proxyPath,
                              string calldata reason) emergencyAuth public {
         bytes32 key = rulesKey(conduit, proxyPath);
-        rules_[key].cmdFlags_ = bytes24(0);
+        rules_[key].cmdFlags_ = bytes32(0);
         rules_[key].mandateTime_ = 0;
         rules_[key].expiryOffset_ = 0;
         emit CrocPolicyEmergency(conduit, reason);
@@ -306,8 +306,8 @@ contract CrocPolicy is ICrocMaster {
 
     /* @notice Returns true if the flag at index is set on the policy command flag 
      *         vector  */
-    function isFlagSet (bytes24 cmdFlags, uint8 flagIdx) private pure returns (bool) {
-        return (bytes24(uint192(1)) << flagIdx) & cmdFlags > 0;         
+    function isFlagSet (bytes32 cmdFlags, uint8 flagIdx) private pure returns (bool) {
+        return (bytes32(uint256(1)) << flagIdx) & cmdFlags > 0;         
     }
 
     function acceptsCrocAuthority() public payable override returns (bool) { return true; }

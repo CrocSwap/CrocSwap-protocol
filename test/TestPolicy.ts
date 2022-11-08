@@ -169,7 +169,7 @@ describe('CrocPolicy', () => {
 
     it("policy invoke", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -184,10 +184,10 @@ describe('CrocPolicy', () => {
         expect(await minion.paths_(0)).to.eq(PROXY_PATH)
         expect(await minion.sudos_(0)).to.eq(false)
     })
-
+    
     it("policy invoke flag pos", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -205,7 +205,7 @@ describe('CrocPolicy', () => {
 
     it("policy non conduit", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -220,7 +220,7 @@ describe('CrocPolicy', () => {
 
     it("policy flag off", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -234,7 +234,7 @@ describe('CrocPolicy', () => {
 
     it("expired policy", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) - 10000 // Expires in past
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -248,7 +248,7 @@ describe('CrocPolicy', () => {
 
     it("set policy unauthorized", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await expect(policy.connect(accts[5]).setPolicy(accts[4].address, PROXY_PATH, 
@@ -257,8 +257,8 @@ describe('CrocPolicy', () => {
 
     it("policy weaken", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -274,8 +274,8 @@ describe('CrocPolicy', () => {
 
     it("expiry offset", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         // Expiry should add the offset to mandate time, therefore this any call should be within the expiry
@@ -295,9 +295,9 @@ describe('CrocPolicy', () => {
 
     it("mandate weaken", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
-        const STRONG_FLAGS = "0x00000000000000000000000000000000000000000000001d"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
+        const STRONG_FLAGS = "0x000000000000000000000000000000000000000000000000000000000000001d"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         // Expiry should add the offset to mandate time, therefore this any call should be within the expiry
@@ -320,8 +320,8 @@ describe('CrocPolicy', () => {
 
     it("force weaken flags", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         // Expiry should add the offset to mandate time, therefore this any call should be within the expiry
@@ -340,8 +340,8 @@ describe('CrocPolicy', () => {
 
     it("force weaken mandate", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         // Expiry should add the offset to mandate time, therefore this any call should be within the expiry
@@ -362,8 +362,8 @@ describe('CrocPolicy', () => {
 
     it("force weaken unauthorized", async() => {
         const PROXY_PATH = 25
-        const FLAGS =      "0x00000000000000000000000000000000000000000000000d"
-        const WEAK_FLAGS = "0x000000000000000000000000000000000000000000000005"
+        const FLAGS =      "0x000000000000000000000000000000000000000000000000000000000000000d"
+        const WEAK_FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000005"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         // Expiry should add the offset to mandate time, therefore this any call should be within the expiry
@@ -380,7 +380,7 @@ describe('CrocPolicy', () => {
 
     it("emergency policy", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
@@ -395,7 +395,7 @@ describe('CrocPolicy', () => {
 
     it("emergency policy authorized", async() => {
         const PROXY_PATH = 25
-        const FLAGS = "0x000000000000000000000000000000000000000000000009"
+        const FLAGS = "0x0000000000000000000000000000000000000000000000000000000000000009"
         const expiry = Math.floor(Date.now() / 1000) + 10000
 
         await ops.setPolicy(accts[4].address, PROXY_PATH, 
