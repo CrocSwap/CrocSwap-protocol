@@ -250,9 +250,9 @@ contract LevelBook is TickCensus {
      *      all we use this value for is calculating the delta of fee accumulation 
      *      between two different post-initialization points in time.)
      *
-     *      For more explanation on how the fee rewards accumulated is calculated for
-     *      a given range order, reference the documenation at [docs/FeeOdometer.md]
-     *      in the project repository. */
+     *      For more explanation on how the per-tick fee odometer related to the 
+     *      cumulative fees in a give range, reference the documenation at 
+     *      [docs/FeeOdometer.md] in the project repository. */
     function pivotFeeBelow (bytes32 poolIdx, int24 lvlTick,
                             int24 currentTick, uint64 feeGlobal)
         private view returns (uint64) {
