@@ -293,16 +293,19 @@ contract PoolRegistry is StorageLayout {
 
     /* @notice Checks if a given position is JIT eligible based on its mint timestamp.
      *         If not, the transaction will revert.
+     * 
      * @dev Because JIT window is capped at 8-bit integers, we can avoid the SLOAD
-     *      for all positions older than 255 seconds, which are the vast majority.
+     *      for all positions older than 2550 seconds, which are the vast majority.
      *
      * @param posTime The block time the position was created or had its liquidity 
      *                increased.
      * @param poolIdx The hash index of the AMM curve pool. */
     function assertJitSafe (uint32 posTime, bytes32 poolIdx) internal view {
-        uint32 elapsed = SafeCast.timeUint32() - posTime;
-        if (elapsed <= type(uint8).max) {
-            require(elapsed >= pools_[poolIdx].jitThresh_, "J");
+        uint32 JIT_UNIT_SECONDS = 10;
+        uint32 elapsedSecs = SafeCast.timeUint32() - posTime;
+        uint32 elapsedUnits = elapsedSecs / JIT_UNIT_SECONDS;
+        if (elapsedUnits <= type(uint8).max) {
+            require(elapsedUnits >= pools_[poolIdx].jitThresh_, "J");
         }
     }
 

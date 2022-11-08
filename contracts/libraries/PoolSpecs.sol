@@ -33,6 +33,8 @@ library PoolSpecs {
      *          0.005% (50 one basis point ticks) between bump points.
      *
      * @param jitThresh_ Sets the minimum TTL for concentrated LP positions in the pool.
+     *                   Represented in units of 10 seconds (as measured by block time)
+     *                   E.g. a value of 5 equates to a minimum TTL of 50 seconds.
      *                   Attempts to burn or partially burn an LP position in less than
      *                   N seconds (as measured in block.timestamp) after a position was
      *                   minted (or had its liquidity increased) will revent. If set to

@@ -76,13 +76,13 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("burn partial [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 100000)
+        await expectGas(test.testBurn(-100, 100, 50), 101000)
     })
 
     it("burn partial level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 100000)
+        await expectGas(test.testBurn(-100, 100, 50), 101000)
     })
 
     it("burn full [@gas-test]", async() => {
