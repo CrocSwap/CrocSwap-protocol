@@ -22,7 +22,7 @@ Therefore once we can track a range’s cumulative rewards over time, we can use
 
 ## Cumulative Range Rewards
 
-The cumulative rewards in any given range can be reduced to tracking the cumulative rewards to occur to a single side of the range boundary point. (For convention, we’ll track the cumulative rewards ***************below******* the range boundary points.) The cumulative rewards in any single range is simply the difference between the cumulative rewards below the upper boundary and the cumulative rewards below the lower boundary.
+The cumulative rewards in any given range can be reduced to tracking the cumulative rewards to occur to a single side of the range boundary point. (For convention, we’ll track the cumulative rewards *below* the range boundary points.) The cumulative rewards in any single range is simply the difference between the cumulative rewards below the upper boundary and the cumulative rewards below the lower boundary.
 
 The below illustrates an example of how this works in practice:
 
@@ -40,7 +40,7 @@ The odometer flips its snapshot every time the curve crosses the tick price. Bec
 
 Calculating the cumulative rewards below the tick, when the curve price is below the tick just involves subtracting the up to date cumulative global rewards from the last snapshot of what the cumulative rewards above the rick were.
 
-(By convention when a tick is first created, the odometer is setup to assume that all existing cumulative rewards occurred below the tick. Since we ultimately only care about the ******change****** of accumulated rewards when calculating rewards over an order lifetime, the initialization value doesn’t matter as long as it’s consistent over the lifetime of the order.)
+(By convention when a tick is first created, the odometer is setup to assume that all existing cumulative rewards occurred below the tick. Since we ultimately only care about the *change* of accumulated rewards when calculating rewards over an order lifetime, the initialization value doesn’t matter as long as it’s consistent over the lifetime of the order.)
 
 The below illustration is an example of how the fee odometer would evolve over time as it’s crossed, and how at any give time the cumulative rewards below the tick can be calculated from the fee odometer.
 
