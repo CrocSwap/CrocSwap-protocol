@@ -16,8 +16,6 @@ import '../mixins/DepositDesk.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
 
-import "hardhat/console.sol";
-
 /* @title Cold path callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
  *         main contract to avoid Ethereum's contract code size limit. Contains

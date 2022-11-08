@@ -8,8 +8,6 @@ import "./PoolSpecs.sol";
 import "./PriceGrid.sol";
 import "./CurveMath.sol";
 
-import "hardhat/console.sol";
-
 /* @title Trade flow chaining library 
  * @notice Provides common conventions and utility functions for aggregating
  *   and backfilling the user <-> pool flow of token assets within a single

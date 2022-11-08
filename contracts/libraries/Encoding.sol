@@ -5,8 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "./Directives.sol";
 
-import "hardhat/console.sol";
-
 /* @title Order encoding library
  * @notice Provides facilities for encoding and decoding user specified order directive
  *    structures to/from raw transaction bytes. */

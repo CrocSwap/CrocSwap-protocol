@@ -7,8 +7,6 @@ import '../libraries/CurveCache.sol';
 import '../libraries/Chaining.sol';
 import '../libraries/Directives.sol';
 
-import "hardhat/console.sol";
-
 /* @title Proxy Caller
  * @notice Because of the Ethereum contract limit, much of the CrocSwap code is pushed
  *         into sidecar proxy contracts, which is involed with DELEGATECALLs. The code

@@ -13,9 +13,6 @@ import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/ProtocolAccount.sol';
 
-import "hardhat/console.sol";
-
-
 /* @title Warm path callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
  *         main contract to avoid Ethereum's contract code size limit. Contains top-

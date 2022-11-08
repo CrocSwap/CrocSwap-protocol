@@ -17,8 +17,6 @@ import './KnockoutCounter.sol';
 import './ProxyCaller.sol';
 import './AgentMask.sol';
 
-import "hardhat/console.sol";
-
 /* @title Trade matcher mixin
  * @notice Provides a unified facility for calling the core atomic trade actions
  *         on a pre-loaded liquidity curve:

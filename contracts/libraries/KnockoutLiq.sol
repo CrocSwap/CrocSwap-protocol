@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
-
 /* @notice Defines structures and functions necessary to track knockout liquidity. 
  *         Knockout liquidity works like standard concentrated range liquidity, *except*
  *         the position becomes inactive once the price of the curve breaches a certain

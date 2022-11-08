@@ -9,8 +9,6 @@ import './LiquidityMath.sol';
 import './CompoundMath.sol';
 import './CurveMath.sol';
 
-import "hardhat/console.sol";
-
 /* @title Curve roll library
  * @notice Provides functionality for rolling swap flows onto a constant-product
  *         AMM liquidity curve. */

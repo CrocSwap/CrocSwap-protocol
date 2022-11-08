@@ -8,8 +8,6 @@ import '../libraries/PriceGrid.sol';
 import '../interfaces/ICrocPermitOracle.sol';
 import './StorageLayout.sol';
 
-import "hardhat/console.sol";
-
 /* @title Pool registry mixin
  * @notice Provides a facility for registering and querying pool types on pairs and
  *         generalized pool templates for pools yet to be initialized. */

@@ -8,8 +8,6 @@ import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
 
-import "hardhat/console.sol";
-
 /* @title Curve and swap math library
  * @notice Library that defines locally stable constant liquidity curves and
  *         swap struct, as well as functions to derive impact and aggregate 

@@ -13,8 +13,6 @@ import './PoolSpecs.sol';
 import './Directives.sol';
 import './Chaining.sol';
 
-import "hardhat/console.sol";
-
 /* @title Swap Curve library.
  * @notice Library contains functionality for fully applying a swap directive to 
  *         a locally stable AMM liquidty curve within the bounds of the stable range,

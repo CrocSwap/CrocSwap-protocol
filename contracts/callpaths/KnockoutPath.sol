@@ -11,8 +11,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/TradeMatcher.sol';
 
-import "hardhat/console.sol";
-
 /* @title Knockout Flag Proxy
  * @notice This is an internal library callpath that's called when a swap triggers a 
  *         knockout liquidity event by crossing a given bump point. 

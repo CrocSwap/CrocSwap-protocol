@@ -8,8 +8,6 @@ import '../libraries/CompoundMath.sol';
 import './StorageLayout.sol';
 import './PoolRegistry.sol';
 
-import "hardhat/console.sol";
-
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */

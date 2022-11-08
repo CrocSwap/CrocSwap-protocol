@@ -5,7 +5,6 @@ pragma solidity ^0.8.4;
 import "../libraries/PoolSpecs.sol";
 import "../interfaces/ICrocLpConduit.sol";
 import "@rari-capital/solmate/src/tokens/ERC20.sol";
-import "hardhat/console.sol";
 
 contract CrocLpErc20 is ERC20, ICrocLpConduit {
 

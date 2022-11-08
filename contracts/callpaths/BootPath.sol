@@ -15,8 +15,6 @@ import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
 import '../CrocEvents.sol';
 
-import "hardhat/console.sol";
-
 /* @title Booth path callpath sidecar.
  * 
  * @notice Simple proxy with the sole function of upgrading other proxy contracts. For safety

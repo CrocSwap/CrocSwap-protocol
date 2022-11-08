@@ -8,8 +8,6 @@ import './SafeCast.sol';
 import './CurveMath.sol';
 import './Directives.sol';
 
-import "hardhat/console.sol";
-
 /* @title Price grid library.
  * @notice Functionality for tick-defined price grids and facilities for off-grid
  *         price improvement. */

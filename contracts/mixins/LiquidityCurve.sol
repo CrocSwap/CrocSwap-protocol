@@ -12,8 +12,6 @@ import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
 import './StorageLayout.sol';
 
-import "hardhat/console.sol";
-
 /* @title Liquidity Curve Mixin
  * @notice Tracks the state of the locally stable constant product AMM liquid curve
  *         for the pool. Applies any adjustment to the curve as needed, either from

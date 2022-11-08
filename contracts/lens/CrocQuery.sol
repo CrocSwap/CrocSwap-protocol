@@ -3,8 +3,6 @@
 pragma solidity ^0.8.4;
 import "../CrocSwapDex.sol";
 
-import "hardhat/console.sol";
-
 contract CrocQuery {
     using CurveMath for CurveMath.CurveState;
     using SafeCast for uint144;
