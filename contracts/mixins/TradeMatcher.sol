@@ -181,7 +181,12 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
      *         LP position that was minted. */
     function depositConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
                              address lpConduit) private {
-        depositConduit(poolHash, 0, 0, liqSeeds, deflator, lpConduit);
+        // Equivalent to calling concentrated liquidity deposit with lowTick=0 and highTick=0
+        // Since a true range order can never have a width of zero, the receiving deposit
+        // contract should recognize these values as always representing ambient liquidity
+        int24 NA_LOW_TICK = 0;
+        int24 NA_HIGH_TICK = 0;
+        depositConduit(poolHash, NA_LOW_TICK, NA_HIGH_TICK, liqSeeds, deflator, lpConduit);
     }
 
     /* @notice Dispatches the call to the ICrocLpConduit with the concentrated liquidity 
