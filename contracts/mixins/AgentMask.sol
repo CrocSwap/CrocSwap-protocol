@@ -163,14 +163,19 @@ contract AgentMask is StorageLayout {
                          ("\x19\x01", domainHash(), hash));
     }
 
+    bytes32 constant CALL_SIG_HASH = 
+        keccak256("CrocRelayerCall(uint8 callpath,bytes cmd,bytes conds,bytes tip)");
+    bytes32 constant DOMAIN_SIG_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 constant APP_NAME_HASH = keccak256("CrocSwap");
+    bytes32 constant VERSION_HASH = keccak256("1.0");
+
     /* @notice Calculates the EIP-712 typedStruct hash. */
     function contentHash (CrocRelayerCall memory call)
         private pure returns (bytes32) {
         return keccak256(
             abi.encode
-            (keccak256
-             ("CrocRelayerCall(uint8 callpath,bytes cmd,bytes conds,bytes tip)"),
-             call.callpath,
+            (CALL_SIG_HASH, call.callpath,
              keccak256(call.cmd),
              keccak256(call.conds),
              keccak256(call.tip)));
@@ -180,11 +185,7 @@ contract AgentMask is StorageLayout {
     function domainHash() private view returns (bytes32) {
         return keccak256(
             abi.encode
-            (keccak256(
-                "EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
-             keccak256("CrocSwap"),
-             block.chainid,
-             address(this)));
+            (DOMAIN_SIG_HASH, APP_NAME_HASH, VERSION_HASH, block.chainid, address(this)));
     }
 
     /* @notice Returns the payer and receiver of any settlement collateral flows.

@@ -145,6 +145,7 @@ describe('Pool Relayer Agent', () => {
     async function formSignature (callpath: number, cmd: BytesLike, conds: BytesLike, tip: BytesLike) {
         const domain = {
             name: "CrocSwap",
+            version: "1.0",
             chainId: 31337,
             verifyingContract: dex
         }
