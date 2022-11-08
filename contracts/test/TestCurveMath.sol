@@ -19,7 +19,7 @@ contract TestCurveMath {
                       bool, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
-        return SwapCurve.vigOverSwap(curve, swapQty, feeRate, protoCut, inBase,
+        return SwapCurve.calcFeeOverSwap(curve, swapQty, feeRate, protoCut, inBase,
                                      limitPrice);
     }
 
