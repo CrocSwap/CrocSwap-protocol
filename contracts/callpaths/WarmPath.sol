@@ -70,41 +70,41 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
                        address lpConduit)
         private returns (int128, int128) {
         if (code == UserCmd.MINT_RANGE_LIQ_LP) {
-            return mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
+            return mintConcentratedLiq(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                         limitLower, limitHigher);
         } else if (code == UserCmd.MINT_RANGE_BASE_LP) {
-            return mintQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
+            return mintConcentratedQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
                            limitLower, limitHigher);
         } else if (code == UserCmd.MINT_RANGE_QUOTE_LP) {
-            return mintQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
+            return mintConcentratedQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
                            limitLower, limitHigher);
             
         } else if (code == UserCmd.BURN_RANGE_LIQ_LP) {
-            return burn(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
+            return burnConcentratedLiq(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                         limitLower, limitHigher);
         } else if (code == UserCmd.BURN_RANGE_BASE_LP) {
-            return burnQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
+            return burnConcentratedQty(base, quote, poolIdx, bidTick, askTick, true, liq, lpConduit,
                            limitLower, limitHigher);
         } else if (code == UserCmd.BURN_RANGE_QUOTE_LP) {
-            return burnQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
+            return burnConcentratedQty(base, quote, poolIdx, bidTick, askTick, false, liq, lpConduit,
                            limitLower, limitHigher);
             
         } else if (code == UserCmd.MINT_AMBIENT_LIQ_LP) {
-            return mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
+            return mintAmbientLiq(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
         } else if (code == UserCmd.MINT_AMBIENT_BASE_LP) {
-            return mintQty(base, quote, poolIdx, true, liq, lpConduit,
+            return mintAmbientQty(base, quote, poolIdx, true, liq, lpConduit,
                            limitLower, limitHigher);
         } else if (code == UserCmd.MINT_AMBIENT_QUOTE_LP) {
-            return mintQty(base, quote, poolIdx, false, liq, lpConduit,
+            return mintAmbientQty(base, quote, poolIdx, false, liq, lpConduit,
                            limitLower, limitHigher);
             
         } else if (code == UserCmd.BURN_AMBIENT_LIQ_LP) {
-            return burn(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
+            return burnAmbientLiq(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
         } else if (code == UserCmd.BURN_AMBIENT_BASE_LP) {
-            return burnQty(base, quote, poolIdx, true, liq, lpConduit,
+            return burnAmbientQty(base, quote, poolIdx, true, liq, lpConduit,
                            limitLower, limitHigher);
         } else if (code == UserCmd.BURN_AMBIENT_QUOTE_LP) {
-            return burnQty(base, quote, poolIdx, false, liq, lpConduit,
+            return burnAmbientQty(base, quote, poolIdx, false, liq, lpConduit,
                            limitLower, limitHigher);
             
         } else if (code == UserCmd.HARVEST_LP) {
@@ -130,7 +130,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold.  */    
-    function mint (address base, address quote, uint256 poolIdx,
+    function mintConcentratedLiq (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher) internal returns
         (int128, int128) {
@@ -156,7 +156,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold. */
-    function burn (address base, address quote, uint256 poolIdx,
+    function burnConcentratedLiq (address base, address quote, uint256 poolIdx,
                    int24 bidTick, int24 askTick, uint128 liq, address lpConduit, 
                    uint128 limitLower, uint128 limitHigher)
         internal returns (int128, int128) {
@@ -208,7 +208,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold.  */
-    function mint (address base, address quote, uint256 poolIdx, uint128 liq,
+    function mintAmbientLiq (address base, address quote, uint256 poolIdx, uint128 liq,
                    address lpConduit, uint128 limitLower, uint128 limitHigher) internal
         returns (int128, int128) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
@@ -216,7 +216,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         return mintOverPool(liq, pool, limitLower, limitHigher, lpConduit);
     }
 
-    function mintQty (address base, address quote, uint256 poolIdx, bool inBase,
+    function mintAmbientQty (address base, address quote, uint256 poolIdx, bool inBase,
                       uint128 qty, address lpConduit, uint128 limitLower,
                       uint128 limitHigher) internal
         returns (int128, int128) {
@@ -225,18 +225,18 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         uint128 liq = Chaining.sizeAmbientLiq(qty, true, curve.priceRoot_, inBase);
         
         (int128 baseFlow, int128 quoteFlow) =
-            mint(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
+            mintAmbientLiq(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
         return Chaining.pinFlow(baseFlow, quoteFlow, qty, inBase);
     }
 
-    function mintQty (address base, address quote, uint256 poolIdx,
+    function mintConcentratedQty (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, bool inBase,
                       uint128 qty, address lpConduit, uint128 limitLower,
                       uint128 limitHigher) internal
         returns (int128, int128) {
         uint128 liq = sizeAddLiq(base, quote, poolIdx, qty, bidTick, askTick, inBase);
         (int128 baseFlow, int128 quoteFlow) =
-            mint(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
+            mintConcentratedLiq(base, quote, poolIdx, bidTick, askTick, liq, lpConduit,
                  limitLower, limitHigher);
         return Chaining.pinFlow(baseFlow, quoteFlow, qty, inBase);
             
@@ -263,7 +263,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *                   at call time is below this value.
      * @param limitUpper Transaction fails if the curve price at call time is above this
      *                   threshold. */
-    function burn (address base, address quote, uint256 poolIdx, uint128 liq,
+    function burnAmbientLiq (address base, address quote, uint256 poolIdx, uint128 liq,
                    address lpConduit, uint128 limitLower, uint128 limitHigher) internal
         returns (int128, int128) {
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
@@ -271,18 +271,18 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         return burnOverPool(liq, pool, limitLower, limitHigher, lpConduit);
     }
 
-    function burnQty (address base, address quote, uint256 poolIdx, bool inBase,
+    function burnAmbientQty (address base, address quote, uint256 poolIdx, bool inBase,
                       uint128 qty, address lpConduit,
                       uint128 limitLower, uint128 limitHigher) internal
         returns (int128, int128) {
         bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
         CurveMath.CurveState memory curve = snapCurve(poolKey);
         uint128 liq = Chaining.sizeAmbientLiq(qty, false, curve.priceRoot_, inBase);
-        return burn(base, quote, poolIdx, liq, lpConduit,
+        return burnAmbientLiq(base, quote, poolIdx, liq, lpConduit,
                     limitLower, limitHigher);
     }
 
-    function burnQty (address base, address quote, uint256 poolIdx,
+    function burnConcentratedQty (address base, address quote, uint256 poolIdx,
                       int24 bidTick, int24 askTick, bool inBase,
                       uint128 qty, address lpConduit,
                       uint128 limitLower, uint128 limitHigher)
@@ -291,7 +291,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         CurveMath.CurveState memory curve = snapCurve(poolKey);
         uint128 liq = Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
                                            bidTick, askTick, inBase);
-        return burn(base, quote, poolIdx, bidTick, askTick,
+        return burnConcentratedLiq(base, quote, poolIdx, bidTick, askTick,
                     liq, lpConduit, limitLower, limitHigher);
     }
     
