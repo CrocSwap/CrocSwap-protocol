@@ -233,7 +233,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function collectProtocol (bytes calldata cmd) private {
         (, address token) = abi.decode(cmd, (uint8, address));
 
-        require(block.timestamp >= treasuryStartTime_, "TL");
+        require(block.timestamp >= treasuryStartTime_, "Treasury start");
         emit CrocEvents.ProtocolDividend(token, treasury_);
         disburseProtocolFees(treasury_, token);
     }
@@ -243,7 +243,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function setTreasury (bytes calldata cmd) private {
         (, address treasury) = abi.decode(cmd, (uint8, address));
 
-        require(treasury != address(0) && treasury.code.length != 0);
+        require(treasury != address(0) && treasury.code.length != 0, "Treasury invalid");
         treasury_ = treasury;
         treasuryStartTime_ = uint64(block.timestamp + 7 days);
         emit CrocEvents.TreasurySet(treasury_, treasuryStartTime_);
@@ -254,7 +254,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             abi.decode(cmd, (uint8, address));
 
         require(auth != address(0) && auth.code.length > 0 && 
-            ICrocMaster(auth).acceptsCrocAuthority());
+            ICrocMaster(auth).acceptsCrocAuthority(), "Invalid Authority");
         
         emit CrocEvents.AuthorityTransfer(authority_);
         authority_ = auth;
@@ -327,7 +327,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             abi.decode(cmd, (uint8, address, uint32, uint16[]));
 
         for (uint i = 0; i < callpaths.length; ++i) {
-            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "RA");
+            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "Invalid Router Approve");
             approveAgent(router, nCalls, callpaths[i]);
         }
     }
