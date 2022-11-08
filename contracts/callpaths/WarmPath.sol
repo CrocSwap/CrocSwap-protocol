@@ -12,7 +12,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/ProtocolAccount.sol';
-import '../mixins/ColdInjector.sol';
 
 import "hardhat/console.sol";
 

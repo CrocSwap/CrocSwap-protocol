@@ -10,7 +10,6 @@ import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/MarketSequencer.sol';
-import './mixins/ColdInjector.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/BootPath.sol';
@@ -20,8 +19,6 @@ import './callpaths/LongPath.sol';
 import './callpaths/KnockoutPath.sol';
 import './callpaths/MicroPaths.sol';
 import './callpaths/SafeModePath.sol';
-
-import "hardhat/console.sol";
 
 /* @title CrocSwap exchange contract
  * @notice Top-level CrocSwap contract. Contains all public facing methods and state

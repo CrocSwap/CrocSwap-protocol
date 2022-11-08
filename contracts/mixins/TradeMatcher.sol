@@ -14,7 +14,7 @@ import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './KnockoutCounter.sol';
-import './ColdInjector.sol';
+import './ProxyCaller.sol';
 import './AgentMask.sol';
 
 import "hardhat/console.sol";
@@ -28,7 +28,7 @@ import "hardhat/console.sol";
  *           4) Burn range liquidity
  *           5) Swap                                                     */
 contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
-    ColdPathInjector {
+    ProxyCaller {
 
     using SafeCast for int256;
     using SafeCast for int128;

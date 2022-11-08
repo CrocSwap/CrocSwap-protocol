@@ -9,13 +9,13 @@ import '../libraries/Directives.sol';
 
 import "hardhat/console.sol";
 
-/* @title Cold path injector
+/* @title Proxy Caller
  * @notice Because of the Ethereum contract limit, much of the CrocSwap code is pushed
  *         into sidecar proxy contracts, which is involed with DELEGATECALLs. The code
- *         moved to these sidecars is less gas critical ("cold path") than the code in
- *         in the core contract ("hot path"). This provides a facility for invoking that
- *         cold path code and setting up the DELEGATECALLs in a standard and safe way. */
-contract ColdPathInjector is StorageLayout {
+ *         moved to these sidecars is less gas critical than the code in the core contract. 
+ *         This provides a facility for invoking proxy conjtracts in a consistent way by
+*          setting up the DELEGATECALLs in a standard and safe manner. */
+contract ProxyCaller is StorageLayout {
     using CurveCache for CurveCache.Cache;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;

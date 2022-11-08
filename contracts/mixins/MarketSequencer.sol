@@ -13,9 +13,7 @@ import '../libraries/Chaining.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
-import './ColdInjector.sol';
 import './TradeMatcher.sol';
-import './ColdInjector.sol';
 
 /* @title Market sequencer.
  * @notice Mixin class that's responsibile for coordinating one or multiple sequetial
