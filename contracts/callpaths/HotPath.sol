@@ -112,6 +112,7 @@ contract HotProxy is HotPath {
 
     function userCmd (bytes calldata input) public payable
         returns (int128, int128) {
+        require(!hotPathOpen_, "Hot path enabled");
         return swapEncoded(input);
     }
 
