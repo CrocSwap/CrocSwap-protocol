@@ -112,54 +112,6 @@ contract DepositDesk is SettleLayer {
         userBals_[toKey].surplusCollateral_ += value;
     }
 
-    /* @notice Called to deposit virtualized tokens through an external token tracker 
-     *         portal. The specific implementation of tracking tokens and verifying that
-     *         the user has an adaquate balance is left to the external tracker portal.
-     * 
-     * @param tracker The address of the external virtual token tracker. 
-     *                (See ICrocVirtualToken for more info on behavior and implementation)
-     * @param tokenSalt An arbitrary salt value that combined with the tracker address
-     *                  defines a single unique virtual token series.
-     * @param value The amount of virtualized token the user wishes to deposit.
-     * @param extraArgs Arbitrary calldata to be passed to the virtual token portal for
-     *                  the deposit call. */
-    function depositVirtual (address tracker, uint256 tokenSalt, uint128 value,
-                             bytes memory extraArgs) internal {
-        bytes32 toKey = tokenKey(lockHolder_, tracker, tokenSalt);
-        userBals_[toKey].surplusCollateral_ += value;
-
-        bool success = ICrocVirtualToken(tracker).depositCroc
-            (lockHolder_, tokenSalt, value, extraArgs);
-        require(success, "VF");
-    }
-
-    /* @notice Called to withdraw virtualized tokens from the dex back through an 
-     *         external token tracker portal. This will decrement the user's balance from
-     *         the dex surplus collateral balance, then it's up to the token tracker 
-     *         portal to externally credit the user in whatever way the virtualized token
-     *         implementation works.
-     * 
-     * @param tracker The address of the external virtual token tracker. 
-     *                (See ICrocVirtualToken for more info on behavior and implementation)
-     * @param tokenSalt An arbitrary salt value that combined with the tracker address
-     *                  defines a single unique virtual token series.
-     * @param value The amount of virtualized token the user wishes to deposit.
-     * @param extraArgs Arbitrary calldata to be passed to the virtual token portal for
-     *                  the deposit call. */
-    function disburseVirtual (address tracker, uint256 tokenSalt, int128 size,
-                              bytes memory extraArgs)
-        internal {
-        bytes32 fromKey = tokenKey(lockHolder_, tracker, tokenSalt);
-        uint128 balance = userBals_[fromKey].surplusCollateral_;
-
-        uint128 value = applyTransactVal(size, balance);
-        userBals_[fromKey].surplusCollateral_ -= value;        
-
-        bool success = ICrocVirtualToken(tracker).withdrawCroc
-            (lockHolder_, tokenSalt, value, extraArgs);
-        require(success, "VF");   
-    }
-
     /* @notice Converts an encoded trasnfer argument to the actual quantity to transfer.
      *         Includes syntactic sugar for special transfer types including:
      *            Positive Value - Transfer this specified amount

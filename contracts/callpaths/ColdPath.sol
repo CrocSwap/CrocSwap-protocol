@@ -98,10 +98,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             transferSurplus(cmd);
         } else if (cmdCode == UserCmd.SIDE_POCKET_CODE) {
             sidePocketSurplus(cmd);
-        } else if (cmdCode == UserCmd.DEPOSIT_VIRTUAL_CODE) {
-            depositVirtual(cmd);
-        } else if (cmdCode == UserCmd.DISBURSE_VIRTUAL_CODE) {
-            disburseVirtual(cmd);
         } else if (cmdCode == UserCmd.RESET_NONCE) {
             resetNonce(cmd);
         } else if (cmdCode == UserCmd.RESET_NONCE_COND) {
@@ -304,18 +300,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (, uint256 fromSalt, uint256 toSalt, int128 value, address token) =
             abi.decode(cmd, (uint8, uint256, uint256, int128, address));
         sidePocketSurplus(fromSalt, toSalt, value, token);
-    }
-
-    function depositVirtual (bytes calldata cmd) private {
-        (, address recv, uint256 salt, uint128 value, bytes memory args) = 
-            abi.decode(cmd, (uint8, address, uint256, uint128, bytes));
-        depositVirtual(recv, salt, value, args);
-    }
-
-    function disburseVirtual (bytes calldata cmd) private {
-        (, address tracker, uint256 salt, int128 value, bytes memory args) =
-            abi.decode(cmd, (uint8, address, uint256, int128, bytes));
-        disburseVirtual(tracker, salt, value, args);
     }
 
     function resetNonce (bytes calldata cmd) private {
