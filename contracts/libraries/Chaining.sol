@@ -19,7 +19,6 @@ library Chaining {
     using TickMath for int24;
     using LiquidityMath for uint128;
     using CurveMath for CurveMath.CurveState;
-    using CurveMath for CurveMath.CurveState;
 
     /* Used as an indicator code by long-form orders to indicate how a given sub-
      * directive should size relative to some pre-existing cumulative collateral flow

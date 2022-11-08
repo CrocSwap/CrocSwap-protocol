@@ -61,7 +61,7 @@ library CrocEvents {
     /* @notice Emitted when accumulated protocol fees are collected by the treasury.
      * @param token The token of the fees being collected.
      * @param recv The vault the collected fees are being paid to. */
-    event ProtocolDividend (address indexed token, address recv);
+    event ProtocolDividend (address indexed token, address indexed recv);
 
     /* @notice Called when any proxy sidecar contract is upgraded.
      * @param proxy The address of the new proxy smart contract.

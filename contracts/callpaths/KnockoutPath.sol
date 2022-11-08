@@ -20,12 +20,18 @@ import '../mixins/TradeMatcher.sol';
 contract KnockoutFlagPath is KnockoutCounter {
 
     /* @notice Called when a knockout pivot is crossed.
+     *
      * @param pool The hash index of the pool.
      * @param tick The 24-bit index of the tick where the knockout pivot exists.
      * @param isBuy If true indicates that the swap direction is a buy.
      * @param feeGlobal The global fee odometer for 1 hypothetical unit of liquidity fully
      *                  in range since the inception of the pool.
-     * @return Returns the net additional amount the curve liquidity should be adjusted by. */
+     *
+     * @return Returns the net additional amount the curve liquidity should be adjusted by.
+     *         Currently this always returns zero, because a liquidity knockout will never change
+     *         active liquidity on a curve. But by leaving this function return type it leaves open
+     *         the possibility in future upgrades of alternative types of dynamic liquidity that 
+     *         do change active curve liquidity when crossed */
     function crossCurveFlag (bytes32 pool, int24 tick, bool isBuy, uint64 feeGlobal)
         public payable returns (int128) {
         // If swap is a sell, then implies we're crossing a resting bid and vice versa

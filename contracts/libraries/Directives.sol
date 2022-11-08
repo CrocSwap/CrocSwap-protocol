@@ -98,7 +98,7 @@ library Directives {
      *         pool.
      * @param ambient_ Directive related to ambient liquidity actions.
      * @param conc_ Directives related to concentrated liquidity range orders. */
-    struct PassiveDirective {
+    struct LiquidityDirective {
         AmbientDirective ambient_;
         ConcentratedDirective[] conc_;
     }
