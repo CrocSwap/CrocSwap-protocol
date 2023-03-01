@@ -29,6 +29,35 @@ contract CrocQuery {
         curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
+    function queryPoolParams (address base, address quote, uint256 poolIdx)
+        public view returns (PoolSpecs.Pool memory pool) {
+        bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 slot = keccak256(abi.encode(key, CrocSlots.POOL_PARAM_SLOT));
+        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        pool.schema_ = uint8(valOne);
+        pool.feeRate_ = uint16(valOne >> 8);
+        pool.protocolTake_ = uint8(valOne >> 24);
+        pool.tickSize_ = uint16(valOne >> 32);
+        pool.jitThresh_ = uint8(valOne >> 48);
+        pool.knockoutBits_ = uint8(valOne >> 56);
+        pool.oracleFlags_ = uint8(valOne >> 64);
+    }
+
+    function queryPoolTemplate (uint256 poolIdx)
+        public view returns (PoolSpecs.Pool memory pool) {
+        bytes32 slot = keccak256(abi.encode(poolIdx, CrocSlots.POOL_TEMPL_SLOT));
+        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        pool.schema_ = uint8(valOne);
+        pool.feeRate_ = uint16(valOne >> 8);
+        pool.protocolTake_ = uint8(valOne >> 24);
+        pool.tickSize_ = uint16(valOne >> 32);
+        pool.jitThresh_ = uint8(valOne >> 48);
+        pool.knockoutBits_ = uint8(valOne >> 56);
+        pool.oracleFlags_ = uint8(valOne >> 64);
+    }
+
     function queryLiquidity (address base, address quote, uint256 poolIdx)
         public view returns (uint128) {        
         return queryCurve(base, quote, poolIdx).activeLiquidity();
@@ -162,6 +191,7 @@ contract CrocQuery {
         int24 curveTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
         uint64 feeLower = lowerTick <= curveTick ? bidFee : curveFee - bidFee;
         uint64 feeUpper = upperTick <= curveTick ? askFee : curveFee - askFee;
+
         unchecked {
             uint64 accumFees = (feeUpper - feeLower) - feeStart;
             uint128 seeds = FixedPoint.mulQ48(liq, accumFees).toUint128By144();
