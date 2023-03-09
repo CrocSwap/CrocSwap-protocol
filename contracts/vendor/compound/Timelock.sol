@@ -33,7 +33,6 @@ contract Timelock {
     }
 
     fallback() external payable { }
-    receive() external payable { }
 
     function setDelay(uint delay_) public {
         require(msg.sender == address(this), "Timelock::setDelay: Call must come from Timelock.");
