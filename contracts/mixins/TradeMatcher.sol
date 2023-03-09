@@ -328,8 +328,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                            CurveMath.CurveState memory curve, int24 midTick,
                            Directives.SwapDirective memory swap,
                            PoolSpecs.PoolCursor memory pool) internal {
-        require(swap.isBuy_ ? curve.priceRoot_ < swap.limitPrice_ : 
-                              curve.priceRoot_ > swap.limitPrice_, "SD");
+        require(swap.isBuy_ ? curve.priceRoot_ <= swap.limitPrice_ : 
+                              curve.priceRoot_ >= swap.limitPrice_, "SD");
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
