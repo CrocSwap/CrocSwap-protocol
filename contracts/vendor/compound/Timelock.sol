@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity ^0.8.4;
+pragma solidity 0.8.19;
 
 /* Code is directly ported from Compound Timelock implementation found here:
  *     https://github.com/compound-finance/compound-protocol/blob/master/contracts/Timelock.sol

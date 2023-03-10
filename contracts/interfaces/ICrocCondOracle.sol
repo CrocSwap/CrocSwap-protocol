@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3 
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.19;
 
 /* @title Croc conditional oracle interface
  * @notice Defines a generalized interface for checking an arbitrary condition. Used in

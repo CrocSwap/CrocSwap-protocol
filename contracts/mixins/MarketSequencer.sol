@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';

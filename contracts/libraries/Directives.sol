@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import "./SafeCast.sol";
@@ -92,7 +92,7 @@ library Directives {
         uint8 rollType_;
         uint128 liquidity_;
     }
-    
+
     /* @param rollExit_ If set to true, use the exit side of the pair's tokens when
      *                  calculating rolling back-fill quantities.
      * @param swapDefer_ If set to true, execute the swap directive *after* the passive

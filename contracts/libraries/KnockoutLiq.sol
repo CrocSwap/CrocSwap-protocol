@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3
-pragma solidity ^0.8.4;
+pragma solidity 0.8.19;
 
 /* @notice Defines structures and functions necessary to track knockout liquidity. 
  *         Knockout liquidity works like standard concentrated range liquidity, *except*
