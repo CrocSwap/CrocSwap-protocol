@@ -80,8 +80,8 @@ contract PoolRegistry is StorageLayout {
     }
 
     function applyDiscount (PoolSpecs.PoolCursor memory pool, uint16 discount) private pure {
-        // Convention from permit oracle is to use 0 for non-approved, 1 for 0 discount, 
-        // and N+1 for N discount. (See ICrocPermitOracle.sol)
+        // Convention from permit oracle return value. Uses 0 for non-approved (meaning we 
+        // should rever), 1 for 0 discount, 2 for 0.0001% discount, and so on
         uint16 DISCOUNT_OFFSET = 1;
         require(discount > 0, "Z");
         pool.head_.feeRate_ -= (discount - DISCOUNT_OFFSET);
@@ -175,7 +175,7 @@ contract PoolRegistry is StorageLayout {
     // represents about $10 worth of burned value. Considering that the initial liquidity commitment
     // should be economic de minims, because it's permenately locked, we wouldn't want to be much 
     // higher than this.
-    uint constant MAX_INIT_POOL_LIQ = 10_000_000;
+    uint128 constant MAX_INIT_POOL_LIQ = 10_000_000;
 
     /* @notice The creation of every new pool requires the pool initializer to 
      *         permanetely lock in a token amount of liquidity (possibly zero). This is

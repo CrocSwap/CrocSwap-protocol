@@ -92,17 +92,7 @@ library Directives {
         uint8 rollType_;
         uint128 liquidity_;
     }
-
-    /* @notice A unified directive defining a collection of actions related to minting
-     *         and burning concentrated and ambient liquidity on a single pre-specified
-     *         pool.
-     * @param ambient_ Directive related to ambient liquidity actions.
-     * @param conc_ Directives related to concentrated liquidity range orders. */
-    struct LiquidityDirective {
-        AmbientDirective ambient_;
-        ConcentratedDirective[] conc_;
-    }
-
+    
     /* @param rollExit_ If set to true, use the exit side of the pair's tokens when
      *                  calculating rolling back-fill quantities.
      * @param swapDefer_ If set to true, execute the swap directive *after* the passive

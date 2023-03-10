@@ -194,7 +194,7 @@ library SwapCurve {
      *         boundary and a user specified limitPrice.
      * 
      * @dev Because the mapping from ticks to bumps always occur at the lowest price unit
-     *      inside a tick, there is an asymettry between the lower and upper bump tick arg. 
+     *      inside a tick, there is an asymmetry between the lower and upper bump tick arg. 
      *      The lower bump tick is the lowest tick *inclusive* for which liquidity is active.
      *      The upper bump tick is the *next* tick above where liquidity is active. Therefore
      *      the lower liquidity price maps to the bump tick price, whereas the upper liquidity

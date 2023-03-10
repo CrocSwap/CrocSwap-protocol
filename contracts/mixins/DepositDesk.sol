@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import './StorageLayout.sol';
 import './SettleLayer.sol';
-import '../interfaces/ICrocVirtualToken.sol';
 import '../interfaces/IERC20Minimal.sol';
 
 contract DepositDesk is SettleLayer {
@@ -77,8 +76,7 @@ contract DepositDesk is SettleLayer {
      *                  Positive - pay out the fixed size amount
      *                  Zero     - pays out the entire balance
      *                  Negative - pays out the entire balance *excluding* the size amount
-     * @param token The address of the token (or virtual token) the surplus collateral
-     *              is sent for. */
+     * @param token The address of the token the surplus collateral is sent for. */
     function transferSurplus (address to, int128 size, address token) internal {
         bytes32 fromKey = tokenKey(lockHolder_, token);
         bytes32 toKey = tokenKey(to, token);
@@ -101,8 +99,7 @@ contract DepositDesk is SettleLayer {
      *                  Positive - pay out the fixed size amount
      *                  Zero     - pays out the entire balance
      *                  Negative - pays out the entire balance *excluding* the size amount
-     * @param token The address of the token (or virtual token) the surplus collateral
-     *              is sent for. */
+     * @param token The address of the token the surplus collateral is sent for. */
     function sidePocketSurplus (uint256 fromSalt, uint256 toSalt, int128 size,
                                 address token) internal {
         address from = virtualizeUser(lockHolder_, fromSalt);

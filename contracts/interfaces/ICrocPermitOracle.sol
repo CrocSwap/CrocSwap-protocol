@@ -21,18 +21,19 @@ interface ICrocPermitOracle {
      * @param poolFee The effective pool fee set for the swap (either the base fee or the
      *                base fee plus user tip).
      *
-     * @returns       If zero, the transaction fails. If non-zero, the user will pay
-     *                a swap fee equivalent to @poolFee minus [value-1]. (I.e. a return value
-     *                of 1 indicates the swap is allowed but with 0 discount, a return value of 101
-     *                is a swap fee discount of [101 - 1] = 100) This allows a permit oracle to 
-     *                discriminate swap fees on a per call or user basis. */
+     * @returns discount    Either returns 0, indicating the action is not approved at all.
+     *                      Or returns the discount (in units of 0.0001%) that should be applied
+     *                      to the pool's pre-existing swap fee on this call. Be aware that this value
+     *                      is defined in terms of N-1 (because 0 is already used to indicate failure).
+     *                      Hence return value of 1 indicates a discount of 0, return value of 2 
+     *                      indicates discount of 0.0001%, return value of 3 is 0.0002%, and so on */
     function checkApprovedForCrocPool (address user, address sender,
                                        address base, address quote,
                                        Directives.AmbientDirective calldata ambient,
                                        Directives.SwapDirective calldata swap,
                                        Directives.ConcentratedDirective[] calldata concs,
                                        uint16 poolFee)
-        external returns (uint16);
+        external returns (uint16 discount);
 
     /* @notice Verifies whether a given user is permissioned to perform a swap on the pool
      *
@@ -47,17 +48,18 @@ interface ICrocPermitOracle {
      *                   hits limit price.
      * @param poolFee The effective pool fee set for the swap (either the base fee or the
      *                base fee plus user tip).
-     *
-     * @returns       If zero, the transaction fails. If non-zero, the user will pay
-     *                a swap fee equivalent to @poolFee minus [value-1]. (I.e. a return value
-     *                of 1 indicates the swap is allowed but with 0 discount, a return value of 101
-     *                is a swap fee discount of [101 - 1] = 100) This allows a permit oracle to 
-     *                disriminate swap fees on a per call or user basis. */
+
+     * @returns discount    Either returns 0, indicating the action is not approved at all.
+     *                      Or returns the discount (in units of 0.0001%) that should be applied
+     *                      to the pool's pre-existing swap fee on this call. Be aware that this value
+     *                      is defined in terms of N-1 (because 0 is already used to indicate failure).
+     *                      Hence return value of 1 indicates a discount of 0, return value of 2 
+     *                      indicates discount of 0.0001%, return value of 3 is 0.0002%, and so on */
     function checkApprovedForCrocSwap (address user, address sender,
                                        address base, address quote,
                                        bool isBuy, bool inBaseQty, uint128 qty,
                                        uint16 poolFee)
-        external returns (uint16);
+        external returns (uint16 discount);
 
     /* @notice Verifies whether a given user is permissioned to mint liquidity
      *         on the pool.

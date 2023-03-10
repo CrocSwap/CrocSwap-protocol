@@ -56,7 +56,7 @@ library OrderEncoding {
         uint8 poolCnt;
         poolCnt = abi.decode(input[next:(next+32)], (uint8));
         unchecked {
-        // Adding 32 at a time should never overflow 256 bits
+        
         next += 32;
         }
 
@@ -79,7 +79,7 @@ library OrderEncoding {
             abi.decode(input[offset:(offset+32*6)], (address, int128, uint128, bool, bool, bool));
 
         unchecked {
-        // Incrementing by 32 at a time should never overflow 256 bits
+        // Incrementing by 192 will run out of gas far before overflowing 256-bits
         return offset + 32*6;
         }        
     }
@@ -96,7 +96,7 @@ library OrderEncoding {
             concCnt) = abi.decode(input[next:(next+32*5)], (uint256, bool, uint8, uint128, uint8));
 
         unchecked {
-        // Incrementing by 32 at a time should never overflow 256 bits
+        // Incrementing by 160 will run out of gas far before overflowing 256-bits
         next += 32*5;
         }
         pair.conc_ = new Directives.ConcentratedDirective[](concCnt);
@@ -111,13 +111,13 @@ library OrderEncoding {
         (pair.swap_.isBuy_, pair.swap_.inBaseQty_, 
             pair.swap_.rollType_, pair.swap_.qty_, pair.swap_.limitPrice_) =
             abi.decode(input[next:(next+32*5)], (bool, bool, uint8, uint128, uint128));
-        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
+        unchecked {         // Incrementing by 160 will run out of gas far before overlowing 256 bits
         next += 32*5;
         }
 
         (pair.chain_.rollExit_, pair.chain_.swapDefer_,
             pair.chain_.offsetSurplus_) = abi.decode(input[next:(next+32*3)], (bool, bool, bool));
-        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
+        unchecked {        // Incrementing by 96 will run out of gas far before overlowing 256 bits
         next += 32*3;
         }
     }
@@ -131,7 +131,7 @@ library OrderEncoding {
             pass.rollType_, pass.liquidity_) = abi.decode(input[offset:(offset+32*6)], 
             (int24, int24, bool, bool, uint8, uint128));
 
-        unchecked {         // Incrementing by 32 at a time should never overflow 256 bits
+        unchecked {         // Incrementing by 196 at a time should never overflow 256 bits
         next = offset + 32*6;
         }
     }

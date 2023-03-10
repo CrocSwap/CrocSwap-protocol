@@ -348,7 +348,7 @@ library Chaining {
         bidPrice = lowTick.getSqrtRatioAtTick();
         askPrice = highTick.getSqrtRatioAtTick();
 
-        /* The requires reserve collateral for a range order is a function of whether
+        /* The required reserve collateral for a range order is a function of whether
          * the order is in-range or out-of-range. For in range orders the reserves are
          * determined based on the distance between the current price and range boundary
          * price:

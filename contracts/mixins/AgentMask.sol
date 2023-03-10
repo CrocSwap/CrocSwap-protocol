@@ -16,7 +16,7 @@ contract AgentMask is StorageLayout {
      *         by the user.
      *
      * @dev    lockHolder_ account is set to msg.sender, and therefore this call will
-     *         touch the positions, tokens and owned by msg.sender. */
+     *         touch the positions, tokens, and liquidity owned by msg.sender. */
     modifier reEntrantLock() {
         require(lockHolder_ == address(0));
         lockHolder_ = msg.sender;
@@ -46,7 +46,7 @@ contract AgentMask is StorageLayout {
      *         tokens, and liquidity owned by client address.
      *
      * @param client The client who's order the router is calling on behalf of.
-     * @param salt   The proxy sidecar callpath the agent is requesting to call on the user's behalf */
+     * @param callPath  The proxy sidecar callpath the agent is requesting to call on the user's behalf */
     modifier reEntrantApproved (address client, uint16 callPath) {
         stepAgentNonce(client, msg.sender, callPath);
         require(lockHolder_ == address(0));
@@ -363,8 +363,8 @@ contract AgentMask is StorageLayout {
         return tokenKey(user, PoolSpecs.virtualizeAddress(token, salt));
     }
 
-    /* @notice Returns an agent key given a user, an agent address and an arbitrary 
-     *         salt. */
+    /* @notice Returns an agent key given a user, an agent address and a specific
+     *         call path. */
     function agentKey (address user, address agent, uint16 callPath) pure internal
         returns (bytes32) {
         return keccak256(abi.encode(user, agent, callPath));
