@@ -55,6 +55,16 @@ module.exports = {
         chainId: 5,
         accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]      
       },
+      arbGoerli: {
+        url: 'https://goerli-rollup.arbitrum.io/rpc',
+        chainId: 421613,
+        accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]      
+      },
+      mumbai: {
+        url: 'https://polygon-mumbai.g.alchemy.com/v2/demo',
+        chainId: 80001,
+        accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]
+      },
 
       fuji: {
         url: "https://api.avax-test.network/ext/bc/C/rpc",
