@@ -56,6 +56,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         } else {
             sudoCmd(cmd);
         }
+
+        emit CrocEvents.CrocColdProtocolCmd(cmd);
     }
 
     /* @notice Subset of highly privileged commands that are only allowed to run in sudo
@@ -77,6 +79,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         } else {
             revert("Invalid command");
         }
+
     }
     
     function userCmd (bytes calldata cmd) virtual public payable {
@@ -106,6 +109,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             revert("Invalid command");
         }
 
+        emit CrocEvents.CrocColdCmd(cmd);
     }
     
     /* @notice Initializes the pool type for the pair.

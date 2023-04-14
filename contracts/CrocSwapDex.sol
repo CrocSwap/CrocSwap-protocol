@@ -19,6 +19,7 @@ import './callpaths/LongPath.sol';
 import './callpaths/KnockoutPath.sol';
 import './callpaths/MicroPaths.sol';
 import './callpaths/SafeModePath.sol';
+import './CrocEvents.sol';
 
 /* @title CrocSwap exchange contract
  * @notice Top-level CrocSwap contract. Contains all public facing methods and state
@@ -86,8 +87,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         // disable by toggling the force proxy flag. If so, users should point to
         // swapProxy.
         require(hotPathOpen_);
-        return swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
-                           limitPrice, minOut, reserveFlags);
+        (baseQuote, quoteFlow) = swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
+                                limitPrice, minOut, reserveFlags);
+        emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, tip, limitPrice, 
+            minOut, reserveFlags, baseQuote, quoteFlow);
     }
 
     /* @notice Consolidated method for protocol control related commands.

@@ -12,6 +12,7 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/ProtocolAccount.sol';
+import '../CrocEvents.sol';
 
 /* @title Warm path callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -58,6 +59,8 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
             commitLP(code, base, quote, poolIdx, bidTick, askTick,
                      liq, limitLower, limitHigher, lpConduit);
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
+
+        emit CrocEvents.CrocWarmCmd(input, baseFlow, quoteFlow);
     }
 
     
