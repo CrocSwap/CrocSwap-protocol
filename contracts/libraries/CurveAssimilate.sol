@@ -155,6 +155,12 @@ library CurveAssimilate {
         //       = S * (1 + G) * (1 + I)
         //   (where A' is the post transaction ambient liquidity, and I is the liquidity
         //    inflator for this transaction)
+        //
+        // Note that if the deflator reaches its maximum value (equivalent to 2^16), then
+        // this value will cease accumulating new rewards. Essentially all fees attributable
+        // to ambient liquidity will be burned. Economically speaking, this is unlikely to happen
+        // for any meaningful pool, but be aware. See the Ambient Rewards section of the
+        // documentation at docs/CurveBound.md in the repo for more discussion.
         curve.seedDeflator_ = curve.seedDeflator_
             .compoundStack(inflator);
 

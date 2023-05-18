@@ -286,6 +286,23 @@ describe('CurveMath', () => {
       expect(fromFixedGrowth(result.concGrowth)).to.lte(0);
       expect(result.shiftSeed.toNumber()).to.eq(0);
    })
+
+   it("assimilate at deflator bounds", async() => {
+      const MAX_GROWTH = BigNumber.from(2).pow(64).sub(1)
+      const concLiq = Math.pow(2, 16) // Conc liq equal to post-deflated ambient liquidity
+      const flowProp = 4
+
+      let result = await curve.testAssimilate(concLiq/flowProp, toSqrtPrice(1.0), 
+         1, concLiq, MAX_GROWTH, false);  
+      
+      // Price should proportionally move by approximately sqrt(flowProp)
+      const priceShift = 0.5 / flowProp
+      expect(fromSqrtPrice(result.shiftPrice)).lt(1 + priceShift);
+      expect(fromSqrtPrice(result.shiftPrice)).gt(1 + priceShift - priceShift*priceShift/2);
+
+      expect(result.shiftGrowth).to.eq(MAX_GROWTH);
+      expect(result.shiftSeed.toNumber()).to.eq(1);
+   })
      
    it("derive liq and price flow impact", async() => {
       let impact = await curve.testDeriveImpact(toSqrtPrice(1), 0, 25, 100, 50, true, true);
