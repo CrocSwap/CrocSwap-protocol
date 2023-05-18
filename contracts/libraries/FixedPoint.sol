@@ -39,8 +39,10 @@ library FixedPoint {
 
     /* @notice Takes the reciprocal of a Q64.64 number. */
     function recipQ64 (uint128 x) internal pure returns (uint128) {
-        unchecked { // No overflow or underflow possible in the below operations
-        return uint128(FixedPoint.Q128 / x);
+        unchecked { // Only possible overflow possible is captured with a specific check
+        uint256 div = uint256(FixedPoint.Q128) / uint256(x);
+        require(div <= type(uint128).max);
+        return uint128(div);
         }
     }
 }

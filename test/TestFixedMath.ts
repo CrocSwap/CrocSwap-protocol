@@ -55,5 +55,15 @@ describe('TestFixedMath', () => {
    it("recipQ64", async () => {
       let result = await comp.testRecipQ64(toQ64(8.0))
       expect(fromQ64(result)).to.equal(0.125);
+
+      result = await comp.testRecipQ64(toQ64(0.0625))
+      expect(fromQ64(result)).to.equal(16);
    })
+
+   it("recipQ64 size bounds", async () => {
+      expect(comp.testRecipQ64(1)).to.be.reverted
+      expect(await comp.testRecipQ64(2)).to.equal(BigNumber.from(2).pow(127))
+      expect(await comp.testRecipQ64(BigNumber.from(2).pow(127))).to.equal(2)
+   })
+
 })
