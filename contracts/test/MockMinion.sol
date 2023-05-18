@@ -13,12 +13,11 @@ contract MockMinion is ICrocMinion {
     bool[] public sudos_;
 
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable
-        override returns (bytes memory) {
+        override {
         paths_.push(proxyPath);
         protoCmds_.push(cmd);
         callers_.push(tx.origin);
         sudos_.push(sudo);
-        return abi.encode();
     }
 
     function userCmd (uint16 proxyPath, bytes calldata cmd) public payable returns
@@ -40,9 +39,8 @@ contract MockMaster is ICrocMaster {
         dex_ = dex;
     }
 
-    function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable
-        returns (bytes memory) {
-        return ICrocMinion(dex_).protocolCmd(proxyPath, cmd, sudo);
+    function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable {
+        ICrocMinion(dex_).protocolCmd(proxyPath, cmd, sudo);
     }
 
     function acceptsCrocAuthority() override external pure returns (bool) { return true; }

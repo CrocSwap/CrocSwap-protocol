@@ -451,7 +451,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         if (knockoutFlag) {
             int128 knockoutDelta = callCrossFlag
                 (poolHash, bumpTick, isBuy, curve.concGrowth_);
-            curve.concLiq_.addDelta(knockoutDelta);
+            curve.concLiq_ = curve.concLiq_.addDelta(knockoutDelta);
         }
     }    
 }

@@ -18,10 +18,9 @@ interface ICrocMinion {
      * @param sudo      Set to true for commands that require escalated privilege (e.g. 
      *                  authority transfers or upgrades.) The ability to call with sudo 
      *                  true should be reserved for privileged callpaths in the governance
-     *                  controller contract.
-     * @return Arbitrary byte data (if any) returned by the command. */
+     *                  controller contract. */
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo)
-        payable external returns (bytes memory);
+        payable external;
 }
 
 /* @notice Interface for a contract that directly governs a CrocSwap dex contract. */
