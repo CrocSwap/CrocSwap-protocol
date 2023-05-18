@@ -165,6 +165,9 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
                        bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
         (uint160 root, uint256[] memory proof) = abi.decode(args, (uint160,uint256[]));
+
+        // No permit check because permit oracles do not control knockout claims
+        // (See ICrocPermitOracle for more information)
         (baseFlow, quoteFlow) = claimKnockout(curve, loc, root, proof, pool);
         commitCurve(pool, curve);
     }
@@ -184,6 +187,10 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
                          bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
         (uint32 pivotTime) = abi.decode(args, (uint32));
+        
+        // No permit check because permit oracles do not control knockout claims
+        // (See ICrocPermitOracle for more information)
+
         (baseFlow, quoteFlow) = recoverKnockout(loc, pivotTime, pool);
         // No need to commit curve because recover doesn't touch curve.
     }

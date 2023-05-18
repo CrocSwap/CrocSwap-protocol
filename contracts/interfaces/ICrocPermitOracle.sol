@@ -4,7 +4,17 @@ pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 
-/* @notice Standard interface for a permit oracle to be used by a permissioned pool. */
+/* @notice Standard interface for a permit oracle to be used by a permissioned pool. 
+ * 
+ * @dev For pools under their control permit oracles have the ability to approve or deny
+ *      pool initialization, swaps, mints and burns for all liquidity types (ambient,
+ *      concentrated and knockout). 
+ * 
+ *      Note that permit oracles do *not* have the ability to restrict claims or recovers 
+ *      on post-knockout liquidity. An order is eligible to be claimed/recovered only after
+ *      its liquidity has been knocked out of the curve, and is no longer active. Since a
+ *      no longer active order does not affect the liquidity or state of the curve, permit
+ *      oracles have no economic reason to restrict knockout claims/recovers. */
 interface ICrocPermitOracle {
 
     /* @notice Verifies whether a given user is permissioned to perform an arbitrary 
