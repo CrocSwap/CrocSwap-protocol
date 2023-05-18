@@ -17,6 +17,7 @@ contract CrocImpact {
     address public dex_;
     
     constructor (address dex) {
+        require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
     }
 

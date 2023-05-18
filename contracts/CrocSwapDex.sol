@@ -168,6 +168,10 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         data := sload(slot)
         }
     }
+
+    /* @notice Validation function used by external contracts to verify an address is
+     *         a valid CrocSwapDex contract. */
+    function acceptCrocDex() pure public returns (bool) { return true; }
 }
 
 

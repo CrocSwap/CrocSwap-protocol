@@ -5,6 +5,7 @@ import '../libraries/ProtocolCmd.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../mixins/StorageLayout.sol';
 import '../vendor/compound/Timelock.sol';
+import '../CrocSwapDex.sol';
 
 /* @title CrocPolicy
  * @notice Intermediates between the dex mechanism inside CrocSwapDex and the top-level
@@ -89,11 +90,14 @@ contract CrocPolicy is ICrocMaster {
     
     /* @param dex Underlying CrocSwapDex contract */
     constructor (address dex) {
+        require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
         opsAuthority_ = msg.sender;
         treasuryAuthority_ = msg.sender;
         emergencyAuthority_ = msg.sender;  
     }
+
+
 
     /* @notice Transfers the existing governance authorities to new addresses. Can only
      *         be invoked by the treasury authority.

@@ -25,6 +25,7 @@ contract Timelock {
 
 
     constructor(address admin_, uint delay_) {
+        require(admin_ != address(0), "Timelock::constructor Invalid admin address");
         require(delay_ >= MINIMUM_DELAY, "Timelock::constructor: Delay must exceed minimum delay.");
         require(delay_ <= MAXIMUM_DELAY, "Timelock::setDelay: Delay must not exceed maximum delay.");
 

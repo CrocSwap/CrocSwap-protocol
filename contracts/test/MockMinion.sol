@@ -28,6 +28,8 @@ contract MockMinion is ICrocMinion {
         callers_.push(tx.origin);
         return abi.encode();
     }
+
+    function acceptCrocDex() public pure returns (bool) { return true; }
 }
 
 contract MockMaster is ICrocMaster {

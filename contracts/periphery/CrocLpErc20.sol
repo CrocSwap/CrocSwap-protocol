@@ -15,6 +15,13 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
     
     constructor (address base, address quote, uint256 poolIdx)
         ERC20 ("Croc Ambient LP ERC20 Token", "LP-CrocAmb", 18) {
+
+        // CrocSwap protocol uses 0x0 for native ETH, so it's possible that base
+        // token could be 0x0, which means the pair is against native ETH. quote
+        // will never be 0x0 because native ETH will always be the base side of
+        // the pair.
+        require(quote != address(0) && base != quote && quote > base, "Invalid Token Pair");
+
         baseToken = base;
         quoteToken = quote;
         poolType = poolIdx;
