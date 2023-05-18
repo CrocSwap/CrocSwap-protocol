@@ -118,5 +118,5 @@ interface ICrocPermitOracle {
         external returns (bool);
 
     /* @notice Just used to validate the contract address at pool creation time. */
-    function acceptsPermitOracle() external payable returns (bool);
+    function acceptsPermitOracle() external returns (bool);
 }

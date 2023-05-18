@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -352,5 +352,37 @@ describe('Pool Knockout Liq', () => {
         expect(await test.snapBaseFlow()).to.equal(-57684)
         expect(await test.snapQuoteFlow()).to.equal(-3753793)
         expect(await test.liquidity()).to.equal(10249921) // Slight decrease from pulling ambient rewards
+    })
+})
+
+describe('Pool Knockout Liq Native Eth', () => {
+    let test: TestPool
+    let quoteToken: Token
+    const feeRate = 225 * 100
+
+    beforeEach("deploy",  async () => {
+       test = await makeEtherPool()
+       quoteToken = await test.quote
+
+       await test.initPool(feeRate, 0, 1, 1.5)
+       test.useHotPath = true;
+
+       const knockoutFlag = 64 + 32 + 5 // Enabled, on grid, 32-ticks wide
+       await test.testRevisePool(feeRate, 0, 1, 0, knockoutFlag)
+    })
+
+    // Test to verify that crossKnockout function works with swaps with non-zero msg.value
+    it("swap knockout", async() => {
+        await test.testMintAmbient(10000)
+        await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
+        expect(await test.liquidity()).to.equal(10295216) // Below range
+
+        await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
+        expect(await test.liquidity()).to.equal(10296483) // Liquidity knocked out
+
+        // Can't burn knocked out liq
+        await expect(test.testKnockoutBurnLiq(1024, true, 3200, 3200+32, true)).to.be.reverted
     })
 })

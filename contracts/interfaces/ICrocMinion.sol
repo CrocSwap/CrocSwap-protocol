@@ -28,5 +28,5 @@ interface ICrocMinion {
 interface ICrocMaster {
     /* @notice Used to validate governance contract to prevent authority transfer to an
      *         an invalid address or contract. */
-    function acceptsCrocAuthority() payable external returns (bool);
+    function acceptsCrocAuthority() external returns (bool);
 }

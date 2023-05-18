@@ -310,7 +310,7 @@ contract CrocPolicy is ICrocMaster {
         return (bytes32(uint256(1)) << flagIdx) & cmdFlags > 0;         
     }
 
-    function acceptsCrocAuthority() public payable override returns (bool) { return true; }
+    function acceptsCrocAuthority() public override pure returns (bool) { return true; }
 
     /* @notice Permissions gate for normal day-to-day operations. */
     modifier opsAuth() {

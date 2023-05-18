@@ -43,5 +43,5 @@ contract MockMaster is ICrocMaster {
         return ICrocMinion(dex_).protocolCmd(proxyPath, cmd, sudo);
     }
 
-    function acceptsCrocAuthority() override external payable returns (bool) { return true; }
+    function acceptsCrocAuthority() override external pure returns (bool) { return true; }
 }

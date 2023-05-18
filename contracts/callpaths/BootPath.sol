@@ -71,7 +71,7 @@ contract BootPath is MarketSequencer, DepositDesk, ProtocolAccount {
 
     /* @notice Conforms to the standard call, but should always reject role because this contract
      *         should only ever be installled once at construction time and never upgraded after */
-    function acceptCrocProxyRole (address, uint16) public payable virtual returns (bool) {
+    function acceptCrocProxyRole (address, uint16) public pure virtual returns (bool) {
         return false;
     }
 }

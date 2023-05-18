@@ -332,7 +332,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
      *         in the correct slot. */
-    function acceptCrocProxyRole (address, uint16 slot) public payable virtual returns (bool) {
+    function acceptCrocProxyRole (address, uint16 slot) public virtual returns (bool) {
         return slot == CrocSlots.COLD_PROXY_IDX;
     }
 }

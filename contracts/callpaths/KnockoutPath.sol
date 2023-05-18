@@ -21,6 +21,11 @@ contract KnockoutFlagPath is KnockoutCounter {
 
     /* @notice Called when a knockout pivot is crossed.
      *
+     * @dev Since this contract is a proxy sidecar, this method needs to be marked
+     *      payable even though it doesn't directly handle msg.value. Otherwise it will
+     *      fail on any. Because of this, this contract should never be used in any other
+     *      context besides a proxy sidecar to CrocSwapDex.
+     *
      * @param pool The hash index of the pool.
      * @param tick The 24-bit index of the tick where the knockout pivot exists.
      * @param isBuy If true indicates that the swap direction is a buy.
@@ -42,7 +47,7 @@ contract KnockoutFlagPath is KnockoutCounter {
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
      *         in the correct slot. */
-    function acceptCrocProxyRole (address, uint16 slot) public payable returns (bool) {
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
         return slot == CrocSlots.FLAG_CROSS_PROXY_IDX;
     }
 
@@ -185,7 +190,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
      *         in the correct slot. */
-    function acceptCrocProxyRole (address, uint16 slot) public payable returns (bool) {
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
         return slot == CrocSlots.KNOCKOUT_LP_PROXY_IDX;
     }
 
