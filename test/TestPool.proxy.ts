@@ -52,7 +52,7 @@ describe('Pool Proxy Paths', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
         const liqGrowth = 93172
-        const counterFlow = -6620438
+        const counterFlow = -6620437
 
         await test.snapStart()
         await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
@@ -77,7 +77,7 @@ describe('Pool Proxy Paths', () => {
         let startBase = await baseToken.balanceOf((await test.dex).address)
         
         const liqGrowth = 93172
-        const counterFlow = -6620438
+        const counterFlow = -6620437
 
         await test.snapStart()
         await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
@@ -100,7 +100,7 @@ describe('Pool Proxy Paths', () => {
         await test.testMint(-5000, 8000, 1000000); 
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)        
-        const counterFlow = -6620438
+        const counterFlow = -6620437
         
         await test.snapStart()
         await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))

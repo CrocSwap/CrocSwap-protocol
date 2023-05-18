@@ -76,20 +76,27 @@ library CurveAssimilate {
     }
 
     /* @notice Converts a fixed delta change in the virtual reserves to a percent 
-     *         change in the AMM curve's active liquidity. */
+     *         change in the AMM curve's active liquidity.
+     *
+     * @dev Inflators above will 100% result in reverted transactions. */
     function calcReserveInflator (uint128 reserve, uint128 feesPaid)
-        private pure returns (uint64) {
+        private pure returns (uint64 inflator) {
         // Short-circuit when virtual reserves are smaller than fees. This can only
         // occur when liquidity is extremely small, and so is economically
         // meanignless. But guarantees numerical stability.
         if (reserve == 0 || feesPaid > reserve) { return 0; }
         
         uint128 nextReserve = reserve + feesPaid;
-        uint64 inflator = nextReserve.compoundDivide(reserve);
+        uint64 inflatorRoot = nextReserve.compoundDivide(reserve);
         
         // Since Liquidity is represented as Sqrt(X*Y) the growth rate of liquidity is
         // Sqrt(X'/X) where X' = X + delta(X)
-        return inflator.approxSqrtCompound();
+        inflator = inflatorRoot.approxSqrtCompound();
+
+        // Important. The price precision buffer calcualted in assimilateLiq assumes
+        // liquidity will never expand by a factor of 2.0 (i.e. inflator over 1.0 in
+        // Q16.48). See the shaveForPrecision() function comments for more discussion
+        require(inflator < FixedPoint.Q48, "IF");
     }
 
     /* @notice Adjusts the fees assimilated into the liquidity curve. This is done to
@@ -109,7 +116,22 @@ library CurveAssimilate {
     function shaveForPrecision (uint128 liq, uint128 price, uint128 feesPaid,
                                 bool isFeesInBase)
         private pure returns (uint128) {
-        uint128 bufferTokens = CurveMath.priceToTokenPrecision
+
+        // The precision buffer is calculated on curve precision, before curve liquidity
+        // expands from fee assimilation. Therefore we upper bound the precision buffer to
+        // account for maximum possible liquidity expansion.
+        //
+        // We set a factor of 2.0, as the bound because that would represnet swap fees
+        // in excess of the entire virtual reserve of the curve. This still allows any
+        // size impact swap (because liquidity fees cannot exceed 100%). The only restrction
+        // is extremely large swaps where fees are collected in input tokens (i.e. fixed
+        // output swaps)
+        //
+        // See the require statement calcReserveInflator function, for where this check
+        // is enforced. 
+        uint128 MAX_LIQ_EXPANSION = 2;
+
+        uint128 bufferTokens = MAX_LIQ_EXPANSION * CurveMath.priceToTokenPrecision
             (liq, price, isFeesInBase);
         unchecked {
         return feesPaid <= bufferTokens ?

@@ -212,11 +212,11 @@ describe('CurveMath', () => {
       let result = await curve.testAssimilate(1000, toSqrtPrice(2.25), 
          2000, 7500, toFixedGrowth(0.25), false);      
       expect(fromSqrtPrice(result.shiftPrice)).lte(2.4);
-      expect(fromSqrtPrice(result.shiftPrice)).gte(2.3997);      
-      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.290994);
-      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.2909);
-      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.02523302);
-      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.025233);
+      expect(fromSqrtPrice(result.shiftPrice)).gte(2.3996);      
+      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.2909);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.2908);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.025209);
+      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.025208);
       expect(result.shiftSeed.toNumber()).to.eq(2000 + 190);
    })
 
@@ -225,10 +225,10 @@ describe('CurveMath', () => {
          2000, 7500, toFixedGrowth(0.25), true);      
       expect(fromSqrtPrice(result.shiftPrice)).gte(0.64 / 1.1);
       expect(fromSqrtPrice(result.shiftPrice)).lte(0.64 / 1.099);      
-      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.31088999);
-      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.31088);
-      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.03702629);
-      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.037026);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.lte(0.31085);
+      expect(fromFixedGrowth(result.shiftGrowth)).to.gte(0.31084);
+      expect(fromFixedGrowth(result.concGrowth)).to.lte(0.03700);
+      expect(fromFixedGrowth(result.concGrowth)).to.gte(0.03699);
       expect(result.shiftSeed.toNumber()).to.lte(2000 + 279);
       expect(result.shiftSeed.toNumber()).to.lte(2000 + 278);
    })
