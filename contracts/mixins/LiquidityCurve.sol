@@ -231,7 +231,7 @@ contract LiquidityCurve is StorageLayout {
      *         on whether it's in range. */
     function bumpConcentrated (CurveMath.CurveState memory curve,
                                uint128 liqDelta, bool inRange) private pure {
-        bumpConcentrated(curve, int128(uint128(liqDelta)), inRange);
+        bumpConcentrated(curve, liqDelta.toInt128Sign(), inRange);
     }
 
     /* @notice Directly increments the concentrated liquidity on the curve, depending
