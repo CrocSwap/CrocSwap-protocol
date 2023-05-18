@@ -276,11 +276,16 @@ library Chaining {
     function bufferCollateral (uint128 collateral, bool isAdd)
         private pure returns (uint128) {
         uint128 BUFFER_COLLATERAL = 4;
+
         if (isAdd) {
+            // This ternary switch always produces non-negative result, preventing underflow
             return collateral < BUFFER_COLLATERAL ? 0 :
                 collateral - BUFFER_COLLATERAL;
         } else {
-            return collateral + BUFFER_COLLATERAL;
+            // This ternary switch prevents buffering into an overflow
+            return collateral > type(uint128).max - 4 ?
+                type(uint128).max :
+                collateral + BUFFER_COLLATERAL;
         }
     }
 
