@@ -196,6 +196,9 @@ contract TickCensus is StorageLayout {
      *   liquidity bump. The result is assymetric boundary for upper/lower ticks. */
     function seekMezzSpill (bytes32 poolIdx, int24 borderTick, bool isUpper)
         internal view returns (int24) {
+        if (isUpper && borderTick == type(int24).max) { return type(int24).max; }
+        if (!isUpper && borderTick == type(int24).min) { return type(int24).min; }
+
         (uint8 lobbyBorder, uint8 mezzBorder) = rootsForBorder(borderTick, isUpper);
 
         // Most common case is that the next neighboring bitmap on the border has
