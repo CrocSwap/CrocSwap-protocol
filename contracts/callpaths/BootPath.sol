@@ -2,17 +2,8 @@
 
 pragma solidity 0.8.19;
 
-import '../libraries/Directives.sol';
-import '../libraries/Encoding.sol';
-import '../libraries/TokenFlow.sol';
-import '../libraries/PriceGrid.sol';
 import '../libraries/ProtocolCmd.sol';
-import '../mixins/SettleLayer.sol';
-import '../mixins/PoolRegistry.sol';
-import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
-import '../mixins/ProtocolAccount.sol';
-import '../mixins/DepositDesk.sol';
 import '../CrocEvents.sol';
 
 /* @title Booth path callpath sidecar.
@@ -25,11 +16,7 @@ import '../CrocEvents.sol';
  *         time at slot 0 (BOOT_PROXY_IDX). No other proxy contract should include upgrade 
  *         functionality. If both of these conditions are true, this proxy can never be overwritten
  *         and upgrade functionality can never be broken for the life of the main contract. */
-contract BootPath is MarketSequencer, DepositDesk, ProtocolAccount {
-    using SafeCast for uint128;
-    using TokenFlow for TokenFlow.PairSeq;
-    using CurveMath for CurveMath.CurveState;
-    using Chaining for Chaining.PairFlow;
+contract BootPath is StorageLayout {
     using ProtocolCmd for bytes;
 
     /* @notice Consolidated method for protocol control related commands. */
