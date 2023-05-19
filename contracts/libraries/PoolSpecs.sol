@@ -20,11 +20,14 @@ library PoolSpecs {
      * @param feeRate_ The overall fee (liquidity fees + protocol fees inclusive) that
      *            swappers pay to the pool as a fraction of notional. Represented as an 
      *            integer representing hundredths of a basis point. I.e. a 0.25% fee 
-     *            would be 250000
+     *            would be 2500
      *
      * @param protocolTake_ The fraction of the fee rate that goes to the protocol fee 
-     *             (the rest accumulates as a liquidity fee to LPs). Represented as 1/n. 
-     *             Special case of zero, means the protocol take is 0%.
+     *             (the rest accumulates as a liquidity fee to LPs). Represented in units
+     *             of 1/256. Since uint8 can represent up to 255, protocol could take
+     *             as much as 99.6% of liquidity fees. However currently the protocol
+     *             set function prohibits values above 128, i.e. 50% of liquidity fees. 
+     *             (See set ProtocolTakeRate in PoolRegistry.sol)
      *
      * @param tickSize The minimum granularity of price ticks defining a grid, on which 
      *          range orders may be placed. (Outside off-grid price improvement facility.)

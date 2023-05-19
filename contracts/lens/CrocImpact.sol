@@ -3,6 +3,13 @@
 pragma solidity 0.8.19;
 import "../CrocSwapDex.sol";
 
+/* @notice Stateless read only contract that calculates the price impact of a hypothetical
+ *         swap on the current state of a given CrocSwapDex pool. Useful for calculating
+ *         impact without actually executing a swap, or needing the underlying tokens. 
+ *
+ * @dev Nothing in this contract can't be done by directly accessing readSlot() on the 
+ *      CrocSwapDex contrct. However this provides a more convienent interface with ergonomic
+ *      that parse the raw data. */
 contract CrocImpact {
     using CurveMath for CurveMath.CurveState;
     using CurveRoll for CurveMath.CurveState;
@@ -16,11 +23,30 @@ contract CrocImpact {
     
     address public dex_;
     
+    /* @param dex The address of the CrocSwapDex contract. */    
     constructor (address dex) {
         require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
     }
 
+    /* @notice Calculates the impact of a hypothetical swap.
+     *
+     * @param base The base token address of the pair
+     * @param quote The quote token address of the pair
+     * @param poolIdx The pool index
+     * @param isBuy True if the swap is paying base side tokens and receiving quote side
+     *              tokens.
+     * @param inBaseQty True if the fixed quantity side of the swap is base tokens, false
+     *                  quote side tokens.
+     * @param qty The total fixed number of tokens being paid or received in the swap.
+     * @param poolTip Any additional liquidity fee, in units of basis points
+     * @param limitPrice The limit price, in Q64.64 square root representation, that the swap
+     *                   should not execute beyond even if the fixed quantity is not reached
+     *
+     * @return baseFlow The base side tokens transacted in the swap.
+     * @return quoteFlow The base side tokens transacted in the swap.
+     * @return finalPrice The final price the pool would reach after the swap has executed.
+     *                    Represented in Q64.64 square root representation. */
     function calcImpact (address base, address quote,
                          uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                         uint16 poolTip, uint128 limitPrice) public view  
@@ -40,6 +66,7 @@ contract CrocImpact {
         finalPrice = curve.priceRoot_;
     }
 
+    /* @notice Retrieves the pool context object. */
     function queryPoolCntx (address base, address quote,
                             uint256 poolIdx, uint16 poolTip) private view 
         returns (PoolSpecs.PoolCursor memory cursor) {
@@ -58,6 +85,7 @@ contract CrocImpact {
         }
     }
 
+    /* @notice Retrieves the liquidity curve state for the pool. */
     function queryCurve (address base, address quote, uint256 poolIdx) private view 
         returns (CurveMath.CurveState memory curve) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
@@ -72,6 +100,7 @@ contract CrocImpact {
         curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
+    /* @notice Retrieves the level liquidity state for the tick in the pool. */
     function queryLevel (bytes32 poolHash, int24 tick) private view 
         returns (uint96 bidLots, uint96 askLots) {   
         bytes32 key = keccak256(abi.encodePacked(poolHash, tick));
@@ -82,12 +111,14 @@ contract CrocImpact {
         bidLots = uint96((val << 160) >> 160);
     }
 
+    /* @notice Retrieves the terminus level bitmap at the location. */
     function queryTerminus (bytes32 key) private view returns (uint256) {
         uint256 TERMINUS_SLOT = 65543;
         bytes32 slot = keccak256(abi.encode(key, TERMINUS_SLOT));
         return CrocSwapDex(dex_).readSlot(uint256(slot));
     }
 
+    /* @notice Retrieves the mezzanine level bitmap at the location. */
     function queryMezz (bytes32 key) private view returns (uint256) {
         uint256 MEZZ_SLOT = 65542;
         bytes32 slot = keccak256(abi.encode(key, MEZZ_SLOT));
@@ -95,6 +126,8 @@ contract CrocImpact {
         
     }
 
+    /* @notice Calculates the swap flow and applies the change to the liquidity curve
+     *         object */
     function sweepSwap (PoolSpecs.PoolCursor memory pool, 
                         CurveMath.CurveState memory curve,
                         Directives.SwapDirective memory swap) private view 
@@ -158,7 +191,8 @@ contract CrocImpact {
         return (accum.baseFlow_, accum.quoteFlow_);
     }
 
-
+    /* @notice Adjusts the liquidity when crossing over a concentrated liquidity bump at
+     *         a given tick. */
     function adjTickLiq (Chaining.PairFlow memory accum, int24 bumpTick,
                          CurveMath.CurveState memory curve,
                          Directives.SwapDirective memory swap,
@@ -184,6 +218,7 @@ contract CrocImpact {
         }
     }
 
+    /* @notice Calculates the next tick to seek in the curve bump tick map. */
     function pinBitmap (bytes32 poolHash, bool isUpper, int24 startTick) 
         private view returns (int24 boundTick, bool isSpill) {
         uint256 termBitmap = queryTerminus(encodeTerm(poolHash, startTick));
@@ -193,6 +228,7 @@ contract CrocImpact {
             (isUpper, shiftTerm, tickMezz, termBitmap);
     }
 
+    /* @notice Calculates the next mezznine tick to seek in the curve bump tick map. */
     function pinTermMezz (bool isUpper, uint16 shiftTerm, int16 tickMezz,
                           uint256 termBitmap)
         private pure returns (int24 nextTick, bool spillBit) {
@@ -204,6 +240,7 @@ contract CrocImpact {
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
+    /* @notice Moves to next tick when reaching the end of a terminus in bitmap */
     function spillOverPin (bool isUpper, int16 tickMezz) private pure returns (int24) {
         if (isUpper) {
             return tickMezz == Bitmaps.zeroMezz(isUpper) ?
@@ -214,6 +251,7 @@ contract CrocImpact {
         }
     }
 
+    /* @notice Determines if the seek would spill over the outside of the bitmap terminus. */
     function doesSpillBit (bool isUpper, bool spillTrunc, uint256 termBitmap)
         private pure returns (bool spillBit) {
         if (isUpper) {
@@ -225,6 +263,7 @@ contract CrocImpact {
         }
     }
 
+    /* @notice Seeks the next liquidity bump in tick bitmap at the mezzanine level. */
     function seekMezzSpill (bytes32 poolIdx, int24 borderTick, bool isUpper)
         internal view returns (int24) {
         (uint8 lobbyBorder, uint8 mezzBorder) = rootsForBorder(borderTick, isUpper);
@@ -354,7 +393,7 @@ contract CrocImpact {
         return keccak256(abi.encodePacked(poolIdx, mezzIdx)); 
     }
 
-
+    /* @notice If true, indicates there is still more quantity to execute in the swap. */
     function hasSwapLeft (CurveMath.CurveState memory curve,
                           Directives.SwapDirective memory swap)
         private pure returns (bool) {

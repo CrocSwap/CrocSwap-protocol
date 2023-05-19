@@ -198,11 +198,15 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         }
     }
 
+    /* @notice Withdraws and sends ownership of the ambient liquidity to a third party conduit
+     *         explicitly nominated by the caller. */
     function withdrawConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
                               address lpConduit) private {
         withdrawConduit(poolHash, 0, 0, liqSeeds, deflator, lpConduit);
     }
 
+    /* @notice Withdraws and sends ownership of the liquidity to a third party conduit
+     *         explicitly nominated by the caller. */
     function withdrawConduit (bytes32 poolHash, int24 lowTick, int24 highTick,
                               uint128 liq, uint64 mileage, address lpConduit) private {
         if (lpConduit != lockHolder_) {
@@ -212,7 +216,17 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         }
     }
 
-    
+    /* @notice Mints a new knockout liquidity position, or adds to a previous position, 
+     *         and updates the curve and debit flows accordingly.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param priceTick The 24-bit tick of the pool's current price
+     * @param loc The location of where to mint the knockout liquidity
+     * @param liquidity The total amount of XY=K liquidity to mint.
+     * @param poolHash The hash of the pool the curve applies to
+     * @param knockoutBits The bitwise knockout parameters currently set on the pool.
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function mintKnockout (CurveMath.CurveState memory curve, int24 priceTick,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
@@ -225,6 +239,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (baseFlow, quoteFlow) = signMintFlow(base, quote);
     }
 
+    /* @notice Burns an existing knockout liquidity position and updates the curve
+     *         and flows accordingly.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param priceTick The 24-bit tick of the pool's current price
+     * @param loc The location of where to burn the knockout liquidity from
+     * @param liquidity The total amount of XY=K liquidity to mint.
+     * @param poolHash The hash of the pool the curve applies to
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function burnKnockout (CurveMath.CurveState memory curve, int24 priceTick,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash)
@@ -237,6 +261,17 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
     }
 
+    /* @notice Claims a post-knockout liquidity position using the ownership Merkle proof
+     *         supplied by the caller.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param loc The location of where the post-knockout position was placed
+     * @param root The root of the supplied Merkle proof
+     * @param proof The Merkle proof that combined with the root must match the current
+     *              hash of the knockout slot
+     * @param poolHash The hash of the pool the curve applies to
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function claimKnockout (CurveMath.CurveState memory curve, 
                             KnockoutLiq.KnockoutPosLoc memory loc,
                             uint160 root, uint256[] memory proof, bytes32 poolHash)
@@ -248,7 +283,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
             (curve, liquidity, rewards, loc);
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
     }
-    
+
+    /* @notice Claims a post-knockout liquidity position using the ownership Merkle proof
+     *         supplied by the caller.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param loc The location of where the post-knockout position was placed
+     * @param root The root of the supplied Merkle proof
+     * @param pivotTime The pivotTime of the knockout slot at the time the position was
+     *                  minted.
+     * @return The incrmental base and quote debit flows from this action. */
     function recoverKnockout (KnockoutLiq.KnockoutPosLoc memory loc,
                               uint32 pivotTime, bytes32 poolHash)
         internal returns (int128 baseFlow, int128 quoteFlow) {

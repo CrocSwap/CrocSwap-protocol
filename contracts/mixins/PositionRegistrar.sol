@@ -30,7 +30,7 @@ contract PositionRegistrar is PoolRegistry {
      * same owner and the same range, it can be represented by incrementing 5 and 
      * updating 6. */
 
-    /* @notice Hashes the owner and concentrated liquidity range to the position key. */
+    /* @notice Hashes the owner of an ambient liquidity position to the position key. */
     function encodePosKey (address owner, bytes32 poolIdx)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx));
@@ -195,7 +195,7 @@ contract PositionRegistrar is PoolRegistry {
     /* @notice Adds ambient liquidity to a give position, creating a new position tracker
      *         if necessry.
      *         
-     * @param owner The bytes32 owning the position.
+     * @param owner The address of the owner of the liquidity position.
      * @param poolIdx The hash key of the pool the position lives on.
      * @param liqAdd The amount of liquidity to add to the position.
      * @param ambientGrowth The up-to-date ambient liquidity seed deflator for the curve.

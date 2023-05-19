@@ -120,8 +120,8 @@ contract SettleLayer is AgentMask {
      * @param baseFlow The amount of flow associated with the base side of the pair. 
      *                 Negative for credits paid to user, positive for debits.
      * @param quoteFlow The flow associated with the quote side of the pair.
-     * @param useSurplus If true, first try to settle using the user's exchange-held
-     *                   surplus collateral account, rather than external transfer. */
+     * @param reserveFlags Bitwise flags to indicate whether the base and/or quote flows
+     *                     should be settled from caller's surplus collateral */
     function settleFlows (address base, address quote, int128 baseFlow, int128 quoteFlow,
                           uint8 reserveFlags) internal {
         (address debitor, address creditor) = agentsSettle();

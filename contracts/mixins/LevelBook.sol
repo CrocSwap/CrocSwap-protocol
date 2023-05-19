@@ -6,6 +6,7 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 import './StorageLayout.sol';
+import 'hardhat/console.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
@@ -17,11 +18,14 @@ contract LevelBook is TickCensus {
 
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
-     *    bidLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from above. Denominated in (1024-unit)
-     *               lots.
-     *    askLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from below. Denominated in lots.
+     *    bidLots_ - The change to concentrated liquidity that's added to the AMM curve when
+     *               price moves into the tick from below, and removed when price moves
+     *               into the tick from above. Denominated in lot-units which are 1024 multiples
+     *               of liquidity units.
+     *    askLots_ - The change to concentrated liquidity that's added to the AMM curve when
+     *               price moves into the tick from above, and removed when price moves
+     *               into the tick from below. Denominated in lot-units which are 1024 multiples
+     *               of liquidity units.
      *    feeOdometer_ - The liquidity fee rewards accumulator that's checkpointed 
      *       whenever the price crosses the tick boundary. Used to calculate the 
      *       cumulative fee rewards on any arbitrary lower-upper tick range. This is
@@ -58,6 +62,7 @@ contract LevelBook is TickCensus {
             (lvl.bidLots_, lvl.askLots_);
         
         liqDelta = isBuy ? crossDelta : -crossDelta;
+
         if (feeGlobal != lvl.feeOdometer_) {
             lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
         }                

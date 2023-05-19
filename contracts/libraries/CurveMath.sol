@@ -219,7 +219,8 @@ library CurveMath {
         private pure returns (uint128) {
         uint128 priceDelta = priceBig - priceSmall;
 
-        // This is guaranteed to be at most 196 bits
+        // This is cast to uint256 but is guaranteed to be less than 2^192 based off
+        // the return type of divQ64
         uint256 termOne = FixedPoint.divQ64(liq, priceSmall);
         
         // As long as the final result doesn't overflow from 128-bits, this term is
