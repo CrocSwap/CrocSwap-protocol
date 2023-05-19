@@ -7,9 +7,16 @@ import '../libraries/TickMath.sol';
 import './StorageLayout.sol';
 
 /* @title Tick census mixin.
+ * 
  * @notice Tracks which tick indices have an active liquidity bump, making it gas
  *   efficient for random read and writes, and to find the next bump tick boundary
- *   on the curve. */
+ *   on the curve. 
+ * 
+ * @dev Note that this mixin works with the full set of possible int24 values.
+ *      Whereas other parts of the protocol set a MIN_TICK and MAX_TICK that are
+ *      that well within the type bounds of int24. It's the responsibility of
+ *      calling code to assure that ticks being set are within the MIN_TICK and
+ *      MAX_TICK, and this library does *not* provide those checks. */
 contract TickCensus is StorageLayout {
     using Bitmaps for uint256;
     using Bitmaps for int24;

@@ -52,10 +52,6 @@ contract TestCompoundMath {
         return FixedPoint.divQ64(x, y);
     }
 
-    function testDivQ64Sq (uint128 x, uint128 y) public pure returns (uint256) {
-        return FixedPoint.divSqQ64(x, y);
-    }
-
     function testRecipQ64 (uint128 x) public pure returns (uint128) {
         return FixedPoint.recipQ64(x);
     }

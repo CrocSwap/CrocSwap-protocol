@@ -12,10 +12,16 @@ contract DepositDesk is SettleLayer {
     /* @notice Directly deposits a certain amount of surplus collateral to a user's
      *         account.
      *
-     * @dev    This call can be used both for token and native Ether collateral. For the
-     *         latter the user must set msg.value with the corresponding amount. Because
-     *         it deals with msg.value, this function must *never* be called twice in the
-     *         same transaction, to avoid the risk of double-spend.
+     * @dev    This call can be used both for token and native Ether collateral. For
+     *         tokens, each call initiates a token transfer call to the ERC20 contract,
+     *         and it's safe to call repeatedly in the same transaction even for the same
+     *         token. 
+     * 
+     *         For native Ether deposits, the call consumes the value in msg.value using the
+     *         popMsgVal() function. If called more than once in a single transction
+     *         popMsgVal() will revert. Therefore if calling depositSurplus() on native ETH
+     *         be aware than calling more than once in a single transaction result in the top-
+     *         level CrocSwapDex contract call failing and reverting.
      *
      * @param recv The address of the owner associated with the account.
      * @param value The amount to be collected from owner and deposited.

@@ -21,9 +21,13 @@ contract SettleLayer is AgentMask {
      *         in the transaction. Settles both the token from the last leg in the chain
      *         as well as closes out the previous net Ether flows.
      * 
-     * @dev    Because this actually collects any Ether debit (using msg.value), this
-     *         function must be called *exactly once* as the final settlement call in
-     *         a transaction. Otherwise, a double-spend is possible.
+     * @dev    This method settles any net Ether debits or credits in the ethFlows
+     *         argument, by consuming the native ETH attached in msg.value, using
+     *         popMsgVal(). popMsgVal() sets a transaction level flag, and to prevent
+     *         double spent will revert and fail the top level CrocSwapDex contract
+     *         call if ever called twice in the same transction. Therefore this method
+     *         must only be called at most once per transaction, otherwise the top-level
+     *         CrocSwapDex contract call will revert and fail.  
      *
      * @param flow The net flow for this settlement leg. Negative for credits paid to
      *             user, positive for debits.
@@ -61,7 +65,8 @@ contract SettleLayer is AgentMask {
      *         in the transaction. Settles both the token from the last leg in the chain
      *         as well as closes out the previous net Ether flows.
      * 
-     * @dev    Because this actually collects any Ether debit (using msg.value), this
+     * @dev   This call is the point where any Ether debit 
+     Because this actually collects any Ether debit (using msg.value), this
      *         function must be called *exactly once* as the final settlement call in
      *         a transaction. Otherwise, a double-spend is possible.
      *

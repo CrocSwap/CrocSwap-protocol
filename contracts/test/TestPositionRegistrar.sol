@@ -19,11 +19,6 @@ contract TestPositionRegistrar is PositionRegistrar {
                                  lower, upper, liq, mileage);
     }
 
-    function testTransfer (address owner, address receipient, uint256 poolIdx,
-                           int24 lower, int24 upper) public {
-        changePosOwner(owner, receipient, bytes32(poolIdx), lower, upper);
-    }
-
     function getPos (address owner, uint256 poolIdx, int24 lower, int24 upper)
         public view returns (uint128, uint256) {
         RangePosition storage pos = lookupPosition(owner, bytes32(poolIdx),

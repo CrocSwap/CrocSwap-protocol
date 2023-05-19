@@ -9,7 +9,13 @@ import "./BitMath.sol";
  *    state over a 256-bit interval. Tick indices are 24-bit integer, so
  *    this library provides for 3-layers of recursive 256-bit bitmaps. Each
  *    layer covers the first (lobby), middle (mezzanine) or last (terminus) 
- *    8-bits in the 24-bit index.*/
+ *    8-bits in the 24-bit index.
+ *
+ * @dev Note that the bitmap library works with the full set of possible int24
+ *      values. Whereas other parts of the protocol set a MIN_TICK and MAX_TICK
+ *      that are well within the type bounds of int24. It's the responsibility of
+ *      calling code to assure that ticks being set are within the MIN_TICK and
+ *      MAX_TICK, and this library does *not* provide those checks. */
 library Bitmaps {
 
     /* @notice Transforms the bitmap so the first or last N bits are set to zero.

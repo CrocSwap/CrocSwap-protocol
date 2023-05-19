@@ -47,11 +47,6 @@ describe('TestFixedMath', () => {
       expect(result).to.equal(BigNumber.from(2).pow(187));
    })
 
-   it("divQ64Sq Precision", async () => {
-      let result = await comp.testDivQ64Sq(BigNumber.from(2).pow(126), BigNumber.from(2).pow(3));
-      expect(result).to.equal(BigNumber.from(2).pow(184));
-   })
-
    it("recipQ64", async () => {
       let result = await comp.testRecipQ64(toQ64(8.0))
       expect(fromQ64(result)).to.equal(0.125);

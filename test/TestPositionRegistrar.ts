@@ -139,20 +139,4 @@ describe('PositionRegistrar', () => {
         expect(rewardThree.toNumber()).to.equal(2300 - REWARD_ROUND_DOWN);
         expect(rewardFour.toNumber()).to.eq(6000 - REWARD_ROUND_DOWN*2);
     })
-
-    it("transfer position", async() => {
-        await reg.testAdd(owner, 0, -100, 100, 250000, 12500);
-        await reg.testTransfer(owner, ownerTwo, 0, -100, 100);
-        let resultPrev = await reg.getPos(owner, 0, -100, 100)
-        let result = await reg.getPos(ownerTwo, 0, -100, 100)
-        expect(resultPrev[0]).to.equal(0)
-        expect(result[0]).to.equal(250000)
-        expect(result[1]).to.equal(12500)
-    })
-
-    it("transfer collision", async() => {
-        await reg.testAdd(owner, 0, -100, 100, 250000, 12500);
-        await reg.testAdd(ownerTwo, 0, -100, 100, 250000, 12500);
-        expect(reg.testTransfer(owner, ownerTwo, 0, -100, 100)).to.be.reverted
-    })
 })
