@@ -105,12 +105,12 @@ contract CrocPolicy is ICrocMaster {
      *         only wants to transfer one or two of the authorities. */
     function transferGovernance (address ops, address treasury, address emergency)
         treasuryAuth public {
-        Timelock(payable(treasury)).acceptAdmin();
-        Timelock(payable(ops)).acceptAdmin();
-        Timelock(payable(emergency)).acceptAdmin();
         opsAuthority_ = ops;
         treasuryAuthority_ = treasury;
         emergencyAuthority_ = emergency;  
+        Timelock(payable(treasury)).acceptAdmin();
+        Timelock(payable(ops)).acceptAdmin();
+        Timelock(payable(emergency)).acceptAdmin();
     }
 
     /* @notice Resolution from the ops authority which calls protocolCmd() on the 
