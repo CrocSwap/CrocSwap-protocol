@@ -13,6 +13,7 @@ import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
+import { BootPath } from "../contracts/typechain";
 
 chai.use(solidity);
 
@@ -67,7 +68,7 @@ export async function makeTokenNext (pool: TestPool): Promise<TestPool> {
     return makePoolFrom(pool.quote, tokenZ)
 }
 
-async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
+export async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
     let base = sortBaseToken(tokenX, tokenY)
     let quote = sortQuoteToken(tokenX, tokenY)
 
@@ -88,7 +89,7 @@ export async function makeEtherPool(): Promise<TestPool> {
 export interface Token {
     address: string
     balanceOf: (address: string) => Promise<BigNumber>
-    fund: (s: Signer, dex: string, val: number) => Promise<void>
+    fund: (s: Signer, dex: string, val: BigNumberish) => Promise<void>
     sendEth: boolean
 }
 
@@ -107,7 +108,7 @@ export class ERC20Token implements Token {
         return this.contract.balanceOf(address)
     }
 
-    async fund (s: Signer, dex: string, val: number): Promise<void> {
+    async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         await this.contract.deposit(await s.getAddress(), BigNumber.from(val))
         await this.contract.approveFor(await s.getAddress(), dex, BigNumber.from(val))
     }
@@ -129,7 +130,7 @@ export class NativeEther implements Token {
         return await this.balanceFinder.then(b => b.getBalance(address))
     }
 
-    async fund (s: Signer, dex: string, val: number): Promise<void> {
+    async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         // Signed should already be funded
     }
 }
@@ -179,7 +180,7 @@ export class TestPool {
             this.dex = Promise.resolve(dex)
         } else {
             this.dex = factory.then(f => this.auth.then(a => 
-                f.deploy(a.getAddress()))) as Promise<CrocSwapDex>
+                f.connect(a).deploy())) as Promise<CrocSwapDex>
         }
 
         factory = ethers.getContractFactory("CrocQuery")
@@ -199,11 +200,11 @@ export class TestPool {
             { value: BigNumber.from(1000000000).mul(1000000000) } : { }
     }
 
-    async fundTokens() {
-        await this.base.fund(await this.trader, (await this.dex).address, INIT_BAL)
-        await this.quote.fund(await this.trader, (await this.dex).address, INIT_BAL)
-        await this.base.fund(await this.other, (await this.dex).address, INIT_BAL)
-        await this.quote.fund(await this.other, (await this.dex).address, INIT_BAL)
+    async fundTokens (bal: BigNumberish = INIT_BAL) {
+        await this.base.fund(await this.trader, (await this.dex).address, bal)
+        await this.quote.fund(await this.trader, (await this.dex).address, bal)
+        await this.base.fund(await this.other, (await this.dex).address, bal)
+        await this.quote.fund(await this.other, (await this.dex).address, bal)
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
     }
@@ -217,13 +218,16 @@ export class TestPool {
         price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
         let overrides = noOverrides ? {} : this.overrides 
 
+        await this.setProtocolTake(protoTake)
+
         if (this.initTemplBefore) {
             await this.initTempl(feeRate, tickSize, poolIdx)
         }
 
         let gasTx = await (await this.dex)
-            .userCmd(0, await this.encodeInitPool(poolIdx, price), overrides)
-
+            .connect(await this.trader)
+            .userCmd(this.COLD_PROXY, await this.encodeInitPool(poolIdx, price), overrides)
+        
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
@@ -236,7 +240,7 @@ export class TestPool {
 
         return (await this.dex)
                 .connect(await this.auth)
-                .protocolCmd(0, cmd, false)
+                .protocolCmd(this.COLD_PROXY, cmd, false)
     }
 
     async encodeInitPool (poolIdx: BigNumberish, price:number | BigNumber): Promise<BytesLike> {
@@ -259,10 +263,11 @@ export class TestPool {
             [110, this.poolIdx, feeRate, tickSize, 0, this.knockoutBits, 1])
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
 
         await (await this.dex)
-            .userCmd(0, await this.encodeInitPool(this.poolIdx, price), this.overrides)
+            .connect(await this.trader)
+            .userCmd(this.COLD_PROXY, await this.encodeInitPool(this.poolIdx, price), this.overrides)
     }
 
     async testSetInitLiq (initLiq: number) {
@@ -270,7 +275,7 @@ export class TestPool {
         let cmd = abiCoder.encode(["uint8", "uint128"], [112, initLiq])
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
     }    
 
     async encodeSwap (isBuy: boolean, inBase: boolean, qty: BigNumber, limitLow: BigNumber, limitHigh: BigNumber,
@@ -435,7 +440,8 @@ export class TestPool {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
 
-    readonly COLD_PROXY: number = 0;
+    readonly BOOT_PROXY: number = 0;
+    readonly COLD_PROXY: number = 3;
     readonly WARM_PROXY: number = 2;
     readonly LONG_PROXY: number = 4;
     readonly HOT_PROXY: number = 1;
@@ -513,31 +519,31 @@ export class TestPool {
     async testKnockoutMint (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeMintKnockout(qty, isBid, bidTick, askTick, partial, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutBurn (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, false, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutBurnLiq (qty: number, isBid: boolean, bidTick: number, askTick: number, partial: boolean, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeBurnKnockout(qty, isBid, bidTick, askTick, partial, true, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutClaim (isBid: boolean, bidTick: number, askTick: number, root: BigNumber, proof: BigNumber[], useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeClaimKnockout(isBid, bidTick, askTick, root, proof, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testKnockoutRecover (isBid: boolean, bidTick: number, askTick: number, pivot: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         let inputBytes = this.encodeRecoverKnockout(isBid, bidTick, askTick, pivot, useSurplus)
-        return (await this.dex).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
+        return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
@@ -569,12 +575,10 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
 
         if (protoTake > 0) {
-            let takeCmd = abiCoder.encode(["uint8", "uint8"], [114, protoTake]);
-            (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)
-
-            takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
+            await this.setProtocolTake(protoTake)
+            let takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
                 [115, (await this.base).address, (await this.quote).address, this.poolIdx]);
-            (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)              
+            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)              
         }
 
         let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
@@ -582,7 +586,13 @@ export class TestPool {
 
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
+    }
+
+    async setProtocolTake (protoTake: number) {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let takeCmd = abiCoder.encode(["uint8", "uint8"], [114, protoTake]);
+        await (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)
     }
 
     async testRevisePoolIdx (idx: number, feeRate: number, protoTake: number, tickSize:number, jit: number = 0): Promise<ContractTransaction> {
@@ -590,18 +600,18 @@ export class TestPool {
 
         if (protoTake > 0) {
             let takeCmd = abiCoder.encode(["uint8", "uint8"], [114, protoTake]);
-            (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)
+            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)
 
             takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
                 [115, (await this.base).address, (await this.quote).address, idx]);
-            (await this.dex).connect(await this.auth).protocolCmd(0, takeCmd, false)              
+            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)              
         }
 
         let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
             [111, (await this.base).address, (await this.quote).address, idx, feeRate, tickSize, jit, 0])
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
     }
 
     async testPegPriceImprove (collateral: number, awayTick: number): Promise<ContractTransaction> {
@@ -610,7 +620,7 @@ export class TestPool {
             [113, (await this.base).address, collateral, awayTick])
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
     }
 
     async testPegPriceImproveQuote (collateral: number, awayTick: number): Promise<ContractTransaction> {
@@ -619,7 +629,15 @@ export class TestPool {
             [113, (await this.quote).address, collateral, awayTick])
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, false)
+            .protocolCmd(this.COLD_PROXY, cmd, false)
+    }
+
+    async testUpgrade (slot: number, address: string): Promise<ContractTransaction> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let cmd = abiCoder.encode(["uint8", "address", "uint16"], [21, address, slot])
+        return (await this.dex)
+            .connect(await this.auth)
+            .protocolCmd(this.BOOT_PROXY, cmd, true)
     }
 
     async testUpgradeHotProxy (address: string, disableEmbedded: boolean = true): Promise<ContractTransaction> {
@@ -627,13 +645,14 @@ export class TestPool {
         let cmd = abiCoder.encode(["uint8", "bool"], [22, !disableEmbedded])
         await (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, true)
+            .protocolCmd(this.COLD_PROXY, cmd, true)
 
         cmd = abiCoder.encode(["uint8", "address", "uint16"], [21, address, 1])
         return (await this.dex)
             .connect(await this.auth)
-            .protocolCmd(0, cmd, true)
+            .protocolCmd(this.BOOT_PROXY, cmd, true)
     }
+
 
     async testDeposit (from: Signer, recv: string, value: number | BigNumber, token: string,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
@@ -716,26 +735,24 @@ export class TestPool {
             overrides ? overrides : this.overrides)
     }
 
-    async testApproveRouter (from: Signer, router: string, nCalls: number, salt: number): Promise<ContractTransaction> {
+    async testApproveRouter (from: Signer, router: string, nCalls: number, callpaths: number[]): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
-        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
-                [72, router, nCalls, salt])
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint16[]"],
+                [72, router, nCalls, callpaths])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
     }
 
-    async testApproveRouterCond (from: Signer, router: string, nCalls: number, salt: number, ): Promise<ContractTransaction> {
+    async testApproveRouterCond (from: Signer, router: string, nCalls: number, callpaths: number[]): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
-        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint256"],
-                [72, router, nCalls, salt])
+        const cmd = abiCoder.encode(["uint8", "address", "uint32", "uint16[]"],
+                [72, router, nCalls, callpaths])
         return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, this.overrides)
     }
 
-    async testDisburseAgent (from: Signer, client: string, salt: number, recv: string, value: number | BigNumber, token: string,
+    async testMintAgent (from: Signer, client: string, val: number,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
-        let abiCoder = new ethers.utils.AbiCoder()
-        let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
-                    [74, recv, value, token])
-        return (await this.dex).connect(from).userCmdRouter(this.COLD_PROXY, cmd, client, salt,
+        let cmd = this.encodeMintAmbientPath(val, toSqrtPrice(0.01), toSqrtPrice(1000), 0)
+        return (await this.dex).connect(from).userCmdRouter(this.WARM_PROXY, await cmd, client,
             overrides ? overrides : this.overrides)
     }
 
@@ -769,14 +786,20 @@ export class TestPool {
         return (await this.snapQuoteOwed())
     }
 
-    async liquidity(): Promise<BigNumber> {
-        return await (await this.query).queryLiquidity
-            ((await this.base).address, (await this.quote).address, this.poolIdx)
+    async liquidity (subInitLocked: boolean = true): Promise<BigNumber> {
+        return this.liquidityIdx(this.poolIdx, subInitLocked)
     }
 
-    async liquidityIdx (idx: number): Promise<BigNumber> {
-        return await (await this.query).queryLiquidity
+    async liquidityIdx (idx: BigNumberish, subInitLocked: boolean = true): Promise<BigNumber> {
+        const INIT_LIQ = 1; // Default burnt liquidity on every pool
+        let liq = (await this.query).queryLiquidity
             ((await this.base).address, (await this.quote).address, idx)
+
+        if (subInitLocked) {
+            return (await liq).sub(INIT_LIQ);
+        } else {
+            return liq;
+        }
     }
 
     async price(): Promise<BigNumber> {
@@ -813,6 +836,7 @@ export class TestPool {
         }
         return order
     }
+
 }
 
 export function sortBaseToken (tokenX: Token, tokenY: Token): Token {

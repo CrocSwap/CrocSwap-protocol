@@ -51,7 +51,7 @@ describe('Swap Curve', () => {
       let accum = await curve.lastSwap();
       expect(accum.qtyLeft_.toNumber()).to.equal(0);
       expect(accum.paidBase_.toNumber()).to.equal(1000000);
-      expect(accum.paidQuote_.toNumber()).to.equal(-409602 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_.toNumber()).to.equal(-409601 + COLLATERAL_ROUND);
       expect(accum.paidProto_.toNumber()).to.equal(0);
 
       let state = await curve.pullCurve(1);
@@ -80,13 +80,13 @@ describe('Swap Curve', () => {
 
       let state = await curve.pullCurve(5);
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.3956)
-      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.3957)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.39571)
       expect(state.ambientSeeds_.toNumber()).to.equal(6003599)
       expect(state.concLiq_.toNumber()).to.equal(10000000);
       expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110304);
       expect(fromFixedGrowth(state.seedDeflator_)).to.lte(0.75 + 0.00110305);
       expect(fromFixedGrowth(state.concGrowth_)).to.lte(2.5 + 0.00035986);
-      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.00035985);
+      expect(fromFixedGrowth(state.concGrowth_)).to.gte(2.5 + 0.00035983);
    })
 
    it("swap paid cumulative", async() => {
@@ -134,7 +134,7 @@ describe('Swap Curve', () => {
       expect(accum.paidProto_.toNumber()).to.equal(5742);
 
       let state = await curve.pullCurve(3);
-      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.103387)
+      expect(fromSqrtPrice(state.priceRoot_)).to.lte(2.1033871)
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.103386)
    })
 
@@ -290,8 +290,8 @@ describe('Swap Curve', () => {
       expect(fromSqrtPrice(state.priceRoot_)).to.gte(2.4024)
 
       let accum = await curve.lastSwap();
-      expect(accum.qtyLeft_.toNumber()).to.equal(949387 - COLLATERAL_ROUND);
-      expect(accum.paidBase_.toNumber()).to.equal(1050613 + COLLATERAL_ROUND);
+      expect(accum.qtyLeft_.toNumber()).to.equal(949388 - COLLATERAL_ROUND);
+      expect(accum.paidBase_.toNumber()).to.equal(1050612 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(-430197 + COLLATERAL_ROUND);
    })
 

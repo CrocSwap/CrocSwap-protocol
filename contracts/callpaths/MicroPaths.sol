@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
@@ -11,8 +11,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
-
-import "hardhat/console.sol";
 
 /* @title Micro paths callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -30,6 +28,7 @@ contract MicroPaths is MarketSequencer {
      *
      * @param price The price of the curve. Represented as the square root of the exchange
      *              rate in Q64.64 fixed point
+     * @param priceTick The price tick index of the current price of the curve
      * @param seed The ambient liquidity seeds in the current curve.
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.
@@ -70,13 +69,14 @@ contract MicroPaths is MarketSequencer {
      *
      * @param price The price of the curve. Represented as the square root of the exchange
      *              rate in Q64.64 fixed point
+     * @param priceTick The price tick index of the current price of the curve
      * @param seed The ambient liquidity seeds in the current curve.
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.
      * @param concGrowth The cumulative concentrated reward growth on the current curve.
      * @param lowTick The price tick index of the lower barrier.
      * @param highTick The price tick index of the upper barrier.
-     * @param liq The amount of liquidity to burn.
+     * @param liq The amount of liquidity to mint.
      * @param poolHash The key hash of the pool the curve belongs to.
      *
      * @return baseFlow The user<->pool flow on the base-side token associated with the 
@@ -146,7 +146,7 @@ contract MicroPaths is MarketSequencer {
      * @param conc The active in-range concentrated liquidity in the current curve.
      * @param seedGrowth The cumulative ambient seed deflator in the current curve.
      * @param concGrowth The cumulative concentrated reward growth on the current curve.
-     * @param liq The amount of liquidity to burn.
+     * @param liq The amount of liquidity to mint.
      * @param poolHash The key hash of the pool the curve belongs to.
      *
      * @return baseFlow The user<->pool flow on the base-side token associated with the 
@@ -200,6 +200,12 @@ contract MicroPaths is MarketSequencer {
         concOut = curve.concLiq_;
         ambientOut = curve.seedDeflator_;
         concGrowthOut = curve.concGrowth_;
+    }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.MICRO_PROXY_IDX;
     }
 }
 

@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/TransferHelper.sol';
 import '../libraries/TokenFlow.sol';
@@ -35,7 +35,7 @@ contract ProtocolAccount is StorageLayout  {
     }
 
     /* @notice Pays out the earned, but unclaimed protocol fees in the pool.
-     * @param receipient - The receiver of the protocol fees.
+     * @param recv - The receiver of the protocol fees.
      * @param token - The token address of the quote token. */
     function disburseProtocolFees (address recv, address token) internal {
         uint128 collected = feesAccum_[token];

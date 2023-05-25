@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -110,20 +110,20 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
-        expect(await test.liquidity()).to.equal(2735095009) // Liquidity comes in range
+        expect(await test.liquidity()).to.equal(2735095007) // Liquidity comes in range
 
         // Goes out of range
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
-        expect(await test.liquidity()).to.equal(10283330) // Most drops out, but some ambient liq rewards active
+        expect(await test.liquidity()).to.equal(10283326) // Most drops out, but some ambient liq rewards active
 
         // Back in range (shouldn't knock out because didn't hit bottom point)
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
-        expect(await test.liquidity()).to.equal(2735138361)
+        expect(await test.liquidity()).to.equal(2735138354)
 
         await test.testKnockoutBurnLiq(2660970*1024, true, 3200, 3200+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-3378243)
-        expect(await test.snapQuoteFlow()).to.equal(-1290151)
-        expect(await test.liquidity()).to.equal(10288213) 
+        expect(await test.snapBaseFlow()).to.equal(-3378242)
+        expect(await test.snapQuoteFlow()).to.equal(-1290150)
+        expect(await test.liquidity()).to.equal(10288207) 
     })
 
     it("swap into active range ask", async() => {
@@ -131,20 +131,20 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, false, 6400, 6400+32, true)
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.9)) // Inside the conc range
-        expect(await test.liquidity()).to.equal(4420780273) // Liquidity comes in range
+        expect(await test.liquidity()).to.equal(4420780272) // Liquidity comes in range
 
         // Goes out of range
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.5))
-        expect(await test.liquidity()).to.equal(10360857) // Most drops out, but some ambient liq rewards active
+        expect(await test.liquidity()).to.equal(10360853) // Most drops out, but some ambient liq rewards active
 
         // Back in range (shouldn't knock out because didn't hit bottom point)
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.9)) // Inside the conc range
-        expect(await test.liquidity()).to.equal(4420901283)
+        expect(await test.liquidity()).to.equal(4420901277)
 
         await test.testKnockoutBurnLiq(4410480640, false, 6400, 6400+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-5794323)
-        expect(await test.snapQuoteFlow()).to.equal(-2135354)
-        expect(await test.liquidity()).to.equal(10373881) 
+        expect(await test.snapBaseFlow()).to.equal(-5794322)
+        expect(await test.snapQuoteFlow()).to.equal(-2135353)
+        expect(await test.liquidity()).to.equal(10373876) 
     })
 
     it("swap knockout", async() => {
@@ -152,10 +152,10 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
-        expect(await test.liquidity()).to.equal(10295216) // Below range
+        expect(await test.liquidity()).to.equal(10295213) // Below range
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
-        expect(await test.liquidity()).to.equal(10296483) // Liquidity knocked out
+        expect(await test.liquidity()).to.equal(10296479) // Liquidity knocked out
 
         // Can't burn knocked out liq
         await expect(test.testKnockoutBurnLiq(1024, true, 3200, 3200+32, true)).to.be.reverted
@@ -166,10 +166,10 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, false, 6400, 6400+32, true)
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.95)) // Below knockout
-        expect(await test.liquidity()).to.equal(10333689) // Below range
+        expect(await test.liquidity()).to.equal(10333686) // Below range
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.9))
-        expect(await test.liquidity()).to.equal(10335206) // Liquidity knocked out
+        expect(await test.liquidity()).to.equal(10335201) // Liquidity knocked out
 
         // Can't burn knocked out liq
         await expect(test.testKnockoutBurnLiq(1024, true, 6400, 6400+32, true)).to.be.reverted
@@ -180,15 +180,15 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
-        expect(await test.liquidity()).to.equal(10295216) // Below range
+        expect(await test.liquidity()).to.equal(10295213) // Below range
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
-        expect(await test.liquidity()).to.equal(10296483) // Liquidity knocked out
+        expect(await test.liquidity()).to.equal(10296479) // Liquidity knocked out
         
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
-        expect(await test.snapBaseFlow()).to.equal(-57670)
+        expect(await test.snapBaseFlow()).to.equal(-57668)
         expect(await test.snapQuoteFlow()).to.equal(-3753782)
-        expect(await test.liquidity()).to.equal(10247391) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10247387) // Slight decrease from pulling ambient rewards
     })
 
     it("claim knockout ask", async() => {
@@ -196,15 +196,15 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutMint(5000*1024, false, 6400, 6400+32, true)
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.95)) //Above knockout
-        expect(await test.liquidity()).to.equal(10333689) // Below range
+        expect(await test.liquidity()).to.equal(10333686) // Below range
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.9))
-        expect(await test.liquidity()).to.equal(10335206) // Liquidity knocked out
+        expect(await test.liquidity()).to.equal(10335201) // Liquidity knocked out
 
         await test.testKnockoutClaim(false, 6400, 6400+32, BigNumber.from(0), [])
-        expect(await test.snapBaseFlow()).to.equal(-9834570)
-        expect(await test.snapQuoteFlow()).to.equal(-57559) // Small payoff from ambient liquidity rewards
-        expect(await test.liquidity()).to.equal(10255865) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(-9834569)
+        expect(await test.snapQuoteFlow()).to.equal(-57558) // Small payoff from ambient liquidity rewards
+        expect(await test.liquidity()).to.equal(10255861) // Slight decrease from pulling ambient rewards
     })
 
     function hashToEntropy (hash: string): BigNumber {
@@ -245,9 +245,9 @@ describe('Pool Knockout Liq', () => {
 
         await test.testKnockoutClaim(true, 3200, 3200+32, merkleOne.root, 
             formProof([merkleOne.pivot, merkleTwo.pivot], [merkleOne.fee, merkleTwo.fee], [hashOne, hashTwo]))
-        expect(await test.snapBaseFlow()).to.equal(-60294) // Small claim from rewards
-        expect(await test.snapQuoteFlow()).to.equal(-3752189)
-        expect(await test.liquidity()).to.equal(10374514) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(-60292) // Small claim from rewards
+        expect(await test.snapQuoteFlow()).to.equal(-3752188)
+        expect(await test.liquidity()).to.equal(10374503) // Slight decrease from pulling ambient rewards
     })
 
     it("bad proof", async() => {
@@ -282,15 +282,15 @@ describe('Pool Knockout Liq', () => {
         let pivot = (await (await test.query).queryKnockoutPivot((await test.base).address, (await test.quote).address, test.poolIdx, true, 3200)).pivot
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
-        expect(await test.liquidity()).to.equal(10295216) // Below range
+        expect(await test.liquidity()).to.equal(10295213) // Below range
 
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
-        expect(await test.liquidity()).to.equal(10296483) // Liquidity knocked out
+        expect(await test.liquidity()).to.equal(10296479) // Liquidity knocked out
 
         await test.testKnockoutRecover(true, 3200, 3200+32, pivot)
         expect(await test.snapBaseFlow()).to.equal(0) // Rewards not caimed
         expect(await test.snapQuoteFlow()).to.equal(-3711993)
-        expect(await test.liquidity()).to.equal(10296483) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10296479) // Slight decrease from pulling ambient rewards
     })
 
     it("claim knockout twice", async() => {
@@ -308,7 +308,7 @@ describe('Pool Knockout Liq', () => {
         // No payout from a second claim
         expect(await test.snapBaseFlow()).to.equal(0)
         expect(await test.snapQuoteFlow()).to.equal(0)
-        expect(await test.liquidity()).to.equal(10247391) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10247387) // Slight decrease from pulling ambient rewards
 
         await test.testKnockoutRecover(true, 3200, 3200+32, pivot)
         expect(await test.snapBaseFlow()).to.equal(0)
@@ -330,7 +330,7 @@ describe('Pool Knockout Liq', () => {
         // No payout from a second claim
         expect(await test.snapBaseFlow()).to.equal(0)
         expect(await test.snapQuoteFlow()).to.equal(0)
-        expect(await test.liquidity()).to.equal(10296483) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10296479) // Slight decrease from pulling ambient rewards
 
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
         expect(await test.snapBaseFlow()).to.equal(0)
@@ -346,11 +346,43 @@ describe('Pool Knockout Liq', () => {
 
         await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
         await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
-        expect(await test.liquidity()).to.equal(10299025) // Liquidity should only knockout once
+        expect(await test.liquidity()).to.equal(10299018) // Liquidity should only knockout once
 
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
-        expect(await test.snapBaseFlow()).to.equal(-57684)
-        expect(await test.snapQuoteFlow()).to.equal(-3753793)
-        expect(await test.liquidity()).to.equal(10249921) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(-57682)
+        expect(await test.snapQuoteFlow()).to.equal(-3753792)
+        expect(await test.liquidity()).to.equal(10249915) // Slight decrease from pulling ambient rewards
+    })
+})
+
+describe('Pool Knockout Liq Native Eth', () => {
+    let test: TestPool
+    let quoteToken: Token
+    const feeRate = 225 * 100
+
+    beforeEach("deploy",  async () => {
+       test = await makeEtherPool()
+       quoteToken = await test.quote
+
+       await test.initPool(feeRate, 0, 1, 1.5)
+       test.useHotPath = true;
+
+       const knockoutFlag = 64 + 32 + 5 // Enabled, on grid, 32-ticks wide
+       await test.testRevisePool(feeRate, 0, 1, 0, knockoutFlag)
+    })
+
+    // Test to verify that crossKnockout function works with swaps with non-zero msg.value
+    it("swap knockout", async() => {
+        await test.testMintAmbient(10000)
+        await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
+
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.35)) // Below knockout
+        expect(await test.liquidity()).to.equal(10295213) // Below range
+
+        await test.testSwap(true, true, 100000000, toSqrtPrice(1.38))
+        expect(await test.liquidity()).to.equal(10296479) // Liquidity knocked out
+
+        // Can't burn knocked out liq
+        await expect(test.testKnockoutBurnLiq(1024, true, 3200, 3200+32, true)).to.be.reverted
     })
 })

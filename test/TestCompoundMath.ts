@@ -5,6 +5,7 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
 import { toFixedGrowth, fromFixedGrowth, toSqrtPrice, fromSqrtPrice } from './FixedPoint';
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -16,17 +17,21 @@ describe('TestCompoundMath', () => {
       comp = (await libFactory.deploy()) as TestCompoundMath;
    })
 
-   it("sqrt", async () => {
-      let result = await comp.testSqrt(toFixedGrowth(0));
+   it("approx sqrt", async () => {
+      let result = await comp.testApproxSqrt(toFixedGrowth(0));
       expect(fromFixedGrowth(result)).to.equal(0);
 
-      result = await comp.testSqrt(toFixedGrowth(0.01));
+      result = await comp.testApproxSqrt(toFixedGrowth(0.01));
       expect(fromFixedGrowth(result)).to.lte(0.005);
       expect(fromFixedGrowth(result)).to.gte(0.004987);
 
-      result = await comp.testSqrt(toFixedGrowth(0.5));
+      result = await comp.testApproxSqrt(toFixedGrowth(0.5));
       expect(fromFixedGrowth(result)).to.lte(0.25);
       expect(fromFixedGrowth(result)).to.gte(0.21875); 
+
+      // approxSqrt does not support above 1.0
+      await expect(comp.testApproxSqrt(toFixedGrowth(1.0))).to.be.reverted
+      await expect(comp.testApproxSqrt(toFixedGrowth(1.5))).to.be.reverted
    })
 
 
@@ -120,4 +125,11 @@ describe('TestCompoundMath', () => {
       expect(resultFour.toNumber()).to.equal(27811);
       expect(resultFive.toNumber()).to.equal(205)
    })
+
+   // Verify that precision doesn't break for liquidity values close to the uint128 limit
+   it("deflate precision", async () => {
+      let result = await comp.testDeflate(BigNumber.from(2).pow(127), toFixedGrowth(0));
+      expect(result).to.equal(BigNumber.from(2).pow(127));
+   })
+
 })

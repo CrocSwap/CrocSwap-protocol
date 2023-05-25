@@ -20,7 +20,6 @@ describe('Pool Router Agent', () => {
     let other: string
     let third: string
     const feeRate = 225 * 100
-    const SALT = 2500
 
     beforeEach("deploy",  async () => {
        test = await makeTokenPool()
@@ -35,122 +34,80 @@ describe('Pool Router Agent', () => {
        test.useHotPath = false;
     })
 
-    it("router agent", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
-
-        let pool = await test.dex
+    async function getLiquidity(): Promise<number> {
         let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(third)
+        let result = query.queryAmbientPosition(sender, baseToken.address, quoteToken.address, test.poolIdx)
+        return (await result).seeds.toNumber()
+    }
 
+    it("router agent", async() => {
         const nCalls = 500
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
-        await test.testDisburseAgent(await test.other, sender, SALT, third, 5000, baseToken.address)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.WARM_PROXY])
+        await test.testMintAgent(await test.other, sender, 1000)
 
-        // Test that deposit was made from the user's account, not from the router. 
-        let nextBal = await baseToken.balanceOf(third)
-        expect(nextBal.sub(initBal)).to.equal(5000)
-        expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(5000))
-      })  
+        // Should have successfully minted liquidity under the sender's ownership
+        expect(await getLiquidity()).eq(1000)
+    })  
+
+    it("router approve array", async() => {
+        const nCalls = 500
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.HOT_PROXY, test.LONG_PROXY, test.WARM_PROXY])
+        await test.testMintAgent(await test.other, sender, 1000)
+
+        // Should have successfully minted liquidity under the sender's ownership
+        expect(await getLiquidity()).eq(1000)
+    })  
+
+    it("router no cold path", async() => {
+        const nCalls = 500
+        await expect(test.testApproveRouter(await test.trader, other, nCalls, [test.COLD_PROXY])).to.be.reverted
+    })  
 
     it("router not approved", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
+        await expect(test.testMintAgent(await test.other, sender, 1000)).to.be.reverted
+    })
 
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(other)
-  
-        await expect(test.testDisburseAgent(await test.other, sender, SALT, other, 0, baseToken.address)).to.be.reverted
-      })
-
-      it("router unnapproved party", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
-
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(other)
-  
+    it("router unnapproved party", async() => {
         const nCalls = 500
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
-        await expect(test.testDisburseAgent(await test.third, sender, SALT, other, 0, baseToken.address)).to.be.reverted
-      })
-      
-      it("router wrong salt", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.WARM_PROXY])
+        await expect(test.testMintAgent(await test.third, sender, 1000)).to.be.reverted
 
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(other)
-  
+    })
+      
+    it("router unapproved callpath", async() => {
         const nCalls = 500
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.HOT_PROXY])
+        await expect(test.testMintAgent(await test.other, sender, 1000)).to.be.reverted
 
-        // This will fail because this router salt has zero nonces set
-        await expect(test.testDisburseAgent(await test.other, sender, SALT+1, other, 0, baseToken.address)).to.be.reverted
-      })
+    })  
       
-      it("router nonces", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
-
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(other)
-  
+    it("router nonces", async() => {
         const nCalls = 20
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.WARM_PROXY])
         for (let i = 0; i < 20; ++i) {
-            await test.testDisburseAgent(await test.other, sender, SALT, other, 10, baseToken.address)
+            await test.testMintAgent(await test.other, sender, 1000)
         }
 
         // Runs out of nCall nonces
-        await expect(test.testDisburseAgent(await test.other, sender, SALT, other, 0, baseToken.address)).to.be.reverted
-      })
+        await expect(test.testMintAgent(await test.other, sender, 1000)).to.be.reverted
+    })
 
-      it("router nonces reset", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
-
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(other)
-  
+    it("router nonces reset", async() => {
         const nCalls = 20
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
-        for (let i = 0; i < 10; ++i) {
-            await test.testDisburseAgent(await test.other, sender, SALT, other, 10, baseToken.address)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.WARM_PROXY])
+        for (let i = 0; i < 20; ++i) {
+            await test.testMintAgent(await test.other, sender, 1000)
         }
 
         // Resets nonce on this salt back to 20 calls
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
+        await test.testApproveRouter(await test.trader, other, nCalls, [test.WARM_PROXY])
         for (let i = 0; i < 20; ++i) {
-            await test.testDisburseAgent(await test.other, sender, SALT, other, 10, baseToken.address)
+            await test.testMintAgent(await test.other, sender, 1000)
         }
 
         // Runs out of nCall nonces
-        await expect(test.testDisburseAgent(await test.other, sender, SALT, other, 0, baseToken.address)).to.be.reverted
-      })
-
-      it("reset conditional", async() => {
-        await test.collectSurplus(sender, -100000, -2500000)
-
-        let pool = await test.dex
-        let query = await test.query
-        let initSurplus = await query.querySurplus(sender, baseToken.address)
-        let initBal = await baseToken.balanceOf(third)
-
-        const nCalls = 500
-        await test.testApproveRouter(await test.trader, other, nCalls, SALT)
-        await test.testDisburseAgent(await test.other, sender, SALT, third, 5000, baseToken.address)
-
-        // Test that deposit was made from the user's account, not from the router. 
-        let nextBal = await baseToken.balanceOf(third)
-        expect(nextBal.sub(initBal)).to.equal(5000)
-        expect(await query.querySurplus(sender, baseToken.address)).to.equal(initSurplus.sub(5000))
-      })  
+        await expect(test.testMintAgent(await test.other, sender, 1000)).to.be.reverted
+    })
 })
 
 
@@ -188,6 +145,7 @@ describe('Pool Relayer Agent', () => {
     async function formSignature (callpath: number, cmd: BytesLike, conds: BytesLike, tip: BytesLike) {
         const domain = {
             name: "CrocSwap",
+            version: "1.0",
             chainId: 31337,
             verifyingContract: dex
         }
@@ -331,7 +289,7 @@ describe('Pool Relayer Agent', () => {
        let tip = formTip(0, other)
        let signature = await formSignature(test.COLD_PROXY, cmd, cond, tip)
        
-       await pool.userCmdRelayer(test.COLD_PROXY, cmd, cond, tip, signature)
+       await pool.connect(await test.trader).userCmdRelayer(test.COLD_PROXY, cmd, cond, tip, signature)
 
        let nextBal = await baseToken.balanceOf(other)
        expect(nextBal.sub(initBal)).to.equal(5000)
@@ -592,4 +550,10 @@ describe('Pool Relayer Agent', () => {
        expect(await query.querySurplus(third, baseToken.address)).to.equal(6000)
        expect(await query.queryProtocolAccum(baseToken.address)).to.equal(2000)
     }) 
+
+    it("protocol take rate valid", async() => {
+        // Take rate must be below 50% (128/256)
+        await expect(setTakeRate(129)).to.be.reverted
+        await expect(setTakeRate(128)).to.be.not.reverted
+    })
 })

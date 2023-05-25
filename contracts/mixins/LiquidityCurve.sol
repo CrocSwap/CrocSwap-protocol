@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import '../libraries/TickMath.sol';
@@ -11,8 +11,6 @@ import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
 import './StorageLayout.sol';
-
-import "hardhat/console.sol";
 
 /* @title Liquidity Curve Mixin
  * @notice Tracks the state of the locally stable constant product AMM liquid curve
@@ -100,7 +98,9 @@ contract LiquidityCurve is StorageLayout {
      * @param seeds The number of ambient seeds being added. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
-     *              rate on the curve. (See CurveMath.sol.) */
+     *              rate on the curve. (See CurveMath.sol.)
+     * @return  The base and quote token flows from the user required to add this amount
+     *          of liquidity to the curve. */
     function liquidityReceivable (CurveMath.CurveState memory curve, uint128 seeds) 
         internal pure returns (uint128, uint128) {
         (uint128 base, uint128 quote) = liquidityFlows(curve, seeds);
@@ -231,7 +231,7 @@ contract LiquidityCurve is StorageLayout {
      *         on whether it's in range. */
     function bumpConcentrated (CurveMath.CurveState memory curve,
                                uint128 liqDelta, bool inRange) private pure {
-        bumpConcentrated(curve, int128(uint128(liqDelta)), inRange);
+        bumpConcentrated(curve, liqDelta.toInt128Sign(), inRange);
     }
 
     /* @notice Directly increments the concentrated liquidity on the curve, depending
@@ -284,7 +284,7 @@ contract LiquidityCurve is StorageLayout {
      * @dev Throws error if price was already initialized. 
      *
      * @param curve   The liquidity curve for the pool being initialized.
-     * @param priceRoot - Square root of the price. Represented as 96-bit fixed point. */
+     * @param priceRoot - Square root of the price. Represented as Q64.64 fixed point. */
     function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
         internal pure {
         int24 tick = TickMath.getTickAtSqrtRatio(priceRoot);

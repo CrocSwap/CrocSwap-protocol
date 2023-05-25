@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
 import '../interfaces/ICrocPermitOracle.sol';
 import './StorageLayout.sol';
-
-import "hardhat/console.sol";
 
 /* @title Pool registry mixin
  * @notice Provides a facility for registering and querying pool types on pairs and
@@ -33,8 +31,7 @@ contract PoolRegistry is StorageLayout {
                 ICrocPermitOracle(pool.oracle_)
                 .checkApprovedForCrocSwap(lockHolder_, msg.sender, base, quote,
                                           isBuy, inBaseQty, qty, pool.head_.feeRate_);
-            require(discount > 0, "Z");
-            pool.head_.feeRate_ -= discount;
+            applyDiscount(pool, discount);
         }
     }
 
@@ -78,13 +75,19 @@ contract PoolRegistry is StorageLayout {
             uint16 discount = ICrocPermitOracle(pool.oracle_)
                 .checkApprovedForCrocPool(lockHolder_, msg.sender, base, quote, ambient,
                                           swap, concs, pool.head_.feeRate_);
-            require(discount > 0, "Z");
-            pool.head_.feeRate_ -= discount;
+            applyDiscount(pool, discount);
         }
     }
 
+    function applyDiscount (PoolSpecs.PoolCursor memory pool, uint16 discount) private pure {
+        // Convention from permit oracle return value. Uses 0 for non-approved (meaning we 
+        // should rever), 1 for 0 discount, 2 for 0.0001% discount, and so on
+        uint16 DISCOUNT_OFFSET = 1;
+        require(discount > 0, "Z");
+        pool.head_.feeRate_ -= (discount - DISCOUNT_OFFSET);
+    }
     
-    /* @notice Tests whether the given burn by the given user is authorized on this
+    /* @notice Tests whether the given initialization by the given user is authorized on this
      *         specific pool. If not, reverts the transaction. If pool is permissionless
      *         this function will just noop. */
     function verifyPermitInit (PoolSpecs.PoolCursor memory pool,
@@ -113,11 +116,10 @@ contract PoolRegistry is StorageLayout {
      *                Represented as a multiple of 0.0001%.
      * @param tickSize The tick grid size for range orders in the pool. (Template can
      *                 also be disabled by setting this to zero.)
-     * @param permitOracle The address of the external permission oracle contract that
-     *                governs who and how can use the pool. If zero, the pool is 
-     *                permissionless.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
-     *                  rest before it can be burned. */
+     *                  rest before it can be burned.
+     * @param knockout  The knockout liquidity bit flags for the pool. (See KnockoutLiq library)
+     * @param oracleFlags The permissioned oracle flags for the pool. */
     function setPoolTemplate (uint256 poolIdx, uint16 feeRate, uint16 tickSize,
                               uint8 jitThresh, uint8 knockout, uint8 oracleFlags)
         internal {
@@ -128,6 +130,14 @@ contract PoolRegistry is StorageLayout {
         templ.jitThresh_ = jitThresh;
         templ.knockoutBits_ = knockout;
         templ.oracleFlags_ = oracleFlags;
+
+        // If template is set to use a permissioned oracle, validate that the oracle address is a
+        // valid oracle contract
+        address oracle = PoolSpecs.oracleForPool(poolIdx, oracleFlags);
+        if (oracle != address(0)) {
+            require(oracle.code.length > 0 && ICrocPermitOracle(oracle).acceptsPermitOracle(),
+                "Oracle");    
+        }
     }
 
     function disablePoolTemplate (uint256 poolIdx) internal {
@@ -138,19 +148,18 @@ contract PoolRegistry is StorageLayout {
     /* @notice Resets the parameters on a previously existing pool in a specific pair.
      *
      * @dev We do not allow the permitOracle to be changed after the pool has been 
-     *      initialized. That would give the protocol authority to much power to 
+     *      initialized. That would give the protocol authority too much power to 
      *      arbitrarily lock LPs out of their funds. 
      *
      * @param base The base-side token specification of the pair containing the pool.
      * @param quote The quote-side token specification of the pair containing the pool.
+     * @param poolIdx The pool type index value. 
      * @param feeRate The pool's exchange fee as a percent of notional swapped. 
      *                Represented as a multiple of 0.0001%.
-     * @param protocolTake The protocol's take rate on the pool's fees. (The rest goes to
-     *                liquidity rewards.) Specified as a fraction 1/n. Zero is a special
-     *                case that indicates the protocol fee is turned off.
      * @param tickSize The tick grid size for range orders in the pool.
      * @param jitThresh The minimum time (in seconds) a concentrated LP position must 
-     *                  rest before it can be burned. */
+     *                  rest before it can be burned.
+     * @param knockoutBits The knockout liquiidity parameter bit flags for the pool. */
     function setPoolSpecs (address base, address quote, uint256 poolIdx,
                            uint16 feeRate, uint16 tickSize, uint8 jitThresh,
                            uint8 knockoutBits) internal {
@@ -161,6 +170,13 @@ contract PoolRegistry is StorageLayout {
         pool.knockoutBits_ = knockoutBits;
     }
 
+    // 10 million represents a sensible upper bound on initial pool, considering that the highest
+    // price token per wei is USDC and similar 6-digit stablecoins. So 10 million in that context
+    // represents about $10 worth of burned value. Considering that the initial liquidity commitment
+    // should be economic de minims, because it's permenately locked, we wouldn't want to be much 
+    // higher than this.
+    uint128 constant MAX_INIT_POOL_LIQ = 10_000_000;
+
     /* @notice The creation of every new pool requires the pool initializer to 
      *         permanetely lock in a token amount of liquidity (possibly zero). This is
      *         set to be economically meaningless for normal cases but prevent the 
@@ -169,11 +185,23 @@ contract PoolRegistry is StorageLayout {
      *         ante value that determines how much liquidity must be locked at 
      *         initialization time. */
     function setNewPoolLiq (uint128 liqAnte) internal {
+        require(liqAnte > 0 && liqAnte < MAX_INIT_POOL_LIQ, "Init liq");
         newPoolLiq_ = liqAnte;
+
     }
 
+    // Since take rate is represented in 1/256, this represents a maximum possible take 
+    // rate of 50%.
+    uint8 MAX_TAKE_RATE = 128;
+
     function setProtocolTakeRate (uint8 takeRate) internal {
+        require(takeRate <= MAX_TAKE_RATE, "TR");
         protocolTakeRate_ = takeRate;
+    }
+
+    function setRelayerTakeRate (uint8 takeRate) internal {
+        require(takeRate <= MAX_TAKE_RATE, "TR");
+        relayerTakeRate_ = takeRate;
     }
 
     function resyncProtocolTake (address base, address quote,
@@ -216,8 +244,8 @@ contract PoolRegistry is StorageLayout {
         returns (PoolSpecs.PoolCursor memory, uint128) {
         assertPoolFresh(base, quote, poolIdx);
         PoolSpecs.Pool memory template = queryTemplate(poolIdx);
-        PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         template.protocolTake_ = protocolTakeRate_;
+        PoolSpecs.writePool(pools_, base, quote, poolIdx, template);
         return (queryPool(base, quote, poolIdx), newPoolLiq_);
     }
 
@@ -227,7 +255,9 @@ contract PoolRegistry is StorageLayout {
      *
      * @param req The user specificed price improvement request.
      * @param base The base-side token defining the pair.
-     * @param quote The quote-side token defining the pair. */
+     * @param quote The quote-side token defining the pair.
+     * @return The price grid improvement thresholds (if any) for off-grid liquidity 
+     *         positions. */
     function queryPriceImprove (Directives.PriceImproveReq memory req,
                                 address base, address quote)
         view internal returns (PriceGrid.ImproveSettings memory dest) {
@@ -245,7 +275,8 @@ contract PoolRegistry is StorageLayout {
      *
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
-     * @param poolIdx The pool type index. */
+     * @param poolIdx The pool type index.
+     * @return The current spec parameters for the pool. */
     function queryPool (address base, address quote, uint256 poolIdx)
         internal view returns (PoolSpecs.PoolCursor memory pool) {
         pool = PoolSpecs.queryPool(pools_, base, quote, poolIdx);
@@ -261,16 +292,19 @@ contract PoolRegistry is StorageLayout {
 
     /* @notice Checks if a given position is JIT eligible based on its mint timestamp.
      *         If not, the transaction will revert.
+     * 
      * @dev Because JIT window is capped at 8-bit integers, we can avoid the SLOAD
-     *      for all positions older than 255 seconds, which are the vast majority.
+     *      for all positions older than 2550 seconds, which are the vast majority.
      *
      * @param posTime The block time the position was created or had its liquidity 
      *                increased.
      * @param poolIdx The hash index of the AMM curve pool. */
     function assertJitSafe (uint32 posTime, bytes32 poolIdx) internal view {
-        uint32 elapsed = SafeCast.timeUint32() - posTime;
-        if (elapsed <= type(uint8).max) {
-            require(elapsed >= pools_[poolIdx].jitThresh_, "J");
+        uint32 JIT_UNIT_SECONDS = 10;
+        uint32 elapsedSecs = SafeCast.timeUint32() - posTime;
+        uint32 elapsedUnits = elapsedSecs / JIT_UNIT_SECONDS;
+        if (elapsedUnits <= type(uint8).max) {
+            require(elapsedUnits >= pools_[poolIdx].jitThresh_, "J");
         }
     }
 
@@ -279,7 +313,8 @@ contract PoolRegistry is StorageLayout {
      *
      * @param base The base-side token defining the pair.
      * @param quote The quote-side token defining the pair.
-     * @param poolIdx The pool type index. */
+     * @param poolIdx The pool type index.
+     * @return Storage reference to the specs for the pool. */
     function selectPool (address base, address quote, uint256 poolIdx)
         private view returns (PoolSpecs.Pool storage pool) {
         pool = PoolSpecs.selectPool(pools_, base, quote, poolIdx);
@@ -299,13 +334,15 @@ contract PoolRegistry is StorageLayout {
      *         that hasn't been disabled. */
     function isPoolInit (PoolSpecs.Pool memory pool)
         private pure returns (bool) {
+        require(pool.schema_ <= PoolSpecs.BASE_SCHEMA, "IPS");
         return pool.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 
     /* @notice Returns true if the pool cursor represents an initailized pool that
      *         hasn't been disabled. */
     function isPoolInit (PoolSpecs.PoolCursor memory pool)
-        private pure returns (bool) {
+        private pure returns (bool) {        
+        require(pool.head_.schema_ <= PoolSpecs.BASE_SCHEMA, "IPS");
         return pool.head_.schema_ == PoolSpecs.BASE_SCHEMA;
     }
 }

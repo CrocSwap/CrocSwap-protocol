@@ -1,6 +1,6 @@
 
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3
+pragma solidity 0.8.19;
     
 import "../mixins/PositionRegistrar.sol";
 
@@ -17,11 +17,6 @@ contract TestPositionRegistrar is PositionRegistrar {
                        uint128 liq, uint64 mileage) public {
         lastRewards = burnPosLiq(owner, bytes32(poolIdx),
                                  lower, upper, liq, mileage);
-    }
-
-    function testTransfer (address owner, address receipient, uint256 poolIdx,
-                           int24 lower, int24 upper) public {
-        changePosOwner(owner, receipient, bytes32(poolIdx), lower, upper);
     }
 
     function getPos (address owner, uint256 poolIdx, int24 lower, int24 upper)

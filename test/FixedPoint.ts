@@ -12,6 +12,23 @@ export const MIN_PRICE = BigNumber.from("65538")
 
 export const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
 
+export function toQ64 (val: number): BigNumber {
+    let multFixed = Math.round(val * PRECISION);
+    return BigNumber.from(multFixed).mul(Q_64).div(PRECISION)
+}
+
+export function toQ48 (val: number): BigNumber {
+    let multFixed = Math.round(val * PRECISION);
+    return BigNumber.from(multFixed).mul(Q_48).div(PRECISION)
+}
+
+export function fromQ64 (val: BigNumber): number {
+    return val.mul(PRECISION).div(Q_64).toNumber() / PRECISION;
+}
+
+export function fromQ48 (val: BigNumber): number {
+    return val.mul(PRECISION).div(Q_48).toNumber() / PRECISION;
+}
 
 export function toFixedGrowth (mult: number) {
     let multFixed = Math.round(mult * PRECISION);

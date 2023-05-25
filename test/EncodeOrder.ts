@@ -1,3 +1,4 @@
+import { AbiCoder } from '@ethersproject/abi';
 import { BigNumber, BytesLike, ethers, BigNumberish } from 'ethers';
 
 export function encodeOrderDirective (directive: OrderDirective): BytesLike {
@@ -75,7 +76,7 @@ export interface ConcentratedDirective {
 
 function encodeSettlement (dir: SettlementDirective): BytesLike {
     let token = encodeToken(dir.token)
-    let limit = encodeFullSigned(dir.limitQty)
+    let limit = encodeSigned(dir.limitQty)
     let dust = encodeFull(dir.dustThresh)
     let reserveFlag = encodeWord(dir.useSurplus ? 1 : 0)
     return ethers.utils.concat([token, limit, dust, reserveFlag])
@@ -89,14 +90,13 @@ function encodeHop (hop: HopDirective): BytesLike {
 }
 
 function encodeImprove (improve: ImproveDirective): BytesLike {
-    let flag = (improve.isEnabled ? 2 : 0) + (improve.useBaseSide ? 1 : 0)
-    return encodeJsNum(flag, 1)
+    let abiCoder = new ethers.utils.AbiCoder()
+    return abiCoder.encode(["bool", "bool"], [improve.isEnabled, improve.useBaseSide])
 }
 
 function encodeChain (chain: ChainingDirective): BytesLike {
-    let flag = (chain.rollExit ? 4 : 0) + (chain.swapDefer ? 2 : 0) + 
-        (chain.offsetSurplus ? 1 : 0)
-    return encodeJsNum(flag, 1)
+    let abiCoder = new ethers.utils.AbiCoder()
+    return abiCoder.encode(["bool", "bool", "bool"], [chain.rollExit, chain.swapDefer, chain.offsetSurplus])
 }
 
 function encodePool (pool: PoolDirective): BytesLike {
@@ -108,11 +108,9 @@ function encodePool (pool: PoolDirective): BytesLike {
 }
 
 function encodeSwap (swap: SwapDirective): BytesLike {
-    let dirFlags = encodeWord((swap.isBuy ? 2 : 0) + (swap.inBaseQty ? 1 : 0))
-    let rollType = encodeWord(swap.rollType ? swap.rollType : 0)
-    let qty = encodeFull(swap.qty)
-    let limit = encodeFull(swap.limitPrice)
-    return ethers.utils.concat([dirFlags, rollType, qty, limit])
+    let abiCoder = new ethers.utils.AbiCoder()
+    return abiCoder.encode(["bool", "bool", "uint8", "uint128", "uint128"],
+        [swap.isBuy, swap.inBaseQty, swap.rollType ? swap.rollType : 0, swap.qty, swap.limitPrice])
 }
 
 function encodePassive (passive: PassiveDirective): BytesLike {
@@ -124,8 +122,8 @@ function encodePassive (passive: PassiveDirective): BytesLike {
 }
 
 function encodeConc (conc: ConcentratedDirective): BytesLike {
-    let openTick = encodeJsSigned(conc.lowTick, 3)
-    let closeTick = encodeJsSigned(conc.highTick, 3)
+    let openTick = encodeJsSigned(conc.lowTick)
+    let closeTick = encodeJsSigned(conc.highTick)
     let isRelTick = encodeBool(conc.isRelTick)
     let isAdd = encodeBool(conc.isAdd)
     let rollType = encodeWord(conc.rollType ? conc.rollType : 0)
@@ -144,34 +142,25 @@ function encodeToken (tokenAddr: BytesLike): BytesLike {
 }
 
 function encodeFull (val: BigNumberish): BytesLike {
-    return encodeNum(val, 32)
+    let abiCoder = new ethers.utils.AbiCoder()
+    return abiCoder.encode(["uint256"], [val]);
 }
 
-function encodeFullSigned (val: BigNumber): BytesLike {
-    return encodeSigned(val, 32)
+function encodeSigned (val: BigNumber): BytesLike {
+    let abiCoder = new ethers.utils.AbiCoder()
+    return abiCoder.encode(["int256"], [val]);
 }
 
-function encodeJsNum (val: number, nWords: number): BytesLike {
-    return encodeNum(BigNumber.from(val), nWords)
+function encodeJsNum (val: number): BytesLike {
+    return encodeFull(BigNumber.from(val))
 }
 
-function encodeJsSigned (val: number, nWords: number): BytesLike {
-    return encodeSigned(BigNumber.from(val), nWords)
-}
-
-function encodeSigned (val: BigNumber, nWords: number): BytesLike {
-    let sign = encodeWord(val.lt(0) ? 1 : 0)
-    let magn = encodeNum(val.abs(), nWords)
-    return ethers.utils.concat([sign, magn])
-}
-
-function encodeNum (val: BigNumberish, nWords: number): BytesLike {
-    let hex = ethers.utils.hexValue(val)
-    return ethers.utils.hexZeroPad(hex, nWords)
+function encodeJsSigned (val: number): BytesLike {
+    return encodeSigned(BigNumber.from(val))
 }
 
 function encodeWord (val: number): BytesLike {
-    return encodeJsNum(val, 1)
+    return encodeJsNum(val)
 }
 
 function encodeBool (flag: boolean): BytesLike {

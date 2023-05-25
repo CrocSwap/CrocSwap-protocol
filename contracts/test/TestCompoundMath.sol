@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.5.0;
+// SPDX-License-Identifier: GPL-3
+pragma solidity 0.8.19;
     
 import "../libraries/CompoundMath.sol";
 
@@ -11,7 +11,7 @@ contract TestCompoundMath {
     using CompoundMath for uint128;
     using CompoundMath for uint64;
     
-    function testSqrt (uint64 x) public pure returns (uint64) {
+    function testApproxSqrt (uint64 x) public pure returns (uint64) {
         return x.approxSqrtCompound();
     }
 
@@ -38,5 +38,21 @@ contract TestCompoundMath {
 
     function testDeflate (uint128 x, uint64 y) public pure returns (uint128) {
         return x.deflateLiqSeed(y);
+    }
+
+    function testMulQ64 (uint128 x, uint128 y) public pure returns (uint192) {
+        return FixedPoint.mulQ64(x, y);
+    }
+
+    function testMulQ48 (uint128 x, uint64 y) public pure returns (uint144) {
+        return FixedPoint.mulQ48(x, y);
+    }
+
+    function testDivQ64 (uint128 x, uint128 y) public pure returns (uint256) {
+        return FixedPoint.divQ64(x, y);
+    }
+
+    function testRecipQ64 (uint128 x) public pure returns (uint128) {
+        return FixedPoint.recipQ64(x);
     }
 }

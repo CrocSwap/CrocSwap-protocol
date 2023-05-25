@@ -5,6 +5,7 @@ import { ethers } from 'hardhat';
 import { toSqrtPrice, toFixedGrowth, fromSqrtPrice, fromFixedGrowth } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -84,6 +85,38 @@ describe('LiquidityCurve', () => {
       expect(state.concLiq_.toNumber()).to.equal(8500);
       expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
       expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("liquidity oversized", async () => {
+      const oversized = BigNumber.from(2).pow(128).sub(2)
+      const belowMax = BigNumber.from(2).pow(127).sub(1)
+
+      // Liquidity delta exceeds int128 max (but not arg type uint128 max)
+      await curve.fixCurve(3, toSqrtPrice(2.25), 0, 0);
+      expect(curve.testLiqRecConc(3, oversized,
+         toSqrtPrice(1.96), toSqrtPrice(2.89))).to.be.reverted
+      
+      // Incrementally it should be possible to get aggregate liquidity over int128 max,
+      // as long as the incremental payables are below 2^127 (int128 max)
+      await curve.testLiqRecConc(3, belowMax, toSqrtPrice(1.96), toSqrtPrice(2.89))
+      await curve.testLiqRecConc(3, belowMax, toSqrtPrice(1.96), toSqrtPrice(2.89))
+      let state = await curve.pullCurve(3);
+      expect(state.concLiq_).to.equal(belowMax.mul(2));
+
+      // But aggregate liquidity should not go over uint128 max
+      expect(curve.testLiqRecConc(3, belowMax, toSqrtPrice(1.96), 
+         toSqrtPrice(2.89))).to.be.reverted
+
+      // Liquidity receivable should fail above int128 max should fail even if there is
+      // enough liquidity to support it...
+      expect(curve.testLiqPayConc(3, oversized,
+         toSqrtPrice(1.96), toSqrtPrice(2.89), 0)).to.be.reverted
+      
+      // But incrementally it should be removable, as long as the steps are below int128 max
+      await curve.testLiqPayConc(3, belowMax, toSqrtPrice(1.96), toSqrtPrice(2.89), 0)
+      await curve.testLiqPayConc(3, belowMax, toSqrtPrice(1.96), toSqrtPrice(2.89), 0)
+      state = await curve.pullCurve(3);
+      expect(state.concLiq_).to.equal(0);
    })
 
    it("multiple pools", async () => {

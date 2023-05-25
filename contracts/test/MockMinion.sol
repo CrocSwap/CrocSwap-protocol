@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.5.0;
+pragma solidity 0.8.19;
 
 import "../interfaces/ICrocMinion.sol";
 
@@ -13,12 +13,11 @@ contract MockMinion is ICrocMinion {
     bool[] public sudos_;
 
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable
-        override returns (bytes memory) {
+        override {
         paths_.push(proxyPath);
         protoCmds_.push(cmd);
         callers_.push(tx.origin);
         sudos_.push(sudo);
-        return abi.encode();
     }
 
     function userCmd (uint16 proxyPath, bytes calldata cmd) public payable returns
@@ -28,4 +27,21 @@ contract MockMinion is ICrocMinion {
         callers_.push(tx.origin);
         return abi.encode();
     }
+
+    function acceptCrocDex() public pure returns (bool) { return true; }
+}
+
+contract MockMaster is ICrocMaster {
+
+    address dex_;
+
+    constructor (address dex) {
+        dex_ = dex;
+    }
+
+    function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo) public payable {
+        ICrocMinion(dex_).protocolCmd(proxyPath, cmd, sudo);
+    }
+
+    function acceptsCrocAuthority() override external pure returns (bool) { return true; }
 }

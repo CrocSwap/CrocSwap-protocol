@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.5.0;
+pragma solidity 0.8.19;
 
 import "../interfaces/ICrocLpConduit.sol";
 import "../libraries/PoolSpecs.sol";

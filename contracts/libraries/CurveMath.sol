@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import './SafeCast.sol';
 import './FixedPoint.sol';
 import './LiquidityMath.sol';
 import './CompoundMath.sol';
-
-import "hardhat/console.sol";
 
 /* @title Curve and swap math library
  * @notice Library that defines locally stable constant liquidity curves and
@@ -53,9 +51,9 @@ library CurveMath {
      *
      * @param priceRoot_ The square root of the price ratio exchange rate between the
      *   base and quote-side tokens in the AMM curve. (represented in Q64.64 fixed point)
-     * @param ambientSeed_ The total ambient liquidity seeds in the current curve. 
+     * @param ambientSeeds_ The total ambient liquidity seeds in the current curve. 
      *   (Inflated by seed deflator to get efective ambient liquidity)
-     * @param concentrated_ The total concentrated liquidity active and in range at the
+     * @param concLiq_ The total concentrated liquidity active and in range at the
      *   current state of the curve.
      * @param seedDeflator_ The cumulative growth rate (represented as Q16.48 fixed
      *    point) of a hypothetical 1-unit of ambient liquidity held in the pool since
@@ -149,7 +147,7 @@ library CurveMath {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
             deltaBase(liq, curve.priceRoot_, limitPrice) :
-            deltaQuote(liq, limitPrice, curve.priceRoot_);
+            deltaQuote(liq, curve.priceRoot_, limitPrice);
     }
 
     /* @notice Calculates the change to base token reserves associated with a price
@@ -162,7 +160,7 @@ library CurveMath {
         internal pure returns (uint128) {
         unchecked {
         uint128 priceDelta = priceX > priceY ?
-            priceX - priceY : priceY - priceX;
+            priceX - priceY : priceY - priceX; // Condition assures never underflows
         return reserveAtPrice(liq, priceDelta, true);
         }
     }
@@ -172,7 +170,7 @@ library CurveMath {
      * 
      * @dev Result is almost always within a fixed-point precision unit from the true
      *   real value. However in certain rare cases, the result could be up to 2 wei
-     *   below the true true mathematical value. Caller should account for this */
+     *   below the true mathematical value. Caller should account for this */
     function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint128) {
         // For purposes of downstream calculations, we make sure that limit price is
@@ -189,7 +187,7 @@ library CurveMath {
      *   (where F is the flow to the limit price, where L is liquidity, d is delta, 
      *    P is price and P' is limit price)
      *
-     * Calculating this requires two stacked mulDiv. To meet the function' contract
+     * Calculating this requires two stacked mulDiv. To meet the function's contract
      * we need to compute the result with tight fixed point boundaries at or below
      * 2 wei to conform to the function's contract.
      * 
@@ -221,7 +219,8 @@ library CurveMath {
         private pure returns (uint128) {
         uint128 priceDelta = priceBig - priceSmall;
 
-        // This is guaranteed to be at most 196 bits
+        // This is cast to uint256 but is guaranteed to be less than 2^192 based off
+        // the return type of divQ64
         uint256 termOne = FixedPoint.divQ64(liq, priceSmall);
         
         // As long as the final result doesn't overflow from 128-bits, this term is
@@ -253,9 +252,9 @@ library CurveMath {
      *   classical constant- product AMM without concentrated liquidity.  */
     function reserveAtPrice (uint128 liq, uint128 price, bool inBaseQty)
         internal pure returns (uint128) {
-        return uint256(inBaseQty ?
-                       FixedPoint.mulQ64(liq, price) :
-                       FixedPoint.divQ64(liq, price)).toUint128();
+        return (inBaseQty ?
+                    uint256(FixedPoint.mulQ64(liq, price)) :
+                    uint256(FixedPoint.divQ64(liq, price))).toUint128();
     }
 
     /* @notice Calculated the amount of concentrated liquidity within a price range
@@ -268,7 +267,7 @@ library CurveMath {
      * @param inBase If true, the collateral represents the base-side token in the pair.
      *               If false the quote side token.
      * @param priceX The price boundary of the concentrated liquidity position.
-     * @param priceX The price boundary of the concentrated liquidity position.
+     * @param priceY The other price boundary of the concentrated liquidity position.
      * @returns The total amount of liquidity supported by the collateral. */
     function liquiditySupported (uint128 collateral, bool inBase,
                                  uint128 priceX, uint128 priceY)
@@ -280,7 +279,7 @@ library CurveMath {
         } else {
             unchecked {
             uint128 priceDelta = priceX > priceY ?
-                priceX - priceY : priceY - priceX;
+                priceX - priceY : priceY - priceX; // Conditional assures never underflows
             return liquiditySupported(collateral, true, priceDelta);
             }
         }
@@ -349,43 +348,32 @@ library CurveMath {
     function priceToTokenPrecision (uint128 liq, uint128 price,
                                     bool inBase) internal pure returns (uint128) {
         unchecked {
-
         // To provide more base token collateral than price precision rounding:
         //     delta(B) >= L * delta(P)
         //     delta(P) <= 2^-64  (64 bit precision rounding)
         //     delta(B) >= L * 2^-64
         //  (where L is liquidity, B is base token reserves, P is price)
         if (inBase) {
-            return (liq >> 64) + 1;
+            // Since liq is shifted right by 64 bits, adding one can never overflow
+            return (liq >> 64) + 1; 
             
         } else {
-            // Proivde quote token collateral to buffer price precision roudning:
-            //    delta(Q) >= L * delta(1/P)
-            //    delta(P) <= 2^-64  (64 bit precision rounding)
-            //          P  >= 2^-64  (minimum precision)
-            //    delta(Q) >= L * (1/(P-2^-64) - 1/P)
-            //             >= L * 2^-64/(P^2 - P * 2^-64)
-            //             >= L * 2^-64/(P - 2^-64)^2        (upper bound to above)
-            if (price <= FixedPoint.Q64) {
-                // The fixed point representation of Price in bits is
-                //    Pb = P * 2^64
-                // Therefore
-                //    delta(Q) >= L * 2^-64/(P/2^64)^2
-                //             >= L * 2^64/Pb^2
+            // Calculate the quote reservs at the current price and a one unit price step,
+            // then take the difference as the minimum required quote tokens needed to
+            // buffer that price step.
+            uint192 step = FixedPoint.divQ64(liq, price - 1);
+            uint192 start = FixedPoint.divQ64(liq, price);
 
-                // Curve price is always well above 1
-                uint256 calc = uint256(FixedPoint.divSqQ64(liq, price-1)) + 1; 
-                if (calc > type(uint128).max) { return type(uint128).max; }
-                return uint128(calc);
-                
-            } else {
-                // If price is greater than 1, Can reduce to this (potentially loose,
-                // but still economically small) upper bound:
-                //           P >= 1
-                //    delta(Q) >= L * 2^-64/P^2
-                //             >= L * 2^-64
-                return (liq >> 64) + 1;
-            }
+            // next reserves will always be equal or greater than start reserves, so the 
+            // subtraction will never underflow. 
+            uint192 delta = step - start;
+
+            // Round tokens up conservative.
+            // This will never overflow because 192 bit nums incremented by 1 will always fit in
+            // 256 bits.
+            uint256 deltaRound = uint256(delta) + 1;
+
+            return deltaRound.toUint128();
         }
         }
     }

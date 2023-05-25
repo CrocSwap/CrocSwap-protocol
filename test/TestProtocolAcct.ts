@@ -33,7 +33,7 @@ describe('Protocol Account', () => {
 
        quoteToken = await tokenX;
        baseToken = await tokenY;
-       if ((await tokenX).address < (await tokenY).address) {
+       if ((await tokenX).address.toLocaleLowerCase() < (await tokenY).address.toLocaleLowerCase()) {
          baseToken = await tokenX;
          quoteToken = await tokenY;
        }
@@ -87,7 +87,7 @@ describe('Protocol Account', () => {
 
       await test.testAccum(baseToken.address, quoteToken.address, 3000, 6000)
       await test.connect(owner).disburseProtocol(treasury, quoteToken.address)
-
+      
       expect(await test.getPaidFees(treasury, baseToken.address)).to.equal(5000)
       expect(await test.getPaidFees(treasury, quoteToken.address)).to.equal(8500)
       expect(await test.protoFeeAccum(baseToken.address)).to.equal(3000)

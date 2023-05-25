@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.7.0;
+// SPDX-License-Identifier: GPL-3
+pragma solidity 0.8.19;
 
 import "../libraries/CurveMath.sol";
 import "../libraries/CurveAssimilate.sol";
@@ -19,7 +19,7 @@ contract TestCurveMath {
                       bool, bool inBase, uint128 curvePrice, uint128 limitPrice)
         public pure returns (uint128, uint128) {
         CurveMath.CurveState memory curve = buildCurve(liq, 0, 0, curvePrice);
-        return SwapCurve.vigOverSwap(curve, swapQty, feeRate, protoCut, inBase,
+        return SwapCurve.calcFeeOverSwap(curve, swapQty, feeRate, protoCut, inBase,
                                      limitPrice);
     }
 
@@ -163,5 +163,10 @@ contract TestCurveMath {
     function buildCurve (uint128 seed, uint64 growth, uint128 conc, uint128 price)
         private pure returns (CurveMath.CurveState memory) {
         return CurveMath.CurveState(price, seed, conc, growth, 0);
+    }
+
+    function testTokenPrecision (uint128 liq, uint128 price,
+                                 bool inBase) public pure returns (uint128) {
+        return CurveMath.priceToTokenPrecision(liq, price, inBase);
     }
 }

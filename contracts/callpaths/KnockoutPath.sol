@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
@@ -11,8 +11,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/TradeMatcher.sol';
 
-import "hardhat/console.sol";
-
 /* @title Knockout Flag Proxy
  * @notice This is an internal library callpath that's called when a swap triggers a 
  *         knockout liquidity event by crossing a given bump point. 
@@ -22,11 +20,23 @@ import "hardhat/console.sol";
 contract KnockoutFlagPath is KnockoutCounter {
 
     /* @notice Called when a knockout pivot is crossed.
+     *
+     * @dev Since this contract is a proxy sidecar, this method needs to be marked
+     *      payable even though it doesn't directly handle msg.value. Otherwise it will
+     *      fail on any. Because of this, this contract should never be used in any other
+     *      context besides a proxy sidecar to CrocSwapDex.
+     *
      * @param pool The hash index of the pool.
      * @param tick The 24-bit index of the tick where the knockout pivot exists.
      * @param isBuy If true indicates that the swap direction is a buy.
      * @param feeGlobal The global fee odometer for 1 hypothetical unit of liquidity fully
-     *                  in range since the inception of the pool. */
+     *                  in range since the inception of the pool.
+     *
+     * @return Returns the net additional amount the curve liquidity should be adjusted by.
+     *         Currently this always returns zero, because a liquidity knockout will never change
+     *         active liquidity on a curve. But by leaving this function return type it leaves open
+     *         the possibility in future upgrades of alternative types of dynamic liquidity that 
+     *         do change active curve liquidity when crossed */
     function crossCurveFlag (bytes32 pool, int24 tick, bool isBuy, uint64 feeGlobal)
         public payable returns (int128) {
         // If swap is a sell, then implies we're crossing a resting bid and vice versa
@@ -34,6 +44,13 @@ contract KnockoutFlagPath is KnockoutCounter {
         crossKnockout(pool, bidCross, tick, feeGlobal);
         return 0;
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.FLAG_CROSS_PROXY_IDX;
+    }
+
 }
 
 /* @title Knockout Liquidity Proxy
@@ -83,6 +100,8 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
             (baseFlow, quoteFlow) = claimCmd(pool.hash_, curve, loc, args);
         } else if (code == UserCmd.RECOVER_KNOCKOUT) {
             (baseFlow, quoteFlow) = recoverCmd(pool.hash_, loc, args);
+        } else {
+            revert("Invalid command");
         }
 
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
@@ -97,7 +116,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
         (uint128 qty, bool insideMid) = abi.decode(args, (uint128,bool));
         
         int24 priceTick = curve.priceRoot_.getTickAtSqrtRatio();
-        require(loc.spreadOkay(priceTick, insideMid, false), "KL");
+        require(loc.spreadOkay(priceTick, insideMid), "KL");
 
         uint128 liq = Chaining.sizeConcLiq(qty, true, curve.priceRoot_,
                                            loc.lowerTick_, loc.upperTick_, loc.isBid_);
@@ -120,7 +139,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
             abi.decode(args, (uint128,bool,bool));
 
         int24 priceTick = curve.priceRoot_.getTickAtSqrtRatio();
-        require(loc.spreadOkay(priceTick, insideMid, false), "KL");
+        require(loc.spreadOkay(priceTick, insideMid), "KL");
 
         uint128 liq = inLiqQty ? qty :
             Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
@@ -146,6 +165,9 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
                        bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
         (uint160 root, uint256[] memory proof) = abi.decode(args, (uint160,uint256[]));
+
+        // No permit check because permit oracles do not control knockout claims
+        // (See ICrocPermitOracle for more information)
         (baseFlow, quoteFlow) = claimKnockout(curve, loc, root, proof, pool);
         commitCurve(pool, curve);
     }
@@ -153,17 +175,30 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
     /* @notice Like claim, but ignores the Merkle proof (either because the user wants to
      *         avoid the gas cost or isn't bothered to recover the history). This results
      *         in the earned liquidity fees being forfeit, but the user still recovers the
-     *         full principal of the undrlying order.
+     *         full principal of the underlying order.
      *
      * @param pool The pool index.
      * @param loc The location the knockout liquidity is being claimed from
      * @params args Corresponds to a flat ABI encoding of the pivot's origin in block 
-     *              time. */
+     *              time. 
+     * @return baseFlow The total base token flow from the pool to the user
+     * @return quoteFlow The total base token flow from the pool to the user */
     function recoverCmd (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                          bytes memory args) private returns
         (int128 baseFlow, int128 quoteFlow) {
         (uint32 pivotTime) = abi.decode(args, (uint32));
+        
+        // No permit check because permit oracles do not control knockout claims
+        // (See ICrocPermitOracle for more information)
+
         (baseFlow, quoteFlow) = recoverKnockout(loc, pivotTime, pool);
-        // No need to commit curve becuase recover doesn't touch curve.
+        // No need to commit curve because recover doesn't touch curve.
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.KNOCKOUT_LP_PROXY_IDX;
+    }
+
 }

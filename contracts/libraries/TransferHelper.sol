@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../interfaces/IERC20Minimal.sol';
 
@@ -22,8 +22,9 @@ library TransferHelper {
     }
 
     /// @notice Transfers tokens from msg.sender to a recipient
-    /// @dev Calls transfer on token contract, errors with TF if transfer fails
+    /// @dev Calls transferFrom on token contract, errors with TF if transfer fails
     /// @param token The contract address of the token which will be transferred
+    /// @param from The sender address of the transfer
     /// @param to The recipient of the transfer
     /// @param value The value of the transfer
     function safeTransferFrom(

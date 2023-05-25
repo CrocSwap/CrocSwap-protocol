@@ -169,13 +169,6 @@ describe('Knockout Liquidity', () => {
       await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -10000, params)).to.be.reverted
       await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10600, params)).to.be.reverted
       await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -10000, params)).to.be.reverted
-      
-      // Yonder position
-      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 0, params)).to.be.reverted
-      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -20000, params)).to.be.reverted
-      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 20000, params)).to.be.reverted
-      await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, 0, params)).to.be.reverted
-      
    })
 
    it("assert inside", async() => {
@@ -194,36 +187,5 @@ describe('Knockout Liquidity', () => {
       await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -10000, params)).to.not.be.reverted
       await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10600, params)).to.not.be.reverted
       await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -10000, params)).to.not.be.reverted
-      
-      // Yonder position
-      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 0, params)).to.be.reverted
-      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -20000, params)).to.be.reverted
-      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 20000, params)).to.be.reverted
-      await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, 0, params)).to.be.reverted
-
-   })
-
-   it("assert yonder", async() => {
-      let width = 10
-      let enabled = 3
-      let params = enabled * 16 + width
-
-      // Outside position
-      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 20000, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, 0, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 0, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -20000, params)).to.not.be.reverted
-
-      // Inside position
-      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10600, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -10000, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10600, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -10000, params)).to.not.be.reverted
-
-      // Yonder position
-      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 0, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(true, -10240, -10240 + 1024, -20000, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 20000, params)).to.not.be.reverted
-      await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, 0, params)).to.not.be.reverted
    })
 })

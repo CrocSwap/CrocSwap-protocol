@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
@@ -10,18 +10,15 @@ import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
 import './mixins/MarketSequencer.sol';
-import './mixins/ColdInjector.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
+import './callpaths/BootPath.sol';
 import './callpaths/WarmPath.sol';
 import './callpaths/HotPath.sol';
 import './callpaths/LongPath.sol';
 import './callpaths/KnockoutPath.sol';
 import './callpaths/MicroPaths.sol';
-import './callpaths/MultiPath.sol';
 import './callpaths/SafeModePath.sol';
-
-import "hardhat/console.sol";
 
 /* @title CrocSwap exchange contract
  * @notice Top-level CrocSwap contract. Contains all public facing methods and state
@@ -37,13 +34,12 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    /* @param authority The address of the protocol authority. Only this address will is
-     *                  able to call methods related to protocol privileged operations.
-     * @param coldPath The address of the pre-deployed ColdPath sidecar contract. */
-    constructor (address authority, address coldPath) {
-        authority_ = authority;
+    constructor() {
+        // Authority is originally set to deployer address, which can then transfer to
+        // proper governance contract (if deployer already isn't)
+        authority_ = msg.sender;
         hotPathOpen_ = true;
-        proxyPaths_[CrocSlots.ADMIN_PROXY_IDX] = coldPath;
+        proxyPaths_[CrocSlots.BOOT_PROXY_IDX] = address(new BootPath());
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -72,7 +68,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      *                   price will always be equal or better, because this is calculated
      *                   at the marginal unit of quantity.
      * @param minOut The minimum output the user expects from the swap. If less is 
-     *               returned, the transaction will revery. (Alternatively if the swap
+     *               returned, the transaction will revert. (Alternatively if the swap
      *               is fixed in terms of output, this is the maximum input.)
      * @param reserveFlags Bitwise flags to indicate if the user wants to pay/receive in
      *                     terms of surplus collateral balance held at the dex contract.
@@ -105,14 +101,13 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param sudo     If true, indicates that the command should be called with elevated
      *                 privileges. */
     function protocolCmd (uint16 callpath, bytes calldata cmd, bool sudo)
-        protocolOnly(sudo) public payable override returns (bytes memory) {
-        return callProtocolCmd(callpath, cmd);
+        protocolOnly(sudo) public payable override {
+        callProtocolCmd(callpath, cmd);
     }
 
-    /* @notice Calls an arbitrary command on one of the 64 spill sidecars. Currently
-     *         none are in use (all slots are set to 0 and therefore calls will fail).
-     *         But this lets protocol governance add new functionality in additional 
-     *         sidecars, which can then be accessed by users through this command.
+    /* @notice Calls an arbitrary command on one of the sidecar proxy contracts at a specific
+     *         index. Not all proxy slots may have a contract attached. If so, this call will
+     *         fail.
      *
      * @param callpath The index of the proxy sidecar the command is being called on.
      * @param cmd The arbitrary call data the client is calling the proxy sidecar.
@@ -156,12 +151,9 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param callpath The index of the proxy sidecar the command is being called on.
      * @param cmd The arbitrary call data the client is calling the proxy sidecar.
      * @param client The address of the client the router is calling on behalf of.
-     * @param salt The arbitrary salt to check the user's router approval against. In most
-     *             cases this will just be zero, but allows for multidimensional approval
      * @return Arbitrary byte data (if any) returned by the command. */
-    function userCmdRouter (uint16 callpath, bytes calldata cmd, address client,
-                            uint256 salt)
-        reEntrantApproved(client, salt) public payable
+    function userCmdRouter (uint16 callpath, bytes calldata cmd, address client)
+        reEntrantApproved(client, callpath) public payable
         returns (bytes memory) {
         return callUserCmd(callpath, cmd);
     }
@@ -175,22 +167,25 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         data := sload(slot)
         }
     }
+
+    /* @notice Validation function used by external contracts to verify an address is
+     *         a valid CrocSwapDex contract. */
+    function acceptCrocDex() pure public returns (bool) { return true; }
 }
 
 
-/* @notice Alternative contrurctor to CrocSwapDex that's more convenient. However
+/* @notice Alternative constructor to CrocSwapDex that's more convenient. However
  *     the deploy transaction is several hundred kilobytes and will get droppped by 
  *     geth. Useful for testing environments though. */
 contract CrocSwapDexSeed  is CrocSwapDex {
     
-    constructor (address authority)
-        CrocSwapDex(authority, address(new ColdPath())) {
+    constructor() {
         proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
+        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
         proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
         proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
-        proxyPaths_[CrocSlots.MULTICALL_PROXY_IDX] = address(new MultiPath());
         proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath());
     }
 }

@@ -1,9 +1,7 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3
+pragma solidity 0.8.19;
 
-import "hardhat/console.sol";
-
-/* @notice Defines structures and functions necessary track to knockout liquidity. 
+/* @notice Defines structures and functions necessary to track knockout liquidity. 
  *         Knockout liquidity works like standard concentrated range liquidity, *except*
  *         the position becomes inactive once the price of the curve breaches a certain
  *         tick pivot. In that sense knockout liquidity behaves like a "non-reversible
@@ -55,8 +53,8 @@ library KnockoutLiq {
      * @param lots_ The total number of liquidity lots in the position. 
      * @param feeMileage_ The in-range cumulative fee mileage at the time the position was
      *                    created.
-     * @param timetamp_ The block time the position was created (or when liquidity was
-     *                  added to the position). */
+     * @param timestamp_ The block time the position was created (or when liquidity was
+     *                   added to the position). */
     struct KnockoutPos {
         uint96 lots_;
         uint64 feeMileage_;
@@ -68,8 +66,8 @@ library KnockoutLiq {
      *
      * @param isBid_ If true, indicates that the knockout is on the bid side, i.e. will
      *                knockout when price falls below the tick.
-     * @param tick_ The 24-bit tick index the knockout pivot is placed at.
-     * @param rangeTicks_ The number of ticks wide the corresponding range order is. */
+     * @param lowerTick The 24-bit tick index of the lower boundary of the knockout range order
+     * @param upperTick The 24-bit tick index of the upper boundary of the knockout range order */
     struct KnockoutPosLoc {
         bool isBid_;
         int24 lowerTick_;
@@ -86,7 +84,8 @@ library KnockoutLiq {
     /* @notice Encodes a hash key for a given knockout pivot point.
      * @param pool The hash index of the AMM pool.
      * @param isBid If true indicates the knockout pivot is on the bid side.
-     * @param tick The tick index of the knockout pivot. */
+     * @param tick The tick index of the knockout pivot.
+     * @return Unique hash key mapping to the pivot struct. */
     function encodePivotKey (bytes32 pool, bool isBid, int24 tick)
         internal pure returns (bytes32) {
         return keccak256(abi.encode(pool, isBid, tick));
@@ -112,9 +111,10 @@ library KnockoutLiq {
 
     /* @notice Encodes a hash key for a knockout position. 
      * @param loc The location of the knockout position
-     * @param pivotTime The timestamp of when the pivot tranche was created
      * @param pool The hash index of the AMM pool.
-     * @param owner The claimint of the liquidity position. */
+     * @param owner The claimant of the liquidity position.
+     * @param pivotTime The timestamp of when the pivot tranche was created
+     * @return Unique hash key to position. */
     function encodePosKey (KnockoutPosLoc memory loc,
                            bytes32 pool, address owner, uint32 pivotTime)
         internal pure returns (bytes32) {
@@ -147,7 +147,7 @@ library KnockoutLiq {
      *      Even if an attacker is the block builder and can manipulate blockhash, they 
      *      can only control as many bits of blockhash entropy as SHA256 hashes they can 
      *      calculate in O(block time). Practically speaking an attacker will not be able
-     *      to calculate more than 2^100 hashes hashes at the scale of block times. 
+     *      to calculate more than 2^100 hashes at the scale of block times. 
      *      Therefore this salt injects a minimum of 60 bits of uncontrollable entropy, 
      *      and raises the cost of a long-range collision attack to 2^140 hashes, which 
      *      is outright infeasible. */
@@ -174,7 +174,7 @@ library KnockoutLiq {
         return uint160(uint256(hash) >> 96);
     }
 
-    /* @notice Tightly packs the 32-bit pivot time with the 64-bit fee mileage. */
+    /* @notice Tightly packs the 32-bit pivot time with the 64-bit fee mileage and the salt. */
     function encodeChainLink (uint32 pivotTime, uint64 feeMileage, uint160 salt)
         private pure returns (uint256)  {
         return (uint256(salt) << 96) +
@@ -197,7 +197,7 @@ library KnockoutLiq {
      *              and includes the encoded 96-bit chain entries (see encodeChainLink())
      *              up to the current Merkle state.
      *
-     * @return The 32-bit Knockout tranche pivot and 64-bit fee mileage at the start of
+     * @return The 32-bit Knockout tranche pivot time and 64-bit fee mileage at the start of
      *         the proof. */
     function proveHistory (KnockoutMerkle memory merkle, uint160 proofRoot,
                            uint256[] memory proof)
@@ -215,6 +215,7 @@ library KnockoutLiq {
         private pure returns (uint32, uint64) {
         uint160 incrRoot = proofRoot;
         unchecked {
+            // Iterate by 1 loop will run out of gas far before overflowing 256 bits
             for (uint i = 0; i < proof.length; ++i) {
                 incrRoot = rootLink(incrRoot, proof[i]);
             }
@@ -227,15 +228,15 @@ library KnockoutLiq {
 
     /* @notice Verifies that a given knockout location is valid relative to the curve
      *         price and the pool's current knockout parameters. If not, the call will
-     *         reverty
+     *         revert
      *
      * @param loc The location for the proposed knockout liquidity candidate.
-     * @param priceTick The tick index of the curv'es current price.
+     * @param priceTick The tick index of the curves current price.
      *
      * @param loc The tightly packed knockout parameters related to the pool. The fields
      *            are set in the following order from most to least significant bit:
-     *                [8][7]            [6][5]           [4][3][2][1]
-     *               Unusued          PlaceType           OrderWidth
+     *         [8]             [7]            [6][5]          [4][3][2][1]
+     *        Unusued      On-Grid Flag      PlaceType         OrderWidth
      *            
      *            The field types are as follows:
      *               OrderWidth - The width of new knockout pivots in ticks represented by
@@ -247,17 +248,21 @@ library KnockoutLiq {
      *                        below (above) the current curve price.
      *                    2 - Knockout bids (asks) must be placed with lower (upper) tick
      *                        below (above) the current curve price.
-     *                    3 - Knockout pivots can be placed anywhere relative to price. */
+     *
+     *              On-Grid Flag - If set requires that any new knockout range order can only
+     *                             be placed on a tick index that's a multiple of the width. 
+     *                             Can be used to restrict density of knockout orders, beyond 
+     *                             the normal pool tick size. */
     function assertValidPos (KnockoutPosLoc memory loc, int24 priceTick, 
                              uint8 knockoutBits) internal pure {
-        (bool enabled, uint8 width, bool inside, bool yonder, bool onGrid) =
+        (bool enabled, uint8 width, bool inside, bool onGrid) =
             unpackBits(knockoutBits);
 
         require(enabled && gridOkay(loc, width, onGrid) &&
-                spreadOkay(loc, priceTick, inside, yonder), "KV");
+                spreadOkay(loc, priceTick, inside), "KV");
     }
 
-    /* @notice Evaluates whether the placement and width of a knockout pivot candidates
+    /* @notice Evaluates whether the placement and width of a knockout pivot candidate
      *         conforms to the grid parameters. */
     function gridOkay (KnockoutPosLoc memory loc, uint8 widthBits, bool mustBeOnGrid)
         private pure returns (bool) {
@@ -274,9 +279,13 @@ library KnockoutLiq {
     /* @notice Evaluates whether the placement of a knockout pivot candidates conforms
      *         to the parameters relative to the curve's current price tick. */
     function spreadOkay (KnockoutPosLoc memory loc, int24 priceTick,
-                         bool inside, bool yonder) internal pure returns (bool) {
-        if (yonder) { return true; }
-        else if (loc.isBid_) {
+                         bool inside) internal pure returns (bool) {
+        // Checks to see whether the range order is placed directionally correct relative
+        // to the current tick price. If inside is true, then the range order can be placed
+        // with the curve price inside the range. 
+        // Otherwise bids must have the entire range below the curve price, and asks must
+        // have the entire range above the curve price.
+        if (loc.isBid_) {
             int24 refTick = inside ? loc.lowerTick_ : loc.upperTick_;
             return refTick < priceTick;
         } else {
@@ -288,21 +297,20 @@ library KnockoutLiq {
     /* @notice Decodes the tightly packed bits in pool knockout parameters.
      * @return enabled True if new knockout pivots are enabled at all.
      * @return widthBits The width of new knockout pivots in ticks to the power of two.
-     * @return inside True if bids (asks) can be placed with upper (lower) tick above 
-     *                (below) the current price tick.
-     * @return yonder True if bids (asks) can be placed with lower (upper) tick above 
-     *                (below) the current price tick. */
+     * @return inside  True if knockout range order can be minted with the current curve
+     *                 price inside the tick range. If false, knockout range orders can
+     *                 only be minted with the full range is outside the current curve 
+     *                 price.
+     * @return onGrid True if new knockout range orders are restricted to ticks that
+     *                are multiples of the width size. */
     function unpackBits (uint8 knockoutBits) private pure returns
-        (bool enabled, uint8 widthBits, bool inside, bool yonder, bool onGrid) {
-        unchecked {
+        (bool enabled, uint8 widthBits, bool inside, bool onGrid) {
         widthBits = uint8(knockoutBits & 0x0F);
         uint8 flagBits = uint8(knockoutBits & 0x30) >> 4;
 
         enabled = flagBits > 0;
-        yonder = flagBits >= 3;
         inside = flagBits >= 2;
 
         onGrid = knockoutBits & 0x40 > 0;
-        }
     }
 }

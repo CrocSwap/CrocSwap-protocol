@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 /// @title Math library for computing sqrt prices from ticks and vice versa
 /// @notice Computes sqrt price for ticks of size 1.0001, i.e. sqrt(1.0001^tick) as fixed point Q64.64 numbers. Supports
@@ -15,13 +15,14 @@ library TickMath {
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint128 internal constant MAX_SQRT_RATIO = 21267430153580247136652501917186561138;
 
-    /// @notice Calculates sqrt(1.0001^tick) * 2^96
-    /// @dev Throws if |tick| > max tick
+    /// @notice Calculates sqrt(1.0001^tick) * 2^64
+    /// @dev Throws if tick < MIN_TICK or tick > MAX_TICK
     /// @param tick The input tick for the above formula
     /// @return sqrtPriceX64 A Fixed point Q64.64 number representing the sqrt of the ratio of the two assets (token1/token0)
     /// at the given tick
     function getSqrtRatioAtTick(int24 tick) internal pure returns (uint128 sqrtPriceX64) {
-        unchecked {
+        // Set to unchecked, but the original UniV3 library was written in a pre-checked version of Solidity
+        unchecked { 
         require(tick >= MIN_TICK && tick <= MAX_TICK);
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
 
@@ -61,6 +62,7 @@ library TickMath {
     /// @param sqrtPriceX64 The sqrt ratio for which to compute the tick as a Q64.64
     /// @return tick The greatest tick for which the ratio is less than or equal to the input ratio
     function getTickAtSqrtRatio(uint128 sqrtPriceX64) internal pure returns (int24 tick) {
+        // Set to unchecked, but the original UniV3 library was written in a pre-checked version of Solidity
         unchecked {
         // second inequality must be < because the price can never reach the price at the max tick
         require(sqrtPriceX64 >= MIN_SQRT_RATIO && sqrtPriceX64 < MAX_SQRT_RATIO);

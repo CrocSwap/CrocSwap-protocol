@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: Unlicensed                                                   
+// SPDX-License-Identifier: GPL-3                                                   
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import './TickMath.sol';
 import './FixedPoint.sol';
 import './SafeCast.sol';
 import './CurveMath.sol';
 import './Directives.sol';
-
-import "hardhat/console.sol";
 
 /* @title Price grid library.
  * @notice Functionality for tick-defined price grids and facilities for off-grid
@@ -68,8 +66,8 @@ library PriceGrid {
     }
 
     /* @notice Returns true if the boundaries of a range order occur on the tick grid.
-     * @param lowTick The lower tick index of the range order.
-     * @param highTick The upper tick index of the range order.
+     * @param lowerTick The lower tick index of the range order.
+     * @param upperTick The upper tick index of the range order.
      * @param gridSize The grid size associated with the pool in ticks. */
     function isOnGrid (int24 lowerTick, int24 upperTick, uint16 gridSize)
         internal pure returns (bool) {
