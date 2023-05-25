@@ -11,8 +11,8 @@ contract CrocDeployer {
     address immutable owner_;
     address public dex_;
 
-    constructor (address owner) {
-        owner_ = owner;
+    constructor() {
+        owner_ = msg.sender;
     }
 
     function protocolCmd (address dex, uint16 proxyPath,

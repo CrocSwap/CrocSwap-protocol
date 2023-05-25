@@ -8,44 +8,38 @@
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 import { ColdPath, CrocDeployer, CrocPolicy, CrocSwapDex } from '../../../typechain';
-import { CREATE2_SALTS } from '../../constants/salts';
+import { mapSalt } from '../../constants/salts';
+import { CROC_ADDRS } from '../../constants/addrs';
+import { initWallet, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
+import { RPC_URLS } from '../../constants/rpcs';
 
-let override = { gasPrice: BigNumber.from("10").pow(9).mul(2), gasLimit: 6000000 }
+const CHAIN_ID = 'mock';
 
-const CHAIN_ID = '0x1';
-
-const salt = CREATE2_SALTS[CHAIN_ID]['']
-
-let abi = new ethers.utils.AbiCoder()
+let addrs = CROC_ADDRS[CHAIN_ID]
+const rpcUrl = RPC_URLS[CHAIN_ID]
 
 async function vanityDeploy() {
-    let authority = (await ethers.getSigners())[0]
+    const authority = initWallet(rpcUrl)
 
-    let cmd;
-    let factory
-    let tx;
+    const salt = mapSalt(addrs.deployer)
 
     console.log("Deploying with the following addresses...")
     console.log("Protocol Authority: ", authority.address)
+    console.log("Using CREATE2 salt", salt.toString())
 
-    factory = await ethers.getContractFactory("CrocDeployer")
-    let crocDeployer = addrs.deployer ?
-        await factory.attach(addrs.deployer) as CrocDeployer :
-        await factory.deploy(authority.address, override) as CrocDeployer
+    let crocDeployer = await refContract("CrocDeployer", addrs.deployer, 
+        authority) as CrocDeployer
 
-    console.log("Deployer: ", crocDeployer.address)
-
-    factory = await ethers.getContractFactory("CrocSwapDex")
-    factory.bytecode
-
-    await (await crocDeployer.deploy(factory.bytecode, SALT)).wait();
-
+    const factory = await ethers.getContractFactory("CrocSwapDex")
+    await traceContractTx(crocDeployer.deploy(factory.bytecode, salt), "Salted Deploy")
     const dex = await crocDeployer.dex_();
-    console.log("CrocSwapDex deployed at: ", dex)
 
+    console.log("CrocSwapDex deployed at: ", dex)
     const crocSwap = factory.attach(dex) as CrocSwapDex
 
-    factory = await ethers.getContractFactory("ColdPath")
+    console.log(`Updated addresses for ${CHAIN_ID}`, addrs)
+
+    /* factory = await ethers.getContractFactory("ColdPath")
     let coldPath = addrs.cold ? factory.attach(addrs.cold) :
         await factory.deploy({gasPrice: ethers.provider.getGasPrice()}) as ColdPath
     addrs.cold = coldPath.address
@@ -65,7 +59,7 @@ async function vanityDeploy() {
     tx = await crocDeployer.protocolCmd(dex, COLD_PROXY_IDX, cmd, true, {gasPrice: ethers.provider.getGasPrice()});
     await tx.wait()
 
-    console.log(await crocSwap.readSlot(65537))
+    console.log(await crocSwap.readSlot(65537))*/
 }
 
 vanityDeploy()

@@ -35,6 +35,24 @@ const emptyAddrs: CrocAddrs = {
     deployer: "",
 }
 
+// Mock used in local forks
+const mockAddrs: CrocAddrs = {
+    dex: "0xAAAAaAAa7A116286168fe3733f994062bc73CbF3",
+    cold: "",
+    warm: "",
+    long: "",
+    micro: "",
+    hot: "",
+    knockout: "",
+    koCross: "",
+    policy: "0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199",
+    query: "",
+    impact: "",
+    shell: "",
+    policyShell: "",
+    deployer: "0x73511669fd4de447fed18bb79bafeac93ab7f31f",
+}
+
 // Mainnet
 const mainnetAddrs: CrocAddrs = {
     dex: "",
@@ -74,6 +92,7 @@ const goerliAddrs: CrocAddrs = {
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrs,
+    'mock': mockAddrs,
 }
 
 // Goerli
