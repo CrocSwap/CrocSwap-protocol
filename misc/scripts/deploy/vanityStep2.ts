@@ -10,16 +10,11 @@ import { BigNumber } from 'ethers';
 import { ColdPath, CrocDeployer, CrocPolicy, CrocSwapDex } from '../../../typechain';
 import { mapSalt } from '../../constants/salts';
 import { CROC_ADDRS } from '../../constants/addrs';
-import { initWallet, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
+import { initChain, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
 import { RPC_URLS } from '../../constants/rpcs';
 
-const CHAIN_ID = 'mock';
-
-let addrs = CROC_ADDRS[CHAIN_ID]
-const rpcUrl = RPC_URLS[CHAIN_ID]
-
 async function vanityDeploy() {
-    const authority = initWallet(rpcUrl)
+    let { addrs, chainId, wallet: authority } = initChain()
 
     const salt = mapSalt(addrs.deployer)
 
@@ -32,12 +27,12 @@ async function vanityDeploy() {
 
     const factory = await ethers.getContractFactory("CrocSwapDex")
     await traceContractTx(crocDeployer.deploy(factory.bytecode, salt), "Salted Deploy")
-    const dex = await crocDeployer.dex_();
+    addrs.dex = await crocDeployer.dex_();
 
-    console.log("CrocSwapDex deployed at: ", dex)
-    const crocSwap = factory.attach(dex) as CrocSwapDex
+    console.log("CrocSwapDex deployed at: ", addrs.dex)
+    const crocSwap = factory.attach(addrs.dex) as CrocSwapDex
 
-    console.log(`Updated addresses for ${CHAIN_ID}`, addrs)
+    console.log(`Updated addresses for ${chainId}`, addrs)
 
     /* factory = await ethers.getContractFactory("ColdPath")
     let coldPath = addrs.cold ? factory.attach(addrs.cold) :

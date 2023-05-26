@@ -1,6 +1,8 @@
 import { JsonRpcProvider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { BigNumber, Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
+import { CrocAddrs, CROC_ADDRS } from "../constants/addrs";
+import { RPC_URLS } from "../constants/rpcs";
 
 export async function traceContractDeploy 
     (deployTx: Promise<Contract>, tag: string): Promise<Contract> {
@@ -51,8 +53,18 @@ export async function refContract (contractName: string, addr: string,
     return contract
 }
 
-export function initWallet (rpcUrl: string) {
+export function initChain (chainId?: string): 
+    { wallet: Wallet, addrs: CrocAddrs, chainId: string } {
+
+    chainId = chainId || process.env.CHAIN_ID || 'mock';
+    const addrs = CROC_ADDRS[chainId as keyof typeof CROC_ADDRS]
+    const rpcUrl = RPC_URLS[chainId as keyof typeof RPC_URLS]
+
+    console.log(rpcUrl)
+
     const provider = new JsonRpcProvider(rpcUrl)
     const key = process.env.WALLET_KEY as string
-    return new Wallet(key.toLowerCase()).connect(provider)
+    const wallet = new Wallet(key.toLowerCase()).connect(provider)
+
+    return { addrs, wallet, chainId }
 }

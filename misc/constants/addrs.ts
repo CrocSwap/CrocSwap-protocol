@@ -37,20 +37,20 @@ const emptyAddrs: CrocAddrs = {
 
 // Mock used in local forks
 const mockAddrs: CrocAddrs = {
-    dex: "0xAAAAaAAa7A116286168fe3733f994062bc73CbF3",
-    cold: "",
-    warm: "",
-    long: "",
-    micro: "",
-    hot: "",
-    knockout: "",
-    koCross: "",
-    policy: "0x8626f6940e2eb28930efb4cef49b2d1f2c9c1199",
-    query: "",
-    impact: "",
-    shell: "",
-    policyShell: "",
-    deployer: "0x73511669fd4de447fed18bb79bafeac93ab7f31f",
+    dex: '0xAAAAaAAa7A116286168fe3733f994062bc73CbF3',
+    cold: '0xC469e7aE4aD962c30c7111dc580B4adbc7E914DD',
+    warm: '',
+    long: '',
+    micro: '',
+    hot: '',
+    knockout: '',
+    koCross: '',
+    policy: '0x43ca3D2C94be00692D207C6A1e60D8B325c6f12f',
+    query: '',
+    impact: '',
+    shell: '',
+    policyShell: '',
+    deployer: '0x73511669fd4de447fed18bb79bafeac93ab7f31f'
 }
 
 // Mainnet
@@ -72,7 +72,7 @@ const mainnetAddrs: CrocAddrs = {
 }
 
 // Goerli
-const goerliAddrs: CrocAddrs = {
+/* const goerliAddrs: CrocAddrs = {
     dex: "0xfafcd1f5530827e7398b6d3c509f450b1b24a209",
     cold: "0xb2ae163293c82dcf36b0ce704591edc2f9e2608d",
     warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
@@ -87,6 +87,23 @@ const goerliAddrs: CrocAddrs = {
     shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861",
     policyShell: "",
     deployer: "",
+}*/ 
+
+const goerliAddrs: CrocAddrs = {
+    dex: "0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688",
+    cold: "",
+    warm: "",
+    long: "",
+    micro: "",
+    hot: "",
+    knockout: "",
+    koCross: "",
+    policy: "",
+    query: "",
+    impact: "",
+    shell: "",
+    policyShell: "",
+    deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349',
 }
 
 export let CROC_ADDRS = {

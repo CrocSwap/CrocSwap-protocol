@@ -5,24 +5,15 @@
  * npx hardhat run 
  */
 
-import { ethers } from 'hardhat';
-import { BigNumber } from 'ethers';
 import { ColdPath, CrocDeployer, CrocPolicy, CrocSwapDex } from '../../../typechain';
-import { mapSalt } from '../../constants/salts';
-import { BOOT_PROXY_IDX, COLD_PROXY_IDX, CROC_ADDRS } from '../../constants/addrs';
-import { inflateAddr, initWallet, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
-import { RPC_URLS } from '../../constants/rpcs';
+import { BOOT_PROXY_IDX, COLD_PROXY_IDX } from '../../constants/addrs';
+import { inflateAddr, initChain, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
 import { AbiCoder } from '@ethersproject/abi';
-
-const CHAIN_ID = 'mock';
-
-let addrs = CROC_ADDRS[CHAIN_ID]
-const rpcUrl = RPC_URLS[CHAIN_ID]
 
 const abi = new AbiCoder()
 
 async function vanityDeploy() {
-    const authority = initWallet(rpcUrl)
+    let { addrs, chainId, wallet: authority } = initChain()
 
     const crocSwap = await refContract("CrocSwapDex", addrs.dex, authority) as CrocSwapDex
     const crocDeployer = await refContract("CrocDeployer", addrs.deployer, 
@@ -35,7 +26,7 @@ async function vanityDeploy() {
         authority, addrs.dex) as CrocPolicy
     addrs.policy = policy.address
 
-    console.log(`Updated addresses for ${CHAIN_ID}`, addrs)
+    console.log(`Updated addresses for ${chainId}`, addrs)
 
     let cmd;
 
@@ -48,7 +39,7 @@ async function vanityDeploy() {
     await traceContractTx(crocDeployer.protocolCmd(addrs.dex, COLD_PROXY_IDX, cmd, true), 
         "Transfer to Policy Contract")
 
-    console.log(`Updated addresses for ${CHAIN_ID}`, addrs)
+    console.log(`Updated addresses for ${chainId}`, addrs)
 }
 
 vanityDeploy()
