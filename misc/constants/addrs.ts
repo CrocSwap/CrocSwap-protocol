@@ -90,20 +90,20 @@ const mainnetAddrs: CrocAddrs = {
 }*/ 
 
 const goerliAddrs: CrocAddrs = {
-    dex: "0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688",
-    cold: "",
-    warm: "",
-    long: "",
-    micro: "",
-    hot: "",
-    knockout: "",
-    koCross: "",
-    policy: "",
-    query: "",
-    impact: "",
-    shell: "",
-    policyShell: "",
-    deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349',
+    dex: '0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688',
+    cold: '0x0b6CD0ECb176cb39Ad99B3A0E4294167a80B68a3',
+    warm: '',
+    long: '',
+    micro: '',
+    hot: '',
+    knockout: '',
+    koCross: '',
+    policy: '0x62beAB7f90Fe2EFD230e61a95DD2c753f466AB13',
+    query: '',
+    impact: '',
+    shell: '',
+    policyShell: '',
+    deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349'
 }
 
 export let CROC_ADDRS = {

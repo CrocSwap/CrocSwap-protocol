@@ -1,8 +1,6 @@
-/* Workflow to deploy a basic CrocSwapDex contract using a pre-determined
- * create2 vanity salt, then hand off to the CrocPolicy contract. 
- *
- * Call using:
- * npx hardhat run 
+/* Workflow to transfer control of the newly deployed CrocSwapDex contract away
+ * from the CrocDeployer to a CrocPolicy contract under the control of the authority
+ * wallet. (Also installs ColdPath as necessary part of the workflow)
  */
 
 import { ColdPath, CrocDeployer, CrocPolicy, CrocSwapDex } from '../../../typechain';
@@ -15,7 +13,6 @@ const abi = new AbiCoder()
 async function vanityDeploy() {
     let { addrs, chainId, wallet: authority } = initChain()
 
-    const crocSwap = await refContract("CrocSwapDex", addrs.dex, authority) as CrocSwapDex
     const crocDeployer = await refContract("CrocDeployer", addrs.deployer, 
         authority) as CrocDeployer
 
