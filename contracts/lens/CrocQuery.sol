@@ -13,7 +13,7 @@ contract CrocQuery {
     using CurveMath for CurveMath.CurveState;
     using SafeCast for uint144;
     
-    address public dex_;
+    address immutable public dex_;
 
     /* @param dex The address of the CrocSwapDex contract. */    
     constructor (address dex) {

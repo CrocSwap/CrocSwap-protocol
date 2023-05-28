@@ -21,7 +21,7 @@ contract CrocImpact {
     using Bitmaps for uint256;
     using Bitmaps for int24;
     
-    address public dex_;
+    address immutable public dex_;
     
     /* @param dex The address of the CrocSwapDex contract. */    
     constructor (address dex) {
