@@ -8,10 +8,10 @@ const abi = new AbiCoder()
 async function install() {
     let { addrs, chainId, wallet: authority } = initChain()
 
-    addrs.hot = (await inflateAddr("ColdPath", addrs.cold, authority)).address
+    addrs.cold = (await inflateAddr("ColdPath", addrs.cold, authority)).address
     console.log(addrs)
 
-    addrs.hot = (await inflateAddr("HotPath", addrs.hot, authority)).address
+    addrs.hot = (await inflateAddr("HotProxy", addrs.hot, authority)).address
     console.log(addrs)
 
     addrs.knockout = (await inflateAddr("KnockoutLiqPath", addrs.knockout, authority)).address
@@ -29,13 +29,13 @@ async function install() {
     addrs.warm = (await inflateAddr("WarmPath", addrs.warm, authority)).address
     console.log(addrs)
 
-    addrs.policy = (await inflateAddr("CrocPolicy", addrs.policy, authority)).address
+    addrs.policy = (await inflateAddr("CrocPolicy", addrs.policy, authority, addrs.dex)).address
     console.log(addrs)
 
-    addrs.query = (await inflateAddr("CrocQuery", addrs.query, authority)).address
+    addrs.query = (await inflateAddr("CrocQuery", addrs.query, authority, addrs.dex)).address
     console.log(addrs)
 
-    addrs.impact = (await inflateAddr("CrocImpact", addrs.impact, authority)).address
+    addrs.impact = (await inflateAddr("CrocImpact", addrs.impact, authority, addrs.dex)).address
     console.log(addrs)
 
 }
