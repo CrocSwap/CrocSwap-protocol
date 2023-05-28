@@ -89,26 +89,28 @@ const mainnetAddrs: CrocAddrs = {
     deployer: "",
 }*/ 
 
-const goerliAddrs: CrocAddrs = {
+const goerliAddrsDryRun: CrocAddrs = {
     dex: '0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688',
     cold: '0x0b6CD0ECb176cb39Ad99B3A0E4294167a80B68a3',
-    warm: '',
-    long: '',
-    micro: '',
-    hot: '',
-    knockout: '',
-    koCross: '',
+    warm: '0xd268767BE4597151Ce2BB4a70A9E368ff26cB195',
+    long: '0x13242bD05B1d3D6b79ADA2b28678C235F3f2389B',
+    micro: '0xf241bEf0Ea64020655C70963ef81Fea333752367',
+    hot: '0x41114A13230625A2735FaA7183e528Ed2538cB7b',
+    knockout: '0x7F5D75AdE75646919c923C98D53E9Cc7Be7ea794',
+    koCross: '0x509DE582af6B4658a1830f7882077FBA5523C957',
     policy: '0x62beAB7f90Fe2EFD230e61a95DD2c753f466AB13',
-    query: '',
-    impact: '',
+    query: '0xc2e1f740E11294C64adE66f69a1271C5B32004c8',
+    impact: '0x3e3EDd3eD7621891E574E5d7f47b1f30A994c0D0',
     shell: '',
     policyShell: '',
     deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349'
-}
+  }
+  
+    
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
-    '0x5': goerliAddrs,
+    '0x5': goerliAddrsDryRun,
     'mock': mockAddrs,
 }
 
