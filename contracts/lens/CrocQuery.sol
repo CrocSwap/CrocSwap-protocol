@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.19;
 import "../CrocSwapDex.sol";
+import "hardhat/console.sol";
 
 /* @notice Stateless read only contract that provides functions for convienetly reading and
  *         parsing the internal state of a CrocSwapDex contract. 
@@ -309,7 +310,7 @@ contract CrocQuery {
 
         seeds = uint128((val << 128) >> 128);
         timestamp = uint32((val >> (128)) << (128 + 32) >> (128 + 32));
-    }
+    }    
 
     /* @notice Queries and returns the total ambient liquidity rewards accumulated by a
      *         given active range liquidity position
@@ -323,7 +324,9 @@ contract CrocQuery {
      *
      * @return The total accumulated rewards in the form of ambient sqrt(X*Y) liquidity */
     function queryConcRewards (address owner, address base, address quote, uint256 poolIdx,
-                               int24 lowerTick, int24 upperTick) public view returns (uint128) {
+                               int24 lowerTick, int24 upperTick) 
+                               public view returns (uint128 liqRewards, 
+                                                    uint128 baseRewards, uint128 quoteRewards) {
         (uint128 liq, uint64 feeStart, ,) = queryRangePosition(owner, base, quote, poolIdx,
                                                                lowerTick, upperTick);
         (, , uint64 bidFee) = queryLevel(base, quote, poolIdx, lowerTick);
@@ -334,10 +337,156 @@ contract CrocQuery {
         int24 curveTick = TickMath.getTickAtSqrtRatio(curve.priceRoot_);
         uint64 feeLower = lowerTick <= curveTick ? bidFee : curveFee - bidFee;
         uint64 feeUpper = upperTick <= curveTick ? askFee : curveFee - askFee;
+            
         unchecked {
-            uint64 accumFees = (feeUpper - feeLower) - feeStart;
+            uint64 odometer = feeUpper - feeLower;
+
+            if (odometer < feeStart) {
+                return (0, 0, 0);
+            }
+
+            uint64 accumFees = odometer - feeStart;
             uint128 seeds = FixedPoint.mulQ48(liq, accumFees).toUint128By144();
-            return CompoundMath.inflateLiqSeed(seeds, curve.seedDeflator_);
+            return convertSeedsToLiq(curve, seeds);
         }
+    }
+
+    /* @notice Queries and returns the liquidity and tokens held by a single ambient
+     *         liquidity position
+     *
+     * @param owner The address that owns the liquidity position
+     * @param base The base token address of the pair
+     * @param quote The quote token address of the pair
+     * @param poolIdx The index of the pool type
+     *
+     * @return liq The total amount of ambient sqrt(X*Y) liquidity 
+     * @return baseQty The base-side tokens held by the current position at current 
+     *                 curve price.
+     * @return quoteQty The quote-side tokens held by the current position at current 
+     *                  curve price. */
+    function queryAmbientTokens (address owner, address base, address quote,
+                                 uint256 poolIdx)
+        public view returns (uint128 liq, uint128 baseQty, uint128 quoteQty) {
+        (uint128 seeds, ) = queryAmbientPosition(owner, base, quote, poolIdx);
+        CurveMath.CurveState memory curve = queryCurve(base, quote, poolIdx);
+        return convertSeedsToLiq(curve, seeds);
+    }
+
+    /* @notice Queries and returns the liquidity and tokens held by a single range
+     *         position. Note that the returned quantities do *not* include accumulated
+     *         rewards.
+     *
+     * @param owner The address that owns the liquidity position
+     * @param base The base token address of the pair
+     * @param quote The quote token address of the pair
+     * @param poolIdx The index of the pool type
+     * @param lowerTick The 24-bit price tick the lower end of the liquidity range
+     * @param upperTick The 24-bit price tick the lower end of the liquidity range
+     *
+     * @return liq The total amount of ambient sqrt(X*Y) liquidity 
+     * @return baseQty The base-side tokens held by the current position at current 
+     *                 curve price.
+     * @return quoteQty The quote-side tokens held by the current position at current 
+     *                  curve price. */
+    function queryRangeTokens (address owner, address base, address quote,
+                               uint256 poolIdx, int24 lowerTick, int24 upperTick)
+        public view returns (uint128 liq, uint128 baseQty, uint128 quoteQty) {
+        (liq, , ,) = queryRangePosition(owner, base, quote, poolIdx, lowerTick, upperTick);
+        CurveMath.CurveState memory curve = queryCurve(base, quote, poolIdx);
+        (baseQty, quoteQty) = concLiqToTokens(curve, lowerTick, upperTick, liq);
+    }
+
+    /* @notice Queries and returns the liquidity and tokens held by a single knockout
+     *         position. Note that the returned quantities do *not* include accumulated
+     *         rewards.
+     *
+     * @param owner The address that owns the liquidity position
+     * @param base The base token address of the pair
+     * @param quote The quote token address of the pair
+     * @param poolIdx The index of the pool type
+     * @param pivot The time associated with the pivot the position was created on
+     * @param isBid If true, represents liquidity pivot that gets knocked out when the curve
+     *              price falls below the tick. And vice versa, if false.
+     * @param lowerTick The 24-bit price tick the lower end of the liquidity range
+     * @param upperTick The 24-bit price tick the lower end of the liquidity range
+     *
+     * @return liq The total amount of ambient sqrt(X*Y) liquidity 
+     * @return baseQty The base-side tokens held by the current position at current 
+     *                 curve price.
+     * @return quoteQty The quote-side tokens held by the current position at current 
+     *                  curve price.
+     * @return knockedOut Returns true if the position has been knocked out of the curve.
+     *                    In which case the values represent the tokens claimable. False,
+     *                    if the liquidity is still active in the curve. */
+    function queryKnockoutTokens (address owner, address base, address quote,
+                                  uint256 poolIdx, uint32 pivot, bool isBid,
+                                  int24 lowerTick, int24 upperTick)
+        public view returns (uint128 liq, uint128 baseQty, uint128 quoteQty, bool knockedOut) {
+
+        int24 knockoutTick = isBid ? lowerTick : upperTick;
+        (uint96 lots, , ) = queryKnockoutPos(owner, base, quote, poolIdx, pivot, isBid, lowerTick, upperTick);
+        (, uint32 pivotActive, ) = queryKnockoutPivot(base, quote, poolIdx, isBid, knockoutTick);
+
+        liq = LiquidityMath.lotsToLiquidity(lots);
+        knockedOut = pivotActive != pivot;
+
+        if (knockedOut) {
+            uint128 knockoutPrice = TickMath.getSqrtRatioAtTick(knockoutTick);
+            (baseQty, quoteQty) = concLiqToTokens(knockoutPrice, lowerTick, upperTick, liq);
+
+        } else {
+            CurveMath.CurveState memory curve = queryCurve(base, quote, poolIdx);
+            (baseQty, quoteQty) = concLiqToTokens(curve, lowerTick, upperTick, liq);
+        }
+    }
+
+    /* @notice Connverts an arbitrary liquidity seeds value to XYK liquidity and equivalent
+     *         full-range tokens for that liquidity. */ 
+    function convertSeedsToLiq (CurveMath.CurveState memory curve, uint128 seeds) 
+                                internal pure returns (uint128 liq, uint128 baseQty, uint128 quoteQty) {
+        liq = CompoundMath.inflateLiqSeed(seeds, curve.seedDeflator_);
+        (baseQty, quoteQty) = liquidityToTokens(curve, liq);
+    }
+
+    /* @notice Converts an arbitrary concentrated liquidity quantity in a given range to 
+     *         the quantity of tokens in the position, given the current price. */
+    function concLiqToTokens (CurveMath.CurveState memory curve, 
+                              int24 lowerTick, int24 upperTick, uint128 liq) 
+        internal pure returns (uint128 baseQty, uint128 quoteQty) {
+        return concLiqToTokens(curve.priceRoot_, lowerTick, upperTick, liq);
+    }
+
+    /* @notice Converts an arbitrary concentrated liquidity quantity in a given range to 
+     *         the quantity of tokens in the position, given the current price. */
+    function concLiqToTokens (uint128 curvePrice, 
+                              int24 lowerTick, int24 upperTick, uint128 liq) 
+        internal pure returns (uint128 baseQty, uint128 quoteQty) {
+        uint128 lowerPrice = TickMath.getSqrtRatioAtTick(lowerTick);
+        uint128 upperPrice = TickMath.getSqrtRatioAtTick(upperTick);
+
+        (uint128 lowerBase, uint128 lowerQuote) = liquidityToTokens(lowerPrice, liq);
+        (uint128 upperBase, uint128 upperQuote) = liquidityToTokens(upperPrice, liq);
+        (uint128 ambBase, uint128 ambQuote) = liquidityToTokens(curvePrice, liq);
+
+        if (curvePrice < lowerPrice) {
+            return (0, lowerQuote - upperQuote);
+        } else if (curvePrice >= upperPrice) {
+            return (upperBase - lowerBase, 0);
+        } else {
+            return (ambBase - lowerBase, ambQuote - upperQuote);
+        }
+    }
+
+    /* @notice Converts a liquidity value to the equivalent amount of full-range virtual tokens. */
+    function liquidityToTokens (CurveMath.CurveState memory curve, uint128 liq) 
+                                internal pure returns (uint128 baseQty, uint128 quoteQty) {
+        return liquidityToTokens(curve.priceRoot_, liq);
+    }
+
+    /* @notice Converts a liquidity value to the equivalent amount of full-range virtual tokens. */
+    function liquidityToTokens (uint128 curvePrice, uint128 liq)
+                                internal pure returns (uint128 baseQty, uint128 quoteQty) {
+        baseQty = uint128(FixedPoint.mulQ64(liq, curvePrice));
+        quoteQty = uint128(FixedPoint.divQ64(liq, curvePrice));        
     }
 }
