@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.19;
 import "../CrocSwapDex.sol";
-import "hardhat/console.sol";
 
 /* @notice Stateless read only contract that provides functions for convienetly reading and
  *         parsing the internal state of a CrocSwapDex contract. 
