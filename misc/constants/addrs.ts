@@ -16,6 +16,25 @@ export interface CrocAddrs {
     shell: string,
     policyShell: string,
     deployer: string,
+    govern: CrocGovAddrs
+}
+
+export interface CrocGovAddrs {
+    multisigTreasury: string,
+    multisigOps: string,
+    multisigEmergency: string,
+    timelockTreasury: string,
+    timelockOps: string,
+    timelockEmergency: string,
+}
+
+const emptryGovAddrs: CrocGovAddrs = {
+    multisigTreasury: "",
+    multisigOps: "",
+    multisigEmergency: "",
+    timelockTreasury: "",
+    timelockOps: "",
+    timelockEmergency: "",
 }
 
 const emptyAddrs: CrocAddrs = {
@@ -33,6 +52,7 @@ const emptyAddrs: CrocAddrs = {
     shell: "",
     policyShell: "",
     deployer: "",
+    govern: emptryGovAddrs
 }
 
 // Mock used in local forks
@@ -50,7 +70,8 @@ const mockAddrs: CrocAddrs = {
     impact: '',
     shell: '',
     policyShell: '',
-    deployer: '0x73511669fd4de447fed18bb79bafeac93ab7f31f'
+    deployer: '0x73511669fd4de447fed18bb79bafeac93ab7f31f',
+    govern: emptryGovAddrs
 }
 
 // Mainnet
@@ -69,6 +90,14 @@ const mainnetAddrs: CrocAddrs = {
     shell: "",
     policyShell: "",
     deployer: "",
+    govern: {
+        multisigTreasury: "",
+        multisigOps: "",
+        multisigEmergency: "",
+        timelockTreasury: "",
+        timelockOps: "",
+        timelockEmergency: ""
+    }
 }
 
 // Goerli
@@ -87,6 +116,7 @@ const mainnetAddrs: CrocAddrs = {
     shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861",
     policyShell: "",
     deployer: "",
+    govern: emptryGovAddrs
 }*/ 
 
 const goerliAddrsDryRun: CrocAddrs = {
@@ -103,9 +133,17 @@ const goerliAddrsDryRun: CrocAddrs = {
     impact: '0x3e3EDd3eD7621891E574E5d7f47b1f30A994c0D0',
     shell: '',
     policyShell: '',
-    deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349'
-  }
-  
+    deployer: '0x25662C94D28DA775C4E4FDCA987B14D704B4b349',
+    govern: {
+        multisigTreasury: '0x78e80194528C5BbC1Bbce7f5A7e7B1A143200351',
+        multisigOps: '0x2D2E5B97Acdea31efbf11b39AeA8dbd5B0c258F1',
+        multisigEmergency: '0x53e3713543737Af4eCb1ad74563402C64e307f0D',
+        timelockTreasury: '0xfd66C5FFF528e1855e498CD324520107885A5288',
+        timelockOps: '0xeF7D040C5540feedD74BA8E5a5167b19c24C940d',
+        timelockEmergency: '0xfd66C5FFF528e1855e498CD324520107885A5288'
+    }
+}
+
     
 
 export let CROC_ADDRS = {

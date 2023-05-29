@@ -1,6 +1,7 @@
 import { JsonRpcProvider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
-import { BigNumber, Contract, ContractTransaction, Signer, Wallet } from "ethers";
+import { BigNumber, BytesLike, Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
+import { TimelockAccepts } from "../../typechain";
 import { CrocAddrs, CROC_ADDRS } from "../constants/addrs";
 import { RPC_URLS } from "../constants/rpcs";
 
@@ -41,13 +42,15 @@ export async function inflateAddr (contractName: string, addr: string,
 }
 
 export async function refContract (contractName: string, addr: string, 
-    authority: Signer): Promise<Contract> {
+    authority?: Signer): Promise<Contract> {
     if (!addr) {
         throw new Error(`No contract initialized for ${contractName} at ${addr}`)
     }
 
-    const factory = (await ethers.getContractFactory(contractName))
-        .connect(authority)
+    let factory = (await ethers.getContractFactory(contractName))
+    if (authority) {
+        factory = factory.connect(authority)
+    }
 
     const contract = factory.attach(addr)
     return contract
@@ -68,3 +71,4 @@ export function initChain (chainId?: string):
 
     return { addrs, wallet, chainId }
 }
+

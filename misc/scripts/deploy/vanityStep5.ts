@@ -14,19 +14,19 @@ async function install() {
 
     let policy = (await inflateAddr("CrocPolicy", addrs.policy, authority)) as CrocPolicy
 
-    /*cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.long, LONG_PROXY_IDX])
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.long, LONG_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
         addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install long path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.warm, LP_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install warm path")*/
+        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install warm path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.hot, SWAP_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
         addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install hot proxy path")
 
-    /*cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.micro, MICRO_PROXY_IDX])
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.micro, MICRO_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
         addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install micro paths")
 
@@ -36,7 +36,7 @@ async function install() {
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.koCross, FLAG_CROSS_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install knockout cross proxy path")*/
+        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install knockout cross proxy path")
 }
 
 install()
