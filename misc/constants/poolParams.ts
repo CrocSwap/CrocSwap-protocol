@@ -18,7 +18,7 @@ export interface CrocPoolParams {
     stdPoolParams: CrocOnePoolParams
 }
 
-const goerliParams: CrocPoolParams = {
+const mainnetParams: CrocPoolParams = {
     universal: {
         initLiq: 10000
     },
@@ -31,6 +31,9 @@ const goerliParams: CrocPoolParams = {
     }
 }
 
+const goerliDryRunParams = mainnetParams
+
 export const CROC_POOL_PARAMS = {
-    '0x5': goerliParams,
+    '0x1': mainnetParams,
+    '0x5': goerliDryRunParams,
 }
