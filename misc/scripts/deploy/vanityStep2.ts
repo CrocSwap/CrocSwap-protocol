@@ -30,31 +30,7 @@ async function vanityDeploy() {
     addrs.dex = await crocDeployer.dex_();
 
     console.log("CrocSwapDex deployed at: ", addrs.dex)
-    const crocSwap = factory.attach(addrs.dex) as CrocSwapDex
-
     console.log(`Updated addresses for ${chainId}`, addrs)
-
-    /* factory = await ethers.getContractFactory("ColdPath")
-    let coldPath = addrs.cold ? factory.attach(addrs.cold) :
-        await factory.deploy({gasPrice: ethers.provider.getGasPrice()}) as ColdPath
-    addrs.cold = coldPath.address
-
-    factory = await ethers.getContractFactory("CrocPolicy")
-    let policy = (addrs.policy ? factory.attach(addrs.policy) :
-        await factory.deploy(dex, { gasPrice: ethers.provider.getGasPrice()})) as CrocPolicy
-    addrs.policy = policy.address
-
-    console.log(addrs)
-
-    cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.cold, COLD_PROXY_IDX])
-    tx = await crocDeployer.protocolCmd(dex, BOOT_PROXY_IDX, cmd, true, {gasPrice: ethers.provider.getGasPrice()})
-    await tx
-
-    cmd = abi.encode(["uint8", "address"], [20, policy.address])
-    tx = await crocDeployer.protocolCmd(dex, COLD_PROXY_IDX, cmd, true, {gasPrice: ethers.provider.getGasPrice()});
-    await tx.wait()
-
-    console.log(await crocSwap.readSlot(65537))*/
 }
 
 vanityDeploy()
