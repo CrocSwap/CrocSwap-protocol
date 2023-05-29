@@ -46,7 +46,7 @@ export interface GovernanceResolution {
 }
 
 export async function opsResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd, 
-    delay: number): Promise<GovernanceResolution> {
+    delay: number, tag:string): Promise<GovernanceResolution> {
     const timelock = await refContract("TimelockAccepts", addrs.govern.timelockOps) as TimelockAccepts
     const policy = await refContract("CrocPolicy", addrs.policy) as CrocPolicy
 
@@ -62,11 +62,11 @@ export async function opsResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd,
         dexContract: addrs.dex,
         multisigOrigin: addrs.govern.multisigOps,
         timelockCall: await timelockCalls,
-    })
+    }, tag)
 }
 
 export async function treasuryResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd, 
-    delay: number): Promise<GovernanceResolution> {
+    delay: number, tag: string): Promise<GovernanceResolution> {
     const timelock = await refContract("TimelockAccepts", addrs.govern.timelockTreasury) as TimelockAccepts
     const policy = await refContract("CrocPolicy", addrs.policy) as CrocPolicy
 
@@ -82,13 +82,14 @@ export async function treasuryResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd
         dexContract: addrs.dex,
         multisigOrigin: addrs.govern.multisigTreasury,
         timelockCall: await timelockCalls,
-    })
+    }, tag)
 }
 
-export function printResolution (res: GovernanceResolution): GovernanceResolution {
+export function printResolution (res: GovernanceResolution, tag: string): GovernanceResolution {
     console.log("-----")
     console.log("Presenting instructions for governance resolution", res)
     console.log()
+    console.log("Description:", tag)
     console.log(`Execution instructions for ${res.resolutionType} resolution`)
     console.log()
     console.log(`Will execute a protocolCmd() call on CrocSwapDex contract at ${res.dexContract}`)
@@ -107,3 +108,5 @@ export function printResolution (res: GovernanceResolution): GovernanceResolutio
     console.log("-----")
     return res
 }
+
+export const INIT_TIMELOCK_DELAY = 30

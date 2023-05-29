@@ -11,7 +11,7 @@ const abi = new AbiCoder()
 let cmd
 
 async function install() {
-    let { addrs, chainId, wallet: authority } = initChain()
+    let { addrs } = initChain()
 
     // Warm path may have already been pre-installed, but install again to verify that
     // treasury resolutions are correctly enabled
@@ -22,7 +22,7 @@ async function install() {
         sudo: true
     }
 
-    treasuryResolution(addrs, resolution, 30)
+    treasuryResolution(addrs, resolution, 30, "Install Warm path sidecar")
 }
 
 install()
