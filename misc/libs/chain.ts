@@ -1,4 +1,4 @@
-import { JsonRpcProvider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
+import { JsonRpcProvider, Provider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { BigNumber, BytesLike, Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
 import { TimelockAccepts } from "../../typechain";
@@ -65,12 +65,23 @@ export function initChain (chainId?: string):
     const rpcUrl = RPC_URLS[chainId as keyof typeof RPC_URLS]
     const poolParams = CROC_POOL_PARAMS[chainId as keyof typeof CROC_POOL_PARAMS]
 
-    console.log(rpcUrl)
-
     const provider = new JsonRpcProvider(rpcUrl)
     const key = process.env.WALLET_KEY as string
     const wallet = new Wallet(key.toLowerCase()).connect(provider)
 
     return { addrs, wallet, chainId, poolParams }
+}
+
+export function initProvider (chainId?: string): 
+    { addrs: CrocAddrs, provider: Provider, chainId: string, poolParams: CrocPoolParams } {
+
+    chainId = chainId || process.env.CHAIN_ID || 'mock';
+    const addrs = CROC_ADDRS[chainId as keyof typeof CROC_ADDRS]
+    const rpcUrl = RPC_URLS[chainId as keyof typeof RPC_URLS]
+    const poolParams = CROC_POOL_PARAMS[chainId as keyof typeof CROC_POOL_PARAMS]
+
+    const provider = new JsonRpcProvider(rpcUrl)
+
+    return { addrs, provider, chainId, poolParams }
 }
 
