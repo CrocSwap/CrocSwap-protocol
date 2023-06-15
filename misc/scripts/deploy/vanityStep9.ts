@@ -1,5 +1,5 @@
 
-import { inflateAddr, initChain, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
+import { inflateAddr, initChain, initProvider, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
 import { AbiCoder } from '@ethersproject/abi';
 import { CrocPolicy, ERC20, TimelockAccepts } from '../../../typechain';
 import { BOOT_PROXY_IDX, LP_PROXY_IDX, TOKEN_ADDRS } from '../../constants/addrs';
@@ -11,7 +11,7 @@ import { initLiqCmd, poolStdTemplCmd } from '../../libs/pool';
 const abi = new AbiCoder()
 
 async function install() {
-    let { addrs, poolParams } = initChain()
+    let { addrs, poolParams } = initProvider()
 
     let initCmd = initLiqCmd(poolParams)
     await opsResolution(addrs, initCmd, INIT_TIMELOCK_DELAY, "Set pool init liquidity")
