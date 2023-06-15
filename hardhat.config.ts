@@ -5,6 +5,7 @@
 import "hardhat-typechain";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer"
+import "@nomicfoundation/hardhat-verify";
 
 require("hardhat-storage-layout");
 require('solidity-coverage')
@@ -66,5 +67,5 @@ module.exports = {
         chainId: 43113,
       },
 
-    },
+    }
 };
