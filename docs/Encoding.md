@@ -1,6 +1,6 @@
 # Encoding Long Form Orders
 
-To optimize gas, long-form CrocSwap calls do not rely on Solidity ABI encoding. Clients calling these functions must directly encode a byte string
+To optimize gas, long-form CrocSwap calls rely on Solidity ABI encoding for primitive types but encode at fixed positions instead of using Solidity ABI array encoding. Clients calling these functions must directly encode a byte string
 based on specification described here. CrocSwap will also make available a TypeScript based SDK to support client-side encoding.
 
 The input argument for long-form orders is a binary encoding, with several nested variable length array fields. Each array field is preceded by a count field that
@@ -90,13 +90,12 @@ All array fields conform to the following structure:
 Starts with a length premable: a single `uint8` byte that encodes the length of the array. If the length is zero, that's the entire field. Otherwise 
 there is N sequential elements of the sub-type of the array. 
 
-Valid primitive types are the following, along with the number of bytes they're encoded over. All primitives are big-Endian, and any bytes in excess of the 
-size type should be padded with zero. Unlike Solidity's `abi.encode`, smaller types do not use a full 32 bytes to avoid needlessly bloating the transaction
-data on large order directives.
+Valid primitive types are the following, along with the number of bytes they're encoded over. All primitives are encoded as 32 bytes compatible with Solidity ABI formatting. 
 
-* `uint8`: 1 byte
-* `uint3`: 3 bytes
-* `int3`: 3 bytes
+* `bool`: 32 bytes
+* `uint8`: 32 bytes
+* `uint3`: 32 bytes
+* `int3`: 32 bytes
 * `address`: 32 bytes
 * `int128`: 32 bytes
 * `uint128`: 32 bytes

@@ -298,9 +298,9 @@ describe('Pair roll triangle', () => {
         expect(await test.snapBaseOwed()).to.equal(0)        
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(-1989)
+        expect(await test2.snapQuoteOwed()).to.equal(-1004)
         expect(await test3.snapBaseOwed()).to.equal(0)        
-        expect(await test3.snapQuoteOwed()).to.equal(-1989)
+        expect(await test3.snapQuoteOwed()).to.equal(-1004)
     })
 
     it("roll surplus diff sides", async() => {
@@ -348,8 +348,8 @@ describe('Pair roll triangle', () => {
         expect(await test.snapBaseOwed()).to.equal(0)        
         expect(await test.snapQuoteOwed()).to.equal(0)
         expect(await test2.snapBaseOwed()).to.equal(0)        
-        expect(await test2.snapQuoteOwed()).to.equal(-1989)
+        expect(await test2.snapQuoteOwed()).to.equal(-1004)
         expect(await test3.snapBaseOwed()).to.equal(0)        
-        expect(await test3.snapQuoteOwed()).to.equal(-1989)
+        expect(await test3.snapQuoteOwed()).to.equal(-1004)
     })
 })

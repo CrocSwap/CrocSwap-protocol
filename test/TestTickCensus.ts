@@ -2,6 +2,8 @@ import { TestTickCensus } from '../typechain/TestTickCensus'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
+import { MAX_TICK, MIN_TICK } from './FixedPoint';
+import { BigNumber } from 'ethers';
 
 const TICK_MAX = 127 * 256 * 256 + 255 * 256 + 255;
 const TICK_MIN = -128 * 256 * 256 + 0 * 256 + 0;
@@ -361,4 +363,53 @@ describe('TickCensus', () => {
       expect(resultBuy[0]).to.equal(1 * 256 * 256 + 31 * 256 + 64);
       expect(resultSell[0]).to.equal(0 * 256 * 236 + 10 * 256 + 120);
    })
+   
+   // Verify that min/max ticks will run to the extremes in empty bitmap
+   it("seek extreme ticks", async() => {
+      const MAX_BIT_TICK = BigNumber.from(2).pow(23).sub(1).toNumber()
+      const MIN_BIT_TICK = BigNumber.from(2).pow(23).mul(-1).toNumber()
+
+      expect((await census.testSeekBuy(MAX_BIT_TICK))[0]).to.eq(MAX_BIT_TICK)
+      expect((await census.testSeekSell(MAX_BIT_TICK))[0]).to.eq(MIN_BIT_TICK)
+      expect((await census.testSeekBuy(MIN_BIT_TICK))[0]).to.eq(MAX_BIT_TICK)
+      expect((await census.testSeekSell(MIN_BIT_TICK))[0]).to.eq(MIN_BIT_TICK)
+   })
+
+   // Try with an arbitrary bookmark in the middel of the map
+   it("seek extreme ticks bookmark in middle", async() => {
+      const MAX_BIT_TICK = BigNumber.from(2).pow(23).sub(1).toNumber()
+      const MIN_BIT_TICK = BigNumber.from(2).pow(23).mul(-1).toNumber()
+
+      const midTick = 1 * 256 * 256 + 31 * 256 + 72
+      await census.testBookmark(midTick);
+
+      expect((await census.testSeekBuy(MAX_BIT_TICK))[0]).to.eq(MAX_BIT_TICK)
+      expect((await census.testSeekSell(MAX_BIT_TICK))[0]).to.eq(midTick)
+      expect((await census.testSeekBuy(MIN_BIT_TICK))[0]).to.eq(midTick)
+      expect((await census.testSeekSell(MIN_BIT_TICK))[0]).to.eq(MIN_BIT_TICK)
+   })
+
+   it("seek extreme ticks terminus bookmark", async() => {
+      const MAX_BIT_TICK = BigNumber.from(2).pow(23).sub(1).toNumber()
+      const MIN_BIT_TICK = BigNumber.from(2).pow(23).mul(-1).toNumber()
+
+      // Arbitrary bookmarks not at the MIN/MAX point but in the same terminus
+      // as the MIN/MAX ticks.
+      const MAX_TERMINUS = MAX_BIT_TICK - 3
+      const MIN_TERMINUS = MIN_BIT_TICK + 4
+      await census.testBookmark(MAX_TERMINUS);
+      await census.testBookmark(MIN_TERMINUS);
+
+      expect((await census.testSeekBuy(MAX_BIT_TICK))[0]).to.eq(MAX_BIT_TICK)
+      expect((await census.testSeekSell(MAX_BIT_TICK))[0]).to.eq(MAX_TERMINUS)
+      expect((await census.testSeekBuy(MIN_BIT_TICK))[0]).to.eq(MIN_TERMINUS)
+      expect((await census.testSeekSell(MIN_BIT_TICK))[0]).to.eq(MIN_BIT_TICK)
+
+      // Verify that we hit the book in the min/max terminus rather than the 
+      // exact MIN/MAX tick
+      const midBorder = 1 * 256 * 256 + 31 * 256
+      expect((await census.testSeekBuy(midBorder))[0]).to.eq(MAX_TERMINUS)
+      expect((await census.testSeekSell(midBorder))[0]).to.eq(MIN_TERMINUS)
+   })
 })
+

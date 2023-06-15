@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
@@ -13,9 +13,8 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
+import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
-
-import "hardhat/console.sol";
 
 /* @title Cold path callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -67,14 +66,16 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         
         if (cmdCode == ProtocolCmd.COLLECT_TREASURY_CODE) {
             collectProtocol(cmd);
+        } else if (cmdCode == ProtocolCmd.SET_TREASURY_CODE) {
+            setTreasury(cmd);
         } else if (cmdCode == ProtocolCmd.AUTHORITY_TRANSFER_CODE) {
             transferAuthority(cmd);
-        } else if (cmdCode == ProtocolCmd.UPGRADE_DEX_CODE) {
-            upgradeProxy(cmd);
         } else if (cmdCode == ProtocolCmd.HOT_OPEN_CODE) {
             setHotPathOpen(cmd);
         } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {
             setSafeMode(cmd);
+        } else {
+            revert("Invalid command");
         }
     }
     
@@ -95,16 +96,14 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             transferSurplus(cmd);
         } else if (cmdCode == UserCmd.SIDE_POCKET_CODE) {
             sidePocketSurplus(cmd);
-        } else if (cmdCode == UserCmd.DEPOSIT_VIRTUAL_CODE) {
-            depositVirtual(cmd);
-        } else if (cmdCode == UserCmd.DISBURSE_VIRTUAL_CODE) {
-            disburseVirtual(cmd);
         } else if (cmdCode == UserCmd.RESET_NONCE) {
             resetNonce(cmd);
         } else if (cmdCode == UserCmd.RESET_NONCE_COND) {
             resetNonceCond(cmd);
         } else if (cmdCode == UserCmd.GATE_ORACLE_COND) {
             checkGateOracle(cmd);
+        } else {
+            revert("Invalid command");
         }
 
     }
@@ -112,7 +111,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     /* @notice Initializes the pool type for the pair.
      * @param base The base token in the pair.
      * @param quote The quote token in the pair.
-     * @param poolIdx The index of the pool type to initialiaze.
+     * @param poolIdx The index of the pool type to initialize.
      * @param price The price to initialize the pool. Represented as square root price in
      *              Q64.64 notation. */
     function initPool (bytes calldata cmd) private {
@@ -128,7 +127,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
     }
 
-    /* @notice Disables an existing pool template. Any previously insatiated pools on
+    /* @notice Disables an existing pool template. Any previously instantiated pools on
      *         this template will continue exist, but calling this will prevent any new
      *         pools from being created on this template. */
     function disableTemplate (bytes calldata input) private {
@@ -140,11 +139,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     /* @notice Sets template parameters for a pool type index.
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
-     * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks.
-     * @param permitOracle The external oracle that permissions pool users (or if set to
-     *                     0x0 address pool type is permissionless).
-     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs. */
+     * @param jitThresh The minimum resting time (in seconds) for concentrated LPs.
+     * @param knockout The knockout bits for the pool template.
+     @ @param oracleFlags The oracle bit flags if a permissioned pool. */
     function setTemplate (bytes calldata input) private {
         (, uint256 poolIdx, uint16 feeRate, uint16 tickSize, uint8 jitThresh,
          uint8 knockout, uint8 oracleFlags) =
@@ -166,9 +164,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function setRelayerTakeRate (bytes calldata input) private {
         (, uint8 takeRate) = 
             abi.decode(input, (uint8, uint8));
-        
+
         emit CrocEvents.SetRelayerTakeRate(takeRate);
-        relayerTakeRate_ = takeRate;
+        setRelayerTakeRate(takeRate);
     }
 
     function setNewPoolLiq (bytes calldata input) private {
@@ -192,10 +190,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param quote The quote-side token defining the pool's pair.
      * @param poolIdx The index of the pool type.
      * @param feeRate The pool's swap fee rate in multiples of 0.0001%
-     * @param protocolTake The protocol take rate represented as 1/n (or 0 if n=0)
      * @param tickSize The pool's grid size in ticks.
      * @param jitThresh The minimum resting time (in seconds) for concentrated LPs in
-     *                  in the pool. */
+     *                  in the pool.
+     * @param knockout The knockout bit flags for the pool. */
     function revisePool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx,
          uint16 feeRate, uint16 tickSize, uint8 jitThresh, uint8 knockout) =
@@ -215,18 +213,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         setPriceImprove(token, unitTickCollateral, awayTickTol);
     }
 
-    /* @notice Upgrades one of the existing proxy sidecar contracts.
-     * @dev    Be extremely careful calling this, particularly when upgrading the
-     *         cold path contract, since that contains the upgrade code itself.
-     * @param proxy The address of the new proxy smart contract
-     * @param proxyIdx Determines which proxy is upgraded on this call */
-    function upgradeProxy (bytes calldata cmd) private {
-        (, address proxy, uint16 proxyIdx) =
-            abi.decode(cmd, (uint8, address, uint16));
-        emit CrocEvents.UpgradeProxy(proxy, proxyIdx);
-        proxyPaths_[proxyIdx] = proxy;        
-    }
-
     function setHotPathOpen (bytes calldata cmd) private {
         (, bool open) = abi.decode(cmd, (uint8, bool));
         emit CrocEvents.HotPathOpen(open);
@@ -243,15 +229,31 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param token The token for which the accumulated fees are being paid out. 
      *              (Or if 0x0 pays out native Ethereum.) */
     function collectProtocol (bytes calldata cmd) private {
-        (, address recv, address token) =
-            abi.decode(cmd, (uint8, address, address));
-        emit CrocEvents.ProtocolDividend(token, recv);
-        disburseProtocolFees(recv, token);
+        (, address token) = abi.decode(cmd, (uint8, address));
+
+        require(block.timestamp >= treasuryStartTime_, "Treasury start");
+        emit CrocEvents.ProtocolDividend(token, treasury_);
+        disburseProtocolFees(treasury_, token);
+    }
+
+    /* @notice Sets the treasury address to receive protocol fees. Once set, the treasury cannot
+     *         receive fees until 7 days after. */
+    function setTreasury (bytes calldata cmd) private {
+        (, address treasury) = abi.decode(cmd, (uint8, address));
+
+        require(treasury != address(0) && treasury.code.length != 0, "Treasury invalid");
+        treasury_ = treasury;
+        treasuryStartTime_ = uint64(block.timestamp + 7 days);
+        emit CrocEvents.TreasurySet(treasury_, treasuryStartTime_);
     }
 
     function transferAuthority (bytes calldata cmd) private {
         (, address auth) =
             abi.decode(cmd, (uint8, address));
+
+        require(auth != address(0) && auth.code.length > 0 && 
+            ICrocMaster(auth).acceptsCrocAuthority(), "Invalid Authority");
+        
         emit CrocEvents.AuthorityTransfer(authority_);
         authority_ = auth;
     }
@@ -262,9 +264,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
      * @param value The amount of surplus collateral being paid or received. If negative
      *              paid from the user into the pool, increasing their balance.
      * @param token The token to which the surplus collateral is applied. (If 0x0, then
-     *              native Ethereum)
-     * @param isTransfer If set to true, disburse calls will transfer the surplus 
-     *                   collateral balance to the recv address instead of paying. */
+     *              native Ethereum) */
     function depositSurplus (bytes calldata cmd) private {
         (, address recv, uint128 value, address token) =
             abi.decode(cmd, (uint8, address, uint128, address));
@@ -297,18 +297,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         sidePocketSurplus(fromSalt, toSalt, value, token);
     }
 
-    function depositVirtual (bytes calldata cmd) private {
-        (, address recv, uint256 salt, uint128 value, bytes memory args) = 
-            abi.decode(cmd, (uint8, address, uint256, uint128, bytes));
-        depositVirtual(recv, salt, value, args);
-    }
-
-    function disburseVirtual (bytes calldata cmd) private {
-        (, address tracker, uint256 salt, int128 value, bytes memory args) =
-            abi.decode(cmd, (uint8, address, uint256, int128, bytes));
-        disburseVirtual(tracker, salt, value, args);
-    }
-
     function resetNonce (bytes calldata cmd) private {
         (, bytes32 salt, uint32 nonce) = 
             abi.decode(cmd, (uint8, bytes32, uint32));
@@ -328,16 +316,24 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     }
 
     /* @notice Called by a user to give permissions to an external smart contract router.
-     * @notice router The address of the external smart contract that the user is giving
+     * @param router The address of the external smart contract that the user is giving
      *                permission to.
-     * @notice forDebit If true, the user is authorizing the router to pay settlement 
-     *                  debits on its behalf.
-     * @notice forBurn If true, the user is authorizing the router to burn liquidity
-     *                 positions belongining to the user. */
+     * @param nCalls The number of calls the router agent is approved for.
+     * @param callpaths The proxy sidecar indexes the router is approved for */
     function approveRouter (bytes calldata cmd) private {
-        (, address router, uint32 nCalls, uint256 salt) =
-            abi.decode(cmd, (uint8, address, uint32, uint256));
-        approveAgent(router, nCalls, salt);
+        (, address router, uint32 nCalls, uint16[] memory callpaths) =
+            abi.decode(cmd, (uint8, address, uint32, uint16[]));
+
+        for (uint i = 0; i < callpaths.length; ++i) {
+            require(callpaths[i] != CrocSlots.COLD_PROXY_IDX, "Invalid Router Approve");
+            approveAgent(router, nCalls, callpaths[i]);
+        }
+    }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public virtual returns (bool) {
+        return slot == CrocSlots.COLD_PROXY_IDX;
     }
 }
 

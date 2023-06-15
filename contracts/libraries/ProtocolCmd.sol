@@ -1,28 +1,36 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import './SafeCast.sol';
 
 /* @title Protocol Command library.
+ *
  * @notice To allow for flexibility and upgradeability the top-level interface to the Croc
- *         dex contract contains a general purpose */
+ *         dex contract contains a general purpose encoding scheme. User commands specify a
+ *         proxy contract index, and input is passed raw and unformatted. Each proxy contract
+ *         is free to specify its own input format, but by convention many proxy contracts
+ *         adhere to a specification where the first 32 bytes of the input encodes a sub-command
+ *         code. This library contains all of these sub-command codes in a single location for
+ *         easy lookup. */
 library ProtocolCmd {
     
     
     ////////////////////////////////////////////////////////////////////////////
     // Privileged commands invokable by direct governance only.
     ////////////////////////////////////////////////////////////////////////////
-    // Code for transfering authority in the underlying CrocSwapDex contract.
+    // Code for transferring authority in the underlying CrocSwapDex contract.
     uint8 constant AUTHORITY_TRANSFER_CODE = 20;
     // Code to upgrade one of the sidecar proxy contracts on CrocSwapDex.
     uint8 constant UPGRADE_DEX_CODE = 21;
     // Code to force hot path to use the proxy contract
     uint8 constant HOT_OPEN_CODE = 22;
-    // Code to force hot path to use the proxy contract
+    // Code to toggle on or off emergency safe mode 
     uint8 constant SAFE_MODE_CODE = 23;
     // Code to collect accumulated protocol fees for the treasury.
     uint8 constant COLLECT_TREASURY_CODE = 40;
+    // Code to set the protocol treasury
+    uint8 constant SET_TREASURY_CODE = 41;
     ////////////////////////////////////////////////////////////////////////////
 
     
@@ -77,6 +85,26 @@ library UserCmd {
     uint8 constant GATE_ORACLE_COND = 82;
     uint8 constant DEPOSIT_PERMIT_CODE = 83;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // LP action warm path command codes
+    ////////////////////////////////////////////////////////////////////////////
+    uint8 constant MINT_RANGE_LIQ_LP = 1;
+    uint8 constant MINT_RANGE_BASE_LP = 11;
+    uint8 constant MINT_RANGE_QUOTE_LP = 12;
+    uint8 constant BURN_RANGE_LIQ_LP = 2;
+    uint8 constant BURN_RANGE_BASE_LP = 21;
+    uint8 constant BURN_RANGE_QUOTE_LP = 22;
+    uint8 constant MINT_AMBIENT_LIQ_LP = 3;
+    uint8 constant MINT_AMBIENT_BASE_LP = 31;
+    uint8 constant MINT_AMBIENT_QUOTE_LP = 32;
+    uint8 constant BURN_AMBIENT_LIQ_LP = 4;
+    uint8 constant BURN_AMBIENT_BASE_LP = 41;
+    uint8 constant BURN_AMBIENT_QUOTE_LP = 42;
+    uint8 constant HARVEST_LP = 5;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Knockout LP command codes
+    ////////////////////////////////////////////////////////////////////////////
     uint8 constant MINT_KNOCKOUT = 91;
     uint8 constant BURN_KNOCKOUT = 92;
     uint8 constant CLAIM_KNOCKOUT = 93;

@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: Unlicensed 
+// SPDX-License-Identifier: GPL-3 
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/SafeCast.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/CompoundMath.sol';
 import './StorageLayout.sol';
 import './PoolRegistry.sol';
-
-import "hardhat/console.sol";
 
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
@@ -23,16 +21,16 @@ contract PositionRegistrar is PoolRegistry {
     /* The six things we need to know for each concentrated liquidity position are:
      *    1) Owner
      *    2) The pool the position is on.
-     *    2) Lower tick bound on the range
-     *    3) Upper tick bound on the range
-     *    4) Total liquidity
-     *    5) Fee accumulation mileage for the position's range checkpointed at the last
+     *    3) Lower tick bound on the range
+     *    4) Upper tick bound on the range
+     *    5) Total liquidity
+     *    6) Fee accumulation mileage for the position's range checkpointed at the last
      *       update. Used to correctly distribute in-range liquidity rewards.
-     * Of these 1-3 constitute the unique key. If a user adds a new position with the
-     * same owner and the same range, it can be represented by incrementing 4 and 
-     * updating 5. */
+     * Of these 1-4 constitute the unique key. If a user adds a new position with the
+     * same owner and the same range, it can be represented by incrementing 5 and 
+     * updating 6. */
 
-    /* @notice Hashes the owner and concentrated liquidity range to the position key. */
+    /* @notice Hashes the owner of an ambient liquidity position to the position key. */
     function encodePosKey (address owner, bytes32 poolIdx)
         internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner, poolIdx));
@@ -147,6 +145,7 @@ contract PositionRegistrar is PoolRegistry {
      * @param poolIdx The hash key of the pool the position lives on.
      * @param lowerTick The lower tick of the LP position
      * @param upperTick The upper tick of the LP position.
+     * @param feeMileage The current accumulated fee rewards rate for the position range
      *
      * @return rewards The total number of ambient seeds to collect as rewards */
     function harvestPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
@@ -196,7 +195,7 @@ contract PositionRegistrar is PoolRegistry {
     /* @notice Adds ambient liquidity to a give position, creating a new position tracker
      *         if necessry.
      *         
-     * @param owner The bytes32 owning the position.
+     * @param owner The address of the owner of the liquidity position.
      * @param poolIdx The hash key of the pool the position lives on.
      * @param liqAdd The amount of liquidity to add to the position.
      * @param ambientGrowth The up-to-date ambient liquidity seed deflator for the curve.
@@ -233,30 +232,5 @@ contract PositionRegistrar is PoolRegistry {
         pos.liquidity_ = liqNext;
         pos.feeMileage_ = mileage;
         pos.timestamp_ = stamp;
-    }
-
-    
-    /* @notice Changes the owner of an existing position without altering its properties
-     *         in any other way. This has no impact from an aggregate liquidity and fee
-     *         accumulation standpoint, and can otherwise be ignored downstream.
-     * @param poolIdx The index of the pool the position belongs to.
-     * @param owner The bytes32 which currently owns the position.
-     * @param receiver The bytes32 that ownership is being transferred to.
-     * @param lowerTick The tick index of the lower boundary of the position. This
-     *                  does *not* change during the ownership process.
-     * @param upperTick The tick index of the upper boundary of the position. This
-     *                  does *not* change during the ownership process. */
-    function changePosOwner (address owner, address receiver, bytes32 poolIdx, 
-                             int24 lowerTick, int24 upperTick) internal {
-        RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
-        RangePosition storage newPos = lookupPosition
-            (receiver, poolIdx, lowerTick, upperTick);
-
-        // For now we only allow transfers to positions with uninitialized liquidity.
-        // Otherwise the fee mileage on the existing liquidity will be set incorrectly.
-        require(newPos.liquidity_ == 0, "G");
-        newPos.liquidity_ = pos.liquidity_;
-        newPos.feeMileage_ = pos.feeMileage_;
-        pos.liquidity_ = 0;
     }
 }

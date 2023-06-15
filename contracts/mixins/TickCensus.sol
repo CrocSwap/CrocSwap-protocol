@@ -1,17 +1,22 @@
-// SPDX-License-Identifier: Unlicensed                                         
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3                                         
+pragma solidity 0.8.19;
 
 import '../libraries/BitMath.sol';
 import '../libraries/Bitmaps.sol';
 import '../libraries/TickMath.sol';
 import './StorageLayout.sol';
 
-import "hardhat/console.sol";
-
 /* @title Tick census mixin.
+ * 
  * @notice Tracks which tick indices have an active liquidity bump, making it gas
  *   efficient for random read and writes, and to find the next bump tick boundary
- *   on the curve. */
+ *   on the curve. 
+ * 
+ * @dev Note that this mixin works with the full set of possible int24 values.
+ *      Whereas other parts of the protocol set a MIN_TICK and MAX_TICK that are
+ *      that well within the type bounds of int24. It's the responsibility of
+ *      calling code to assure that ticks being set are within the MIN_TICK and
+ *      MAX_TICK, and this library does *not* provide those checks. */
 contract TickCensus is StorageLayout {
     using Bitmaps for uint256;
     using Bitmaps for int24;
@@ -124,9 +129,9 @@ contract TickCensus is StorageLayout {
      * @return boundTick - The tick index that we can conservatively move to without 
      *    potentially hitting any currently active liquidity bump points.
      * @return isSpill - If true indicates that the boundary represents the end of the
-     *    terminus bitmap. Could or could not also still be an active bump, but only
-     *    at the lower bound. (Lower bounds exist in the bitmap, but upper bounds
-     *    exist at the next bitmap over, which is beyond the horizon). */
+     *    inner terminus bitmap neighborhood. Based on this we have to actually check whether
+     *     we've reached teh true end of the liquidity range, or just the end of the known
+     *     neighborhood.  */
     function pinBitmap (bytes32 poolIdx,
                         bool isUpper, int24 startTick)
         internal view returns (int24 boundTick, bool isSpill) {
@@ -150,9 +155,10 @@ contract TickCensus is StorageLayout {
             Bitmaps.weldMezzTerm(tickMezz, nextTerm);
     }
 
-    /* @notice Returns true if the tick seek spills out of the terminus neighborhood.
-     *         Which indicates to the user that the returned value represents a censored
-     *         horizon not a genuine liquidity bump point. */
+    /* @notice Returns true if the tick seek reaches the end of the inner terminus 
+     *      bitmap neighborhood. If that happens, it's like reaching the end of the map.
+     *      It's returned as the boundary point, but the the user must be aware that the tick
+     *      may or may not represent an active liquidity tick and check accordingly. */
     function doesSpillBit (bool isUpper, bool spillTrunc, uint256 termBitmap)
         private pure returns (bool spillBit) {
         if (isUpper) {
@@ -197,6 +203,9 @@ contract TickCensus is StorageLayout {
      *   liquidity bump. The result is assymetric boundary for upper/lower ticks. */
     function seekMezzSpill (bytes32 poolIdx, int24 borderTick, bool isUpper)
         internal view returns (int24) {
+        if (isUpper && borderTick == type(int24).max) { return type(int24).max; }
+        if (!isUpper && borderTick == type(int24).min) { return type(int24).min; }
+
         (uint8 lobbyBorder, uint8 mezzBorder) = rootsForBorder(borderTick, isUpper);
 
         // Most common case is that the next neighboring bitmap on the border has
@@ -256,7 +265,7 @@ contract TickCensus is StorageLayout {
         private view returns (int24) {
         uint8 MAX_MEZZ = 0;
         unchecked {
-            // Because it's unchecked idx will wrap around to 0 when it checks all bits
+            // Unchecked because we want idx to wrap around to 0, to check all 256 bits
             for (uint8 i = lobbyBit + 1; i > 0; ++i) {
                 (int24 tick, bool spills) = seekAtMezz(poolIdx, i, MAX_MEZZ, true);
                 if (!spills) { return tick; }
@@ -270,7 +279,7 @@ contract TickCensus is StorageLayout {
         private view returns (int24) {
         uint8 MIN_MEZZ = 255;
         unchecked {
-            // Because it's unchecked idx will wrap around to 255 when it checks all bits
+            // Unchecked because we want idx to wrap around to 255, to check all 256 bits
             for (uint8 i = lobbyBit - 1; i < 255; --i) {
                 (int24 tick, bool spills) = seekAtMezz(poolIdx, i, MIN_MEZZ, false);
                 if (!spills) { return tick; }

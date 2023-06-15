@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed                                                          
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3                                                          
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import '../libraries/Directives.sol';
@@ -20,7 +20,20 @@ import '../libraries/KnockoutLiq.sol';
  *    contracts. */
 contract StorageLayout {
 
-    // Re-entant lock. Should always be 0x0 at rest
+    // Re-entrant lock. Should always be reset to 0x0 after the end of every
+    // top-level call. Any top-level call should fail on if this value is non-
+    // zero.
+    //
+    // Inside a call this address is always set to the beneficial owner that
+    // the call is being made on behalf of. Therefore any positions, tokens,
+    // or liquidity can only be accessed if and only if they're owned by the
+    // value lockHolder_ is currently set to.
+    //
+    // In the case of third party relayer or router calls, this value should
+    // always be set to the *client* that the call is being made for, and never
+    // the msg.sender caller that is acting on the client behalf's. (Of course
+    // for security, third party calls made on a client's behalf must always
+    // be authorized by the client either by pre-approval or signature.)
     address internal lockHolder_;
 
     // Indicates whether a given protocolCmd() call is operating in escalated
@@ -29,9 +42,10 @@ contract StorageLayout {
 
     bool internal msgValSpent_;
 
-    // If set to true, than the embedded hot-path (swap()) is not enabled and
-    // users must use the hot proxy for the hot-path. By default set to false.
+    // If set to false, then the embedded hot-path (swap()) is not enabled and
+    // users must use the hot proxy for the hot-path. By default set to true.
     bool internal hotPathOpen_;
+    
     bool internal inSafeMode_;
 
     // The protocol take rate for relayer tips. Represented in 1/256 fractions
@@ -40,7 +54,7 @@ contract StorageLayout {
     // Slots for sidecar proxy contracts
     address[65536] internal proxyPaths_;
         
-    // Address of the current dex protocol authority. Can be transfered
+    // Address of the current dex protocol authority. Can be transferred
     address internal authority_;
 
     /**************************************************************/
@@ -131,6 +145,9 @@ contract StorageLayout {
     
     mapping(bytes32 => UserBalance) internal userBals_;
     /**************************************************************/
+
+    address treasury_;
+    uint64 treasuryStartTime_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars
@@ -158,12 +175,12 @@ library CrocSlots {
         
     // The slots of the currently attached sidecar proxy contracts. These are set by
     // covention and should be expanded over time as more sidecars are installed. For
-    // backwards compatibility, upgradears should never break existing interface on
+    // backwards compatibility, upgraders should never break existing interface on
     // a pre-existing proxy sidecar.
-    uint16 constant ADMIN_PROXY_IDX = 0;
+    uint16 constant BOOT_PROXY_IDX = 0;
     uint16 constant SWAP_PROXY_IDX = 1;
     uint16 constant LP_PROXY_IDX = 2;
-    uint16 constant BAL_PROXY_IDX = 3;
+    uint16 constant COLD_PROXY_IDX = 3;
     uint16 constant LONG_PROXY_IDX = 4;
     uint16 constant MICRO_PROXY_IDX = 5;
     uint16 constant MULTICALL_PROXY_IDX = 6;

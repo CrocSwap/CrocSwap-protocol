@@ -98,6 +98,7 @@ describe('AgentMask', () => {
 
         const domain = {
             name: "CrocSwap",
+            version: "1.0",
             chainId: 31337,
             verifyingContract: agent.address
         }

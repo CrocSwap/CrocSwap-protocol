@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0;
+pragma solidity 0.8.19;
 
 /// @title BitMath
 /// @dev This library provides functionality for computing bit properties of an unsigned integer
@@ -11,6 +11,7 @@ library BitMath {
     /// @param x the value for which to compute the most significant bit, must be greater than 0
     /// @return r the index of the most significant bit
     function mostSignificantBit(uint256 x) internal pure returns (uint8 r) {
+        // Set to unchecked, but the original UniV3 library was written in a pre-checked version of Solidity
         unchecked{
         require(x > 0);
 
@@ -53,6 +54,7 @@ library BitMath {
     /// @param x the value for which to compute the least significant bit, must be greater than 0
     /// @return r the index of the least significant bit
     function leastSignificantBit(uint256 x) internal pure returns (uint8 r) {
+        // Set to unchecked, but the original UniV3 library was written in a pre-checked version of Solidity
         unchecked {
         require(x > 0);
 

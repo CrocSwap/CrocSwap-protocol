@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import "./SafeCast.sol";
@@ -8,10 +8,8 @@ import "./PoolSpecs.sol";
 import "./PriceGrid.sol";
 import "./CurveMath.sol";
 
-import "hardhat/console.sol";
-
 /* @title Trade flow chaining library 
- * @notice Provides common convetions and utility functions for aggregating
+ * @notice Provides common conventions and utility functions for aggregating
  *   and backfilling the user <-> pool flow of token assets within a single
  *   pre-defined pair of assets. */
 library Chaining {
@@ -20,7 +18,6 @@ library Chaining {
     using CurveMath for uint128;
     using TickMath for int24;
     using LiquidityMath for uint128;
-    using CurveMath for CurveMath.CurveState;
     using CurveMath for CurveMath.CurveState;
 
     /* Used as an indicator code by long-form orders to indicate how a given sub-
@@ -33,7 +30,7 @@ library Chaining {
      *        units for LP actions).
      *    
      *    ROLL_PASS_POS_TYPE - Rolling fill, but against a fixed token collateral target.
-     *        Difference with NO_ROLL_TYPE, is the set quantity will denoinate as the unit
+     *        Difference with NO_ROLL_TYPE, is the set quantity will denominate as the unit
      *        of the rolling quantity. I.e. represents token collateral instead of 
      *        liquidity units on LP actions.
      *
@@ -92,7 +89,6 @@ library Chaining {
     }
 
     /* @notice Represents the accumulated flow between user and pool within a transaction.
-     *   transaction
      * 
      * @param baseFlow_ Represents the cumulative base side token flow. Negative for
      *   flow going to the user, positive for flow going to the pool.
@@ -163,6 +159,7 @@ library Chaining {
      *
      * @param roll Indicates the context for the type of roll target that the call 
      *   should target. (See RollTarget struct above.)
+     * @param dir The ambient liquidity directive the liquidity is applied to
      * @param curve The liquidity curve that is being minted or burned against.
      * @param flow The previously accumulated flow on this pair. Based on the context 
      *   above, this function will target the accumulated flow contained herein.
@@ -187,7 +184,7 @@ library Chaining {
     /* @notice Computes the amount of concentrated liquidity to mint/burn in order to 
      *   neutralize the previously accumulated flow in the pair.
      *
-     * @dev Note that concenrated liquidity is represented as lots 1024. The results of
+     * @dev Note that concentrated liquidity is represented as lots 1024. The results of
      *   this function will always conform to that multiple. Because of integer rounding
      *   it's impossible to guarantee a liquidity value that exactly neutralizes an 
      *   arbitrary token flow quantity. Therefore this function always rounds in favor of 
@@ -196,6 +193,7 @@ library Chaining {
      *
      * @param roll Indicates the context for the type of roll target that the call 
      *   should target. (See RollTarget struct above.)
+     * @param bend The concentrated range order directive the liquidity is applied to
      * @param curve The liquidity curve that is being minted or burned against.
      * @param flow The previously accumulated flow on this pair. Based on the context 
      *   above, this function will target the accumulated flow contained herein.
@@ -233,7 +231,7 @@ library Chaining {
      * @param isAdd Indicates whether the liquidity is being added or removed. Necessary
      *              to make sure that we round conservatively.
      * @param priceRoot The current price in the pool.
-     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     * @param inBaseQty True if the collateral is a base token value, false if quote 
      *                  token.
      * @return The amount of liquidity, in sqrt(X*Y) units, supported by this 
      *         collateral. */
@@ -255,7 +253,7 @@ library Chaining {
      * @param lowTick The tick index of the lower bound of the concentrated liquidity 
      *                range.
      * @param highTick The tick index of the upper bound.
-     * @param isBaseQty True if the collateral is a base token value, false if quote 
+     * @param inBaseQty True if the collateral is a base token value, false if quote 
      *                  token.
      * @return The amount of concentrated liquidity (in sqrt(X*Y) units) supported in
      *         the given tick range. */
@@ -273,16 +271,21 @@ library Chaining {
             liq.shaveRoundLotsUp();
     }
 
-    // Represents a small, economically menaingless amount of token wei that makes sure
+    // Represents a small, economically meaningless amount of token wei that makes sure
     // we're always leaving the user with a collateral credit.    
     function bufferCollateral (uint128 collateral, bool isAdd)
         private pure returns (uint128) {
         uint128 BUFFER_COLLATERAL = 4;
+
         if (isAdd) {
+            // This ternary switch always produces non-negative result, preventing underflow
             return collateral < BUFFER_COLLATERAL ? 0 :
                 collateral - BUFFER_COLLATERAL;
         } else {
-            return collateral + BUFFER_COLLATERAL;
+            // This ternary switch prevents buffering into an overflow
+            return collateral > type(uint128).max - 4 ?
+                type(uint128).max :
+                collateral + BUFFER_COLLATERAL;
         }
     }
 
@@ -293,7 +296,7 @@ library Chaining {
      *
      * @param roll Indicates the context for the type of roll target that the call 
      *   should target. (See RollTarget struct above.)
-     * @param swap The templated SwapDirective object. This function will update with
+     * @param swap The templated SwapDirective object. This function will update the
      *   object with the quantity, direction, and (if necessary) price needed to gap-fill
      *   the rolling flow accumulator.
      * @param flow The previously accumulated flow on this pair. Based on the context 
@@ -330,7 +333,7 @@ library Chaining {
         }
     }
 
-    /* @notice Calculated the total amount of collateral and its direction, that we should
+    /* @notice Calculates the total amount of collateral and its direction, that we should
      *   be targeting to neutralize when sizing a liquidity gap-fill. */
     function collateralDemand (RollTarget memory roll, PairFlow memory flow,
                                uint8 rollType, uint128 nextQty) private pure
@@ -342,14 +345,42 @@ library Chaining {
     }
 
     /* @notice Calculates the effective bid/ask committed collateral range related
-     *   to a concentrated liquidity range order. Based on whether the curve's current
-     *   price is sitting inr ange or not, this results will be different. */
+     *   to a concentrated liquidity range order. The calculation is different depending on
+     *   whether the curve price is inside or outside the specified tick range. (See below) */
     function determinePriceRange (uint128 curvePrice, int24 lowTick, int24 highTick,
                                   bool inBase) private pure
         returns (uint128 bidPrice, uint128 askPrice) {
         bidPrice = lowTick.getSqrtRatioAtTick();
         askPrice = highTick.getSqrtRatioAtTick();
 
+        /* The required reserve collateral for a range order is a function of whether
+         * the order is in-range or out-of-range. For in range orders the reserves are
+         * determined based on the distance between the current price and range boundary
+         * price:
+         *           Lower range        Curve Price        Upper range
+         *                |                  |                  | 
+         *    <-----------*******************O*******************------------->
+         *                --------------------
+         *                 Base token reserves
+         *
+         * For out of range orders the reserve collateral is a function of the entire
+         * width of the range.
+         *
+         *           Lower range              Upper range       Curve Price
+         *                |                        |                 |
+         *    <-----------**************************-----------------O---->
+         *                --------------------------
+         *                   Base token reserves
+         *
+         * And if the curve is out of range on the opposite side, the reserve collateral
+         * would be zero, and therefore it's impossible to map a non-zero amount of tokens
+         * to liquidity (and function reverts)
+         *
+         *        Curve Price          Lower range              Upper range       
+         *           |                     |                        |                 
+         *    <------O---------------------**************************---------------------->
+         *                                      ZERO base tokens
+         */                  
         if (curvePrice <= bidPrice) {
             require(!inBase);
         } else if (curvePrice >= askPrice) {
@@ -373,7 +404,7 @@ library Chaining {
     /* @notice Given a cumulative rolling flow, calculates a gap-fill quantity based on
      *         rolling target parameters.
      *
-     * @param roll The rolling target schematic, set at the beggining of the pair hop.
+     * @param roll The rolling target schematic, set at the begining of the pair hop.
      * @param flow The cumulative collateral flow accumulated in this pair hop so far.
      * @param rollType The type of rolling gap-fill to target (see indicator comments 
      *                 above)
@@ -388,7 +419,7 @@ library Chaining {
     /* @notice Given a fixed rolling gap, scales the next incremental size to achieve
      *         a specific user-defined target.
      *
-     * @param roll The rolling gap that exists prior to this leg of the long-form order.
+     * @param rollGap The rolling gap that exists prior to this leg of the long-form order.
      * @param rollType The type of rolling gap-fill to target (see indicator comments 
      *                 above)
      * @param target   The rolling gap-fill target, contextualized by rollType value.
@@ -409,12 +440,13 @@ library Chaining {
     /* @notice Convenience function to round up flows pinned to liquidity. Will safely 
      *         (i.e. only in the debit direction) round up the flow to the user-specified
      *         qty. This is primarily useful for mints where the user specifies a token 
-     *         qty, that gets cast to liquidity, that then then gets converted back to
+     *         qty, that gets cast to liquidity, that then gets converted back to
      *         a token quantity amount. Because of fixed-point rounding the latter will
      *         be slightly smaller than the fixed specified amount. For usability and gas
      *         optimization the user will likely want to just pay the full amount. */
-    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 qty, bool inBase)
+    function pinFlow (int128 baseFlow, int128 quoteFlow, uint128 uQty, bool inBase)
         internal pure returns (int128, int128) {
+        int128 qty = uQty.toInt128Sign();
         if (inBase && int128(qty) > baseFlow) {
             baseFlow = int128(qty);
         } else if (!inBase && int128(qty) > quoteFlow) {

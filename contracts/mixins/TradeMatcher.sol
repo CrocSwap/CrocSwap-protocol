@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
@@ -14,10 +14,8 @@ import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './KnockoutCounter.sol';
-import './ColdInjector.sol';
+import './ProxyCaller.sol';
 import './AgentMask.sol';
-
-import "hardhat/console.sol";
 
 /* @title Trade matcher mixin
  * @notice Provides a unified facility for calling the core atomic trade actions
@@ -28,7 +26,7 @@ import "hardhat/console.sol";
  *           4) Burn range liquidity
  *           5) Swap                                                     */
 contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
-    ColdPathInjector {
+    ProxyCaller {
 
     using SafeCast for int256;
     using SafeCast for int128;
@@ -54,8 +52,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
      *                 sqrt(X*Y) where X,Y are the collateral reserves in a constant-
      *                 product AMM
      * @param poolHash The hash indexing the pool this liquidity curve applies to.
-     * @param lpConduit The address of the ICrocLpConduit the LP position will be 
-     *                  assigned to. (If zero the user will directly own the LP.)
+     * @param lpOwner The address of the ICrocLpConduit the LP position will be 
+     *                assigned to. (If zero the user will directly own the LP.)
      *
      * @return baseFlow The amount of base-side token collateral required by this
      *                  operations. Will always be positive indicating, a debit from
@@ -181,7 +179,12 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
      *         LP position that was minted. */
     function depositConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
                              address lpConduit) private {
-        depositConduit(poolHash, 0, 0, liqSeeds, deflator, lpConduit);
+        // Equivalent to calling concentrated liquidity deposit with lowTick=0 and highTick=0
+        // Since a true range order can never have a width of zero, the receiving deposit
+        // contract should recognize these values as always representing ambient liquidity
+        int24 NA_LOW_TICK = 0;
+        int24 NA_HIGH_TICK = 0;
+        depositConduit(poolHash, NA_LOW_TICK, NA_HIGH_TICK, liqSeeds, deflator, lpConduit);
     }
 
     /* @notice Dispatches the call to the ICrocLpConduit with the concentrated liquidity 
@@ -195,11 +198,15 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         }
     }
 
+    /* @notice Withdraws and sends ownership of the ambient liquidity to a third party conduit
+     *         explicitly nominated by the caller. */
     function withdrawConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
                               address lpConduit) private {
         withdrawConduit(poolHash, 0, 0, liqSeeds, deflator, lpConduit);
     }
 
+    /* @notice Withdraws and sends ownership of the liquidity to a third party conduit
+     *         explicitly nominated by the caller. */
     function withdrawConduit (bytes32 poolHash, int24 lowTick, int24 highTick,
                               uint128 liq, uint64 mileage, address lpConduit) private {
         if (lpConduit != lockHolder_) {
@@ -209,7 +216,17 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         }
     }
 
-    
+    /* @notice Mints a new knockout liquidity position, or adds to a previous position, 
+     *         and updates the curve and debit flows accordingly.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param priceTick The 24-bit tick of the pool's current price
+     * @param loc The location of where to mint the knockout liquidity
+     * @param liquidity The total amount of XY=K liquidity to mint.
+     * @param poolHash The hash of the pool the curve applies to
+     * @param knockoutBits The bitwise knockout parameters currently set on the pool.
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function mintKnockout (CurveMath.CurveState memory curve, int24 priceTick,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
@@ -222,6 +239,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (baseFlow, quoteFlow) = signMintFlow(base, quote);
     }
 
+    /* @notice Burns an existing knockout liquidity position and updates the curve
+     *         and flows accordingly.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param priceTick The 24-bit tick of the pool's current price
+     * @param loc The location of where to burn the knockout liquidity from
+     * @param liquidity The total amount of XY=K liquidity to mint.
+     * @param poolHash The hash of the pool the curve applies to
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function burnKnockout (CurveMath.CurveState memory curve, int24 priceTick,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash)
@@ -234,6 +261,17 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
     }
 
+    /* @notice Claims a post-knockout liquidity position using the ownership Merkle proof
+     *         supplied by the caller.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param loc The location of where the post-knockout position was placed
+     * @param root The root of the supplied Merkle proof
+     * @param proof The Merkle proof that combined with the root must match the current
+     *              hash of the knockout slot
+     * @param poolHash The hash of the pool the curve applies to
+     *
+     * @return The incrmental base and quote debit flows from this action. */
     function claimKnockout (CurveMath.CurveState memory curve, 
                             KnockoutLiq.KnockoutPosLoc memory loc,
                             uint160 root, uint256[] memory proof, bytes32 poolHash)
@@ -245,7 +283,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
             (curve, liquidity, rewards, loc);
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
     }
-    
+
+    /* @notice Claims a post-knockout liquidity position using the ownership Merkle proof
+     *         supplied by the caller.
+     *
+     * @param curve The current state of the liquidity curve.
+     * @param loc The location of where the post-knockout position was placed
+     * @param root The root of the supplied Merkle proof
+     * @param pivotTime The pivotTime of the knockout slot at the time the position was
+     *                  minted.
+     * @return The incrmental base and quote debit flows from this action. */
     function recoverKnockout (KnockoutLiq.KnockoutPosLoc memory loc,
                               uint32 pivotTime, bytes32 poolHash)
         internal returns (int128 baseFlow, int128 quoteFlow) {
@@ -325,7 +372,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                            CurveMath.CurveState memory curve, int24 midTick,
                            Directives.SwapDirective memory swap,
                            PoolSpecs.PoolCursor memory pool) internal {
-        require(swap.isBuy_ == (curve.priceRoot_ < swap.limitPrice_), "SD");
+        require(swap.isBuy_ ? curve.priceRoot_ <= swap.limitPrice_ : 
+                              curve.priceRoot_ >= swap.limitPrice_, "SD");
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
@@ -422,13 +470,16 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         (int128 paidBase, int128 paidQuote, uint128 burnSwap) =
             curve.shaveAtBump(swap.inBaseQty_, swap.isBuy_, swap.qty_);
         accum.accumFlow(paidBase, paidQuote);
+
+        // burn down qty from shaveAtBump is always validated to be less than remaining swap.qty_
+        // so this will never underflow
         swap.qty_ -= burnSwap;
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick.
         return swap.isBuy_ ?
             bumpTick :
-            bumpTick - 1; // Valid ticks are well above {min(int128)-1}
+            bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
         }
     }
 
@@ -444,7 +495,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         if (knockoutFlag) {
             int128 knockoutDelta = callCrossFlag
                 (poolHash, bumpTick, isBuy, curve.concGrowth_);
-            curve.concLiq_.addDelta(knockoutDelta);
+            curve.concLiq_ = curve.concLiq_.addDelta(knockoutDelta);
         }
     }    
 }

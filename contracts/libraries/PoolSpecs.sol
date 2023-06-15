@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 /* @title Pool specification library.
@@ -10,21 +10,24 @@ library PoolSpecs {
 
     /* @notice Specifcations of the parameters of a single pool type. Any given pair
      *         may have many different pool types, each of which may operate as segmented
-     *         markts with different underlying behavior to the AMM. 
+     *         markets with different underlying behavior to the AMM. 
      *
      * @param schema_ Placeholder that defines the structure of the poolSpecs object in
-     *                in storage. Becuase slots initialize zero, 0 is used for an 
-     *                unitializez or disabled pool. 1 is the only currently used schema
+     *                in storage. Because slots initialize zero, 0 is used for an 
+     *                unitialized or disabled pool. 1 is the only currently used schema
      *                (for the below struct), but allows for upgradeability in the future
      *
      * @param feeRate_ The overall fee (liquidity fees + protocol fees inclusive) that
      *            swappers pay to the pool as a fraction of notional. Represented as an 
-     *            integer representing hundredeths of a basis point. I.e. a 0.25% fee 
-     *            would be 250000
+     *            integer representing hundredths of a basis point. I.e. a 0.25% fee 
+     *            would be 2500
      *
      * @param protocolTake_ The fraction of the fee rate that goes to the protocol fee 
-     *             (the rest accumulates as a liquidity fee to LPs). Represented as 1/n. 
-     *             Special case of zero, means the protocol take is 0%.
+     *             (the rest accumulates as a liquidity fee to LPs). Represented in units
+     *             of 1/256. Since uint8 can represent up to 255, protocol could take
+     *             as much as 99.6% of liquidity fees. However currently the protocol
+     *             set function prohibits values above 128, i.e. 50% of liquidity fees. 
+     *             (See set ProtocolTakeRate in PoolRegistry.sol)
      *
      * @param tickSize The minimum granularity of price ticks defining a grid, on which 
      *          range orders may be placed. (Outside off-grid price improvement facility.)
@@ -33,11 +36,17 @@ library PoolSpecs {
      *          0.005% (50 one basis point ticks) between bump points.
      *
      * @param jitThresh_ Sets the minimum TTL for concentrated LP positions in the pool.
+     *                   Represented in units of 10 seconds (as measured by block time)
+     *                   E.g. a value of 5 equates to a minimum TTL of 50 seconds.
      *                   Attempts to burn or partially burn an LP position in less than
      *                   N seconds (as measured in block.timestamp) after a position was
-     *                   minted (or had its liquidity increased) will revent. If set to
+     *                   minted (or had its liquidity increased) will revert. If set to
      *                   0, atomically flashed liquidity that mints->burns in the same
      *                   block is enabled.
+     *
+     * @param knockoutBits_ Defines the parameters for where and how knockout liquidity
+     *                      is allowed in the pool. (See KnockoutLiq library for a full
+     *                      description of the bit field.)
      *
      * @param oracleFlags_ Bitmap flags to indicate the pool's oracle permission 
      *                     requirements. Current implementation only uses the least 
@@ -110,11 +119,12 @@ library PoolSpecs {
      *
      * @dev    The oracle (if enabled on pool settings) is always deterministically based
      *         on the first 160-bits of the pool type value. This means users can know 
-     *         ahead of time if a pool is can be oracled by checking the bits in the pool
+     *         ahead of time if a pool can be oracled by checking the bits in the pool
      *         index. */
     function oracleForPool (uint256 poolIdx, uint8 oracleFlags)
-        private pure returns (address) {
-        bool oracleEnabled = (oracleFlags & 0x1 == 1);
+        internal pure returns (address) {
+        uint8 ORACLE_ENABLED_MASK = 0x1;
+        bool oracleEnabled = (oracleFlags & ORACLE_ENABLED_MASK == 1);
         return oracleEnabled ?
             address(uint160(poolIdx >> 96)) :
             address(0);

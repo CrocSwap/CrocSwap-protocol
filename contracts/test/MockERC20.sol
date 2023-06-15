@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.5.0;
+pragma solidity 0.8.19;
 
 import "../interfaces/IERC20Minimal.sol";
+import "hardhat/console.sol";
 
 contract MockERC20 is IERC20Permit {
     mapping(address => uint256) public override balanceOf;
@@ -35,7 +36,7 @@ contract MockERC20 is IERC20Permit {
         external override returns (bool) {
         require(allowance[from][msg.sender] >= qty, "Insufficent Allowance");
         allowance[from][msg.sender] -= qty;
-        
+
         require(balanceOf[from] >= qty, "Insufficient Balance");
         balanceOf[from] -= qty;
         balanceOf[to] += qty;

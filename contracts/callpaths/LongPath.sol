@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
@@ -11,8 +11,6 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/StorageLayout.sol';
-
-import "hardhat/console.sol";
 
 /* @title Long path callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -34,19 +32,20 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *         combination of mints, burns and swaps across an arbitrary set of pools
      *         across an arbitrary set of pairs.
      *
-     * @input  The encoded byte data associated with the user's order directive. See
-     *         Encoding.sol and Directives.sol library for information on how to encode
-     *         order directives as byte data. */
-    function userCmd (bytes calldata input) public payable {
+     * @param input  The encoded byte data associated with the user's order directive. See
+     *               Encoding.sol and Directives.sol library for information on how to encode
+     *               order directives as byte data. 
+     * @return The signed token flows associated with each successive token leg in the flows.
+     *         Negative indicates pool is paying user, positive pool is collecting from user. */
+    function userCmd (bytes calldata input) public payable returns (int128[] memory) {
         Directives.OrderDirective memory order = OrderEncoding.decodeOrder(input);
         Directives.SettlementChannel memory settleChannel = order.open_;
         TokenFlow.PairSeq memory pairs;
-        int128 ethBalance = 0;
+        Chaining.ExecCntx memory cntx;
+        int128[] memory flows = new int128[](order.hops_.length+1); 
 
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
-
-            Chaining.ExecCntx memory cntx;
             cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
                                               pairs.baseToken_, pairs.quoteToken_);
 
@@ -63,14 +62,25 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
             }
 
             accumProtocolFees(pairs); // Make sure to call before clipping              
-            int128 settleFlow = pairs.clipFlow();
-            ethBalance += settleLeg(settleFlow, settleChannel);
+            flows[i] = pairs.clipFlow();
             settleChannel = order.hops_[i].settle_;
         }
 
-        settleFinal(pairs.closeFlow(), settleChannel, ethBalance);
+        flows[order.hops_.length] = pairs.closeFlow();
+        settleFlows(order, flows);
+        return flows;
     }
 
+    function settleFlows (Directives.OrderDirective memory order, int128[] memory flows) internal {
+        Directives.SettlementChannel memory settleChannel = order.open_;
+        int128 ethFlow = 0;
+
+        for (uint i = 0; i < order.hops_.length; ++i) {
+            ethFlow += settleLeg(flows[i], settleChannel);
+            settleChannel = order.hops_[i].settle_;
+        }
+        settleFinal(flows[order.hops_.length], settleChannel, ethFlow);
+    }
 
     /* @notice Sets the roll target parameters based on the user's directive and the
      *         previously accumulated flow on the pair.
@@ -93,5 +103,11 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
                 pair.backToken() : pair.frontToken();
             roll.prePairBal_ -= querySurplus(lockHolder_, token).toInt128Sign();
         }
+    }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.LONG_PROXY_IDX;
     }
 }

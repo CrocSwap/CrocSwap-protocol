@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.5.0;
+pragma solidity 0.8.19;
 
 import "../interfaces/ICrocPermitOracle.sol";
 
@@ -97,5 +97,8 @@ contract MockPermit is ICrocPermitOracle {
          poolIdx_ = poolIdx;
          return user == user_ && base == base_ && quote_ == quote;
      }
+
+     /* @notice Just used to validate the contract address at pool creation time. */
+    function acceptsPermitOracle() external pure override returns (bool) { return true; }
 }
 

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: Unlicensed
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3
+pragma solidity 0.8.19;
 
 import "./FixedPoint.sol";
 import "./TickMath.sol";
@@ -12,21 +12,47 @@ library CompoundMath {
     using SafeCast for uint256;
 
     /* @notice Provides a safe lower-bound approximation of the square root of (1+x)
-     *         based on a two-term Taylor series expansion.
+     *         based on a two-term Taylor series expansion. The purpose is to calculate
+     *         the square root for small compound growth rates. 
+     * 
+     *         Both the input and output values are passed as the growth rate *excluding*
+     *         the 1.0 multiplier base. For example assume the input (X) is 0.1, then the
+     *         output Y is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.1)
+     *             (1 + Y) = 1.0488 (approximately)
+     *                   Y = 0.0488 (approximately)
+     *         In the example the square root of 10% compound growth is 4.88%
+     *
+     *         Another example, assume the input (X) is 0.6, then the output (Y) is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.6)
+     *             (1 + Y) = 1.264 (approximately)
+     *                   Y = 0.264 (approximately)
+     *         In the example the square root of 60% growth is 26.4% compound growth
+     *
+     *         Another example, assume the input (X) is 0.018, then the output (Y) is:
+     *             (1 + Y) = sqrt(1+X)
+     *             (1 + Y) = sqrt(1 + 0.018)
+     *             (1 + Y) = 1.00896 (approximately)
+     *                   Y = 0.00896 (approximately)
+     *         In the example the square root of 1.8% growth is 0.896% compound growth
+     *
      * @dev    Due to approximation error, only safe to use on input in the range of 
      *         [0,1). Will always round down from the true real value.
+     *
      * @param x  The value of x in (1+x). Represented as a Q16.48 fixed-point
-     * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as 128-bit
-     *            fixed point. */
+     * @returns   The value of y for which (1+y) = sqrt(1+x). Represented as Q16.48 fixed point
+     * */
     function approxSqrtCompound (uint64 x64) internal pure returns (uint64) {
         // Taylor series error becomes too large above 2.0. Approx is still conservative
-        // but the angel's share becomes unreasonble. 
+        // but the angel's share becomes unreasonable. 
         require(x64 < FixedPoint.Q48);
 
         unchecked {
         uint256 x = uint256(x64);
         // Shift by 48, to bring x^2 back in fixed point precision
-        uint256 xSq = (x * x) >> 48;
+        uint256 xSq = (x * x) >> 48; // x * x never overflows 256 bits, because x is 64 bits
         uint256 linear = x >> 1; // Linear Taylor series term is x/2
         uint256 quad = xSq >> 3; // Quadratic Tayler series term ix x^2/8;
 
@@ -37,7 +63,7 @@ library CompoundMath {
     }
 
     /* @notice Computes the result from compounding two cumulative growth rates.
-     * @dev    Rounds down from the real value. Caps teh result if type exceeds the max
+     * @dev    Rounds down from the real value. Caps the result if type exceeds the max
      *         fixed-point value.
      * @param x The compounded growth rate as in (1+x). Represted as Q16.48 fixed-point.
      * @param y The compounded growth rate as in (1+y). Represted as Q16.48 fixed-point.
@@ -47,7 +73,7 @@ library CompoundMath {
         pure returns (uint64) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 num = (ONE + x) * (ONE + y);
+        uint256 num = (ONE + x) * (ONE + y); // Never overflows 256-bits because x and y are 64 bits
         uint256 term = num >> 48;  // Divide by 48-bit ONE
         uint256 z = term - ONE; // term will always be >= ONE
         if (z >= type(uint64).max) { return type(uint64).max; }
@@ -58,19 +84,19 @@ library CompoundMath {
     /* @notice Computes the result from backing out a compounded growth value from
      *         an existing value. The inverse of compoundStack().
      * @dev    Rounds down from the real value.
-     * @param price The fixed price representing the starting value that we want
-     *              to back out a pre-growth seed from.
-     * @param growth The compounded growth rate to back out, as in (1+g). Represented
-     *                as Q16.48 fixed-point
+     * @param val The fixed price representing the starting value that we want
+     *            to back out a pre-growth seed from.
+     * @param deflator The compounded growth rate to back out, as in (1+g). Represented
+     *                 as Q16.48 fixed-point
      * @returns The pre-growth value as in val/(1+g). Rounded down as an unsigned
      *          integer. */
     function compoundShrink (uint64 val, uint64 deflator) internal
         pure returns (uint64) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 multFactor = ONE + deflator;
+        uint256 multFactor = ONE + deflator; // Never overflows because both fit inside 64 bits
         uint256 num = uint256(val) << 48; // multiply by 48-bit ONE
-        uint256 z = num / multFactor;
+        uint256 z = num / multFactor; // multFactor will never be zero because it's bounded by 1
         return uint64(z); // Will always fit in 64-bits because shrink can only decrease
         }
     }
@@ -92,14 +118,14 @@ library CompoundMath {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
         uint256 num = uint256(inflated) << 48;
-        uint256 z = (num / seed) - ONE; 
+        uint256 z = (num / seed) - ONE; // Never underflows because num is always greater than seed
 
         if (z >= ONE) { return uint64(ONE); }
         return uint64(z);
         }
     }
 
-    /* @notice Calculates an final price from applying a growth rate to a starting price.
+    /* @notice Calculates a final price from applying a growth rate to a starting price.
      * @dev    Always rounds in the direction of @shiftUp
      * @param price The starting price to be compounded. Q64.64 fixed point.
      * @param growth The compounded growth rate to apply, as in (1+g). Represented
@@ -108,7 +134,7 @@ library CompoundMath {
      *                greater. If false, compounds the price down so the result will be
      *                smaller than the original price.
      * @returns The post-growth price as in price*(1+g) (or price*(1-g) if shiftUp is 
-     *          false). Q64.64 always founded in the direction of shiftUp. */
+     *          false). Q64.64 always rounded in the direction of shiftUp. */
     function compoundPrice (uint128 price, uint64 growth, bool shiftUp) internal
         pure returns (uint128) {
         unchecked {
@@ -150,13 +176,13 @@ library CompoundMath {
      * @dev    Rounds down from the real value.
      * @param liq The post-inflated liquidity as unsigned integer
      * @param growth Cumulative growth rate as Q16.48 fixed-point
-     * @return The ending value = liq/* (1 + growth). Rounded down to nearest
+     * @return The ending value = liq / (1 + growth). Rounded down to nearest
      *         integer value */
     function deflateLiqSeed (uint128 liq, uint64 growth)
         internal pure returns (uint128) {
         unchecked {
         uint256 ONE = FixedPoint.Q48;
-        uint256 num = liq << 48;
+        uint256 num = uint256(liq) << 48;
         uint256 deflated = num / (ONE + growth); // Guaranteed to fit in 256-bits
         
         // No need to safe cast-- will allways be smaller than starting

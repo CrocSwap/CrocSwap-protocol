@@ -1,21 +1,19 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import './StorageLayout.sol';
 import '../libraries/CurveCache.sol';
 import '../libraries/Chaining.sol';
 import '../libraries/Directives.sol';
 
-import "hardhat/console.sol";
-
-/* @title Cold path injector
+/* @title Proxy Caller
  * @notice Because of the Ethereum contract limit, much of the CrocSwap code is pushed
  *         into sidecar proxy contracts, which is involed with DELEGATECALLs. The code
- *         moved to these sidecars is less gas critical ("cold path") than the code in
- *         in the core contract ("hot path"). This provides a facility for invoking that
- *         cold path code and setting up the DELEGATECALLs in a standard and safe way. */
-contract ColdPathInjector is StorageLayout {
+ *         moved to these sidecars is less gas critical than the code in the core contract. 
+ *         This provides a facility for invoking proxy conjtracts in a consistent way by
+*          setting up the DELEGATECALLs in a standard and safe manner. */
+contract ProxyCaller is StorageLayout {
     using CurveCache for CurveCache.Cache;
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
@@ -26,8 +24,7 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("protocolCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     /* @notice Passes through the userCmd call to a sidecar proxy. */
@@ -36,8 +33,7 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     function callUserCmdMem (uint16 proxyIdx, bytes memory input)
@@ -45,13 +41,28 @@ contract ColdPathInjector is StorageLayout {
         assertProxy(proxyIdx);
         (bool success, bytes memory output) = proxyPaths_[proxyIdx].delegatecall(
             abi.encodeWithSignature("userCmd(bytes)", input));
-        require(success);
-        return output;
+        return verifyCallResult(success, output);
     }
 
     function assertProxy (uint16 proxyIdx) private view {
         require(proxyPaths_[proxyIdx] != address(0));
-        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH);        
+        require(!inSafeMode_ || proxyIdx == CrocSlots.SAFE_MODE_PROXY_PATH || proxyIdx == CrocSlots.BOOT_PROXY_IDX);
+    }
+
+    function verifyCallResult (bool success, bytes memory returndata) internal pure returns (bytes memory) {
+        // On success pass through the return data
+        if (success) {
+            return returndata;
+        } else if (returndata.length > 0) {
+            // If DELEGATECALL failed bubble up the error message
+            assembly {
+                 let returndata_size := mload(returndata)
+                revert(add(32, returndata), returndata_size)
+            }
+        } else {
+            // If failed with no  error, then bubble up the empty revert
+            revert();
+        }
     }
 
     /* @notice Invokes mintAmbient() call in MicroPaths sidecar and relays the result. */

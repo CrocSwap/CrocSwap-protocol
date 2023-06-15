@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed 
+// SPDX-License-Identifier: GPL-3 
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/CurveCache.sol';
 
@@ -16,9 +16,16 @@ interface ICrocMinion {
      * @param cmd       The underlying command content to pass to the proxy sidecar call.
      *                  Will DELEGATECALL (protocolCmd(cmd) on the sidecar proxy.
      * @param sudo      Set to true for commands that require escalated privilege (e.g. 
-     *                  authority transers or upgrades.) The ability to call with sudo 
+     *                  authority transfers or upgrades.) The ability to call with sudo 
      *                  true should be reserved for privileged callpaths in the governance
      *                  controller contract. */
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo)
-        payable external returns (bytes memory);
+        payable external;
+}
+
+/* @notice Interface for a contract that directly governs a CrocSwap dex contract. */
+interface ICrocMaster {
+    /* @notice Used to validate governance contract to prevent authority transfer to an
+     *         an invalid address or contract. */
+    function acceptsCrocAuthority() external returns (bool);
 }

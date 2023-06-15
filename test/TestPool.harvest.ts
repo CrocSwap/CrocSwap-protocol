@@ -39,8 +39,8 @@ describe('Pool Harvest', () => {
         startBase = await baseToken.balanceOf((await test.dex).address)
         await test.testHarvest(-10000, 25000)
         // The expected amounts harvested
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-145)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-218)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-144)
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-216)
     })
 
     it("harvest deplete", async() => {
@@ -102,7 +102,7 @@ describe('Pool Harvest', () => {
         let startQuote = await quoteToken.balanceOf((await test.dex).address)
         let startBase = await baseToken.balanceOf((await test.dex).address)
         await test.testHarvest(-10000, 25000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-145)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-218)
+        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote)).to.equal(-144)
+        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase)).to.equal(-216)
     })
 })

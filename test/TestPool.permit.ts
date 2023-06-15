@@ -133,5 +133,5 @@ describe('permissioned pool', () => {
     await (await test.permit).setMatching(ZERO_ADDR,
         (await test.base).address, (await test.quote).address)
     await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
-})
+   })
 })

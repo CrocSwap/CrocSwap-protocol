@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: Unlicensed                                                          
-pragma solidity >=0.8.4;
+// SPDX-License-Identifier: GPL-3                                                          
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 import './StorageLayout.sol';
-import './ColdInjector.sol';
+import 'hardhat/console.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
@@ -18,11 +18,14 @@ contract LevelBook is TickCensus {
 
     /* Book level structure exists one-to-one on a tick basis (though could possibly be
      * zero-valued). For each tick we have to track three values:
-     *    bidLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from above. Denominated in (1024-unit)
-     *               lots.
-     *    askLots_ - The concentrated liquidity bump that's added to the AMM curve when
-     *               the price moves into the tick from below. Denominated in lots.
+     *    bidLots_ - The change to concentrated liquidity that's added to the AMM curve when
+     *               price moves into the tick from below, and removed when price moves
+     *               into the tick from above. Denominated in lot-units which are 1024 multiples
+     *               of liquidity units.
+     *    askLots_ - The change to concentrated liquidity that's added to the AMM curve when
+     *               price moves into the tick from above, and removed when price moves
+     *               into the tick from below. Denominated in lot-units which are 1024 multiples
+     *               of liquidity units.
      *    feeOdometer_ - The liquidity fee rewards accumulator that's checkpointed 
      *       whenever the price crosses the tick boundary. Used to calculate the 
      *       cumulative fee rewards on any arbitrary lower-upper tick range. This is
@@ -59,6 +62,7 @@ contract LevelBook is TickCensus {
             (lvl.bidLots_, lvl.askLots_);
         
         liqDelta = isBuy ? crossDelta : -crossDelta;
+
         if (feeGlobal != lvl.feeOdometer_) {
             lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
         }                
@@ -92,7 +96,7 @@ contract LevelBook is TickCensus {
      * @param midTick - The tick index associated with the current price of the AMM curve
      * @param bidTick - The tick index for the lower bound of the range order.
      * @param askTick - The tick index for the upper bound of the range order.
-     * @param liq - The amount of liquidity being added by the range order.
+     * @param lots - The amount of liquidity (in 1024 unit lots) being added by the range order.
      * @param feeGlobal - The up-to-date global fee rewards growth accumulator. 
      *    Represented as 128-bit fixed point growth rate.
      *
@@ -207,6 +211,11 @@ contract LevelBook is TickCensus {
      *         liquidity tick range. The difference between this value at two different
      *         times is guaranteed to reflect the accumulated rewards in the tick range
      *         between those two times.
+     *
+     *         For more explanation on how the fee rewards accumulated is calculated for
+     *         a given range order, reference the documenation at [docs/FeeOdometer.md]
+     *         in the project repository.
+     *
      * @dev This returned result only has meaning when compared against the result
      *      from the same method call on the same range at a different time. Any
      *      given range could have an arbitrary offset relative to the pool's actual
@@ -215,7 +224,7 @@ contract LevelBook is TickCensus {
      * @param poolIdx The hash key specifying the pool being operated on.
      * @param currentTick The price tick of the curve's current price
      * @param lowerTick The prick tick of the lower boundary of the range order
-     * @param lowerTick The prick tick of the upper boundary of the range order
+     * @param upperTick The prick tick of the upper boundary of the range order
      * @param feeGlobal The cumulative rewards accumulated to a single unit of 
      *                  concentrated liquidity that was active since pool inception.
      *
@@ -243,7 +252,11 @@ contract LevelBook is TickCensus {
      *      on the outside of the tick level. (Though this may be faked for fees that
      *      that accumulated prior to level initialization. It doesn't matter, because
      *      all we use this value for is calculating the delta of fee accumulation 
-     *      between two different post-initialization points in time.) */
+     *      between two different post-initialization points in time.)
+     *
+     *      For more explanation on how the per-tick fee odometer related to the 
+     *      cumulative fees in a give range, reference the documenation at 
+     *      [docs/FeeOdometer.md] in the project repository. */
     function pivotFeeBelow (bytes32 poolIdx, int24 lvlTick,
                             int24 currentTick, uint64 feeGlobal)
         private view returns (uint64) {

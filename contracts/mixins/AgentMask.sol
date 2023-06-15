@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
 import "./StorageLayout.sol";
@@ -13,7 +13,10 @@ contract AgentMask is StorageLayout {
     using SafeCast for uint256;
     
     /* @notice Standard re-entrant gate for an unprivileged order called directly
-     *         by the user. */
+     *         by the user.
+     *
+     * @dev    lockHolder_ account is set to msg.sender, and therefore this call will
+     *         touch the positions, tokens, and liquidity owned by msg.sender. */
     modifier reEntrantLock() {
         require(lockHolder_ == address(0));
         lockHolder_ = msg.sender;
@@ -37,11 +40,15 @@ contract AgentMask is StorageLayout {
      *         third party client. Requires the user to have previously approved the 
      *         router.
      *
+     * @dev    lockHolder_ is set to the client address directly supplied by the caller.
+     *         (The client address must always directly approve the msg.sender contract to
+     *         act on its behalf.) Therefore this call (if approved) will touch the positions,
+     *         tokens, and liquidity owned by client address.
+     *
      * @param client The client who's order the router is calling on behalf of.
-     * @param salt   The approval slot salt to check the user's approval. Allows for a
-     *               user to approve the same router with diferent command sub-types. */
-    modifier reEntrantApproved (address client, uint256 salt) {
-        casAgent(client, msg.sender, salt);
+     * @param callPath  The proxy sidecar callpath the agent is requesting to call on the user's behalf */
+    modifier reEntrantApproved (address client, uint16 callPath) {
+        stepAgentNonce(client, msg.sender, callPath);
         require(lockHolder_ == address(0));
         lockHolder_ = client;
         _;
@@ -50,7 +57,12 @@ contract AgentMask is StorageLayout {
     }
 
     /* @notice Re-entrant gate for a relayer calling an order that was signed off-chain
-     *         using the EIP-712 standard. */
+     *         using the EIP-712 standard.
+     *
+     * @dev    lockHolder_ is set to the address whose private key signed the ECDSA 
+     *         signature. Regardless of which address is msg.sender, all operations inside
+     *         this call will touch the positions, tokens, and liquidity owned by the
+     *         signing address.  */
     modifier reEntrantAgent (CrocRelayerCall memory call,
                              bytes calldata signature) {
         require(lockHolder_ == address(0));
@@ -118,10 +130,21 @@ contract AgentMask is StorageLayout {
         require(block.timestamp <= deadline);
         require(block.timestamp >= alive);
         require(relayer == address(0) || relayer == msg.sender || relayer == tx.origin);
-        casNonce(client, salt, nonce);
+        stepNonce(client, salt, nonce);
     }
 
-    /* @notice Verifies the supplied signature matches the EIP-712 compatible data. */
+    /* @notice Verifies the supplied signature matches the EIP-712 compatible data.
+     *
+     * @dev Note that the ECDSA signature is malleable, because (v, r, s) are unrestricted.
+     *      However this is not an issue, because the raw signature itself is not used as an
+     *      index or nonce in any form. A malicious attacker *could* change the signature, but
+     *      could not change the plaintext checksum being signed. 
+     * 
+     *      If a malleable signature was submitted, either it would arrive before the honest 
+     *      signature, in which case the call parameters would be identical. Or it would arrive after
+     *      the honest signature, in which case the call parameter would be rejected becaue it
+     *      used an expired nonce. In no state of the world does a malleable signature make a 
+     *      replay attack possible. */
     function verifySignature (CrocRelayerCall memory call,
                               bytes calldata signature)
         internal view returns (address client) {
@@ -140,14 +163,19 @@ contract AgentMask is StorageLayout {
                          ("\x19\x01", domainHash(), hash));
     }
 
+    bytes32 constant CALL_SIG_HASH = 
+        keccak256("CrocRelayerCall(uint8 callpath,bytes cmd,bytes conds,bytes tip)");
+    bytes32 constant DOMAIN_SIG_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 constant APP_NAME_HASH = keccak256("CrocSwap");
+    bytes32 constant VERSION_HASH = keccak256("1.0");
+
     /* @notice Calculates the EIP-712 typedStruct hash. */
     function contentHash (CrocRelayerCall memory call)
         private pure returns (bytes32) {
         return keccak256(
             abi.encode
-            (keccak256
-             ("CrocRelayerCall(uint8 callpath,bytes cmd,bytes conds,bytes tip)"),
-             call.callpath,
+            (CALL_SIG_HASH, call.callpath,
              keccak256(call.cmd),
              keccak256(call.conds),
              keccak256(call.tip)));
@@ -157,11 +185,7 @@ contract AgentMask is StorageLayout {
     function domainHash() private view returns (bytes32) {
         return keccak256(
             abi.encode
-            (keccak256(
-                "EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
-             keccak256("CrocSwap"),
-             block.chainid,
-             address(this)));
+            (DOMAIN_SIG_HASH, APP_NAME_HASH, VERSION_HASH, block.chainid, address(this)));
     }
 
     /* @notice Returns the payer and receiver of any settlement collateral flows.
@@ -176,13 +200,9 @@ contract AgentMask is StorageLayout {
      * @param router The address of the external agent.
      * @param nCalls The number of calls the external router is authorized to make. Set
      *               to uint32.max for unlimited.
-     * @param salt An arbitrary number corresponding to a specific call track. When the
-     *             external agent calls the dex on the user's behalf it will supply this
-     *             number and nCalls will be checked specifically against it. Depending
-     *             on implementation, this allows users to authorize routers to make
-     *             certain types of calls but not others. */
-    function approveAgent (address router, uint32 nCalls, uint256 salt) internal {
-        bytes32 key = agentKey(lockHolder_, router, salt);
+     * @param callPath The specific proxy sidecar callpath that the router is approved for */
+    function approveAgent (address router, uint32 nCalls, uint16 callPath) internal {
+        bytes32 key = agentKey(lockHolder_, router, callPath);
         UserBalance storage bal = userBals_[key];
         bal.agentCallsLeft_ = nCalls;
     }
@@ -195,6 +215,7 @@ contract AgentMask is StorageLayout {
      * @param nonce The nonce index value the nonce will be reset to. */
     function resetNonce (bytes32 nonceSalt, uint32 nonce) internal {
         UserBalance storage bal = userBals_[nonceKey(lockHolder_, nonceSalt)];
+        require(nonce >= bal.nonce_, "NI");
         bal.nonce_ = nonce;
     }
 
@@ -235,9 +256,9 @@ contract AgentMask is StorageLayout {
      *         number of remaining calls.
      * @param client The client the agent is making the call on behalf of.
      * @param agent The address of the external agent making the call.
-     * @param salt The multidimensional nonce dimension the call is being applied to. */
-    function casAgent (address client, address agent, uint256 salt) internal {
-        UserBalance storage bal = userBals_[agentKey(client, agent, salt)];
+     * @param callPath The proxy sidecar the call is being made on. */
+    function stepAgentNonce (address client, address agent, uint16 callPath) internal {
+        UserBalance storage bal = userBals_[agentKey(client, agent, callPath)];
         if (bal.agentCallsLeft_ < type(uint32).max) {
             require(bal.agentCallsLeft_ > 0);
             --bal.agentCallsLeft_;
@@ -251,7 +272,7 @@ contract AgentMask is StorageLayout {
      * @param salt The multidimensional nonce dimension the call is being applied to.
      * @param nonce The nonce the EIP-712 message is signed for. This must match the 
      *              current nonce or the transaction will fail. */
-    function casNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
+    function stepNonce (address client, bytes32 nonceSalt, uint32 nonce) internal {
         UserBalance storage bal = userBals_[nonceKey(client, nonceSalt)];
         require(bal.nonce_ == nonce);
         ++bal.nonce_;
@@ -274,8 +295,8 @@ contract AgentMask is StorageLayout {
      * @param recv The receiver of the tip. This will always be paid to this account's
      *             surplus collateral balance. Also supports generic magic values for 
      *             generic relayer payment:
-     *                 0x10 - Paid to the msg.sender, regardless of who made the dex call
-     *                 0x20 - Paid to the tx.origin, regardless of who sent tx. */
+     *                 0x100 - Paid to the msg.sender, regardless of who made the dex call
+     *                 0x200 - Paid to the tx.origin, regardless of who sent tx. */
     function tipRelayer (bytes memory tipCmd) internal {
         if (tipCmd.length == 0) { return; }
         
@@ -342,15 +363,11 @@ contract AgentMask is StorageLayout {
         return tokenKey(user, PoolSpecs.virtualizeAddress(token, salt));
     }
 
-    /* @notice Returns an agent key given a user, an agent address and an arbitrary 
-     *         salt. */
-    function agentKey (address user, address agent, uint256 salt) pure internal
+    /* @notice Returns an agent key given a user, an agent address and a specific
+     *         call path. */
+    function agentKey (address user, address agent, uint16 callPath) pure internal
         returns (bytes32) {
-        if (salt == 0) {
-            return keccak256(abi.encode(user, agent));
-        } else {
-            return keccak256(abi.encode(user, PoolSpecs.virtualizeAddress(agent, salt)));
-        }
+        return keccak256(abi.encode(user, agent, callPath));
     }
 
 }

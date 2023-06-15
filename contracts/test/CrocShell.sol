@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 /* @title Empty implementation of CrocSwap interface */
 contract CrocShell {
@@ -11,7 +11,7 @@ contract CrocShell {
                    uint8 settleFlags) public payable returns (int128) { }
 
     function protocolCmd (uint16 callpath, bytes calldata cmd, bool sudo)
-        public payable returns (bytes memory) { }
+        public payable { }
 
     function userCmd (uint16 callpath, bytes calldata cmd) 
         public payable returns (bytes memory) { }

@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
@@ -13,9 +13,7 @@ import '../libraries/Chaining.sol';
 import './PositionRegistrar.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
-import './ColdInjector.sol';
 import './TradeMatcher.sol';
-import './ColdInjector.sol';
 
 /* @title Market sequencer.
  * @notice Mixin class that's responsibile for coordinating one or multiple sequetial
@@ -243,9 +241,8 @@ contract MarketSequencer is TradeMatcher {
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInit(pool.hash_);
         initPrice(curve, price);
-        if (initLiq > 0) {
-            (baseFlow, quoteFlow) = lockAmbient(curve, initLiq);
-        }
+        if (initLiq == 0) { initLiq = 1; }
+        (baseFlow, quoteFlow) = lockAmbient(curve, initLiq);
         commitCurve(pool.hash_, curve);
     }
 
@@ -258,7 +255,7 @@ contract MarketSequencer is TradeMatcher {
             applySwap(flow, dir.swap_, curve, cntx);
         }
         applyAmbient(flow, dir.ambient_, curve, cntx);
-        applyConcentrateds(flow, dir.conc_, curve, cntx);
+        applyConcentrated(flow, dir.conc_, curve, cntx);
         if (dir.chain_.swapDefer_) {
             applySwap(flow, dir.swap_, curve, cntx);
         }
@@ -293,11 +290,11 @@ contract MarketSequencer is TradeMatcher {
 
     /* @notice Applies zero, one or a series of concentrated liquidity directives to a 
      *         pre-loaded liquidity curve. */
-    function applyConcentrateds (Chaining.PairFlow memory flow,
+    function applyConcentrated (Chaining.PairFlow memory flow,
                                  Directives.ConcentratedDirective[] memory dirs,
                                  CurveCache.Cache memory curve,
                                  Chaining.ExecCntx memory cntx) private {
-        unchecked { // Only arithmetic in block is ++i/++j which will never overflow
+        unchecked { // Only arithmetic in block is ++i which will never overflow
         for (uint i = 0; i < dirs.length; ++i) {
             (int128 nextBase, int128 nextQuote) = applyConcentrated
                 (curve, flow, cntx, dirs[i]);
@@ -333,11 +330,17 @@ contract MarketSequencer is TradeMatcher {
                                                    bend.liquidity_,
                                                    cntx.pool_.head_.tickSize_,
                                                    curve.pullPriceTick());
+
+            // Off-grid positions are only eligible when the LP has committed
+            // to a minimum liquidity commitment above some threshold. This opens
+            // up the possibility of a user minting an off-grid LP position above the
+            // the threshold, then partially burning the position to resize the position *below*
+            // the threhsold. 
+            // To prevent this all off-grid positions are marked as atomic which prevents partial 
+            // (but not full) burns. An off-grid LP wishing to reduce their position must fully 
+            // burn the position, then mint a new position, which will be checked that it meets 
+            // the size threshold at mint time.
             if (offGrid) {
-                // Off-grid positions are set with atomic liquidity. That prevents
-                // partial burns on these positions. Since off-grid size eligibility
-                // is only checked at mint time this is necessary to prevent under-sized
-                // off-grid orders.
                 markPosAtomic(lockHolder_, cntx.pool_.hash_,
                               bend.lowTick_, bend.highTick_);
             }

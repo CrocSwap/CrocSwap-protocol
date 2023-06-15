@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: GPL-3
 
-pragma solidity >=0.8.4;
+pragma solidity 0.8.19;
 
 import '../libraries/Directives.sol';
 import '../libraries/Encoding.sol';
@@ -51,6 +51,12 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     /* @notice Final check at swap completion to verify that the non-fixed side of the 
      *         swap meets the user's minimum execution standards: minimum floor if output,
      *         maximum ceiling if input. 
+     * @param flow The resulting final token flows from the swap
+     * @param minOutput The minimum output (if sell-side token is fixed) *or* maximum inout
+     *                  (if buy-side token is fixed)
+     * @param isBuy  If true indicates the swap was a buy, i.e. paid base tokens to receive
+     *               quote tokens
+     * @param inBaseQty If true indicates the base-side was the fixed leg of the swap.
      * @return outFlow Returns the non-fixed side of the swap flow. */
     function pivotOutFlow (Chaining.PairFlow memory flow, uint128 minOutput,
                            bool isBuy, bool inBaseQty) private pure
@@ -71,6 +77,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         dir.inBaseQty_ = inBaseQty;
         dir.qty_ = qty;
         dir.limitPrice_ = limitPrice;
+        dir.rollType_ = 0;
         return swapOverPool(dir, pool);
         
     }
@@ -112,8 +119,16 @@ contract HotProxy is HotPath {
 
     function userCmd (bytes calldata input) public payable
         returns (int128, int128) {
+        require(!hotPathOpen_, "Hot path enabled");
         return swapEncoded(input);
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.SWAP_PROXY_IDX;
+    }
+
 }
 
 
