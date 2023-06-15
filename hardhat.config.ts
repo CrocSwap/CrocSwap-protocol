@@ -5,6 +5,7 @@
 import "hardhat-typechain";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer"
+import "@nomicfoundation/hardhat-verify";
 
 require("hardhat-storage-layout");
 require('solidity-coverage')
@@ -55,11 +56,16 @@ module.exports = {
         chainId: 5,
         accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]      
       },
+      mainnet: {
+        url: 'https://mainnet.infura.io/v3/360ea5fda45b4a22883de8522ebd639e',
+        chainId: 1
+      },
+
 
       fuji: {
         url: "https://api.avax-test.network/ext/bc/C/rpc",
         chainId: 43113,
       },
 
-    },
+    }
 };
