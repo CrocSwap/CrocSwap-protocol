@@ -85,6 +85,50 @@ export async function treasuryResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd
     }, tag)
 }
 
+export async function opsTimelockSet (addrs: CrocAddrs, newDelay: number, oldDelay: number) {
+    await timelockDelaySet(addrs.govern.multisigOps, addrs.govern.timelockOps,
+        newDelay, oldDelay, `Update ops timelock to ${newDelay} seconds`)
+}
+
+export async function treasuryTimelockSet (addrs: CrocAddrs, newDelay: number, oldDelay: number) {
+    await timelockDelaySet(addrs.govern.multisigTreasury, addrs.govern.timelockTreasury,
+        newDelay, oldDelay, `Update treasury timelock to ${newDelay} seconds`)
+}
+
+async function timelockDelaySet (multisigAddr: string,
+    timelockAddr: string, newDelay: number, oldDelay: number, tag: string) {
+    const timelock = await refContract("TimelockAccepts", timelockAddr) as TimelockAccepts
+    let delayCall = await timelock.populateTransaction.updateDelay(newDelay)
+
+    if (newDelay > 7 * 3600 * 24) {
+        throw new Error("Timelock delay exceeds seven days")
+    }
+
+    let timelockCalls = await populateTimelockCalls(timelock, timelockAddr, delayCall.data as string,
+        oldDelay)
+        
+    console.log("----")
+    console.log("Presenting instructions for setting timelock delay")
+    console.log()
+    console.log("Description: Change update timelock " + tag)
+    console.log(`Execution instructions for updating timelock delay`)
+    console.log()
+    console.log(`Step 1: Use the Gnosis Safe at ${multisigAddr}`)
+    console.log(`Transaction to timelock contract at ${timelockAddr}`)
+    console.log(`(Message value: 0)`)
+    console.log(`With the following calldata: `)
+    console.log(timelockCalls.scheduleCalldata)
+
+    console.log()
+    console.log(`Step 2: Wait at least ${timelockCalls.delay}`)
+    console.log(`Use same Gnosis Safe at ${multisigAddr}`)
+    console.log(`Transaction to timelock contract at ${timelockCalls.timelockAddr}`)
+    console.log(`(Message value: 0)`)
+    console.log(`With the following calldata: `)
+    console.log(timelockCalls.execCalldata)
+    console.log("-----")
+}
+
 export function printResolution (res: GovernanceResolution, tag: string): GovernanceResolution {
     console.log("-----")
     console.log("Presenting instructions for governance resolution", res)
@@ -95,14 +139,16 @@ export function printResolution (res: GovernanceResolution, tag: string): Govern
     console.log(`Will execute a protocolCmd() call on CrocSwapDex contract at ${res.dexContract}`)
     console.log("protocolCmd() will be called with args: ", res.protocolCmd)
     console.log()
-    console.log(`Step 1: Use multisig at ${res.multisigOrigin}`)
-    console.log(`Sign and send transaction to ${res.timelockCall.timelockAddr}`)
+    console.log(`Step 1: Use the Gnosis Safe at ${res.multisigOrigin}`)
+    console.log(`Transaction to timelock contract at ${res.timelockCall.timelockAddr}`)
+    console.log(`(Message value: 0)`)
     console.log(`With the following calldata: `)
     console.log(res.timelockCall.scheduleCalldata)
     console.log()
     console.log(`Step 2: Wait at least ${res.timelockCall.delay}`)
-    console.log(`Use same multisig at ${res.multisigOrigin}`)
-    console.log(`Sign and send transaction to ${res.timelockCall.timelockAddr}`)
+    console.log(`Use same Gnosis Safe at ${res.multisigOrigin}`)
+    console.log(`Transaction to timelock contract at ${res.timelockCall.timelockAddr}`)
+    console.log(`(Message value: 0)`)
     console.log(`With the following calldata: `)
     console.log(res.timelockCall.execCalldata)
     console.log("-----")
