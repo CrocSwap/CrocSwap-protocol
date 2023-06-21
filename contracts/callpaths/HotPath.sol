@@ -11,6 +11,7 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/ProtocolAccount.sol';
+import '../CrocEvents.sol';
 
 /* @title Hot path mixin.
  * @notice Provides the top-level function for the most common operation: simple one-hop
@@ -118,9 +119,10 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
 contract HotProxy is HotPath {
 
     function userCmd (bytes calldata input) public payable
-        returns (int128, int128) {
+        returns (int128 baseFlow, int128 quoteFlow) {
         require(!hotPathOpen_, "Hot path enabled");
-        return swapEncoded(input);
+        (baseFlow, quoteFlow) = swapEncoded(input);
+        emit CrocEvents.CrocHotCmd(input, baseFlow, quoteFlow);
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

@@ -100,6 +100,32 @@ const mainnetAddrs: CrocAddrs = {
   }
 }
 
+const mantleTestAddrs: CrocAddrs = {
+    dex: '',
+    cold: '',
+    warm: '',
+    long: '',
+    micro: '',
+    hot: '',
+    knockout: '',
+    koCross: '',
+    policy: '',
+    query: '',
+    impact: '',
+    shell: '',
+    policyShell: '',
+    deployer: '0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C',
+    govern: {
+      multisigTreasury: '',
+      multisigOps: '',
+      multisigEmergency: '',
+      timelockTreasury: '',
+      timelockOps: '',
+      timelockEmergency: ''
+    }
+  }
+
+
 
 // Goerli
 /* const goerliAddrs: CrocAddrs = {
@@ -150,6 +176,7 @@ const goerliAddrsDryRun: CrocAddrs = {
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
+    '0x1389': mantleTestAddrs,
     'mock': mockAddrs,
 }
 
@@ -164,7 +191,8 @@ export let TOKEN_ADDRS = {
 
 export let POOL_IDXS = {
     '0x5': 36000,
-    '0x1': 420
+    '0x1': 420,
+    '0x1389': 36000,
 }
 
 export const BOOT_PROXY_IDX = 0;
