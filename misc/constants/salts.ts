@@ -8,6 +8,10 @@ CREATE2_SALTS.set('0x73511669fd4de447fed18bb79bafeac93ab7f31f',
 CREATE2_SALTS.set('0x25662C94D28DA775C4E4FDCA987B14D704B4b349'.toLowerCase(),
     '0xaa648ca9a669467563048f9854d0c61d261957924a3753296908131cee781714')    
 
+// Mantle testnet
+CREATE2_SALTS.set('0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C'.toLowerCase(),
+    '0xaa648ca9a669467563048f9854d0c61d261957924a3753296908131cee781714')    
+
 export function mapSalt (deployerAddr: string): BigNumber {
     const lookup = CREATE2_SALTS.get(deployerAddr.toLowerCase())
     if (!lookup) {

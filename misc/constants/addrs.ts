@@ -101,17 +101,17 @@ const mainnetAddrs: CrocAddrs = {
 }
 
 const mantleTestAddrs: CrocAddrs = {
-    dex: '',
-    cold: '',
-    warm: '',
-    long: '',
-    micro: '',
-    hot: '',
-    knockout: '',
-    koCross: '',
-    policy: '',
-    query: '',
-    impact: '',
+    dex: '0x1F1722B5a7D15b83F7d3Cb2a24381c8656fC95c2',
+    cold: '0xE5B0b009e3aF251933A66E0B3BA9a25FeA0a4f89',
+    warm: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+    long: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+    micro: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+    hot: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+    knockout: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+    koCross: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+    policy: '0xc7b11B33F7c0644F564Db2bB33670Fc30f088861',
+    query: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+    impact: '0x3d7baE85731D056889383b5765C37530deAA98A2',
     shell: '',
     policyShell: '',
     deployer: '0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C',
@@ -124,7 +124,8 @@ const mantleTestAddrs: CrocAddrs = {
       timelockEmergency: ''
     }
   }
-
+  
+  
 
 
 // Goerli
