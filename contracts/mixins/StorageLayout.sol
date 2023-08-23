@@ -148,6 +148,9 @@ contract StorageLayout {
 
     address treasury_;
     uint64 treasuryStartTime_;
+
+    mapping(bytes32 => mapping(int24 => uint32[])) tickEnterTimestamps_;
+    mapping(bytes32 => mapping(int24 => uint32[])) tickExitTimestamps_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars

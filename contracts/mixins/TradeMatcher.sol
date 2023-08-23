@@ -477,9 +477,15 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick.
-        return swap.isBuy_ ?
-            bumpTick :
-            bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
+        if (swap.isBuy_) {
+            tickEnterTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
+            tickExitTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
+            return bumpTick;
+        } else {
+            tickEnterTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
+            tickExitTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
+            return bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
+        }
         }
     }
 
