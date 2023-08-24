@@ -11,7 +11,7 @@ import './PoolRegistry.sol';
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
-contract PositionRegistrar is PoolRegistry {
+contract PositionRegistrar is PoolRegistry { // TODO
     using SafeCast for uint256;
     using SafeCast for uint144;
     using CompoundMath for uint128;
