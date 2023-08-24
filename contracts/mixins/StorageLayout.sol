@@ -149,7 +149,14 @@ contract StorageLayout {
     address treasury_;
     uint64 treasuryStartTime_;
 
+    /**************************************************************/
     address governance_;
+
+    // Amount of reward per liquidity and second that this liquidity is in range
+    uint256 rewardPerLiquiditySecond_;
+
+    mapping(bytes32 => uint32) internal ambLiquidityLastClaimed_;
+
     mapping(bytes32 => mapping(int24 => uint32[])) tickEnterTimestamps_;
     mapping(bytes32 => mapping(int24 => uint32[])) tickExitTimestamps_;
 }
