@@ -159,6 +159,8 @@ contract StorageLayout {
 
     mapping(bytes32 => mapping(int24 => uint32[])) tickEnterTimestamps_;
     mapping(bytes32 => mapping(int24 => uint32[])) tickExitTimestamps_;
+    mapping(bytes32 => mapping(int24 => uint32)) internal concLiquidityLastClaimed_;
+    mapping(bytes32 => mapping(int24 => uint40)) internal concLiquidityClaimedUpTo_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars

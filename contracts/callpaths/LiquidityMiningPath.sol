@@ -21,17 +21,33 @@ import '../mixins/PositionRegistrar.sol';
 contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
 
     
-    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable {
+    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable { // TODO: User-configurable ranges
         RangePosition storage pos = lookupPosition(msg.sender, poolIdx, lowerTick, upperTick);
+        uint256 liquidity = pos.liquidity_;
+        require(liquidity > 0, "Position does not exist");
+        bytes32 posKey = encodePosKey(msg.sender, poolIdx);
+        uint256 secondsActiveRange;
+        for (int24 i = lowerTick + 10; i < upperTick - 10; ++i) {
+            uint32[] storage tickEnterTimestamps = tickEnterTimestamps_[poolIdx][i];
+            uint32[] storage tickExitTimestamps = tickExitTimestamps_[poolIdx][i];
+            uint256 numTimestamps = tickExitTimestamps.length;
+            uint40 claimedUpTo = concLiquidityClaimedUpTo_[poolIdx][i]; // TODO: Need to init that
+            for (uint40 j = claimedUpTo; j < numTimestamps; ++j) {
+                uint32 secondsActiveTick = tickExitTimestamps[j] - tickEnterTimestamps[j];
+                secondsActiveRange += secondsActiveTick;
+            }
+            concLiquidityClaimedUpTo_[poolIdx][i] = uint40(numTimestamps);
+        }
     }
 
     function claimAmbientRewards (bytes32 poolIdx) public payable {
         AmbientPosition storage pos = lookupPosition(msg.sender, poolIdx);
-        require(pos.seeds_ > 0, "Position does not exist");
+        uint256 liquidity = pos.seeds_;
+        require(liquidity > 0, "Position does not exist");
         bytes32 posKey = encodePosKey(msg.sender, poolIdx);
-        uint32 lastClaimed = ambLiquidityLastClaimed_[posKey];
+        uint32 lastClaimed = ambLiquidityLastClaimed_[posKey]; //TODO: Init
         uint32 currTime = uint32(block.timestamp);
-        uint256 rewardsToSend = (currTime - lastClaimed) * rewardPerLiquiditySecond_; // TODO: rewardPerLiquiditySecond_ can change
+        uint256 rewardsToSend = (currTime - lastClaimed) * rewardPerLiquiditySecond_ * liquidity; // TODO: rewardPerLiquiditySecond_ can change
         ambLiquidityLastClaimed_[posKey] = uint32(block.timestamp);
         (bool sent, ) = msg.sender.call{value: rewardsToSend}("");
         require(sent, "Sending rewards failed");
