@@ -33,6 +33,12 @@ contract LiquidityMiningPath is LiquidityMining {
     function setRewardsPerLiquiditySecond(uint256 rewardPerLiquiditySecond) public payable {
         require(msg.sender == governance_, "Only callable by governance");
         rewardPerLiquiditySecond_ = rewardPerLiquiditySecond;
+        if (rewardPerLiquiditySecondLastSet_ > 0) {
+            for (uint32 i = rewardPerLiquiditySecondLastSet_; i < uint32(block.timestamp); i += uint32(MONTH)) {
+                rewardPerLiquiditySecondHistory_[i] = rewardPerLiquiditySecond;
+            }
+        }
+        rewardPerLiquiditySecondLastSet_ = uint32((block.timestamp / MONTH) * MONTH);
     }
 
 

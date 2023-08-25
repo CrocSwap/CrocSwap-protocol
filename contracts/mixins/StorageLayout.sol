@@ -154,6 +154,9 @@ contract StorageLayout {
 
     // Amount of reward per liquidity and second that this liquidity is in range
     uint256 rewardPerLiquiditySecond_;
+    // Historical values of the reward (per month), 0 implies current value (rewardPerLiquiditySecond_) still valid
+    mapping(uint256 => uint256) rewardPerLiquiditySecondHistory_;
+    uint32 rewardPerLiquiditySecondLastSet_;
 
     mapping(bytes32 => uint32) internal ambLiquidityLastClaimed_;
 
