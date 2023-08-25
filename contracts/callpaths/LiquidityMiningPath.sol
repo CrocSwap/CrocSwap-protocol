@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 import '../libraries/SafeCast.sol';
 import '../mixins/StorageLayout.sol';
-import '../mixins/PositionRegistrar.sol';
+import '../mixins/LiquidityMining.sol';
 
 /* @title Liquidity mining callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -19,42 +19,18 @@ import '../mixins/PositionRegistrar.sol';
  *      payable even though it doesn't directly handle msg.value. Otherwise it will
  *      fail on any. Because of this, this contract should never be used in any other
  *      context besides a proxy sidecar to CrocSwapDex. */
-contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
+contract LiquidityMiningPath is LiquidityMining {
 
     
     function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable { // TODO: User-configurable ranges
-        RangePosition storage pos = lookupPosition(msg.sender, poolIdx, lowerTick, upperTick);
-        uint256 liquidity = pos.liquidity_;
-        require(liquidity > 0, "Position does not exist");
-        bytes32 posKey = encodePosKey(msg.sender, poolIdx);
-        uint256 secondsActiveRange;
-        for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
-            uint32[] storage tickEnterTimestamps = tickEnterTimestamps_[poolIdx][i];
-            uint32[] storage tickExitTimestamps = tickExitTimestamps_[poolIdx][i];
-            uint256 numTimestamps = tickExitTimestamps.length;
-            uint40 claimedUpTo = concLiquidityClaimedUpTo_[posKey][i];
-            for (uint40 j = claimedUpTo; j < numTimestamps; ++j) {
-                uint32 secondsActiveTick = tickExitTimestamps[j] - tickEnterTimestamps[j];
-                secondsActiveRange += secondsActiveTick;
-            }
-            concLiquidityClaimedUpTo_[posKey][i] = uint40(numTimestamps);
-        }
+        claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick);
     }
 
     function claimAmbientRewards (bytes32 poolIdx) public payable {
-        AmbientPosition storage pos = lookupPosition(msg.sender, poolIdx);
-        uint256 liquidity = pos.seeds_;
-        require(liquidity > 0, "Position does not exist");
-        bytes32 posKey = encodePosKey(msg.sender, poolIdx);
-        uint32 lastClaimed = ambLiquidityLastClaimed_[posKey];
-        uint32 currTime = SafeCast.timeUint32();
-        uint256 rewardsToSend = (currTime - lastClaimed) * rewardPerLiquiditySecond_ * liquidity; // TODO: rewardPerLiquiditySecond_ can change
-        ambLiquidityLastClaimed_[posKey] = currTime;
-        (bool sent, ) = msg.sender.call{value: rewardsToSend}("");
-        require(sent, "Sending rewards failed");
+        claimAmbientRewards(payable(msg.sender), poolIdx);
     }
 
-    function setRewardsPerLiquiditySecond(uint256 rewardPerLiquiditySecond) public {
+    function setRewardsPerLiquiditySecond(uint256 rewardPerLiquiditySecond) public payable {
         require(msg.sender == governance_, "Only callable by governance");
         rewardPerLiquiditySecond_ = rewardPerLiquiditySecond;
     }
