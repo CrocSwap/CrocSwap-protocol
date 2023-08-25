@@ -28,11 +28,11 @@ contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
         require(liquidity > 0, "Position does not exist");
         bytes32 posKey = encodePosKey(msg.sender, poolIdx);
         uint256 secondsActiveRange;
-        for (int24 i = lowerTick + 10; i < upperTick - 10; ++i) {
+        for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
             uint32[] storage tickEnterTimestamps = tickEnterTimestamps_[poolIdx][i];
             uint32[] storage tickExitTimestamps = tickExitTimestamps_[poolIdx][i];
             uint256 numTimestamps = tickExitTimestamps.length;
-            uint40 claimedUpTo = concLiquidityClaimedUpTo_[posKey][i]; // TODO: Need to init that
+            uint40 claimedUpTo = concLiquidityClaimedUpTo_[posKey][i];
             for (uint40 j = claimedUpTo; j < numTimestamps; ++j) {
                 uint32 secondsActiveTick = tickExitTimestamps[j] - tickEnterTimestamps[j];
                 secondsActiveRange += secondsActiveTick;

@@ -11,7 +11,7 @@ import './PoolRegistry.sol';
 /* @title Position registrar mixin
  * @notice Tracks the individual positions of liquidity miners, including fee 
  *         accumulation checkpoints for fair distribution of rewards. */
-contract PositionRegistrar is PoolRegistry { // TODO
+contract PositionRegistrar is PoolRegistry {
     using SafeCast for uint256;
     using SafeCast for uint144;
     using CompoundMath for uint128;
@@ -189,6 +189,13 @@ contract PositionRegistrar is PoolRegistry { // TODO
     function mintPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 liqAdd, uint64 feeMileage) internal {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        bytes32 posKey = encodePosKey(msg.sender, poolIdx);
+        if (pos.liquidity_ == 0) {
+            // Init timestamps for liquidity mining
+            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+                concLiquidityLastClaimed_[posKey][i] = SafeCast.timeUint32();
+            }
+        }
         incrementPosLiq(pos, liqAdd, feeMileage);
     }
     
