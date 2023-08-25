@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.19;
 
+import '../libraries/SafeCast.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/PositionRegistrar.sol';
 
@@ -31,12 +32,12 @@ contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
             uint32[] storage tickEnterTimestamps = tickEnterTimestamps_[poolIdx][i];
             uint32[] storage tickExitTimestamps = tickExitTimestamps_[poolIdx][i];
             uint256 numTimestamps = tickExitTimestamps.length;
-            uint40 claimedUpTo = concLiquidityClaimedUpTo_[poolIdx][i]; // TODO: Need to init that
+            uint40 claimedUpTo = concLiquidityClaimedUpTo_[posKey][i]; // TODO: Need to init that
             for (uint40 j = claimedUpTo; j < numTimestamps; ++j) {
                 uint32 secondsActiveTick = tickExitTimestamps[j] - tickEnterTimestamps[j];
                 secondsActiveRange += secondsActiveTick;
             }
-            concLiquidityClaimedUpTo_[poolIdx][i] = uint40(numTimestamps);
+            concLiquidityClaimedUpTo_[posKey][i] = uint40(numTimestamps);
         }
     }
 
@@ -45,10 +46,10 @@ contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
         uint256 liquidity = pos.seeds_;
         require(liquidity > 0, "Position does not exist");
         bytes32 posKey = encodePosKey(msg.sender, poolIdx);
-        uint32 lastClaimed = ambLiquidityLastClaimed_[posKey]; //TODO: Init
-        uint32 currTime = uint32(block.timestamp);
+        uint32 lastClaimed = ambLiquidityLastClaimed_[posKey];
+        uint32 currTime = SafeCast.timeUint32();
         uint256 rewardsToSend = (currTime - lastClaimed) * rewardPerLiquiditySecond_ * liquidity; // TODO: rewardPerLiquiditySecond_ can change
-        ambLiquidityLastClaimed_[posKey] = uint32(block.timestamp);
+        ambLiquidityLastClaimed_[posKey] = currTime;
         (bool sent, ) = msg.sender.call{value: rewardsToSend}("");
         require(sent, "Sending rewards failed");
     }

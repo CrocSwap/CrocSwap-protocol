@@ -206,6 +206,10 @@ contract PositionRegistrar is PoolRegistry { // TODO
                          uint64 ambientGrowth) internal returns (uint128 seeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         seeds = liqAdd.deflateLiqSeed(ambientGrowth);
+        if (pos.seeds_ == 0) {
+            // Init timestamp for liquidity mining
+            ambLiquidityLastClaimed_[encodePosKey(owner, poolIdx)] = SafeCast.timeUint32();
+        }
         pos.seeds_ = pos.seeds_.addLiq(seeds);
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }
