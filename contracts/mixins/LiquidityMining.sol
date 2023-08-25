@@ -13,19 +13,25 @@ contract LiquidityMining is PositionRegistrar {
 
     uint256 constant MONTH = 2592000; // Month in seconds (assuming 30 days)
 
-    function claimConcentratedRewards (address payable owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick) internal { // TODO: User-configurable ranges
+    function claimConcentratedRewards (address payable owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick) internal {
+        claimConcentratedRewards(owner, poolIdx, lowerTick, upperTick, 0, 0, 0);
+    }
+
+    function claimConcentratedRewards (address payable owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick, int24 lowerClaimDelta, int24 upperClaimDelta, uint40 maxLiquidityDepth) internal { // TODO: User-configurable ranges
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint256 liquidity = pos.liquidity_;
         require(liquidity > 0, "Position does not exist");
         bytes32 posKey = encodePosKey(owner, poolIdx);
         uint256 secondsActiveRangeTimesReward;
         uint256 rewardPerLiquiditySecond = rewardPerLiquiditySecond_;
-        for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+        for (int24 i = lowerTick + 10 + lowerClaimDelta; i <= upperTick - 10 - upperClaimDelta; ++i) {
             uint32[] storage tickEnterTimestamps = tickEnterTimestamps_[poolIdx][i];
             uint32[] storage tickExitTimestamps = tickExitTimestamps_[poolIdx][i];
             uint256 numTimestamps = tickExitTimestamps.length;
             uint40 claimedUpTo = concLiquidityClaimedUpTo_[posKey][i];
-            for (uint40 j = claimedUpTo; j < numTimestamps; ++j) {
+            uint40 claimUpperBoundary = uint40(numTimestamps);
+            if (maxLiquidityDepth > 0 && claimedUpTo + maxLiquidityDepth < claimUpperBoundary) claimUpperBoundary = claimedUpTo + maxLiquidityDepth;
+            for (uint40 j = claimedUpTo; j < claimUpperBoundary; ++j) {
                 uint32 tickEnterTimestamp = tickEnterTimestamps[j];
                 uint32 secondsActiveTick = tickExitTimestamps[j] - tickEnterTimestamp;
                 // To simplify things, we take the reward of the beginning of the last enter, even if the enter / exit range goes over the month boundary with two different values

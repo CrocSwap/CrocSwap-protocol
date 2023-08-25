@@ -21,8 +21,11 @@ import '../mixins/LiquidityMining.sol';
  *      context besides a proxy sidecar to CrocSwapDex. */
 contract LiquidityMiningPath is LiquidityMining {
 
+    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick, int24 lowerClaimDelta, int24 upperClaimDelta, uint40 maxLiquidityDepth) public payable {
+        claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, lowerClaimDelta, upperClaimDelta, maxLiquidityDepth);
+    }
     
-    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable { // TODO: User-configurable ranges
+    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable {
         claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick);
     }
 
