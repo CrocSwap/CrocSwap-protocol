@@ -17,7 +17,7 @@ contract LiquidityMining is PositionRegistrar {
         claimConcentratedRewards(owner, poolIdx, lowerTick, upperTick, 0, 0, 0);
     }
 
-    function claimConcentratedRewards (address payable owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick, int24 lowerClaimDelta, int24 upperClaimDelta, uint40 maxLiquidityDepth) internal { // TODO: User-configurable ranges
+    function claimConcentratedRewards (address payable owner, bytes32 poolIdx, int24 lowerTick, int24 upperTick, int24 lowerClaimDelta, int24 upperClaimDelta, uint40 maxLiquidityDepth) internal {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
         uint256 liquidity = pos.liquidity_;
         require(liquidity > 0, "Position does not exist");
