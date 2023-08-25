@@ -54,6 +54,11 @@ contract LiquidityMiningPath is StorageLayout, PositionRegistrar {
         require(sent, "Sending rewards failed");
     }
 
+    function setRewardsPerLiquiditySecond(uint256 rewardPerLiquiditySecond) public {
+        require(msg.sender == governance_, "Only callable by governance");
+        rewardPerLiquiditySecond_ = rewardPerLiquiditySecond;
+    }
+
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
      *         in the correct slot. */
