@@ -14,6 +14,7 @@ import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
 import { BootPath } from "../contracts/typechain";
+import { buildCrocSwapSex } from "./SetupDex";
 
 chai.use(solidity);
 
@@ -179,8 +180,7 @@ export class TestPool {
         if (dex) {
             this.dex = Promise.resolve(dex)
         } else {
-            this.dex = factory.then(f => this.auth.then(a => 
-                f.connect(a).deploy())) as Promise<CrocSwapDex>
+            this.dex = buildCrocSwapSex(this.auth)
         }
 
         factory = ethers.getContractFactory("CrocQuery")
@@ -441,12 +441,11 @@ export class TestPool {
     }
 
     readonly BOOT_PROXY: number = 0;
-    readonly COLD_PROXY: number = 3;
-    readonly WARM_PROXY: number = 2;
-    readonly LONG_PROXY: number = 4;
     readonly HOT_PROXY: number = 1;
+    readonly WARM_PROXY: number = 2;
+    readonly COLD_PROXY: number = 3;
+    readonly LONG_PROXY: number = 4;
     readonly KNOCKOUT_PROXY: number = 7;
-    readonly MULTI_PROXY: number = 6;
     readonly EMERGENCY_PROXY: number = 9999
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
