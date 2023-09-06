@@ -1,6 +1,10 @@
 # CrocSwap-protocol
 Decentralized exchange with concentrated liquidity and low gas fees
 
+Frontend available at 
+
+https://ambient.finance
+
 ## Installation
 
 Clone the repository. In the repository home directory run the following commands:
@@ -17,6 +21,8 @@ Test coverage can be run with
 
 
 ## Documentation
+
+Primary docs can be found at [our Gitbook](https://docs.ambient.finance)
 
 Additional technical documentation can be found
 
