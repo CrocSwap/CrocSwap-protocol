@@ -723,7 +723,7 @@ export class TestPool {
         if (isTransfer) {
             cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
                     [75, recv, value, token])
-        } else if (value < 0) {
+        } else if (BigNumber.from(value).lt(0)) {
             cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
                     [73, recv, -value, token])
         } else {
