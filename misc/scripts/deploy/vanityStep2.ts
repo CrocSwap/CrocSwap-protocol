@@ -14,7 +14,7 @@ import { initChain, refContract, traceContractTx, traceTxResp } from '../../libs
 import { RPC_URLS } from '../../constants/rpcs';
 
 async function vanityDeploy() {
-    let { addrs, chainId, wallet: authority } = initChain()
+    let { addrs, chainId, wallet: authority } = initChain('7701')
 
     const salt = mapSalt(addrs.deployer)
 
@@ -28,6 +28,7 @@ async function vanityDeploy() {
     const factory = await ethers.getContractFactory("CrocSwapDex")
     await traceContractTx(crocDeployer.deploy(factory.bytecode, salt), "Salted Deploy")
     addrs.dex = await crocDeployer.dex_();
+
 
     console.log("CrocSwapDex deployed at: ", addrs.dex)
     console.log(`Updated addresses for ${chainId}`, addrs)
