@@ -1,7 +1,7 @@
 // Deploy Croc Lens Contracts
 
 // testnet dex address
-const dexAddress = "0x3b72043Fc6Dcd2C10201eb775570bdae2237a5c0";
+const dexAddress = "0xACB4D5CcFD3291A6b17bE2f117C12A278F57C024";
 
 async function main() {
 	const [deployer] = await ethers.getSigners();

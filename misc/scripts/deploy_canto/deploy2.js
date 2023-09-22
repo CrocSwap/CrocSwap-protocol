@@ -4,17 +4,30 @@ var AbiCoder = require("@ethersproject/abi").AbiCoder;
 
 const abi = new AbiCoder();
 
-// testnet addresses
+// testnet addresses 1
+// const addresses = {
+// 	CrocSwapDex: "0x3b72043fc6dcd2c10201eb775570bdae2237a5c0",
+// 	ColdPath: "0x7336fd03d2490175acca515ae2d5afed2a232e30",
+// 	HotProxy: "0xba783019e4937073340A308b933Ce0BE64ccD64A",
+// 	KnockoutLiqPath: "0x07a0406c7ea542bf2fee92b94586057c25318817",
+// 	CrossKnockoutLiqPath: "0xf91D5d838FDcCDa8224DFB944D140CFDcA73e2cc",
+// 	LongPath: "0xac79b5e09aa1557fb42e53426fb4534fc648edb2",
+// 	MicroPaths: "0x9b6681d01857841d404f90a6ad3422e5d8140ebc",
+// 	SafeModePath: "0x7689a7f88d85de0b7c1ea4f35eb3e155c751fd89",
+// 	WarmPath: "0x48ee738bf78956bd9a4a38f1028d1fae6b9c74bb",
+// };
+
+// testnet addresses 2
 const addresses = {
-	CrocSwapDex: "0x3b72043fc6dcd2c10201eb775570bdae2237a5c0",
-	ColdPath: "0x7336fd03d2490175acca515ae2d5afed2a232e30",
-	HotProxy: "0xba783019e4937073340A308b933Ce0BE64ccD64A",
-	KnockoutLiqPath: "0x07a0406c7ea542bf2fee92b94586057c25318817",
-	CrossKnockoutLiqPath: "0xf91D5d838FDcCDa8224DFB944D140CFDcA73e2cc",
-	LongPath: "0xac79b5e09aa1557fb42e53426fb4534fc648edb2",
-	MicroPaths: "0x9b6681d01857841d404f90a6ad3422e5d8140ebc",
-	SafeModePath: "0x7689a7f88d85de0b7c1ea4f35eb3e155c751fd89",
-	WarmPath: "0x48ee738bf78956bd9a4a38f1028d1fae6b9c74bb",
+	CrocSwapDex: "0xACB4D5CcFD3291A6b17bE2f117C12A278F57C024",
+	ColdPath: "0xF5202Cf9Ee626039beB1f0087830C256e3457440",
+	HotProxy: "0x2cDFF351614470B60aabCb4CF58475D4AB06709e",
+	KnockoutLiqPath: "0xD983503C1F9C014cEb4F936Da64Dd608397E6774",
+	CrossKnockoutLiqPath: "0x2E8fe08D63b36B753a8df66047b0fa3259fAe5Cd",
+	LongPath: "0xEf0b15283fb6B1d176981DbcEbdbAdF756853a34",
+	MicroPaths: "0x8d222C05098382946Cd78568C65f53127F2c3490",
+	SafeModePath: "0x077873fF9d6151Bfe68B738F6Afaf9aa67418f7a",
+	WarmPath: "0xbDE6D21E26921f86690e3ea32039652b8Ac00745",
 };
 
 const BOOT_PROXY_IDX = 0;
