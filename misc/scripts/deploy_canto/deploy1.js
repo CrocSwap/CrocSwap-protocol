@@ -14,9 +14,7 @@ async function main() {
 	// deploy KnockoutPath
 	const KnockoutLiqPath = await ethers.deployContract("KnockoutLiqPath");
 	// deploy CrossKnockoutPath
-	const CrossKnockoutLiqPath = await ethers.deployContract(
-		"KnockoutFlagPath"
-	);
+	const KnockoutFlagPath = await ethers.deployContract("KnockoutFlagPath");
 	// deploy LongPath
 	const LongPath = await ethers.deployContract("LongPath");
 	// deploy MicroPath
@@ -26,18 +24,15 @@ async function main() {
 	// deploy WarmPath
 	const WarmPath = await ethers.deployContract("WarmPath");
 
-	console.log("CrocSwapDex address:", await dex.address);
-	console.log("ColdPath address:", await ColdPath.address);
-	console.log("HotProxy address:", await HotProxy.address);
-	console.log("KnockoutLiqPath address:", await KnockoutLiqPath.address);
-	console.log(
-		"CrossKnockoutLiqPath address:",
-		await CrossKnockoutLiqPath.address
-	);
-	console.log("LongPath address:", await LongPath.address);
-	console.log("MicroPaths address:", await MicroPaths.address);
-	console.log("SafeModePath address:", await SafeModePath.address);
-	console.log("WarmPath address:", await WarmPath.address);
+	console.log("CrocSwapDex:", await dex.address);
+	console.log("HotProxy:", await HotProxy.address);
+	console.log("WarmPath:", await WarmPath.address);
+	console.log("ColdPath:", await ColdPath.address);
+	console.log("LongPath:", await LongPath.address);
+	console.log("MicroPaths:", await MicroPaths.address);
+	console.log("KnockoutLiqPath:", await KnockoutLiqPath.address);
+	console.log("KnockoutFlagPath:", await KnockoutFlagPath.address);
+	console.log("SafeModePath:", await SafeModePath.address);
 }
 
 main()

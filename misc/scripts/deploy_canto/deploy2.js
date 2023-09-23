@@ -19,15 +19,15 @@ const abi = new AbiCoder();
 
 // testnet addresses 2
 const addresses = {
-	CrocSwapDex: "0xACB4D5CcFD3291A6b17bE2f117C12A278F57C024",
-	ColdPath: "0xF5202Cf9Ee626039beB1f0087830C256e3457440",
-	HotProxy: "0x2cDFF351614470B60aabCb4CF58475D4AB06709e",
-	KnockoutLiqPath: "0xD983503C1F9C014cEb4F936Da64Dd608397E6774",
-	CrossKnockoutLiqPath: "0x2E8fe08D63b36B753a8df66047b0fa3259fAe5Cd",
-	LongPath: "0xEf0b15283fb6B1d176981DbcEbdbAdF756853a34",
-	MicroPaths: "0x8d222C05098382946Cd78568C65f53127F2c3490",
-	SafeModePath: "0x077873fF9d6151Bfe68B738F6Afaf9aa67418f7a",
-	WarmPath: "0xbDE6D21E26921f86690e3ea32039652b8Ac00745",
+	CrocSwapDex: "0xd9bac85f6ac9fBFd2559A4Ac2883c635C29Feb4b",
+	HotProxy: "0xB33B14c1042F37a1d0671BbF59dDdaE9eEAaabca",
+	WarmPath: "0x509EeEe3db2648a923FC97fB23AA92e76a913F32",
+	ColdPath: "0x90d5e19e389443bB9Cc71A1d4203BBa00c0E7A33",
+	LongPath: "0xBf6D9783BFB27E7A497636ab2B23948a8Aa30E6b",
+	MicroPaths: "0x3e51083feF8b61B1aD6D2637423A31B324D7da9a",
+	KnockoutLiqPath: "0x0783646705d7266CfD22374ba071f7785a10C7cC",
+	KnockoutFlagPath: "0xeAE58C8a7F995Bb04D1Aeba691749BC89168F2B4",
+	SafeModePath: "0x160E16a11ac5C5D146Dfa6b45b94faCD00A9D62A",
 };
 
 const BOOT_PROXY_IDX = 0;
@@ -49,8 +49,7 @@ async function main() {
 	const CrocSwapDex = await hre.ethers.getContractFactory("CrocSwapDex");
 	const dex = await CrocSwapDex.attach(addresses.CrocSwapDex);
 
-	// use protocolCmd to set paths
-
+	// use protocolCmd to install paths
 	// install coldpath
 	cmd = abi.encode(
 		["uint8", "address", "uint16"],
@@ -96,7 +95,7 @@ async function main() {
 	// install cross knockout cross proxy path
 	cmd = abi.encode(
 		["uint8", "address", "uint16"],
-		[21, addresses.CrossKnockoutLiqPath, FLAG_CROSS_PROXY_IDX]
+		[21, addresses.KnockoutFlagPath, FLAG_CROSS_PROXY_IDX]
 	);
 	await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
 }

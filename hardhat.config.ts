@@ -39,7 +39,7 @@ module.exports = {
        canto_testnet: {
         url: 'https://testnet-archive.plexnode.wtf',
         chainId: 7701,
-        accounts: ["7dda93199f59b786879a8ab8556810ec0a126bc4807da7617d284ed88799cbc2"]
+        accounts: [""]
       },
        ropsten: {
          url: 'https://ropsten.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8',
