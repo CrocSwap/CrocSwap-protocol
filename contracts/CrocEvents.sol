@@ -58,6 +58,10 @@ library CrocEvents {
      * @param startTime The earliest time that the vault will be eligible to collect protocol fees. */
     event TreasurySet (address indexed treasury, uint64 indexed startTime);
 
+    /* @notice Emitted when protocol governance sets a new CANTO governance address
+     * @param governance The CANTO governance address */
+    event GovernanceSet (address indexed governance);
+
     /* @notice Emitted when accumulated protocol fees are collected by the treasury.
      * @param token The token of the fees being collected.
      * @param recv The vault the collected fees are being paid to. */

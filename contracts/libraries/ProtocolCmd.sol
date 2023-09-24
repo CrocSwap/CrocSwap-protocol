@@ -31,6 +31,8 @@ library ProtocolCmd {
     uint8 constant COLLECT_TREASURY_CODE = 40;
     // Code to set the protocol treasury
     uint8 constant SET_TREASURY_CODE = 41;
+    // Code to set the CANTO governance address
+    uint8 constant SET_GOVERNANCE_CODE = 42;
     ////////////////////////////////////////////////////////////////////////////
 
     

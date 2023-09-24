@@ -189,6 +189,13 @@ contract PositionRegistrar is PoolRegistry {
     function mintPosLiq (address owner, bytes32 poolIdx, int24 lowerTick,
                          int24 upperTick, uint128 liqAdd, uint64 feeMileage) internal {
         RangePosition storage pos = lookupPosition(owner, poolIdx, lowerTick, upperTick);
+        bytes32 posKey = encodePosKey(msg.sender, poolIdx);
+        if (pos.liquidity_ == 0) {
+            // Init timestamps for liquidity mining
+            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+                concLiquidityLastClaimed_[posKey][i] = SafeCast.timeUint32();
+            }
+        }
         incrementPosLiq(pos, liqAdd, feeMileage);
     }
     
@@ -206,6 +213,10 @@ contract PositionRegistrar is PoolRegistry {
                          uint64 ambientGrowth) internal returns (uint128 seeds) {
         AmbientPosition storage pos = lookupPosition(owner, poolIdx);
         seeds = liqAdd.deflateLiqSeed(ambientGrowth);
+        if (pos.seeds_ == 0) {
+            // Init timestamp for liquidity mining
+            ambLiquidityLastClaimed_[encodePosKey(owner, poolIdx)] = SafeCast.timeUint32();
+        }
         pos.seeds_ = pos.seeds_.addLiq(seeds);
         pos.timestamp_ = SafeCast.timeUint32(); // Increase liquidity loses time priority.
     }

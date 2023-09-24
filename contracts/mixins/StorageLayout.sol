@@ -148,6 +148,22 @@ contract StorageLayout {
 
     address treasury_;
     uint64 treasuryStartTime_;
+
+    /**************************************************************/
+    address governance_;
+
+    // Amount of reward per liquidity and second that this liquidity is in range
+    uint256 rewardPerLiquiditySecond_;
+    // Historical values of the reward (per month), 0 implies current value (rewardPerLiquiditySecond_) still valid
+    mapping(uint256 => uint256) rewardPerLiquiditySecondHistory_;
+    uint32 rewardPerLiquiditySecondLastSet_;
+
+    mapping(bytes32 => uint32) internal ambLiquidityLastClaimed_;
+
+    mapping(bytes32 => mapping(int24 => uint32[])) tickEnterTimestamps_;
+    mapping(bytes32 => mapping(int24 => uint32[])) tickExitTimestamps_;
+    mapping(bytes32 => mapping(int24 => uint32)) internal concLiquidityLastClaimed_;
+    mapping(bytes32 => mapping(int24 => uint40)) internal concLiquidityClaimedUpTo_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars
@@ -185,6 +201,7 @@ library CrocSlots {
     uint16 constant MICRO_PROXY_IDX = 5;
     uint16 constant MULTICALL_PROXY_IDX = 6;
     uint16 constant KNOCKOUT_LP_PROXY_IDX = 7;
+    uint16 constant LIQUIDITY_MINING_PROXY_IDX = 8;
     uint16 constant FLAG_CROSS_PROXY_IDX = 3500;
     uint16 constant SAFE_MODE_PROXY_PATH = 9999;
 }

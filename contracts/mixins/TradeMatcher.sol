@@ -10,7 +10,7 @@ import '../libraries/CurveMath.sol';
 import '../libraries/CurveRoll.sol';
 import '../libraries/Chaining.sol';
 import '../interfaces/ICrocLpConduit.sol';
-import './PositionRegistrar.sol';
+import './LiquidityMining.sol';
 import './LiquidityCurve.sol';
 import './LevelBook.sol';
 import './KnockoutCounter.sol';
@@ -25,7 +25,7 @@ import './AgentMask.sol';
  *           3) Burn ambient liquidity
  *           4) Burn range liquidity
  *           5) Swap                                                     */
-contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
+contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
     ProxyCaller {
 
     using SafeCast for int256;
@@ -63,6 +63,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128 baseFlow, int128 quoteFlow) {
+        // Can be used to increase position, need to claim first
+        claimAmbientRewards(lpOwner, poolHash);
         uint128 liqSeeds = mintPosLiq(lpOwner, poolHash, liqAdded,
                                       curve.seedDeflator_);
         depositConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
@@ -97,6 +99,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     function burnAmbient (CurveMath.CurveState memory curve, uint128 liqBurned, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128, int128) {
+        claimAmbientRewards(payable(lpOwner), poolHash);
         uint128 liqSeeds = burnPosLiq(lpOwner, poolHash, liqBurned, curve.seedDeflator_);
         withdrawConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
         
@@ -132,6 +135,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                                        liquidity.liquidityToLots(),
                                        curve.concGrowth_);
         
+        // Can be used to increase position, need to claim first
+        claimConcentratedRewards(payable(lpOwner), poolHash, lowTick, highTick);
         mintPosLiq(lpOwner, poolHash, lowTick, highTick,
                    liquidity, feeMileage);
         depositConduit(poolHash, lowTick, highTick, liquidity, feeMileage, lpOwner);
@@ -166,6 +171,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
                                           liquidity.liquidityToLots(),
                                           curve.concGrowth_);
+        claimConcentratedRewards(payable(lpOwner), poolHash, lowTick, highTick);
         uint64 rewards = burnPosLiq(lpOwner, poolHash, lowTick, highTick, liquidity,
                                     feeMileage);
         withdrawConduit(poolHash, lowTick, highTick,
@@ -477,9 +483,15 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
 
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick.
-        return swap.isBuy_ ?
-            bumpTick :
-            bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
+        if (swap.isBuy_) {
+            tickEnterTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
+            tickExitTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
+            return bumpTick;
+        } else {
+            tickEnterTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
+            tickExitTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
+            return bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
+        }
         }
     }
 
