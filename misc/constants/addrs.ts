@@ -145,12 +145,31 @@ const goerliAddrsDryRun: CrocAddrs = {
     }
 }
 
+const cantoTestnetAddrs: CrocAddrs = {
+    dex: "",
+    cold: "",
+    warm: "",
+    long: "",
+    micro: "",
+    hot: "",
+    knockout: "",
+    koCross: "",
+    policy: "",
+    query: "",
+    impact: "",
+    shell: "",
+    policyShell: "",
+    deployer: "0xDE6cc3e7170C84cC57c4870aaD066A34E64F39d7",
+    govern: emptryGovAddrs
+}
+
     
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
     'mock': mockAddrs,
+    '7701': cantoTestnetAddrs,
 }
 
 // Goerli

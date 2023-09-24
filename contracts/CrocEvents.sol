@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 
 library CrocEvents {
 
-
+    
     /* @notice Emitted when governance authority for CrocSwapDex is transfered.
      * @param The authority being transfered to. */
     event AuthorityTransfer (address indexed authority);
