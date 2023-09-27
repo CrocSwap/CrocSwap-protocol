@@ -152,18 +152,34 @@ contract StorageLayout {
     /**************************************************************/
     address governance_;
 
-    // Amount of reward per liquidity and second that this liquidity is in range
-    uint256 rewardPerLiquiditySecond_;
-    // Historical values of the reward (per month), 0 implies current value (rewardPerLiquiditySecond_) still valid
-    mapping(uint256 => uint256) rewardPerLiquiditySecondHistory_;
-    uint32 rewardPerLiquiditySecondLastSet_;
+    // Reward per week
+    mapping(bytes32 => mapping(uint32 => uint64)) concRewardPerWeek_;
+    mapping(bytes32 => mapping(uint32 => uint64)) ambRewardPerWeek_;
 
-    mapping(bytes32 => uint32) internal ambLiquidityLastClaimed_;
+    // Pool -> Week -> Tick -> Liquidity
+    mapping(bytes32 => mapping(uint32 => mapping(int24 => uint256))) timeWeightedWeeklyGlobalConcLiquidityPerTick_;
+    // Pool -> Week -> Liquidity (sum of above for all ticks)
+    mapping(bytes32 => mapping(uint32 => uint256)) timeWeightedWeeklyGlobalConcLiquidity_;
+    // Pool -> Timestamp
+    mapping(bytes32 => uint32) timeWeightedWeeklyGlobalConcLiquidityLastSet_;
 
-    mapping(bytes32 => mapping(int24 => uint32[])) tickEnterTimestamps_;
-    mapping(bytes32 => mapping(int24 => uint32[])) tickExitTimestamps_;
-    mapping(bytes32 => mapping(int24 => uint32)) internal concLiquidityLastClaimed_;
-    mapping(bytes32 => mapping(int24 => uint40)) internal concLiquidityClaimedUpTo_;
+    // Pool -> Position -> Week -> Tick -> Liquidity
+    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => mapping(int24 => uint256)))) timeWeightedWeeklyPositionConcLiquidity_;
+    // Pool -> Position -> Timestamp
+    mapping(bytes32 => mapping(bytes32 => uint32)) timeWeightedWeeklyPositionConcLiquidityLastSet_;
+    // Pool -> Position -> Week -> Claimed
+    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => bool))) concLiquidityRewardsClaimed_;
+    
+    // Pool -> Week -> Liquidity
+    mapping(bytes32 => mapping(uint32 => uint256)) timeWeightedWeeklyGlobalAmbLiquidity_;
+    // Pool -> Timestamp
+    mapping(bytes32 => uint32) timeWeightedWeeklyGlobalAmbLiquidityLastSet_;
+    // Pool -> Position -> Week -> Liquidity
+    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => uint256))) timeWeightedWeeklyPositionAmbLiquidity_;
+    // Pool -> Position -> Timestamp
+    mapping(bytes32 => mapping(bytes32 => uint32)) timeWeightedWeeklyPositionAmbLiquidityLastSet_;
+    // Pool -> Position -> Week -> Claimed
+    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => bool))) ambLiquidityRewardsClaimed_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars

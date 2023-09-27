@@ -20,28 +20,30 @@ import '../mixins/LiquidityMining.sol';
  *      fail on any. Because of this, this contract should never be used in any other
  *      context besides a proxy sidecar to CrocSwapDex. */
 contract LiquidityMiningPath is LiquidityMining {
-
-    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick, int24 lowerClaimDelta, int24 upperClaimDelta, uint40 maxLiquidityDepth) public payable {
-        claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, lowerClaimDelta, upperClaimDelta, maxLiquidityDepth);
-    }
-    
-    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick) public payable {
-        claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick);
+    function claimConcentratedRewards (bytes32 poolIdx, int24 lowerTick, int24 upperTick, uint32[] memory weeksToClaim) public payable {
+        claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, weeksToClaim);
     }
 
-    function claimAmbientRewards (bytes32 poolIdx) public payable {
-        claimAmbientRewards(payable(msg.sender), poolIdx);
+    function claimAmbientRewards (bytes32 poolIdx, uint32[] memory weeksToClaim) public payable {
+        claimAmbientRewards(payable(msg.sender), poolIdx, weeksToClaim);
     }
 
-    function setRewardsPerLiquiditySecond(uint256 rewardPerLiquiditySecond) public payable {
+    function setConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
         require(msg.sender == governance_, "Only callable by governance");
-        rewardPerLiquiditySecond_ = rewardPerLiquiditySecond;
-        if (rewardPerLiquiditySecondLastSet_ > 0) {
-            for (uint32 i = rewardPerLiquiditySecondLastSet_; i < uint32(block.timestamp); i += uint32(MONTH)) {
-                rewardPerLiquiditySecondHistory_[i] = rewardPerLiquiditySecond;
-            }
+        require(weekFrom % WEEK == 0 && weekTo % WEEK == 0, "Invalid weeks");
+        while (weekFrom <= weekTo) {
+            concRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
+            weekFrom += uint32(WEEK);
         }
-        rewardPerLiquiditySecondLastSet_ = uint32((block.timestamp / MONTH) * MONTH);
+    }
+
+    function setAmbRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
+        require(msg.sender == governance_, "Only callable by governance");
+        require(weekFrom % WEEK == 0 && weekTo % WEEK == 0, "Invalid weeks");
+        while (weekFrom <= weekTo) {
+            ambRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
+            weekFrom += uint32(WEEK);
+        }
     }
 
 

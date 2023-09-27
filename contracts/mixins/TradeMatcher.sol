@@ -63,8 +63,9 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        // Can be used to increase position, need to claim first
-        claimAmbientRewards(lpOwner, poolHash);
+        // Can be used to increase position, need to accrue first
+        accrueAmbientGlobalTimeWeightedLiquidity(poolHash, curve);
+        accrueAmbientPositionTimeWeightedLiquidity(payable(lpOwner), poolHash);
         uint128 liqSeeds = mintPosLiq(lpOwner, poolHash, liqAdded,
                                       curve.seedDeflator_);
         depositConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
@@ -99,7 +100,8 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
     function burnAmbient (CurveMath.CurveState memory curve, uint128 liqBurned, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128, int128) {
-        claimAmbientRewards(payable(lpOwner), poolHash);
+        accrueAmbientGlobalTimeWeightedLiquidity(poolHash, curve);
+        accrueAmbientPositionTimeWeightedLiquidity(payable(lpOwner), poolHash);
         uint128 liqSeeds = burnPosLiq(lpOwner, poolHash, liqBurned, curve.seedDeflator_);
         withdrawConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
         
@@ -135,8 +137,9 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                                        liquidity.liquidityToLots(),
                                        curve.concGrowth_);
         
-        // Can be used to increase position, need to claim first
-        claimConcentratedRewards(payable(lpOwner), poolHash, lowTick, highTick);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        // Can be used to increase position, need to accrue first
+        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
         mintPosLiq(lpOwner, poolHash, lowTick, highTick,
                    liquidity, feeMileage);
         depositConduit(poolHash, lowTick, highTick, liquidity, feeMileage, lpOwner);
@@ -171,7 +174,8 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
                                           liquidity.liquidityToLots(),
                                           curve.concGrowth_);
-        claimConcentratedRewards(payable(lpOwner), poolHash, lowTick, highTick);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
         uint64 rewards = burnPosLiq(lpOwner, poolHash, lowTick, highTick, liquidity,
                                     feeMileage);
         withdrawConduit(poolHash, lowTick, highTick,
@@ -237,6 +241,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
         internal returns (int128 baseFlow, int128 quoteFlow) {
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
         addKnockoutLiq(poolHash, knockoutBits, priceTick, curve.concGrowth_, loc,
                        liquidity.liquidityToLots());
         
@@ -262,6 +267,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         (, , uint64 rewards) = rmKnockoutLiq(poolHash, priceTick, curve.concGrowth_,
                                              loc, liquidity.liquidityToLots());
         
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
         (uint128 base, uint128 quote) = liquidityPayable
             (curve, liquidity, rewards, loc.lowerTick_, loc.upperTick_);
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
@@ -333,6 +339,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         uint128 rewards = harvestPosLiq(lpOwner, poolHash,
                                         lowTick, highTick, feeMileage);
         withdrawConduit(poolHash, lowTick, highTick, 0, feeMileage, lpOwner);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
         (uint128 base, uint128 quote) = liquidityPayable(curve, rewards);
         return signBurnFlow(base, quote);
     }
@@ -471,6 +478,12 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         returns (int24) {
         unchecked {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
+        if (swap.isBuy_) {
+            // We exit bumpTick - 1, accrue the global time-weighted liquidity
+            accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick - 1, curve);
+        } else {
+            accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick, curve);
+        }
         bumpLiquidity(curve, bumpTick, swap.isBuy_, poolHash);
 
         (int128 paidBase, int128 paidQuote, uint128 burnSwap) =
@@ -484,12 +497,8 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         // When selling down, the next tick leg actually occurs *below* the bump tick
         // because the bump barrier is the first price on a tick.
         if (swap.isBuy_) {
-            tickEnterTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
-            tickExitTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
             return bumpTick;
         } else {
-            tickEnterTimestamps_[poolHash][bumpTick - 1].push(uint32(block.timestamp));
-            tickExitTimestamps_[poolHash][bumpTick].push(uint32(block.timestamp));
             return bumpTick - 1; // Valid ticks are well above {min(int128)-1}, so will never underflow
         }
         }
