@@ -36,8 +36,7 @@ contract LiquidityMining is PositionRegistrar {
                     currWeek
                 ][tick] += dt * liquidity;
                 timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][currWeek] +=
-                    dt *
-                    liquidity;
+                    dt * liquidity;
                 time += dt;
             }
         }
@@ -102,12 +101,6 @@ contract LiquidityMining is PositionRegistrar {
         );
         CurveMath.CurveState memory curve = curves_[poolIdx];
         bytes32 posKey = encodePosKey(owner, poolIdx, lowerTick, upperTick);
-        RangePosition storage pos = lookupPosition(
-            owner,
-            poolIdx,
-            lowerTick,
-            upperTick
-        );
         uint256 rewardsToSend;
         for (uint256 i; i < weeksToClaim.length; ++i) {
             bool firstIteration = true;
@@ -117,32 +110,34 @@ contract LiquidityMining is PositionRegistrar {
                 !concLiquidityRewardsClaimed_[poolIdx][posKey][week],
                 "Already claimed"
             );
-            uint256 overallTimeWeightedLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[
+            uint256 overallGlobalLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[
                     poolIdx
                 ][week];
             uint256 rewardsForWeek;
             for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
-                if (firstIteration)
+                if (firstIteration) {
+                    // Make sure we accrue the global liquidity for all ticks
                     accrueConcentratedGlobalTimeWeightedLiquidity(
                         poolIdx,
                         j,
                         curve
                     );
-                uint256 perTick = timeWeightedWeeklyGlobalConcLiquidityPerTick_[
+                }
+                uint256 perTickGlobalLiquidity = timeWeightedWeeklyGlobalConcLiquidityPerTick_[
                     poolIdx
                 ][week][j];
-                if (perTick == 0) continue;
+                if (perTickGlobalLiquidity == 0) continue;
                 // % of time-weighted liquidity for this tick that was provided by user times overall time-weighted liquidity
                 rewardsForWeek +=
                     (timeWeightedWeeklyPositionConcLiquidity_[poolIdx][posKey][
                         week
-                    ][j] * overallTimeWeightedLiquidity) /
-                    perTick;
+                    ][j] * overallGlobalLiquidity) /
+                    perTickGlobalLiquidity;
             }
             // % of the overall time-weighted liquidity that was provided by user times the reward for this week
             rewardsForWeek =
                 (rewardsForWeek * concRewardPerWeek_[poolIdx][week]) /
-                overallTimeWeightedLiquidity;
+                overallGlobalLiquidity;
             rewardsToSend += rewardsForWeek;
             concLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
             firstIteration = false;
@@ -173,8 +168,7 @@ contract LiquidityMining is PositionRegistrar {
                         : block.timestamp - time
                 );
                 timeWeightedWeeklyGlobalAmbLiquidity_[poolIdx][currWeek] +=
-                    dt *
-                    liquidity;
+                    dt * liquidity;
                 time += dt;
             }
         }
@@ -223,8 +217,6 @@ contract LiquidityMining is PositionRegistrar {
         CurveMath.CurveState memory curve = curves_[poolIdx];
         accrueAmbientPositionTimeWeightedLiquidity(payable(owner), poolIdx);
         accrueAmbientGlobalTimeWeightedLiquidity(poolIdx, curve);
-        AmbientPosition storage pos = lookupPosition(owner, poolIdx);
-        uint256 liquidity = pos.seeds_;
         bytes32 posKey = encodePosKey(owner, poolIdx);
         uint256 rewardsToSend;
         for (uint256 i; i < weeksToClaim.length; ++i) {
@@ -242,6 +234,7 @@ contract LiquidityMining is PositionRegistrar {
                 poolIdx
             ][posKey][week] * ambRewardPerWeek_[poolIdx][week]) /
                 overallTimeWeightedLiquidity;
+            rewardsToSend += rewardsForWeek;
             ambLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
         }
         if (rewardsToSend > 0) {

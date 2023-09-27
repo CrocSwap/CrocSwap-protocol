@@ -150,9 +150,10 @@ contract StorageLayout {
     uint64 treasuryStartTime_;
 
     /**************************************************************/
+    // Governance address for liquidity mining
     address governance_;
 
-    // Reward per week
+    // Overall rewards per week (pool => week => reward), configured by governance
     mapping(bytes32 => mapping(uint32 => uint64)) concRewardPerWeek_;
     mapping(bytes32 => mapping(uint32 => uint64)) ambRewardPerWeek_;
 
