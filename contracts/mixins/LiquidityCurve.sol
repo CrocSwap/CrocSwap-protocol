@@ -286,8 +286,8 @@ contract LiquidityCurve is StorageLayout {
      * @param curve   The liquidity curve for the pool being initialized.
      * @param priceRoot - Square root of the price. Represented as Q64.64 fixed point. */
     function initPrice (CurveMath.CurveState memory curve, uint128 priceRoot)
-        internal pure returns (int24 tick) {
-        tick = TickMath.getTickAtSqrtRatio(priceRoot);
+        internal pure {
+        int24 tick = TickMath.getTickAtSqrtRatio(priceRoot);
         require(tick >= TickMath.MIN_TICK && tick <= TickMath.MAX_TICK, "R");
         
         require(curve.priceRoot_ == 0, "N");

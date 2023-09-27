@@ -240,7 +240,7 @@ contract MarketSequencer is TradeMatcher {
                         uint128 price, uint128 initLiq)
         internal returns (int128 baseFlow, int128 quoteFlow) {
         CurveMath.CurveState memory curve = snapCurveInit(pool.hash_);
-        int24 initTick = initPrice(curve, price);
+        initPrice(curve, price);
         if (initLiq == 0) { initLiq = 1; }
         (baseFlow, quoteFlow) = lockAmbient(curve, initLiq);
         commitCurve(pool.hash_, curve);
