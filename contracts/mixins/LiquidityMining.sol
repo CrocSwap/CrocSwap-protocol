@@ -13,12 +13,15 @@ import "./PoolRegistry.sol";
 contract LiquidityMining is PositionRegistrar {
     uint256 constant WEEK = 604800; // Week in seconds
 
+    /// @notice Initialize the tick tracking for the first tick of a pool
     function initTickTracking(bytes32 poolIdx, int24 tick) internal {
         StorageLayout.TickTracking memory tickTrackingData = StorageLayout
             .TickTracking(uint32(block.timestamp), 0);
         tickTracking_[poolIdx][tick].push(tickTrackingData);
     }
 
+    /// @notice Keeps track of the tick crossings
+    /// @dev Needs to be called whenever a tick is crossed
     function crossTicks(
         bytes32 poolIdx,
         int24 exitTick,
@@ -32,6 +35,8 @@ contract LiquidityMining is PositionRegistrar {
         tickTracking_[poolIdx][entryTick].push(tickTrackingData);
     }
 
+    /// @notice Keeps track of the global in-range time-weighted concentrated liquidity per week
+    /// @dev Needs to be called whenever the concentrated liquidity is modified (tick crossed, positions changed)
     function accrueConcentratedGlobalTimeWeightedLiquidity(
         bytes32 poolIdx,
         int24 tick,
@@ -61,6 +66,8 @@ contract LiquidityMining is PositionRegistrar {
         );
     }
 
+    /// @notice Accrues the in-range time-weighted concentrated liquidity for a position by going over the tick entry / exit history
+    /// @dev Needs to be called whenever a position is modified
     function accrueConcentratedPositionTimeWeightedLiquidity(
         address payable owner,
         bytes32 poolIdx,
