@@ -3,7 +3,6 @@
 pragma solidity 0.8.19;
 
 import "../libraries/SafeCast.sol";
-import "../libraries/TickMath.sol";
 import "./PositionRegistrar.sol";
 import "./StorageLayout.sol";
 import "./PoolRegistry.sol";
@@ -39,7 +38,6 @@ contract LiquidityMining is PositionRegistrar {
     /// @dev Needs to be called whenever the concentrated liquidity is modified (tick crossed, positions changed)
     function accrueConcentratedGlobalTimeWeightedLiquidity(
         bytes32 poolIdx,
-        int24 tick,
         CurveMath.CurveState memory curve
     ) internal {
         uint32 lastAccrued = timeWeightedWeeklyGlobalConcLiquidityLastSet_[
@@ -158,7 +156,7 @@ contract LiquidityMining is PositionRegistrar {
         );
         CurveMath.CurveState memory curve = curves_[poolIdx];
         // Need to do a global accrual in case the current tick was already in range for a long time without any modifications that triggered an accrual
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolIdx, TickMath.getTickAtSqrtRatio(curve.priceRoot_), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolIdx, curve);
         bytes32 posKey = encodePosKey(owner, poolIdx, lowerTick, upperTick);
         uint256 rewardsToSend;
         for (uint256 i; i < weeksToClaim.length; ++i) {

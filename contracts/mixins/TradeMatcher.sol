@@ -137,7 +137,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                                        liquidity.liquidityToLots(),
                                        curve.concGrowth_);
         
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         // Can be used to increase position, need to accrue first
         accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
         mintPosLiq(lpOwner, poolHash, lowTick, highTick,
@@ -174,7 +174,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
                                           liquidity.liquidityToLots(),
                                           curve.concGrowth_);
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
         uint64 rewards = burnPosLiq(lpOwner, poolHash, lowTick, highTick, liquidity,
                                     feeMileage);
@@ -241,7 +241,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         addKnockoutLiq(poolHash, knockoutBits, priceTick, curve.concGrowth_, loc,
                        liquidity.liquidityToLots());
         
@@ -267,7 +267,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         (, , uint64 rewards) = rmKnockoutLiq(poolHash, priceTick, curve.concGrowth_,
                                              loc, liquidity.liquidityToLots());
         
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         (uint128 base, uint128 quote) = liquidityPayable
             (curve, liquidity, rewards, loc.lowerTick_, loc.upperTick_);
         (baseFlow, quoteFlow) = signBurnFlow(base, quote);
@@ -339,7 +339,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         uint128 rewards = harvestPosLiq(lpOwner, poolHash,
                                         lowTick, highTick, feeMileage);
         withdrawConduit(poolHash, lowTick, highTick, 0, feeMileage, lpOwner);
-        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve.priceRoot_.getTickAtSqrtRatio(), curve);
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         (uint128 base, uint128 quote) = liquidityPayable(curve, rewards);
         return signBurnFlow(base, quote);
     }
@@ -478,12 +478,11 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         returns (int24) {
         unchecked {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         if (swap.isBuy_) {
             // We exit bumpTick - 1, accrue the global time-weighted liquidity
-            accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick - 1, curve);
             crossTicks(poolHash, bumpTick - 1, bumpTick);
         } else {
-            accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick, curve);
             crossTicks(poolHash, bumpTick, bumpTick - 1);
         }
         bumpLiquidity(curve, bumpTick, swap.isBuy_, poolHash);
