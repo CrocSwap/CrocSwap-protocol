@@ -3,6 +3,7 @@
 pragma solidity 0.8.19;
 
 import "../libraries/SafeCast.sol";
+import "../libraries/TickMath.sol";
 import "./PositionRegistrar.sol";
 import "./StorageLayout.sol";
 import "./PoolRegistry.sol";
@@ -11,6 +12,25 @@ import "./PoolRegistry.sol";
  * @notice Contains the functions related to liquidity mining claiming. */
 contract LiquidityMining is PositionRegistrar {
     uint256 constant WEEK = 604800; // Week in seconds
+
+    function initTickTracking(bytes32 poolIdx, int24 tick) internal {
+        StorageLayout.TickTracking memory tickTrackingData = StorageLayout
+            .TickTracking(uint32(block.timestamp), 0);
+        tickTracking_[poolIdx][tick].push(tickTrackingData);
+    }
+
+    function crossTicks(
+        bytes32 poolIdx,
+        int24 exitTick,
+        int24 entryTick
+    ) internal {
+        uint256 numElementsExit = tickTracking_[poolIdx][exitTick].length;
+        tickTracking_[poolIdx][exitTick][numElementsExit - 1]
+            .exitTimestamp = uint32(block.timestamp);
+        StorageLayout.TickTracking memory tickTrackingData = StorageLayout
+            .TickTracking(uint32(block.timestamp), 0);
+        tickTracking_[poolIdx][entryTick].push(tickTrackingData);
+    }
 
     function accrueConcentratedGlobalTimeWeightedLiquidity(
         bytes32 poolIdx,
@@ -32,11 +52,7 @@ contract LiquidityMining is PositionRegistrar {
                         ? nextWeek - time
                         : block.timestamp - time
                 );
-                timeWeightedWeeklyGlobalConcLiquidityPerTick_[poolIdx][
-                    currWeek
-                ][tick] += dt * liquidity;
-                timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][currWeek] +=
-                    dt * liquidity;
+                timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][currWeek] += dt * liquidity;
                 time += dt;
             }
         }
@@ -65,8 +81,13 @@ contract LiquidityMining is PositionRegistrar {
         if (lastAccrued != 0) {
             uint256 liquidity = pos.liquidity_;
             for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+                uint32 tickTrackingIndex = tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i];
+                uint32 origIndex = tickTrackingIndex;
+                uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
                 uint32 time = lastAccrued;
-                while (time < block.timestamp) {
+                // Loop through all in-range time spans for the tick or up to the current time (if it is still in range)
+                while (time < block.timestamp && tickTrackingIndex < numTickTracking) {
+                    TickTracking memory tickTracking = tickTracking_[poolIdx][i][tickTrackingIndex];
                     uint32 currWeek = uint32((time / WEEK) * WEEK);
                     uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
                     uint32 dt = uint32(
@@ -74,10 +95,39 @@ contract LiquidityMining is PositionRegistrar {
                             ? nextWeek - time
                             : block.timestamp - time
                     );
-                    timeWeightedWeeklyPositionConcLiquidity_[poolIdx][posKey][
-                        currWeek
-                    ][i] += dt * liquidity;
+                    uint32 tickActiveStart; // Timestamp to use for the liquidity addition
+                    uint32 tickActiveEnd;
+                    if (tickTracking.enterTimestamp < nextWeek) {
+                        // Tick was active before next week, need to add the liquidity
+                        if (tickTracking.enterTimestamp < currWeek) {
+                            // Tick was already active before this week
+                            tickActiveStart = currWeek;
+                        } else {
+                            // Tick has become active this week
+                            tickActiveStart = tickTracking.enterTimestamp;
+                        }
+                        if (tickTracking.exitTimestamp == 0) {
+                            // Tick still active, do not increase index because we need to continue from here
+                            tickActiveEnd = uint32(nextWeek < block.timestamp ? nextWeek : block.timestamp);
+                        } else {
+                            // Tick is no longer active
+                            if (tickTracking.exitTimestamp < nextWeek) {
+                                // Exit was in this week, continue with next tick
+                                tickActiveEnd = tickTracking.exitTimestamp;
+                                tickTrackingIndex++;
+                                dt = tickActiveEnd - tickActiveStart;
+                            } else {
+                                // Exit was in next week, we need to consider the current tick there (i.e. not increase the index)
+                                tickActiveEnd = nextWeek;
+                            }
+                        }
+                        timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][currWeek][i] +=
+                            (tickActiveEnd - tickActiveStart) * liquidity;
+                    }
                     time += dt;
+                }
+                if (tickTrackingIndex != origIndex) {
+                    tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = tickTrackingIndex;
                 }
             }
         }
@@ -100,47 +150,25 @@ contract LiquidityMining is PositionRegistrar {
             upperTick
         );
         CurveMath.CurveState memory curve = curves_[poolIdx];
+        // Need to do a global accrual in case the current tick was already in range for a long time without any modifications that triggered an accrual
+        accrueConcentratedGlobalTimeWeightedLiquidity(poolIdx, TickMath.getTickAtSqrtRatio(curve.priceRoot_), curve);
         bytes32 posKey = encodePosKey(owner, poolIdx, lowerTick, upperTick);
         uint256 rewardsToSend;
         for (uint256 i; i < weeksToClaim.length; ++i) {
-            bool firstIteration = true;
             uint32 week = weeksToClaim[i];
             require(week + WEEK < block.timestamp, "Week not over yet");
             require(
                 !concLiquidityRewardsClaimed_[poolIdx][posKey][week],
                 "Already claimed"
             );
-            uint256 overallGlobalLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[
-                    poolIdx
-                ][week];
-            uint256 rewardsForWeek;
+            uint256 inRangeLiquidityOfPosition;
             for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
-                if (firstIteration) {
-                    // Make sure we accrue the global liquidity for all ticks
-                    accrueConcentratedGlobalTimeWeightedLiquidity(
-                        poolIdx,
-                        j,
-                        curve
-                    );
-                }
-                uint256 perTickGlobalLiquidity = timeWeightedWeeklyGlobalConcLiquidityPerTick_[
-                    poolIdx
-                ][week][j];
-                if (perTickGlobalLiquidity == 0) continue;
-                // % of time-weighted liquidity for this tick that was provided by user times overall time-weighted liquidity
-                rewardsForWeek +=
-                    (timeWeightedWeeklyPositionConcLiquidity_[poolIdx][posKey][
-                        week
-                    ][j] * overallGlobalLiquidity) /
-                    perTickGlobalLiquidity;
+                inRangeLiquidityOfPosition += timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][week][j];
             }
-            // % of the overall time-weighted liquidity that was provided by user times the reward for this week
-            rewardsForWeek =
-                (rewardsForWeek * concRewardPerWeek_[poolIdx][week]) /
-                overallGlobalLiquidity;
-            rewardsToSend += rewardsForWeek;
+            uint256 overallInRangeLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][week];
+            // Percentage of this weeks overall in range liquidity that was provided by the user times the overall weekly rewards
+            rewardsToSend += inRangeLiquidityOfPosition * concRewardPerWeek_[poolIdx][week] / overallInRangeLiquidity;
             concLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
-            firstIteration = false;
         }
         if (rewardsToSend > 0) {
             (bool sent, ) = owner.call{value: rewardsToSend}("");
@@ -152,9 +180,7 @@ contract LiquidityMining is PositionRegistrar {
         bytes32 poolIdx,
         CurveMath.CurveState memory curve
     ) internal {
-        uint32 lastAccrued = timeWeightedWeeklyGlobalAmbLiquidityLastSet_[
-            poolIdx
-        ];
+        uint32 lastAccrued = timeWeightedWeeklyGlobalAmbLiquidityLastSet_[poolIdx];
         // Only set time on first call
         if (lastAccrued != 0) {
             uint256 liquidity = curve.ambientSeeds_;
@@ -167,8 +193,7 @@ contract LiquidityMining is PositionRegistrar {
                         ? nextWeek - time
                         : block.timestamp - time
                 );
-                timeWeightedWeeklyGlobalAmbLiquidity_[poolIdx][currWeek] +=
-                    dt * liquidity;
+                timeWeightedWeeklyGlobalAmbLiquidity_[poolIdx][currWeek] += dt * liquidity;
                 time += dt;
             }
         }

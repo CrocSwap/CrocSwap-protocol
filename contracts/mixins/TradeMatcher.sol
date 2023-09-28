@@ -481,8 +481,10 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         if (swap.isBuy_) {
             // We exit bumpTick - 1, accrue the global time-weighted liquidity
             accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick - 1, curve);
+            crossTicks(poolHash, bumpTick - 1, bumpTick);
         } else {
             accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, bumpTick, curve);
+            crossTicks(poolHash, bumpTick, bumpTick - 1);
         }
         bumpLiquidity(curve, bumpTick, swap.isBuy_, poolHash);
 

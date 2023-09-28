@@ -157,19 +157,26 @@ contract StorageLayout {
     mapping(bytes32 => mapping(uint32 => uint64)) concRewardPerWeek_;
     mapping(bytes32 => mapping(uint32 => uint64)) ambRewardPerWeek_;
 
-    // Pool -> Week -> Tick -> Liquidity
-    mapping(bytes32 => mapping(uint32 => mapping(int24 => uint256))) timeWeightedWeeklyGlobalConcLiquidityPerTick_;
-    // Pool -> Week -> Liquidity (sum of above for all ticks)
+    // Pool -> Week -> Liquidity
     mapping(bytes32 => mapping(uint32 => uint256)) timeWeightedWeeklyGlobalConcLiquidity_;
     // Pool -> Timestamp
     mapping(bytes32 => uint32) timeWeightedWeeklyGlobalConcLiquidityLastSet_;
 
+    struct TickTracking {
+        uint32 enterTimestamp;
+        uint32 exitTimestamp;
+    }
+    // Pool -> Tick -> Tracking Data (enter / exit timestamps)
+    mapping(bytes32 => mapping(int24 => TickTracking[])) tickTracking_;
+
     // Pool -> Position -> Week -> Tick -> Liquidity
-    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => mapping(int24 => uint256)))) timeWeightedWeeklyPositionConcLiquidity_;
+    mapping(bytes32 => mapping(bytes32 => mapping(uint32 => mapping(int24 => uint256)))) timeWeightedWeeklyPositionInRangeConcLiquidity_;
     // Pool -> Position -> Timestamp
     mapping(bytes32 => mapping(bytes32 => uint32)) timeWeightedWeeklyPositionConcLiquidityLastSet_;
     // Pool -> Position -> Week -> Claimed
     mapping(bytes32 => mapping(bytes32 => mapping(uint32 => bool))) concLiquidityRewardsClaimed_;
+
+    mapping(bytes32 => mapping(bytes32 => mapping(int32 => uint32))) tickTrackingIndexAccruedUpTo_;
     
     // Pool -> Week -> Liquidity
     mapping(bytes32 => mapping(uint32 => uint256)) timeWeightedWeeklyGlobalAmbLiquidity_;
