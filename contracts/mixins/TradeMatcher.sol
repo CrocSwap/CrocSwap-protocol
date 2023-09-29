@@ -388,6 +388,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         require(swap.isBuy_ ? curve.priceRoot_ <= swap.limitPrice_ : 
                               curve.priceRoot_ >= swap.limitPrice_, "SD");
         
+        int24 preTradeTick = curve.priceRoot_.getTickAtSqrtRatio();
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
         bool doMore = true;
@@ -436,6 +437,10 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                 }
             }
         }
+        int24 postTradeTick = curve.priceRoot_.getTickAtSqrtRatio();
+        if (preTradeTick != postTradeTick) {
+            crossTicks(pool.hash_, preTradeTick, postTradeTick);
+        }
     }
 
     /* @notice Determines if we've terminated the swap execution. I.e. fully exhausted
@@ -479,12 +484,6 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         unchecked {
         if (!Bitmaps.isTickFinite(bumpTick)) { return bumpTick; }
         accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
-        if (swap.isBuy_) {
-            // We exit bumpTick - 1, accrue the global time-weighted liquidity
-            crossTicks(poolHash, bumpTick - 1, bumpTick);
-        } else {
-            crossTicks(poolHash, bumpTick, bumpTick - 1);
-        }
         bumpLiquidity(curve, bumpTick, swap.isBuy_, poolHash);
 
         (int128 paidBase, int128 paidQuote, uint128 burnSwap) =
