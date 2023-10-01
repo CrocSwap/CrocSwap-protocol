@@ -128,12 +128,12 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                         int24 lowTick, int24 highTick, uint128 liquidity,
                         bytes32 poolHash, address lpOwner)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        uint64 feeMileage = addBookLiq(poolHash, priceTick, lowTick, highTick,
+        uint72 feeMileage = addBookLiq72(poolHash, priceTick, lowTick, highTick,
                                        liquidity.liquidityToLots(),
                                        curve.concGrowth_);
         
         mintPosLiq(lpOwner, poolHash, lowTick, highTick,
-                   liquidity, feeMileage);
+                     liquidity, feeMileage);
         depositConduit(poolHash, lowTick, highTick, liquidity, feeMileage, lpOwner);
 
         (uint128 base, uint128 quote) = liquidityReceivable
@@ -163,7 +163,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                         int24 lowTick, int24 highTick, uint128 liquidity,
                         bytes32 poolHash, address lpOwner)
         internal returns (int128, int128) {
-        uint64 feeMileage = removeBookLiq(poolHash, priceTick, lowTick, highTick,
+        uint72 feeMileage = removeBookLiq72(poolHash, priceTick, lowTick, highTick,
                                           liquidity.liquidityToLots(),
                                           curve.concGrowth_);
         uint64 rewards = burnPosLiq(lpOwner, poolHash, lowTick, highTick, liquidity,
@@ -177,7 +177,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
 
     /* @notice Dispatches the call to the ICrocLpConduit with the ambient liquidity 
      *         LP position that was minted. */
-    function depositConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
+    function depositConduit (bytes32 poolHash, uint128 liqSeeds, uint72 deflator,
                              address lpConduit) private {
         // Equivalent to calling concentrated liquidity deposit with lowTick=0 and highTick=0
         // Since a true range order can never have a width of zero, the receiving deposit
@@ -190,7 +190,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     /* @notice Dispatches the call to the ICrocLpConduit with the concentrated liquidity 
      *         LP position that was minted. */
     function depositConduit (bytes32 poolHash, int24 lowTick, int24 highTick,
-                             uint128 liq, uint64 mileage, address lpConduit) private {
+                             uint128 liq, uint72 mileage, address lpConduit) private {
         if (lpConduit != lockHolder_) {
             bool doesAccept = ICrocLpConduit(lpConduit).
                 depositCrocLiq(lockHolder_, poolHash, lowTick, highTick, liq, mileage);
@@ -200,7 +200,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
 
     /* @notice Withdraws and sends ownership of the ambient liquidity to a third party conduit
      *         explicitly nominated by the caller. */
-    function withdrawConduit (bytes32 poolHash, uint128 liqSeeds, uint64 deflator,
+    function withdrawConduit (bytes32 poolHash, uint128 liqSeeds, uint72 deflator,
                               address lpConduit) private {
         withdrawConduit(poolHash, 0, 0, liqSeeds, deflator, lpConduit);
     }
@@ -208,7 +208,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     /* @notice Withdraws and sends ownership of the liquidity to a third party conduit
      *         explicitly nominated by the caller. */
     function withdrawConduit (bytes32 poolHash, int24 lowTick, int24 highTick,
-                              uint128 liq, uint64 mileage, address lpConduit) private {
+                              uint128 liq, uint72 mileage, address lpConduit) private {
         if (lpConduit != lockHolder_) {
             bool doesAccept = ICrocLpConduit(lpConduit).
                 withdrawCrocLiq(lockHolder_, poolHash, lowTick, highTick, liq, mileage);
@@ -322,8 +322,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                            int24 lowTick, int24 highTick, bytes32 poolHash,
                            address lpOwner)
         internal returns (int128, int128) {
-        uint64 feeMileage = clockFeeOdometer(poolHash, priceTick, lowTick, highTick,
-                                             curve.concGrowth_);
+        uint72 feeMileage = clockFeeOdometer72(poolHash, priceTick, lowTick, highTick,
+                                               curve.concGrowth_);
         uint128 rewards = harvestPosLiq(lpOwner, poolHash,
                                         lowTick, highTick, feeMileage);
         withdrawConduit(poolHash, lowTick, highTick, 0, feeMileage, lpOwner);

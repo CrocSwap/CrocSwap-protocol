@@ -7,10 +7,10 @@ import { AbiCoder } from "@ethersproject/abi";
 
 export const BOOT_PROXY_IDX = 0;
 export const SWAP_PROXY_IDX = 1;
-export const LP_PROXY_IDX = 2;
+export const LP_PROXY_IDX = 128;
 export const COLD_PROXY_IDX = 3;
-export const LONG_PROXY_IDX = 4;
-export const MICRO_PROXY_IDX = 5;
+export const LONG_PROXY_IDX =130;
+export const MICRO_PROXY_IDX = 131;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;

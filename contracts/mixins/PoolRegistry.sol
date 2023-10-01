@@ -190,10 +190,6 @@ contract PoolRegistry is StorageLayout {
 
     }
 
-    // Since take rate is represented in 1/256, this represents a maximum possible take 
-    // rate of 50%.
-    uint8 MAX_TAKE_RATE = 128;
-
     function setProtocolTakeRate (uint8 takeRate) internal {
         require(takeRate <= MAX_TAKE_RATE, "TR");
         protocolTakeRate_ = takeRate;
