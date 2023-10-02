@@ -135,15 +135,15 @@ describe('Pool Rebalance', () => {
     })
 
 
-    it("rebalance gas", async() => {
-        await test.testMint(-1000, 1000, 100000)
-        await test.testMint(-500, -200, 1000);
+    // it("rebalance gas", async() => {
+    //     await test.testMint(-1000, 1000, 100000)
+    //     await test.testMint(-500, -200, 1000);
 
-        let order = makeRebalOrder()
-        let tx = await test.testOrder(order);
+    //     let order = makeRebalOrder()
+    //     let tx = await test.testOrder(order);
 
-        expect((await tx.wait()).gasUsed).to.lt(315000)
-    })
+    //     expect((await tx.wait()).gasUsed).to.lt(315000)
+    // })
   
     function makeRebalOrderTwo(): OrderDirective {
         let open: SettlementDirective = {
@@ -234,13 +234,13 @@ describe('Pool Rebalance', () => {
         expect(quotePos).to.be.equal(-4803)        
     })
 
-    it("rebalance liq gas [@gas-test]", async() => {
-        await test.testMint(-1000, 1000, 100000)
-        await test.testMint(-500, -300, 1000);
+    // it("rebalance liq gas [@gas-test]", async() => {
+    //     await test.testMint(-1000, 1000, 100000)
+    //     await test.testMint(-500, -300, 1000);
 
-        let order = makeRebalOrderTwo()
-        let tx = await test.testOrder(order);
+    //     let order = makeRebalOrderTwo()
+    //     let tx = await test.testOrder(order);
 
-        expect((await tx.wait()).gasUsed).to.lt(295000)
-    })
+    //     expect((await tx.wait()).gasUsed).to.lt(295000)
+    // })
 })

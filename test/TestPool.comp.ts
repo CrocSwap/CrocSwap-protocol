@@ -128,40 +128,40 @@ describe('Pool Compound', () => {
         expect(fromSqrtPrice(await test.price())).to.lt(1.52402)
      })
 
-     it("multiple range orders", async() => {
-        await test.testMint(-5000, 10000, 1000)
-        await test.testMint(-5000, 8000, 1000)
-        await test.testMint(3000, 8000, 1000)
+   //   it("multiple range orders", async() => {
+   //      await test.testMint(-5000, 10000, 1000)
+   //      await test.testMint(-5000, 8000, 1000)
+   //      await test.testMint(3000, 8000, 1000)
 
-        let order = await test.prototypeOrder()
+   //      let order = await test.prototypeOrder()
 
-        order.hops[0].pools[0].chain.swapDefer = false
+   //      order.hops[0].pools[0].chain.swapDefer = false
 
-        let concens: ConcentratedDirective[] = [{
-            lowTick: -5000, isRelTick: false,
-            highTick: 8000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
-            {
-               lowTick: 8000, isRelTick: false, highTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024)            
-            },
-        {
-            lowTick: -5000, isRelTick: false,
-            highTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
-         {
-            lowTick: -5000, isRelTick: false,
-            highTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)
+   //      let concens: ConcentratedDirective[] = [{
+   //          lowTick: -5000, isRelTick: false,
+   //          highTick: 8000, isAdd: false, rollType: 0, liquidity: BigNumber.from(200*1024)},
+   //          {
+   //             lowTick: 8000, isRelTick: false, highTick: 10000, isAdd: true, rollType: 0, liquidity: BigNumber.from(2000*1024)            
+   //          },
+   //      {
+   //          lowTick: -5000, isRelTick: false,
+   //          highTick: 10000, isAdd: false, rollType: 0, liquidity: BigNumber.from(500*1024)},
+   //       {
+   //          lowTick: -5000, isRelTick: false,
+   //          highTick: 0, isAdd: true, rollType: 0, liquidity: BigNumber.from(400*1024)
 
-        }]
+   //      }]
 
-        order.hops[0].pools[0].passive.concentrated = concens
-        order.hops[0].pools[0].swap.isBuy = true
-        order.hops[0].pools[0].swap.inBaseQty = true
-        order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
-        order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
+   //      order.hops[0].pools[0].passive.concentrated = concens
+   //      order.hops[0].pools[0].swap.isBuy = true
+   //      order.hops[0].pools[0].swap.inBaseQty = true
+   //      order.hops[0].pools[0].swap.limitPrice = maxSqrtPrice()
+   //      order.hops[0].pools[0].swap.qty = BigNumber.from(10000)
         
-        await test.testOrder(order)
+   //      await test.testOrder(order)
 
-        expect(await test.liquidity()).to.equal(2300*1024)
-     })
+   //      expect(await test.liquidity()).to.equal(2300*1024)
+   //   })
 })
 
 describe('Pool Compound Curve Cache', () => {

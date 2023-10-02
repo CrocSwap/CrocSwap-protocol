@@ -156,6 +156,12 @@ contract StorageLayout {
     address treasury_;
     uint64 treasuryStartTime_;
 
+    // Since take rate is represented in 1/256, this represents a maximum possible take 
+    // rate of 50%.
+    uint8 MAX_TAKE_RATE = 128;
+
+    mapping(bytes32 => RangePosition72) internal positions72_;
+
     /**************************************************************/
     // Governance address for liquidity mining
     address governance_;
@@ -195,11 +201,6 @@ contract StorageLayout {
     mapping(bytes32 => mapping(bytes32 => uint32)) timeWeightedWeeklyPositionAmbLiquidityLastSet_;
     // Pool -> Position -> Week -> Claimed
     mapping(bytes32 => mapping(bytes32 => mapping(uint32 => bool))) ambLiquidityRewardsClaimed_;
-    // Since take rate is represented in 1/256, this represents a maximum possible take 
-    // rate of 50%.
-    uint8 MAX_TAKE_RATE = 128;
-
-    mapping(bytes32 => RangePosition72) internal positions72_;
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars
@@ -244,9 +245,9 @@ library CrocSlots {
 
     // // Used as proxy contracts by previous deployments. These slots should not be re-used
     // // to preserve backwards compatibility.
-    // uint16 constant LP_PROXY_LEGACY_IDX = 2;
-    // uint16 constant LONG_PROXY_LEGACY_IDX = 4;
-    // uint16 constant MICRO_PROXY_LEGACY_IDX = 5;
+    uint16 constant LP_PROXY_LEGACY_IDX = 2;
+    uint16 constant LONG_PROXY_LEGACY_IDX = 4;
+    uint16 constant MICRO_PROXY_LEGACY_IDX = 5;
 
 }
 

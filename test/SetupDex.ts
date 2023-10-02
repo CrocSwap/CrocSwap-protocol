@@ -7,11 +7,12 @@ import { AbiCoder } from "@ethersproject/abi";
 
 export const BOOT_PROXY_IDX = 0;
 export const SWAP_PROXY_IDX = 1;
-export const LP_PROXY_IDX = 128;
+export const LP_PROXY_IDX = 2;
 export const COLD_PROXY_IDX = 3;
-export const LONG_PROXY_IDX =130;
-export const MICRO_PROXY_IDX = 131;
+export const LONG_PROXY_IDX =4;
+export const MICRO_PROXY_IDX = 5;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
+export const LIQUIDITY_MINING_PROXY_IDX = 8;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;
 
@@ -60,6 +61,11 @@ export async function buildCrocSwapSex (auth: Promise<Signer>): Promise<CrocSwap
     proxy = await factory.deploy()
     cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, SAFE_MODE_PROXY_PATH])
     await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true) 
+
+    factory = await ethers.getContractFactory("LiquidityMiningPath")
+    proxy = await factory.deploy()
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, LIQUIDITY_MINING_PROXY_IDX])
+    await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true)
 
     return dex
 }
