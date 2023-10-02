@@ -9,7 +9,7 @@ const PRECISION = 100000000;
 const Q_64 = BigNumber.from(2).pow(64);
 
 // testnet dex address
-const dexAddress = "0xd9bac85f6ac9fBFd2559A4Ac2883c635C29Feb4b";
+const dexAddress = "0xA4C0F8febA559083Fe47E396f7C4f047E8820253";
 const usdcAddress = "0xc51534568489f47949A828C8e3BF68463bdF3566";
 const cNoteAddress = "0x04E52476d318CdF739C38BD41A922787D441900c";
 

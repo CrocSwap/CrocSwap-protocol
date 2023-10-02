@@ -5,29 +5,17 @@ var AbiCoder = require("@ethersproject/abi").AbiCoder;
 const abi = new AbiCoder();
 
 // testnet addresses 1
-// const addresses = {
-// 	CrocSwapDex: "0x3b72043fc6dcd2c10201eb775570bdae2237a5c0",
-// 	ColdPath: "0x7336fd03d2490175acca515ae2d5afed2a232e30",
-// 	HotProxy: "0xba783019e4937073340A308b933Ce0BE64ccD64A",
-// 	KnockoutLiqPath: "0x07a0406c7ea542bf2fee92b94586057c25318817",
-// 	CrossKnockoutLiqPath: "0xf91D5d838FDcCDa8224DFB944D140CFDcA73e2cc",
-// 	LongPath: "0xac79b5e09aa1557fb42e53426fb4534fc648edb2",
-// 	MicroPaths: "0x9b6681d01857841d404f90a6ad3422e5d8140ebc",
-// 	SafeModePath: "0x7689a7f88d85de0b7c1ea4f35eb3e155c751fd89",
-// 	WarmPath: "0x48ee738bf78956bd9a4a38f1028d1fae6b9c74bb",
-// };
-
-// testnet addresses 2
 const addresses = {
-	CrocSwapDex: "0xd9bac85f6ac9fBFd2559A4Ac2883c635C29Feb4b",
-	HotProxy: "0xB33B14c1042F37a1d0671BbF59dDdaE9eEAaabca",
-	WarmPath: "0x509EeEe3db2648a923FC97fB23AA92e76a913F32",
-	ColdPath: "0x90d5e19e389443bB9Cc71A1d4203BBa00c0E7A33",
-	LongPath: "0xBf6D9783BFB27E7A497636ab2B23948a8Aa30E6b",
-	MicroPaths: "0x3e51083feF8b61B1aD6D2637423A31B324D7da9a",
-	KnockoutLiqPath: "0x0783646705d7266CfD22374ba071f7785a10C7cC",
-	KnockoutFlagPath: "0xeAE58C8a7F995Bb04D1Aeba691749BC89168F2B4",
-	SafeModePath: "0x160E16a11ac5C5D146Dfa6b45b94faCD00A9D62A",
+	CrocSwapDex: "0xA4C0F8febA559083Fe47E396f7C4f047E8820253",
+	HotProxy: "0xcf883bB0B1903b96B10242696D62d54BE94Aa2f5",
+	WarmPath: "0xafC5554c7710F760E79f748eb900A28B7b1E4FA7",
+	ColdPath: "0x3b62C6B3430832B970551eab21268e7C87A48912",
+	LongPath: "0x4d9E727A61b8BEc65300A1b05b31E01C82d4B982",
+	MicroPaths: "0x663f021531BDE01C2373dA41c3144115e06f9211",
+	KnockoutLiqPath: "0xcA54dcD6B08687e61D0E44010af35C65C4EDefF4",
+	KnockoutFlagPath: "0x575298cbc88faB5433928D1cF27C57d779677844",
+	SafeModePath: "0xC428162feD5E33cBf604dfCBa8Eb9247DE9722a4",
+	LiquidityMiningPath: "0x5e27C6FD3967275E566F55A4F2f2e56A0d29A461",
 };
 
 const BOOT_PROXY_IDX = 0;
@@ -37,6 +25,7 @@ const COLD_PROXY_IDX = 3;
 const LONG_PROXY_IDX = 4;
 const MICRO_PROXY_IDX = 5;
 const KNOCKOUT_LP_PROXY_IDX = 7;
+const LIQUIDITY_MINING_PROXY_IDX = 8;
 const FLAG_CROSS_PROXY_IDX = 3500;
 const SAFE_MODE_PROXY_PATH = 9999;
 
@@ -96,6 +85,13 @@ async function main() {
 	cmd = abi.encode(
 		["uint8", "address", "uint16"],
 		[21, addresses.KnockoutFlagPath, FLAG_CROSS_PROXY_IDX]
+	);
+	await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
+
+	// install liquidity mining path
+	cmd = abi.encode(
+		["uint8", "address", "uint16"],
+		[21, addresses.LiquidityMiningPath, LIQUIDITY_MINING_PROXY_IDX]
 	);
 	await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
 }

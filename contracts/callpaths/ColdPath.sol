@@ -74,8 +74,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             setHotPathOpen(cmd);
         } else if (cmdCode == ProtocolCmd.SAFE_MODE_CODE) {
             setSafeMode(cmd);
-        } else if (cmdCode == ProtocolCmd.SET_GOVERNANCE_CODE) {
-            setGovernance(cmd);
         } else {
             revert("Invalid command");
         }
@@ -247,15 +245,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         treasury_ = treasury;
         treasuryStartTime_ = uint64(block.timestamp + 7 days);
         emit CrocEvents.TreasurySet(treasury_, treasuryStartTime_);
-    }
-
-    /* @notice Sets the governance address that is allowed to set the liquidity mining rewards. */
-    function setGovernance (bytes calldata cmd) private {
-        (, address governance) = abi.decode(cmd, (uint8, address));
-
-        require(governance != address(0) && governance.code.length != 0, "Treasury invalid");
-        governance_ = governance;
-        emit CrocEvents.GovernanceSet(governance);
     }
 
     function transferAuthority (bytes calldata cmd) private {

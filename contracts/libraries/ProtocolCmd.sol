@@ -31,8 +31,6 @@ library ProtocolCmd {
     uint8 constant COLLECT_TREASURY_CODE = 40;
     // Code to set the protocol treasury
     uint8 constant SET_TREASURY_CODE = 41;
-    // Code to set the CANTO governance address
-    uint8 constant SET_GOVERNANCE_CODE = 42;
     ////////////////////////////////////////////////////////////////////////////
 
     
@@ -54,6 +52,10 @@ library ProtocolCmd {
     // Code to resync the protocol take rate on an extant pool
     uint8 constant RESYNC_TAKE_CODE = 115;
     uint8 constant RELAYER_TAKE_CODE = 116;
+    // Code to set Concentrated Rewards for pool
+    uint8 constant SET_CONC_REWARDS_CODE = 117;
+    // Code to set Ambient Rewards for pool
+    uint8 constant SET_AMB_REWARDS_CODE = 118;
     ////////////////////////////////////////////////////////////////////////////
 
 
@@ -111,4 +113,10 @@ library UserCmd {
     uint8 constant BURN_KNOCKOUT = 92;
     uint8 constant CLAIM_KNOCKOUT = 93;
     uint8 constant RECOVER_KNOCKOUT = 94;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Liquidity Mining command codes
+    ////////////////////////////////////////////////////////////////////////////
+    uint8 constant CLAIM_CONC_REWARDS_CODE = 101;
+    uint8 constant CLAIM_AMB_REWARDS_CODE = 102;
 }

@@ -17,7 +17,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000000
+            runs: 25000
           },
           viaIR: true,
           outputSelection: {
@@ -34,7 +34,7 @@ module.exports = {
 
     networks: {
        hardhat: {
-        allowUnlimitedContractSize: true
+        blockGasLimit: 500000000
        },
        local: {
          url: 'http://127.0.0.1:8545',

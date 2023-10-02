@@ -23,6 +23,10 @@ async function main() {
 	const SafeModePath = await ethers.deployContract("SafeModePath");
 	// deploy WarmPath
 	const WarmPath = await ethers.deployContract("WarmPath");
+	// deploy LiquidityMiningPath
+	const LiquidityMiningPath = await ethers.deployContract(
+		"LiquidityMiningPath"
+	);
 
 	console.log("CrocSwapDex:", await dex.address);
 	console.log("HotProxy:", await HotProxy.address);
@@ -33,6 +37,7 @@ async function main() {
 	console.log("KnockoutLiqPath:", await KnockoutLiqPath.address);
 	console.log("KnockoutFlagPath:", await KnockoutFlagPath.address);
 	console.log("SafeModePath:", await SafeModePath.address);
+	console.log("LiquidityMiningPath:", await LiquidityMiningPath.address);
 }
 
 main()
