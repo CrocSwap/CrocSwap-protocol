@@ -78,7 +78,7 @@ contract LiquidityMining is PositionRegistrar {
             lowerTick,
             upperTick
         );
-        bytes32 posKey = encodePosKey(owner, poolIdx);
+        bytes32 posKey = encodePosKey(owner, poolIdx, lowerTick, upperTick);
         uint32 lastAccrued = timeWeightedWeeklyPositionConcLiquidityLastSet_[
             poolIdx
         ][posKey];
@@ -166,13 +166,15 @@ contract LiquidityMining is PositionRegistrar {
                 !concLiquidityRewardsClaimed_[poolIdx][posKey][week],
                 "Already claimed"
             );
-            uint256 inRangeLiquidityOfPosition;
-            for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
-                inRangeLiquidityOfPosition += timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][week][j];
-            }
             uint256 overallInRangeLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][week];
-            // Percentage of this weeks overall in range liquidity that was provided by the user times the overall weekly rewards
-            rewardsToSend += inRangeLiquidityOfPosition * concRewardPerWeek_[poolIdx][week] / overallInRangeLiquidity;
+            if (overallInRangeLiquidity > 0) {
+                uint256 inRangeLiquidityOfPosition;
+                for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
+                    inRangeLiquidityOfPosition += timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][week][j];
+                }
+                // Percentage of this weeks overall in range liquidity that was provided by the user times the overall weekly rewards
+                rewardsToSend += inRangeLiquidityOfPosition * concRewardPerWeek_[poolIdx][week] / overallInRangeLiquidity;
+            }
             concLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
         }
         if (rewardsToSend > 0) {
