@@ -104,9 +104,9 @@ contract LiquidityMining is PositionRegistrar {
                     uint32 tickActiveEnd;
                     if (tickTracking.enterTimestamp < nextWeek) {
                         // Tick was active before next week, need to add the liquidity
-                        if (tickTracking.enterTimestamp < currWeek) {
-                            // Tick was already active before this week
-                            tickActiveStart = currWeek;
+                        if (tickTracking.enterTimestamp < time) {
+                            // Tick was already active when last claim happened, only accrue from last claim timestamp
+                            tickActiveStart = time;
                         } else {
                             // Tick has become active this week
                             tickActiveStart = tickTracking.enterTimestamp;
@@ -133,6 +133,18 @@ contract LiquidityMining is PositionRegistrar {
                 }
                 if (tickTrackingIndex != origIndex) {
                     tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = tickTrackingIndex;
+                }
+            }
+        } else {
+            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+                uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
+                if (numTickTracking > 0) {
+                    if (tickTracking_[poolIdx][i][numTickTracking - 1].exitTimestamp == 0) {
+                        // Tick currently active
+                        tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = numTickTracking - 1;
+                    } else {
+                        tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = numTickTracking;
+                    }
                 }
             }
         }
