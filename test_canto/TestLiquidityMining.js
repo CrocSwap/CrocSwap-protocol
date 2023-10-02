@@ -264,7 +264,7 @@ describe("Liquidity Mining Tests", function () {
 				ethers.utils.keccak256(poolHash),
 				Math.floor(timestampBefore / 10) * 10,
 				Math.floor(timestampBefore / 10) * 10 + 20,
-				BigNumber.from("1000000000000000000"),
+				BigNumber.from("1000000000000000000"), // 1 CANTO per week distributed
 			]
 		);
 		tx = await dex.protocolCmd(8, setRewards, true);
