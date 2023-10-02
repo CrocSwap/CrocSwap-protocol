@@ -72,7 +72,7 @@ contract LiquidityMining is PositionRegistrar {
         int24 lowerTick,
         int24 upperTick
     ) internal {
-        RangePosition storage pos = lookupPosition(
+        RangePosition72 storage pos = lookupPosition(
             owner,
             poolIdx,
             lowerTick,

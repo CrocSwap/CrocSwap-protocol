@@ -232,21 +232,21 @@ library CrocSlots {
     // a pre-existing proxy sidecar.
     uint16 constant BOOT_PROXY_IDX = 0;
     uint16 constant SWAP_PROXY_IDX = 1;
-    uint16 constant LP_PROXY_IDX = 128;
+    uint16 constant LP_PROXY_IDX = 2;
     uint16 constant COLD_PROXY_IDX = 3;
-    uint16 constant LONG_PROXY_IDX = 130;
-    uint16 constant MICRO_PROXY_IDX = 131;
+    uint16 constant LONG_PROXY_IDX = 4;
+    uint16 constant MICRO_PROXY_IDX = 5;
     uint16 constant MULTICALL_PROXY_IDX = 6;
     uint16 constant KNOCKOUT_LP_PROXY_IDX = 7;
     uint16 constant LIQUIDITY_MINING_PROXY_IDX = 8;
     uint16 constant FLAG_CROSS_PROXY_IDX = 3500;
     uint16 constant SAFE_MODE_PROXY_PATH = 9999;
 
-    // Used as proxy contracts by previous deployments. These slots should not be re-used
-    // to preserve backwards compatibility.
-    uint16 constant LP_PROXY_LEGACY_IDX = 2;
-    uint16 constant LONG_PROXY_LEGACY_IDX = 4;
-    uint16 constant MICRO_PROXY_LEGACY_IDX = 5;
+    // // Used as proxy contracts by previous deployments. These slots should not be re-used
+    // // to preserve backwards compatibility.
+    // uint16 constant LP_PROXY_LEGACY_IDX = 2;
+    // uint16 constant LONG_PROXY_LEGACY_IDX = 4;
+    // uint16 constant MICRO_PROXY_LEGACY_IDX = 5;
 
 }
 
