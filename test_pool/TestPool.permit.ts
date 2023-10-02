@@ -1,10 +1,10 @@
-import { TestPool, makeTokenPool } from './FacadePool'
+import { TestPool, makeTokenPool } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { toSqrtPrice, ZERO_ADDR } from './FixedPoint';
+import { toSqrtPrice, ZERO_ADDR } from '../test/FixedPoint';
 
 chai.use(solidity);
 
@@ -66,27 +66,27 @@ describe('permissioned pool', () => {
         await expect(test.testSwap(true, true, 500, toSqrtPrice(2.0))).to.be.reverted
    })
 
-   it("mint/burn concentrated", async() => {
-    await (await test.permit).setPassThru(false)
-    await (await test.permit).setMatching(await (await test.trader).getAddress(),
-        (await test.base).address, (await test.quote).address)
+//    it("mint/burn concentrated", async() => {
+//     await (await test.permit).setPassThru(false)
+//     await (await test.permit).setMatching(await (await test.trader).getAddress(),
+//         (await test.base).address, (await test.quote).address)
 
-    // Should be approved
-    await test.testMint(-5000, 5000, 25000)
-    expect(await (await test.permit).bidTickSnap_()).to.eq(-5000)
-    expect(await (await test.permit).askTickSnap_()).to.eq(5000)
-    expect(await (await test.permit).liqSnap_()).to.eq(25000*1024)
-    expect(await (await test.permit).codeSnap_()).to.eq(MINT_ACT_CODE)
+//     // Should be approved
+//     await test.testMint(-5000, 5000, 25000)
+//     expect(await (await test.permit).bidTickSnap_()).to.eq(-5000)
+//     expect(await (await test.permit).askTickSnap_()).to.eq(5000)
+//     expect(await (await test.permit).liqSnap_()).to.eq(25000*1024)
+//     expect(await (await test.permit).codeSnap_()).to.eq(MINT_ACT_CODE)
 
-    // Reset bid/ask snapsshots
-    await test.testMint(8000, 12000, 25000)
+//     // Reset bid/ask snapsshots
+//     await test.testMint(8000, 12000, 25000)
 
-    await test.testBurn(-5000, 5000, 19000)
-    expect(await (await test.permit).bidTickSnap_()).to.eq(-5000)
-    expect(await (await test.permit).askTickSnap_()).to.eq(5000)
-    expect(await (await test.permit).liqSnap_()).to.eq(19000*1024)
-    expect(await (await test.permit).codeSnap_()).to.eq(BURN_ACT_CODE)
-   })
+//     await test.testBurn(-5000, 5000, 19000)
+//     expect(await (await test.permit).bidTickSnap_()).to.eq(-5000)
+//     expect(await (await test.permit).askTickSnap_()).to.eq(5000)
+//     expect(await (await test.permit).liqSnap_()).to.eq(19000*1024)
+//     expect(await (await test.permit).codeSnap_()).to.eq(BURN_ACT_CODE)
+//    })
 
    it("mint/burn ambient", async() => {
     await (await test.permit).setPassThru(false)

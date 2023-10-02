@@ -10,7 +10,7 @@ import "./PoolRegistry.sol";
 /* @title Liquidity mining mixin
  * @notice Contains the functions related to liquidity mining claiming. */
 contract LiquidityMining is PositionRegistrar {
-    uint256 constant WEEK = 10; // Week in seconds 604800
+    uint256 constant WEEK = 604800; // Week in seconds 604800
 
     /// @notice Initialize the tick tracking for the first tick of a pool
     function initTickTracking(bytes32 poolIdx, int24 tick) internal {
@@ -72,7 +72,7 @@ contract LiquidityMining is PositionRegistrar {
         int24 lowerTick,
         int24 upperTick
     ) internal {
-        RangePosition storage pos = lookupPosition(
+        RangePosition72 storage pos = lookupPosition(
             owner,
             poolIdx,
             lowerTick,
@@ -104,9 +104,9 @@ contract LiquidityMining is PositionRegistrar {
                     uint32 tickActiveEnd;
                     if (tickTracking.enterTimestamp < nextWeek) {
                         // Tick was active before next week, need to add the liquidity
-                        if (tickTracking.enterTimestamp < currWeek) {
-                            // Tick was already active before this week
-                            tickActiveStart = currWeek;
+                        if (tickTracking.enterTimestamp < time) {
+                            // Tick was already active when last claim happened, only accrue from last claim timestamp
+                            tickActiveStart = time;
                         } else {
                             // Tick has become active this week
                             tickActiveStart = tickTracking.enterTimestamp;
@@ -133,6 +133,18 @@ contract LiquidityMining is PositionRegistrar {
                 }
                 if (tickTrackingIndex != origIndex) {
                     tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = tickTrackingIndex;
+                }
+            }
+        } else {
+            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+                uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
+                if (numTickTracking > 0) {
+                    if (tickTracking_[poolIdx][i][numTickTracking - 1].exitTimestamp == 0) {
+                        // Tick currently active
+                        tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = numTickTracking - 1;
+                    } else {
+                        tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i] = numTickTracking;
+                    }
                 }
             }
         }

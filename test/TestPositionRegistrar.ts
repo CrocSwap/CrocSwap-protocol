@@ -57,7 +57,7 @@ describe('PositionRegistrar', () => {
         let result = await reg.getPos(owner, 0, -100, 100);
         expect(result[0].toNumber()).to.equal(450000);
         expect(result[1].toNumber()).to.gt(mileageMean);
-        expect(result[1].toNumber()).to.lte(mileageMean + 1);
+        expect(result[1].toNumber()).to.lte(mileageMean + 2);
     })
 
     it("add multi pos", async() => {

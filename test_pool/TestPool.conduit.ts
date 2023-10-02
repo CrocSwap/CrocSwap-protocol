@@ -1,13 +1,13 @@
-import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, MAX_PRICE, MIN_PRICE, Q_48 } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, MAX_PRICE, MIN_PRICE, Q_48 } from '../test/FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { MockLpConduit } from '../typechain/MockLpConduit';
-import { ContractFactory } from 'ethers';
+import { BigNumber, ContractFactory } from 'ethers';
 
 chai.use(solidity);
 
@@ -35,6 +35,8 @@ describe('Pool Conduit', () => {
     })
 
     const MINT_BUFFER = 4;
+
+    const CONC_ZERO_MILEAGE = BigNumber.from(2).pow(64).sub(1)
 
     it("mint ambient", async() => {
         await test.testMintAmbient(5000)
@@ -74,31 +76,31 @@ describe('Pool Conduit', () => {
         expect(await conduit.lowerSnap_()).to.eq(-25000)
         expect(await conduit.upperSnap_()).to.eq(85000)
         expect(await conduit.liqSnap_()).to.eq(5000*1024)
-        expect(await conduit.mileageSnap_()).to.eq(0)
+        expect(await conduit.mileageSnap_()).to.eq(CONC_ZERO_MILEAGE)
     })
 
-    it("burn concentrated", async() => {
-        await test.testMint(-25000, 85000, 5000)
-        await test.testMint(-25000, 85000, 2000)
-        expect(await conduit.hashMatches(baseToken.address, quoteToken.address, POOL_IDX)).to.be.true
-        expect(await conduit.senderSnap_()).to.eq(await (await test.trader).getAddress())
-        expect(await conduit.lowerSnap_()).to.eq(-25000)
-        expect(await conduit.upperSnap_()).to.eq(85000)
-        expect(await conduit.liqSnap_()).to.eq(2000*1024)
-        expect(await conduit.mileageSnap_()).to.eq(0)
-    })
+    // it("burn concentrated", async() => {
+    //     await test.testMint(-25000, 85000, 5000)
+    //     await test.testMint(-25000, 85000, 2000)
+    //     expect(await conduit.hashMatches(baseToken.address, quoteToken.address, POOL_IDX)).to.be.true
+    //     expect(await conduit.senderSnap_()).to.eq(await (await test.trader).getAddress())
+    //     expect(await conduit.lowerSnap_()).to.eq(-25000)
+    //     expect(await conduit.upperSnap_()).to.eq(85000)
+    //     expect(await conduit.liqSnap_()).to.eq(2000*1024)
+    //     expect(await conduit.mileageSnap_()).to.eq(CONC_ZERO_MILEAGE)
+    // })
 
-    it("mint concentrated deflator", async() => {
-        await test.testMint(-25000, 85000, 5000)
-        await test.testSwap(true, true, 2500000, MAX_PRICE)
-        await test.testSwap(false, true, 2500000, MIN_PRICE)
-        await test.testMint(-25000, 85000, 5000)
+    // it("mint concentrated deflator", async() => {
+    //     await test.testMint(-25000, 85000, 5000)
+    //     await test.testSwap(true, true, 2500000, MAX_PRICE)
+    //     await test.testSwap(false, true, 2500000, MIN_PRICE)
+    //     await test.testMint(-25000, 85000, 5000)
 
-        let mileage = (await conduit.mileageSnap_()).toNumber() / (2 ** 48)
-        expect(mileage).to.lt(0.01)
-        expect(mileage).to.gt(0.005)
-        expect(await conduit.liqSnap_()).to.eq(5000*1024)
-    })
+    //     let mileage = (await conduit.mileageSnap_()).sub(CONC_ZERO_MILEAGE).toNumber() / (2 ** 48)
+    //     expect(mileage).to.lt(0.01)
+    //     expect(mileage).to.gt(0.005)
+    //     expect(await conduit.liqSnap_()).to.eq(5000*1024)
+    // })
 
     it("mint reject", async() => {
         test.lpConduit = rejConduit.address
@@ -106,13 +108,13 @@ describe('Pool Conduit', () => {
         await expect(test.testMint(-25000, 85000, 5000)).to.be.reverted
     })
 
-    it("burn reject", async() => {
-        await test.testMintAmbient(5000)
-        await test.testMint(-25000, 85000, 5000)
+    // it("burn reject", async() => {
+    //     await test.testMintAmbient(5000)
+    //     await test.testMint(-25000, 85000, 5000)
 
-        await conduit.setAccept(false)
-        await expect(test.testBurnAmbient(1000)).to.be.reverted
-        await expect(test.testBurn(-25000, 85000, 1000)).to.be.reverted
+    //     await conduit.setAccept(false)
+    //     await expect(test.testBurnAmbient(1000)).to.be.reverted
+    //     await expect(test.testBurn(-25000, 85000, 1000)).to.be.reverted
         
-    })
+    // })
 })

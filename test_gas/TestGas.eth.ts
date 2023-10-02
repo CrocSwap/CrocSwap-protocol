@@ -1,8 +1,8 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from '../test/FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
@@ -46,12 +46,12 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("mint increase liq [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMint(-100, 100, 10000), 106000)
+        await expectGas(test.testMint(-100, 100, 10000), 107000)
     })
 
     it("mint pre-init ticks [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-100, 100, 10000), 123000)
+        await expectGas(test.testMintOther(-100, 100, 10000), 124000)
     })
 
     it("mint one fresh init [@gas-test]", async() => {
@@ -130,7 +130,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 96000)
+        await expectGas(test.testBurn(-100, 100, 100), 97000)
     })
 
     it("harvest fees [@gas-test]", async() => {

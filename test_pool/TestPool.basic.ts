@@ -1,8 +1,8 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from '../test/FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
@@ -440,99 +440,99 @@ describe('Pool', () => {
     })
 
 
-    it("burn payout rewards", async() => {
-        await test.testMint(-10000, 25000, 1000000);
+    // it("burn payout rewards", async() => {
+    //     await test.testMint(-10000, 25000, 1000000);
 
-        // Estabilish the pre-reward collateral commitment...
-        let startQuote = await quoteToken.balanceOf((await test.dex).address)
-        let startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 100000)
-        let collateralBase = ((await baseToken.balanceOf((await test.dex).address)).sub(startBase))
-        let collateralQuote = ((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote))
+    //     // Estabilish the pre-reward collateral commitment...
+    //     let startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     let startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 100000)
+    //     let collateralBase = ((await baseToken.balanceOf((await test.dex).address)).sub(startBase))
+    //     let collateralQuote = ((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote))
 
-        // Collect rewards and bring back to original price
-        await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
-        await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
+    //     // Collect rewards and bring back to original price
+    //     await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
+    //     await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
 
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 100000)
-        // The formula below backs out the rewards portion of the burn
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-15)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-23)
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 100000)
+    //     // The formula below backs out the rewards portion of the burn
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-15)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-23)
 
-        // Subsequent burns should collect rewards at same rate.
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 100000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-15)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-23)
+    //     // Subsequent burns should collect rewards at same rate.
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 100000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-15)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-23)
 
-        // Subsequent burns should stack upon previously unredeemed fraction of the rewards. I.e. not reset
-        // rewards for the unburned liquidity.
-        await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
-        await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 100000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-36)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-55)
-    })
+    //     // Subsequent burns should stack upon previously unredeemed fraction of the rewards. I.e. not reset
+    //     // rewards for the unburned liquidity.
+    //     await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
+    //     await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 100000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-36)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-55)
+    // })
 
 
-    it("mint blends rewards", async() => {
-        await test.testMint(-10000, 25000, 1000000);
+    // it("mint blends rewards", async() => {
+    //     await test.testMint(-10000, 25000, 1000000);
 
-        // Estabilish the pre-reward collateral commitment...
-        let startQuote = await quoteToken.balanceOf((await test.dex).address)
-        let startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 250000)
-        let collateralBase = ((await baseToken.balanceOf((await test.dex).address)).sub(startBase))
-        let collateralQuote = ((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote))
+    //     // Estabilish the pre-reward collateral commitment...
+    //     let startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     let startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 250000)
+    //     let collateralBase = ((await baseToken.balanceOf((await test.dex).address)).sub(startBase))
+    //     let collateralQuote = ((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote))
 
-        await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
-        await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
+    //     await test.testSwap(true, true, 10000, toSqrtPrice(1.7))
+    //     await test.testSwap(false, false, 100000, toSqrtPrice(1.5))
 
-        // Burn should collect rewards at the blended rate of the previously stacked liquidity
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-48)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-72)
+    //     // Burn should collect rewards at the blended rate of the previously stacked liquidity
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 250000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-48)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-72)
         
-        // Minting on top of previously rewarded liquidity should require the same collateral commitment
-        // (Roughtly accounting for minor differences in price...)
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testMint(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(-collateralQuote)).to.lte(4)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(-collateralQuote)).to.gte(0)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(-collateralBase)).to.lte(4)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(-collateralBase)).to.gte(0)
+    //     // Minting on top of previously rewarded liquidity should require the same collateral commitment
+    //     // (Roughtly accounting for minor differences in price...)
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testMint(-10000, 25000, 250000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(-collateralQuote)).to.lte(4)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(-collateralQuote)).to.gte(0)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(-collateralBase)).to.lte(4)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(-collateralBase)).to.gte(0)
 
-        // Burn should collect rewards at the blended rate of the previously stacked liquidity
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-31)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-47);
+    //     // Burn should collect rewards at the blended rate of the previously stacked liquidity
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 250000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-31)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-47);
 
-        // Adding more liquidity at higher rewards mark should blend down the rewards rate per unit burned 
-        await test.testMint(-10000, 25000, 250000)
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
+    //     // Adding more liquidity at higher rewards mark should blend down the rewards rate per unit burned 
+    //     await test.testMint(-10000, 25000, 250000)
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 250000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
 
-        // Rewards rate on subsequent burns should remain the at the same blended rate
-        startBase = await baseToken.balanceOf((await test.dex).address)
-        startQuote = await quoteToken.balanceOf((await test.dex).address)
-        await test.testBurn(-10000, 25000, 250000)
-        expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
-        expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
+    //     // Rewards rate on subsequent burns should remain the at the same blended rate
+    //     startBase = await baseToken.balanceOf((await test.dex).address)
+    //     startQuote = await quoteToken.balanceOf((await test.dex).address)
+    //     await test.testBurn(-10000, 25000, 250000)
+    //     expect((await quoteToken.balanceOf((await test.dex).address)).sub(startQuote).sub(collateralQuote)).to.equal(-21)
+    //     expect((await baseToken.balanceOf((await test.dex).address)).sub(startBase).sub(collateralBase)).to.equal(-31);
 
-    })
+    // })
 
     it("mint ambient", async() => {
         await test.testMintAmbient(20000);

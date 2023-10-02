@@ -262,15 +262,15 @@ describe("Liquidity Mining Tests", function () {
 			[
 				117,
 				ethers.utils.keccak256(poolHash),
-				Math.floor(timestampBefore / 10) * 10,
-				Math.floor(timestampBefore / 10) * 10 + 20,
+				Math.floor(timestampBefore / 604800) * 604800,
+				Math.floor(timestampBefore / 604800) * 604800 + 604800 * 2,
 				BigNumber.from("1000000000000000000"), // 1 CANTO per week distributed
 			]
 		);
 		tx = await dex.protocolCmd(8, setRewards, true);
 		await tx.wait();
 
-		await time.increase(1000); // fast forward 1000 seconds so that rewards accrue
+		await time.increase(604800 * 5); // fast forward 1000 seconds so that rewards accrue
 
 		//////////////////////////////////////////////////
 		// CLAIM REWARDS ACCRUED FROM CONCENTRATED REWARDS
@@ -288,8 +288,8 @@ describe("Liquidity Mining Tests", function () {
 				currentTick - 15,
 				currentTick + 15,
 				[
-					Math.floor(timestampBefore / 10) * 10 + 10,
-					Math.floor(timestampBefore / 10) * 10 + 20,
+					Math.floor(timestampBefore / 604800) * 604800 + 604800,
+					Math.floor(timestampBefore / 604800) * 604800 + 604800 * 2,
 				],
 			]
 		);
