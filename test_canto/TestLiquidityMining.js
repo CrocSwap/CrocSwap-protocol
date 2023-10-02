@@ -51,7 +51,7 @@ describe("Liquidity Mining Tests", function () {
 		);
 
 		////////////////////////////////////////////////
-		// deploy CrocSwapDex contract
+		// DEPLOY DEX CONTRACT AND ALL PROXIES
 		////////////////////////////////////////////////
 		const dex = await ethers.deployContract("CrocSwapDex");
 		// deploy ColdPath
@@ -78,7 +78,7 @@ describe("Liquidity Mining Tests", function () {
 		);
 
 		////////////////////////////////////////////////
-		// install paths
+		// INSTALL PROXIES TO DEX
 		////////////////////////////////////////////////
 		cmd = abi.encode(
 			["uint8", "address", "uint16"],
@@ -129,8 +129,11 @@ describe("Liquidity Mining Tests", function () {
 		await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
 
 		////////////////////////////////////////////////
-		// configure pools
+		// CONFIGURE POOLS
 		////////////////////////////////////////////////
+
+		// approve tokens for dex
+		// initializing pool will lock up a small amount of each token in the dex
 		approveUSDC = await USDC.approve(
 			dex.address,
 			BigNumber.from(10).pow(36)
@@ -179,7 +182,7 @@ describe("Liquidity Mining Tests", function () {
 		await tx.wait();
 
 		//////////////////////////////////////////////////
-		// add liquidity to concentrated pool
+		// ADD LIQUIDITY TO THE POOL THAT WAS JUST CREATED
 		//////////////////////////////////////////////////
 		const currentTick = 276324;
 		const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
@@ -220,59 +223,63 @@ describe("Liquidity Mining Tests", function () {
 		await tx.wait();
 
 		////////////////////////////////////////////////
-		// swap test
+		// SAMPLE SWAP TEST (swaps 2 USDC for cNOTE)
 		////////////////////////////////////////////////
 		swapTx = await dex.swap(
-			cNOTE.address,
-			USDC.address,
-			36000,
-			false,
-			false,
-			BigNumber.from("20000000"),
-			0,
-			BigNumber.from("16602069666338596454400000"),
-			BigNumber.from("19000000000000000000"),
-			0
+			cNOTE.address, // base
+			USDC.address, // quote
+			36000, // poolIdx
+			false, // isBuy
+			false, // inBaseQty
+			BigNumber.from("2000000"), // qty
+			0, // tip
+			BigNumber.from("16602069666338596454400000"), // limit price
+			BigNumber.from("1900000000000000000"), // min out
+			0 // reserveFlag (to use surplus or not)
 		);
 
 		await swapTx.wait();
 		expect(await USDC.balanceOf(owner.address)).to.equal(
-			BigNumber.from("999880351768")
+			BigNumber.from("999898351768")
 		);
 
 		//////////////////////////////////////////////////
-		// set concentrated rewards
+		// SET LIQUIDITY MINING REWARDS FOR CONCENTRATED LIQUIDITY
 		//////////////////////////////////////////////////
 		const blockNumBefore = await ethers.provider.getBlockNumber();
 		const blockBefore = await ethers.provider.getBlock(blockNumBefore);
 		const timestampBefore = blockBefore.timestamp;
-		// console.log("timestamp before: ", timestampBefore);
 
+		// get the hash of the pool, which is keccak256(base, quote, poolIdx)
 		let poolHash = abi.encode(
 			["address", "address", "uint256"],
 			[cNOTE.address, USDC.address, 36000]
 		);
+
 		let setRewards = abi.encode(
+			// [code, poolHash, startWeek, endWeek, rewardPerWeek]
 			["uint8", "bytes32", "uint32", "uint32", "uint64"],
 			[
 				117,
 				ethers.utils.keccak256(poolHash),
 				Math.floor(timestampBefore / 10) * 10,
-				Math.floor(timestampBefore / 10) * 10 + 1000,
-				10,
+				Math.floor(timestampBefore / 10) * 10 + 20,
+				BigNumber.from("1000000000000000000"),
 			]
 		);
 		tx = await dex.protocolCmd(8, setRewards, true);
 		await tx.wait();
 
-		await time.increase(1000); // mine 1000 seconds
+		await time.increase(1000); // fast forward 1000 seconds so that rewards accrue
 
 		//////////////////////////////////////////////////
-		// claim rewards
+		// CLAIM REWARDS ACCRUED FROM CONCENTRATED REWARDS
 		//////////////////////////////////////////////////
-		// get eth balanace before claim
-		const ethBalBefore = await ethers.provider.getBalance(dex.address);
-		console.log("eth balance before claim: ", ethBalBefore.toString());
+
+		// get eth balanace of dex before claim
+		const dexBalBefore = await ethers.provider.getBalance(dex.address);
+		const ownerBalBefore = await ethers.provider.getBalance(owner.address);
+
 		let claim = abi.encode(
 			["uint8", "bytes32", "int24", "int24", "uint32[]"],
 			[
@@ -281,15 +288,21 @@ describe("Liquidity Mining Tests", function () {
 				currentTick - 15,
 				currentTick + 15,
 				[
-					Math.floor(timestampBefore / 10) * 10,
-					Math.floor(timestampBefore / 10) * 10 + 100,
+					Math.floor(timestampBefore / 10) * 10 + 10,
+					Math.floor(timestampBefore / 10) * 10 + 20,
 				],
 			]
 		);
 		tx = await dex.userCmd(8, claim);
 		await tx.wait();
-		// get eth balanace after claim
-		const ethBalAfter = await ethers.provider.getBalance(dex.address);
-		console.log("eth balance after claim: ", ethBalAfter.toString());
+
+		// get eth balanace of dex after claim
+		const dexBalAfter = await ethers.provider.getBalance(dex.address);
+		const ownerBalAfter = await ethers.provider.getBalance(owner.address);
+
+		// expect dex to have 2 less CANTO since we claimed for 2 weeks worth of rewards
+		expect(dexBalBefore.sub(dexBalAfter)).to.equal(
+			BigNumber.from("2000000000000000000")
+		);
 	});
 });
