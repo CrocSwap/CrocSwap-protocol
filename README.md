@@ -7,6 +7,8 @@ https://ambient.finance
 
 ## Installation
 
+Ensure you are using node version 16
+
 Clone the repository. In the repository home directory run the following commands:
 
     $ yarn install
@@ -16,9 +18,13 @@ To verify that the code is functioning run:
 
     $ npx hardhat test
 
-Test coverage can be run with
+To see example of liquidity mining in action:
 
+    $ npx hardhat test test_canto/TestLiquidityMining.js
 
+To test complex pool logic:
+
+    $ npx hardhat test test_pool/<test-name>.js
 
 ## Documentation
 
