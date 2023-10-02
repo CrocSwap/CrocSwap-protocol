@@ -1,14 +1,14 @@
-import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedPoint';
+import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from '../test/FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { simpleSwap } from './EncodeSimple';
+import { simpleSwap } from '../test/EncodeSimple';
 import { BigNumber } from 'ethers';
-import { ConcentratedDirective } from './EncodeOrder';
+import { ConcentratedDirective } from '../test/EncodeOrder';
 
 chai.use(solidity);
 

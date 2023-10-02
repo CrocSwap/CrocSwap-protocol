@@ -1,10 +1,10 @@
-import { TestPool, makeTokenPool } from './FacadePool'
+import { TestPool, makeTokenPool } from '../test/FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
-import { toSqrtPrice, ZERO_ADDR } from './FixedPoint';
+import { toSqrtPrice, ZERO_ADDR } from '../test/FixedPoint';
 
 chai.use(solidity);
 
