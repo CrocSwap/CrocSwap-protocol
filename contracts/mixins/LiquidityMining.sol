@@ -261,12 +261,13 @@ contract LiquidityMining is PositionRegistrar {
             uint256 overallTimeWeightedLiquidity = timeWeightedWeeklyGlobalAmbLiquidity_[
                     poolIdx
                 ][week];
-            if (overallTimeWeightedLiquidity == 0) continue;
-            uint256 rewardsForWeek = (timeWeightedWeeklyPositionAmbLiquidity_[
-                poolIdx
-            ][posKey][week] * ambRewardPerWeek_[poolIdx][week]) /
-                overallTimeWeightedLiquidity;
-            rewardsToSend += rewardsForWeek;
+            if (overallTimeWeightedLiquidity > 0) {
+                uint256 rewardsForWeek = (timeWeightedWeeklyPositionAmbLiquidity_[
+                    poolIdx
+                ][posKey][week] * ambRewardPerWeek_[poolIdx][week]) /
+                    overallTimeWeightedLiquidity;
+                rewardsToSend += rewardsForWeek;
+            }
             ambLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
         }
         if (rewardsToSend > 0) {
