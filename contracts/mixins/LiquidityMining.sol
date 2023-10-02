@@ -10,7 +10,7 @@ import "./PoolRegistry.sol";
 /* @title Liquidity mining mixin
  * @notice Contains the functions related to liquidity mining claiming. */
 contract LiquidityMining is PositionRegistrar {
-    uint256 constant WEEK = 10; // Week in seconds 604800
+    uint256 constant WEEK = 604800; // Week in seconds 604800
 
     /// @notice Initialize the tick tracking for the first tick of a pool
     function initTickTracking(bytes32 poolIdx, int24 tick) internal {
