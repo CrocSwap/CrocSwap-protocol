@@ -1,0 +1,2525 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "accept",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "poolHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "int24",
+          "name": "lowerTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upperTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint128",
+          "name": "liq",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint72",
+          "name": "mileage",
+          "type": "uint72"
+        }
+      ],
+      "name": "depositCrocLiq",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "base",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "quote",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "poolIdx",
+          "type": "uint256"
+        }
+      ],
+      "name": "hashMatches",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isDeposit_",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "liqSnap_",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lowerSnap_",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mileageSnap_",
+      "outputs": [
+        {
+          "internalType": "uint72",
+          "name": "",
+          "type": "uint72"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "poolSnap_",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "senderSnap_",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "accept",
+          "type": "bool"
+        }
+      ],
+      "name": "setAccept",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "upperSnap_",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "poolHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "int24",
+          "name": "lowerTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upperTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint128",
+          "name": "liq",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint72",
+          "name": "mileage",
+          "type": "uint72"
+        }
+      ],
+      "name": "withdrawCrocLiq",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x60803461006657601f6104ad38819003918201601f19168301916001600160401b0383118484101761006b5780849260209460405283398101031261006657518015158091036100665760ff80196000541691161760005560405161042b90816100828239f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe60806040818152600436101561001457600080fd5b600091823560e01c9081630c7e361814610363575080631547eb13146103455780634fc3aa7c14610317578063668e2cdb1461028b57806388014d77146101ea57806393835c1e14610164578063b962423814610143578063c8adf80914610119578063df35a724146100ed578063f0b1ced1146100c95763f81d3d1a1461009b57600080fd5b346100c557816003193601126100c5579054905160089190911c6001600160a01b03168152602090f35b5080fd5b50346100c557816003193601126100c55760209060025460181c60020b9051908152f35b50346100c557816003193601126100c55760209068ffffffffffffffffff60025460b01c169051908152f35b50346100c557816003193601126100c5576020906001600160801b0360025460301c169051908152f35b50346100c557816003193601126100c55760209060025460020b9051908152f35b50346100c55760ff65ffffff0000009160209362ffffff6601000000000000600160b01b0361019236610384565b91949a939096929780549b610100600160a81b039060081b16610100600160a81b03198d1617905560015568ffffffffffffffffff60b01b9060b01b1695169160181b16179160301b16171760025551911615158152f35b509034610288576060366003190112610288576001600160a01b036004358181169081900361028457602435918216809203610284576001549180821015610280578451906020820192835285820152604435606082015260608152608081019381851067ffffffffffffffff86111761026c57508360209552519020148152f35b634e487b7160e01b81526041600452602490fd5b8380fd5b8280fd5b80fd5b50346100c5579060ff6020926601000000000000600160b01b036102ae36610384565b95929498809491945499610100600160a81b039060081b16610100600160a81b03198b1617905560015565ffffff00000062ffffff600160f81b9668ffffffffffffffffff60b01b9060b01b1695169160181b16179160301b1617171760025551911615158152f35b8234610288576020366003190112610288576004358015158091036100c55760ff8019835416911617815580f35b50346100c557816003193601126100c5576020906001549051908152f35b8390346100c557816003193601126100c55760209060025460f81c15158152f35b60c09060031901126103f0576004356001600160a01b03811681036103f05790602435906044358060020b81036103f057906064358060020b81036103f057906084356001600160801b03811681036103f0579060a43568ffffffffffffffffff811681036103f05790565b600080fdfea264697066735822122024a43ac1217ec782979882b7d143e9372051dd63058ee37ca3836a73e9078de864736f6c63430008130033",
+    "sourceMap": "141:1522:61:-:0;;;;;;;;;;;;;-1:-1:-1;;141:1522:61;;;;-1:-1:-1;;;;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;141:1522:61;;;;;-1:-1:-1;141:1522:61;;;;;;;;;;;-1:-1:-1;141:1522:61;;;;;;-1:-1:-1;141:1522:61;;;;;-1:-1:-1;141:1522:61",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x60806040818152600436101561001457600080fd5b600091823560e01c9081630c7e361814610363575080631547eb13146103455780634fc3aa7c14610317578063668e2cdb1461028b57806388014d77146101ea57806393835c1e14610164578063b962423814610143578063c8adf80914610119578063df35a724146100ed578063f0b1ced1146100c95763f81d3d1a1461009b57600080fd5b346100c557816003193601126100c5579054905160089190911c6001600160a01b03168152602090f35b5080fd5b50346100c557816003193601126100c55760209060025460181c60020b9051908152f35b50346100c557816003193601126100c55760209068ffffffffffffffffff60025460b01c169051908152f35b50346100c557816003193601126100c5576020906001600160801b0360025460301c169051908152f35b50346100c557816003193601126100c55760209060025460020b9051908152f35b50346100c55760ff65ffffff0000009160209362ffffff6601000000000000600160b01b0361019236610384565b91949a939096929780549b610100600160a81b039060081b16610100600160a81b03198d1617905560015568ffffffffffffffffff60b01b9060b01b1695169160181b16179160301b16171760025551911615158152f35b509034610288576060366003190112610288576001600160a01b036004358181169081900361028457602435918216809203610284576001549180821015610280578451906020820192835285820152604435606082015260608152608081019381851067ffffffffffffffff86111761026c57508360209552519020148152f35b634e487b7160e01b81526041600452602490fd5b8380fd5b8280fd5b80fd5b50346100c5579060ff6020926601000000000000600160b01b036102ae36610384565b95929498809491945499610100600160a81b039060081b16610100600160a81b03198b1617905560015565ffffff00000062ffffff600160f81b9668ffffffffffffffffff60b01b9060b01b1695169160181b16179160301b1617171760025551911615158152f35b8234610288576020366003190112610288576004358015158091036100c55760ff8019835416911617815580f35b50346100c557816003193601126100c5576020906001549051908152f35b8390346100c557816003193601126100c55760209060025460f81c15158152f35b60c09060031901126103f0576004356001600160a01b03811681036103f05790602435906044358060020b81036103f057906064358060020b81036103f057906084356001600160801b03811681036103f0579060a43568ffffffffffffffffff811681036103f05790565b600080fdfea264697066735822122024a43ac1217ec782979882b7d143e9372051dd63058ee37ca3836a73e9078de864736f6c63430008130033",
+    "sourceMap": "141:1522:61:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;;;299:23;141:1522;;;299:23;141:1522;;;;;;;;;;;;;;;;;;;;;;;357:26;141:1522;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;328:23:61;141:1522;;;;;;;;;;;;;;;;;;;;;;;;;270:23;141:1522;270:23;141:1522;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;141:1522:61;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1431:18;141:1522;;;;;;;;;;;;;;;;;-1:-1:-1;;141:1522:61;;;;-1:-1:-1;;;;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;5837:15:33;;;;141:1522:61;;;;;5880:35:33;141:1522:61;5880:35:33;;141:1522:61;;;;;;;;;;;;;;5880:35:33;;141:1522:61;;;;;;;;;;;;;;;;;;;5870:46:33;;685:54:61;141:1522;;;;-1:-1:-1;;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;141:1522:61;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;973:17;141:1522;;;;;;;;;;;;;;;;-1:-1:-1;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;240:24;141:1522;;;;;;;;;;;;;;;;;;;;;;;389:22;141:1522;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;141:1522:61;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;141:1522:61;;;;;;;;;;;;;;;;;:::o;:::-;-1:-1:-1;141:1522:61;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "depositCrocLiq(address,bytes32,int24,int24,uint128,uint72)": "668e2cdb",
+    "hashMatches(address,address,uint256)": "88014d77",
+    "isDeposit_()": "0c7e3618",
+    "liqSnap_()": "c8adf809",
+    "lowerSnap_()": "b9624238",
+    "mileageSnap_()": "df35a724",
+    "poolSnap_()": "1547eb13",
+    "senderSnap_()": "f81d3d1a",
+    "setAccept(bool)": "4fc3aa7c",
+    "upperSnap_()": "f0b1ced1",
+    "withdrawCrocLiq(address,bytes32,int24,int24,uint128,uint72)": "93835c1e"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"accept\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"poolHash\",\"type\":\"bytes32\"},{\"internalType\":\"int24\",\"name\":\"lowerTick\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upperTick\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"liq\",\"type\":\"uint128\"},{\"internalType\":\"uint72\",\"name\":\"mileage\",\"type\":\"uint72\"}],\"name\":\"depositCrocLiq\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"base\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"quote\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"poolIdx\",\"type\":\"uint256\"}],\"name\":\"hashMatches\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isDeposit_\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"liqSnap_\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lowerSnap_\",\"outputs\":[{\"internalType\":\"int24\",\"name\":\"\",\"type\":\"int24\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mileageSnap_\",\"outputs\":[{\"internalType\":\"uint72\",\"name\":\"\",\"type\":\"uint72\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"poolSnap_\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"senderSnap_\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"accept\",\"type\":\"bool\"}],\"name\":\"setAccept\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"upperSnap_\",\"outputs\":[{\"internalType\":\"int24\",\"name\":\"\",\"type\":\"int24\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"poolHash\",\"type\":\"bytes32\"},{\"internalType\":\"int24\",\"name\":\"lowerTick\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upperTick\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"liq\",\"type\":\"uint128\"},{\"internalType\":\"uint72\",\"name\":\"mileage\",\"type\":\"uint72\"}],\"name\":\"withdrawCrocLiq\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/test/MockConduit.sol\":\"MockLpConduit\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/interfaces/ICrocLpConduit.sol\":{\"keccak256\":\"0x2e7ec87b1050365c16ba74f7d9beecea883d4791ec1def08e8ae45dd3510e27a\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://8f283048c17c0a0b2c525bcaf313b0fa31a3cd78a69b782f3974088352992524\",\"dweb:/ipfs/QmTuewpvVVBotRkDNUtZcZsbDDEfMLSUiCGRjiThWFevx7\"]},\"contracts/libraries/Directives.sol\":{\"keccak256\":\"0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585\",\"dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17\"]},\"contracts/libraries/PoolSpecs.sol\":{\"keccak256\":\"0x13c94aa15a3e26002d5f4b6e6f2a55e32a742e40cfb8cb97b1d1b6333ca293cb\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://a0723aad7e94311ae7a933f46cc97b99f6cd5df6692172ad8c60e5e4d8e08a4b\",\"dweb:/ipfs/QmRM2VDrDyPAYfmaTV2ggSto9ChsLifNMxrHhUzn4ZUvDq\"]},\"contracts/libraries/SafeCast.sol\":{\"keccak256\":\"0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5\",\"dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg\"]},\"contracts/test/MockConduit.sol\":{\"keccak256\":\"0x631e6dc284fddd3de7719b12b7f57a35a1b25e1cc1662bcdbc7d9d2f039c3fc9\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://421723ff510b2087d2d893534238bf8f6001e78e2a748334eb1fd4c10cc6573e\",\"dweb:/ipfs/QmSW9Lb7fEryMVVzNLtimeQf2dZ1BKYAQeGJ5XLgyNLY2G\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "bool",
+              "name": "accept",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "poolHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "int24",
+              "name": "lowerTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upperTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liq",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint72",
+              "name": "mileage",
+              "type": "uint72"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "depositCrocLiq",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "base",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "quote",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "poolIdx",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "hashMatches",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "isDeposit_",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "liqSnap_",
+          "outputs": [
+            {
+              "internalType": "uint128",
+              "name": "",
+              "type": "uint128"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "lowerSnap_",
+          "outputs": [
+            {
+              "internalType": "int24",
+              "name": "",
+              "type": "int24"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "mileageSnap_",
+          "outputs": [
+            {
+              "internalType": "uint72",
+              "name": "",
+              "type": "uint72"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "poolSnap_",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "senderSnap_",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bool",
+              "name": "accept",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setAccept"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "upperSnap_",
+          "outputs": [
+            {
+              "internalType": "int24",
+              "name": "",
+              "type": "int24"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "poolHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "int24",
+              "name": "lowerTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upperTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liq",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint72",
+              "name": "mileage",
+              "type": "uint72"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "withdrawCrocLiq",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/test/MockConduit.sol": "MockLpConduit"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/interfaces/ICrocLpConduit.sol": {
+        "keccak256": "0x2e7ec87b1050365c16ba74f7d9beecea883d4791ec1def08e8ae45dd3510e27a",
+        "urls": [
+          "bzz-raw://8f283048c17c0a0b2c525bcaf313b0fa31a3cd78a69b782f3974088352992524",
+          "dweb:/ipfs/QmTuewpvVVBotRkDNUtZcZsbDDEfMLSUiCGRjiThWFevx7"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/Directives.sol": {
+        "keccak256": "0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0",
+        "urls": [
+          "bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585",
+          "dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/PoolSpecs.sol": {
+        "keccak256": "0x13c94aa15a3e26002d5f4b6e6f2a55e32a742e40cfb8cb97b1d1b6333ca293cb",
+        "urls": [
+          "bzz-raw://a0723aad7e94311ae7a933f46cc97b99f6cd5df6692172ad8c60e5e4d8e08a4b",
+          "dweb:/ipfs/QmRM2VDrDyPAYfmaTV2ggSto9ChsLifNMxrHhUzn4ZUvDq"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/SafeCast.sol": {
+        "keccak256": "0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916",
+        "urls": [
+          "bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5",
+          "dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg"
+        ],
+        "license": "GPL-2.0-or-later"
+      },
+      "contracts/test/MockConduit.sol": {
+        "keccak256": "0x631e6dc284fddd3de7719b12b7f57a35a1b25e1cc1662bcdbc7d9d2f039c3fc9",
+        "urls": [
+          "bzz-raw://421723ff510b2087d2d893534238bf8f6001e78e2a748334eb1fd4c10cc6573e",
+          "dweb:/ipfs/QmSW9Lb7fEryMVVzNLtimeQf2dZ1BKYAQeGJ5XLgyNLY2G"
+        ],
+        "license": "GPL-3"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/test/MockConduit.sol",
+    "id": 29696,
+    "exportedSymbols": {
+      "Directives": [
+        13070
+      ],
+      "ICrocLpConduit": [
+        5763
+      ],
+      "MockLpConduit": [
+        29695
+      ],
+      "PoolSpecs": [
+        15228
+      ],
+      "SafeCast": [
+        16160
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "35:1629:61",
+    "nodes": [
+      {
+        "id": 29535,
+        "nodeType": "PragmaDirective",
+        "src": "35:23:61",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 29536,
+        "nodeType": "ImportDirective",
+        "src": "60:42:61",
+        "nodes": [],
+        "absolutePath": "contracts/interfaces/ICrocLpConduit.sol",
+        "file": "../interfaces/ICrocLpConduit.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 29696,
+        "sourceUnit": 5764,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 29537,
+        "nodeType": "ImportDirective",
+        "src": "103:36:61",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/PoolSpecs.sol",
+        "file": "../libraries/PoolSpecs.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 29696,
+        "sourceUnit": 15229,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 29695,
+        "nodeType": "ContractDefinition",
+        "src": "141:1522:61",
+        "nodes": [
+          {
+            "id": 29541,
+            "nodeType": "VariableDeclaration",
+            "src": "189:12:61",
+            "nodes": [],
+            "constant": false,
+            "mutability": "mutable",
+            "name": "accept_",
+            "nameLocation": "194:7:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 29540,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "189:4:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "id": 29543,
+            "nodeType": "VariableDeclaration",
+            "src": "208:26:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "f81d3d1a",
+            "mutability": "mutable",
+            "name": "senderSnap_",
+            "nameLocation": "223:11:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_address",
+              "typeString": "address"
+            },
+            "typeName": {
+              "id": 29542,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "208:7:61",
+              "stateMutability": "nonpayable",
+              "typeDescriptions": {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29545,
+            "nodeType": "VariableDeclaration",
+            "src": "240:24:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "1547eb13",
+            "mutability": "mutable",
+            "name": "poolSnap_",
+            "nameLocation": "255:9:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 29544,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "240:7:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29547,
+            "nodeType": "VariableDeclaration",
+            "src": "270:23:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "b9624238",
+            "mutability": "mutable",
+            "name": "lowerSnap_",
+            "nameLocation": "283:10:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_int24",
+              "typeString": "int24"
+            },
+            "typeName": {
+              "id": 29546,
+              "name": "int24",
+              "nodeType": "ElementaryTypeName",
+              "src": "270:5:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_int24",
+                "typeString": "int24"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29549,
+            "nodeType": "VariableDeclaration",
+            "src": "299:23:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "f0b1ced1",
+            "mutability": "mutable",
+            "name": "upperSnap_",
+            "nameLocation": "312:10:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_int24",
+              "typeString": "int24"
+            },
+            "typeName": {
+              "id": 29548,
+              "name": "int24",
+              "nodeType": "ElementaryTypeName",
+              "src": "299:5:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_int24",
+                "typeString": "int24"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29551,
+            "nodeType": "VariableDeclaration",
+            "src": "328:23:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "c8adf809",
+            "mutability": "mutable",
+            "name": "liqSnap_",
+            "nameLocation": "343:8:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint128",
+              "typeString": "uint128"
+            },
+            "typeName": {
+              "id": 29550,
+              "name": "uint128",
+              "nodeType": "ElementaryTypeName",
+              "src": "328:7:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint128",
+                "typeString": "uint128"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29553,
+            "nodeType": "VariableDeclaration",
+            "src": "357:26:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "df35a724",
+            "mutability": "mutable",
+            "name": "mileageSnap_",
+            "nameLocation": "371:12:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint72",
+              "typeString": "uint72"
+            },
+            "typeName": {
+              "id": 29552,
+              "name": "uint72",
+              "nodeType": "ElementaryTypeName",
+              "src": "357:6:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint72",
+                "typeString": "uint72"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29555,
+            "nodeType": "VariableDeclaration",
+            "src": "389:22:61",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "0c7e3618",
+            "mutability": "mutable",
+            "name": "isDeposit_",
+            "nameLocation": "401:10:61",
+            "scope": 29695,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 29554,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "389:4:61",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 29565,
+            "nodeType": "FunctionDefinition",
+            "src": "422:59:61",
+            "nodes": [],
+            "body": {
+              "id": 29564,
+              "nodeType": "Block",
+              "src": "448:33:61",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 29562,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29560,
+                      "name": "accept_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29541,
+                      "src": "458:7:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29561,
+                      "name": "accept",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29557,
+                      "src": "468:6:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "458:16:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 29563,
+                  "nodeType": "ExpressionStatement",
+                  "src": "458:16:61"
+                }
+              ]
+            },
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "parameters": {
+              "id": 29558,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29557,
+                  "mutability": "mutable",
+                  "name": "accept",
+                  "nameLocation": "440:6:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29565,
+                  "src": "435:11:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 29556,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "435:4:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "434:13:61"
+            },
+            "returnParameters": {
+              "id": 29559,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "448:0:61"
+            },
+            "scope": 29695,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 29575,
+            "nodeType": "FunctionDefinition",
+            "src": "487:73:61",
+            "nodes": [],
+            "body": {
+              "id": 29574,
+              "nodeType": "Block",
+              "src": "527:33:61",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 29572,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29570,
+                      "name": "accept_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29541,
+                      "src": "537:7:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29571,
+                      "name": "accept",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29567,
+                      "src": "547:6:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "537:16:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 29573,
+                  "nodeType": "ExpressionStatement",
+                  "src": "537:16:61"
+                }
+              ]
+            },
+            "functionSelector": "4fc3aa7c",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setAccept",
+            "nameLocation": "496:9:61",
+            "parameters": {
+              "id": 29568,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29567,
+                  "mutability": "mutable",
+                  "name": "accept",
+                  "nameLocation": "512:6:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29575,
+                  "src": "507:11:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 29566,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "507:4:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "506:13:61"
+            },
+            "returnParameters": {
+              "id": 29569,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "527:0:61"
+            },
+            "scope": 29695,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 29596,
+            "nodeType": "FunctionDefinition",
+            "src": "566:180:61",
+            "nodes": [],
+            "body": {
+              "id": 29595,
+              "nodeType": "Block",
+              "src": "668:78:61",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "commonType": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    },
+                    "id": 29593,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "id": 29586,
+                      "name": "poolSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29545,
+                      "src": "685:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "==",
+                    "rightExpression": {
+                      "arguments": [
+                        {
+                          "id": 29589,
+                          "name": "base",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 29577,
+                          "src": "718:4:61",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        {
+                          "id": 29590,
+                          "name": "quote",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 29579,
+                          "src": "724:5:61",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          }
+                        },
+                        {
+                          "id": 29591,
+                          "name": "poolIdx",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 29581,
+                          "src": "731:7:61",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          },
+                          {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          },
+                          {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        ],
+                        "expression": {
+                          "id": 29587,
+                          "name": "PoolSpecs",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 15228,
+                          "src": "698:9:61",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_contract$_PoolSpecs_$15228_$",
+                            "typeString": "type(library PoolSpecs)"
+                          }
+                        },
+                        "id": 29588,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "708:9:61",
+                        "memberName": "encodeKey",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 15148,
+                        "src": "698:19:61",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_address_$_t_address_$_t_uint256_$returns$_t_bytes32_$",
+                          "typeString": "function (address,address,uint256) pure returns (bytes32)"
+                        }
+                      },
+                      "id": 29592,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "698:41:61",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "src": "685:54:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 29585,
+                  "id": 29594,
+                  "nodeType": "Return",
+                  "src": "678:61:61"
+                }
+              ]
+            },
+            "functionSelector": "88014d77",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "hashMatches",
+            "nameLocation": "575:11:61",
+            "parameters": {
+              "id": 29582,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29577,
+                  "mutability": "mutable",
+                  "name": "base",
+                  "nameLocation": "596:4:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29596,
+                  "src": "588:12:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 29576,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "588:7:61",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29579,
+                  "mutability": "mutable",
+                  "name": "quote",
+                  "nameLocation": "610:5:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29596,
+                  "src": "602:13:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 29578,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "602:7:61",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29581,
+                  "mutability": "mutable",
+                  "name": "poolIdx",
+                  "nameLocation": "625:7:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29596,
+                  "src": "617:15:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 29580,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "617:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "587:46:61"
+            },
+            "returnParameters": {
+              "id": 29585,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29584,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29596,
+                  "src": "663:4:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 29583,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "663:4:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "662:6:61"
+            },
+            "scope": 29695,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 29645,
+            "nodeType": "FunctionDefinition",
+            "src": "752:449:61",
+            "nodes": [],
+            "body": {
+              "id": 29644,
+              "nodeType": "Block",
+              "src": "963:238:61",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 29616,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29614,
+                      "name": "isDeposit_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29555,
+                      "src": "973:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "hexValue": "74727565",
+                      "id": 29615,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "bool",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "986:4:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      },
+                      "value": "true"
+                    },
+                    "src": "973:17:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 29617,
+                  "nodeType": "ExpressionStatement",
+                  "src": "973:17:61"
+                },
+                {
+                  "expression": {
+                    "id": 29620,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29618,
+                      "name": "senderSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29543,
+                      "src": "1000:11:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29619,
+                      "name": "sender",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29598,
+                      "src": "1014:6:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "1000:20:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 29621,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1000:20:61"
+                },
+                {
+                  "expression": {
+                    "id": 29624,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29622,
+                      "name": "poolSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29545,
+                      "src": "1030:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29623,
+                      "name": "poolHash",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29600,
+                      "src": "1042:8:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "src": "1030:20:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "id": 29625,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1030:20:61"
+                },
+                {
+                  "expression": {
+                    "id": 29628,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29626,
+                      "name": "lowerSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29547,
+                      "src": "1060:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29627,
+                      "name": "lowerTick",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29602,
+                      "src": "1073:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1060:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 29629,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1060:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29632,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29630,
+                      "name": "upperSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29549,
+                      "src": "1092:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29631,
+                      "name": "upperTick",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29604,
+                      "src": "1105:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1092:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 29633,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1092:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29636,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29634,
+                      "name": "liqSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29551,
+                      "src": "1124:8:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint128",
+                        "typeString": "uint128"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29635,
+                      "name": "liq",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29606,
+                      "src": "1135:3:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint128",
+                        "typeString": "uint128"
+                      }
+                    },
+                    "src": "1124:14:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "id": 29637,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1124:14:61"
+                },
+                {
+                  "expression": {
+                    "id": 29640,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29638,
+                      "name": "mileageSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29553,
+                      "src": "1148:12:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint72",
+                        "typeString": "uint72"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29639,
+                      "name": "mileage",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29608,
+                      "src": "1163:7:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint72",
+                        "typeString": "uint72"
+                      }
+                    },
+                    "src": "1148:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "id": 29641,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1148:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29642,
+                    "name": "accept_",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 29541,
+                    "src": "1187:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 29613,
+                  "id": 29643,
+                  "nodeType": "Return",
+                  "src": "1180:14:61"
+                }
+              ]
+            },
+            "baseFunctions": [
+              5745
+            ],
+            "functionSelector": "668e2cdb",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "depositCrocLiq",
+            "nameLocation": "761:14:61",
+            "overrides": {
+              "id": 29610,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "939:8:61"
+            },
+            "parameters": {
+              "id": 29609,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29598,
+                  "mutability": "mutable",
+                  "name": "sender",
+                  "nameLocation": "785:6:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "777:14:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 29597,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "777:7:61",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29600,
+                  "mutability": "mutable",
+                  "name": "poolHash",
+                  "nameLocation": "801:8:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "793:16:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 29599,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "793:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29602,
+                  "mutability": "mutable",
+                  "name": "lowerTick",
+                  "nameLocation": "846:9:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "840:15:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 29601,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "840:5:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29604,
+                  "mutability": "mutable",
+                  "name": "upperTick",
+                  "nameLocation": "863:9:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "857:15:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 29603,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "857:5:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29606,
+                  "mutability": "mutable",
+                  "name": "liq",
+                  "nameLocation": "882:3:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "874:11:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 29605,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "874:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29608,
+                  "mutability": "mutable",
+                  "name": "mileage",
+                  "nameLocation": "923:7:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "916:14:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint72",
+                    "typeString": "uint72"
+                  },
+                  "typeName": {
+                    "id": 29607,
+                    "name": "uint72",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "916:6:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "776:155:61"
+            },
+            "returnParameters": {
+              "id": 29613,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29612,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29645,
+                  "src": "957:4:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 29611,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "957:4:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "956:6:61"
+            },
+            "scope": 29695,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 29694,
+            "nodeType": "FunctionDefinition",
+            "src": "1207:453:61",
+            "nodes": [],
+            "body": {
+              "id": 29693,
+              "nodeType": "Block",
+              "src": "1421:239:61",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 29665,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29663,
+                      "name": "isDeposit_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29555,
+                      "src": "1431:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "hexValue": "66616c7365",
+                      "id": 29664,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "bool",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "1444:5:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      },
+                      "value": "false"
+                    },
+                    "src": "1431:18:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 29666,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1431:18:61"
+                },
+                {
+                  "expression": {
+                    "id": 29669,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29667,
+                      "name": "senderSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29543,
+                      "src": "1459:11:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29668,
+                      "name": "sender",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29647,
+                      "src": "1473:6:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "1459:20:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 29670,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1459:20:61"
+                },
+                {
+                  "expression": {
+                    "id": 29673,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29671,
+                      "name": "poolSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29545,
+                      "src": "1489:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29672,
+                      "name": "poolHash",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29649,
+                      "src": "1501:8:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "src": "1489:20:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "id": 29674,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1489:20:61"
+                },
+                {
+                  "expression": {
+                    "id": 29677,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29675,
+                      "name": "lowerSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29547,
+                      "src": "1519:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29676,
+                      "name": "lowerTick",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29651,
+                      "src": "1532:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1519:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 29678,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1519:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29681,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29679,
+                      "name": "upperSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29549,
+                      "src": "1551:10:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29680,
+                      "name": "upperTick",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29653,
+                      "src": "1564:9:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1551:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 29682,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1551:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29685,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29683,
+                      "name": "liqSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29551,
+                      "src": "1583:8:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint128",
+                        "typeString": "uint128"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29684,
+                      "name": "liq",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29655,
+                      "src": "1594:3:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint128",
+                        "typeString": "uint128"
+                      }
+                    },
+                    "src": "1583:14:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "id": 29686,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1583:14:61"
+                },
+                {
+                  "expression": {
+                    "id": 29689,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 29687,
+                      "name": "mileageSnap_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29553,
+                      "src": "1607:12:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint72",
+                        "typeString": "uint72"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 29688,
+                      "name": "mileage",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 29657,
+                      "src": "1622:7:61",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint72",
+                        "typeString": "uint72"
+                      }
+                    },
+                    "src": "1607:22:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "id": 29690,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1607:22:61"
+                },
+                {
+                  "expression": {
+                    "id": 29691,
+                    "name": "accept_",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 29541,
+                    "src": "1646:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 29662,
+                  "id": 29692,
+                  "nodeType": "Return",
+                  "src": "1639:14:61"
+                }
+              ]
+            },
+            "baseFunctions": [
+              5762
+            ],
+            "functionSelector": "93835c1e",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdrawCrocLiq",
+            "nameLocation": "1216:15:61",
+            "overrides": {
+              "id": 29659,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "1397:8:61"
+            },
+            "parameters": {
+              "id": 29658,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29647,
+                  "mutability": "mutable",
+                  "name": "sender",
+                  "nameLocation": "1241:6:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1233:14:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 29646,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1233:7:61",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29649,
+                  "mutability": "mutable",
+                  "name": "poolHash",
+                  "nameLocation": "1257:8:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1249:16:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 29648,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1249:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29651,
+                  "mutability": "mutable",
+                  "name": "lowerTick",
+                  "nameLocation": "1303:9:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1297:15:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 29650,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1297:5:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29653,
+                  "mutability": "mutable",
+                  "name": "upperTick",
+                  "nameLocation": "1320:9:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1314:15:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 29652,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1314:5:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29655,
+                  "mutability": "mutable",
+                  "name": "liq",
+                  "nameLocation": "1339:3:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1331:11:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 29654,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1331:7:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 29657,
+                  "mutability": "mutable",
+                  "name": "mileage",
+                  "nameLocation": "1381:7:61",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1374:14:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint72",
+                    "typeString": "uint72"
+                  },
+                  "typeName": {
+                    "id": 29656,
+                    "name": "uint72",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1374:6:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1232:157:61"
+            },
+            "returnParameters": {
+              "id": 29662,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 29661,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 29694,
+                  "src": "1415:4:61",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 29660,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1415:4:61",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1414:6:61"
+            },
+            "scope": 29695,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 29538,
+              "name": "ICrocLpConduit",
+              "nameLocations": [
+                "167:14:61"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 5763,
+              "src": "167:14:61"
+            },
+            "id": 29539,
+            "nodeType": "InheritanceSpecifier",
+            "src": "167:14:61"
+          }
+        ],
+        "canonicalName": "MockLpConduit",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          29695,
+          5763
+        ],
+        "name": "MockLpConduit",
+        "nameLocation": "150:13:61",
+        "scope": 29696,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 61
+}

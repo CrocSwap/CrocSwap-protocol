@@ -1,0 +1,890 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "dex",
+          "type": "address"
+        },
+        {
+          "internalType": "uint16",
+          "name": "slot",
+          "type": "uint16"
+        }
+      ],
+      "name": "acceptCrocProxyRole",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proxyDex_",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proxySlot_",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "slot",
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "proxyDex",
+          "type": "address"
+        }
+      ],
+      "name": "setRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x60808060405234610016576101aa908161001c8239f35b600080fdfe608080604052600436101561001357600080fd5b600090813560e01c9081630dbd4d6f1461011b578163975113c1146100f957508063ac54c0fc1461007a5763c9ec4fd31461004d57600080fd5b346100775780600319360112610077575460405160109190911c6001600160a01b03168152602090f35b80fd5b506040366003190112610077576001600160a01b03600435818116908190036100f5576024359061ffff918281168091036100f15760209454938460101c169283159485156100d0575b86866040519015158152f35b1614925090826100e7575b505038808080806100c4565b14905038806100db565b8480fd5b8280fd5b90503461011757816003193601126101175761ffff60209254168152f35b5080fd5b82346100775760403660031901126100775760043561ffff811680910361011757602435906001600160a01b03821682036100f55782546001600160b01b0319161760109190911b62010000600160b01b031617815580f3fea26469706673582212206a96fe009ad86b0582a96ae13be75d59b35fa2bca97c61d8c3edc543f40b36f164736f6c63430008130033",
+    "sourceMap": "105:555:66:-:0;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x608080604052600436101561001357600080fd5b600090813560e01c9081630dbd4d6f1461011b578163975113c1146100f957508063ac54c0fc1461007a5763c9ec4fd31461004d57600080fd5b346100775780600319360112610077575460405160109190911c6001600160a01b03168152602090f35b80fd5b506040366003190112610077576001600160a01b03600435818116908190036100f5576024359061ffff918281168091036100f15760209454938460101c169283159485156100d0575b86866040519015158152f35b1614925090826100e7575b505038808080806100c4565b14905038806100db565b8480fd5b8280fd5b90503461011757816003193601126101175761ffff60209254168152f35b5080fd5b82346100775760403660031901126100775760043561ffff811680910361011757602435906001600160a01b03821682036100f55782546001600160b01b0319161760109190911b62010000600160b01b031617815580f3fea26469706673582212206a96fe009ad86b0582a96ae13be75d59b35fa2bca97c61d8c3edc543f40b36f164736f6c63430008130033",
+    "sourceMap": "105:555:66:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;105:555:66;;;;;;;;;;-1:-1:-1;105:555:66;;-1:-1:-1;;105:555:66;;;;-1:-1:-1;;;;;105:555:66;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;571:23;;;570:81;;;;;105:555;;;;;;;;;;;570:81;105:555;612:18;;-1:-1:-1;105:555:66;612:18;:38;;570:81;;;;;;;;;;612:38;634:16;;-1:-1:-1;612:38:66;;;;105:555;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;105:555:66;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;105:555:66;;;;;;;;-1:-1:-1;;;;;;105:555:66;;;;;;;-1:-1:-1;;;;;105:555:66;;;;;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "acceptCrocProxyRole(address,uint16)": "ac54c0fc",
+    "proxyDex_()": "c9ec4fd3",
+    "proxySlot_()": "975113c1",
+    "setRole(uint16,address)": "0dbd4d6f"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"dex\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"slot\",\"type\":\"uint16\"}],\"name\":\"acceptCrocProxyRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxyDex_\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxySlot_\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"slot\",\"type\":\"uint16\"},{\"internalType\":\"address\",\"name\":\"proxyDex\",\"type\":\"address\"}],\"name\":\"setRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/test/MockProxySidecar.sol\":\"MockProxySidecar\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/interfaces/ICrocCondOracle.sol\":{\"keccak256\":\"0x66c623f5dce7637e25d3f7033e8c1cfa21f9c0c3b425319d3d38fbe7ce8353a0\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://d32284e8381bdb229a13f57a06c69a2fd7d65880e24a5f74c9af6d9b9167daa0\",\"dweb:/ipfs/QmXUjomA3Fu4sxLF69Fg7baGircEL2eFscZLkTRPg7tJK6\"]},\"contracts/test/MockProxySidecar.sol\":{\"keccak256\":\"0xe660ed88eaacd68b9312fa65f4e117fc0263efee717b9f5c410353abef44ddce\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://2e4291bc0fa1ef40659f2ef7de1a4082d236b391030a29d751cfc1ccfcb77a0b\",\"dweb:/ipfs/QmVqsz9AG2VcbsBxM87ozuduSRLUZrcEFzkpraaFZ11sP4\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "dex",
+              "type": "address"
+            },
+            {
+              "internalType": "uint16",
+              "name": "slot",
+              "type": "uint16"
+            }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "acceptCrocProxyRole",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "proxyDex_",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "proxySlot_",
+          "outputs": [
+            {
+              "internalType": "uint16",
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint16",
+              "name": "slot",
+              "type": "uint16"
+            },
+            {
+              "internalType": "address",
+              "name": "proxyDex",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setRole"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/test/MockProxySidecar.sol": "MockProxySidecar"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/interfaces/ICrocCondOracle.sol": {
+        "keccak256": "0x66c623f5dce7637e25d3f7033e8c1cfa21f9c0c3b425319d3d38fbe7ce8353a0",
+        "urls": [
+          "bzz-raw://d32284e8381bdb229a13f57a06c69a2fd7d65880e24a5f74c9af6d9b9167daa0",
+          "dweb:/ipfs/QmXUjomA3Fu4sxLF69Fg7baGircEL2eFscZLkTRPg7tJK6"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/test/MockProxySidecar.sol": {
+        "keccak256": "0xe660ed88eaacd68b9312fa65f4e117fc0263efee717b9f5c410353abef44ddce",
+        "urls": [
+          "bzz-raw://2e4291bc0fa1ef40659f2ef7de1a4082d236b391030a29d751cfc1ccfcb77a0b",
+          "dweb:/ipfs/QmVqsz9AG2VcbsBxM87ozuduSRLUZrcEFzkpraaFZ11sP4"
+        ],
+        "license": "GPL-3"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/test/MockProxySidecar.sol",
+    "id": 30559,
+    "exportedSymbols": {
+      "ICrocCondOracle": [
+        5725
+      ],
+      "ICrocNonceOracle": [
+        5715
+      ],
+      "MockProxySidecar": [
+        30558
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "35:627:66",
+    "nodes": [
+      {
+        "id": 30509,
+        "nodeType": "PragmaDirective",
+        "src": "35:23:66",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 30510,
+        "nodeType": "ImportDirective",
+        "src": "60:43:66",
+        "nodes": [],
+        "absolutePath": "contracts/interfaces/ICrocCondOracle.sol",
+        "file": "../interfaces/ICrocCondOracle.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 30559,
+        "sourceUnit": 5726,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 30558,
+        "nodeType": "ContractDefinition",
+        "src": "105:555:66",
+        "nodes": [
+          {
+            "id": 30512,
+            "nodeType": "VariableDeclaration",
+            "src": "138:24:66",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "975113c1",
+            "mutability": "mutable",
+            "name": "proxySlot_",
+            "nameLocation": "152:10:66",
+            "scope": 30558,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint16",
+              "typeString": "uint16"
+            },
+            "typeName": {
+              "id": 30511,
+              "name": "uint16",
+              "nodeType": "ElementaryTypeName",
+              "src": "138:6:66",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint16",
+                "typeString": "uint16"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 30514,
+            "nodeType": "VariableDeclaration",
+            "src": "168:24:66",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "c9ec4fd3",
+            "mutability": "mutable",
+            "name": "proxyDex_",
+            "nameLocation": "183:9:66",
+            "scope": 30558,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_address",
+              "typeString": "address"
+            },
+            "typeName": {
+              "id": 30513,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "168:7:66",
+              "stateMutability": "nonpayable",
+              "typeDescriptions": {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 30530,
+            "nodeType": "FunctionDefinition",
+            "src": "199:120:66",
+            "nodes": [],
+            "body": {
+              "id": 30529,
+              "nodeType": "Block",
+              "src": "255:64:66",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 30523,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 30521,
+                      "name": "proxySlot_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 30512,
+                      "src": "265:10:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 30522,
+                      "name": "slot",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 30516,
+                      "src": "278:4:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "src": "265:17:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "id": 30524,
+                  "nodeType": "ExpressionStatement",
+                  "src": "265:17:66"
+                },
+                {
+                  "expression": {
+                    "id": 30527,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 30525,
+                      "name": "proxyDex_",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 30514,
+                      "src": "292:9:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 30526,
+                      "name": "proxyDex",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 30518,
+                      "src": "304:8:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "292:20:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 30528,
+                  "nodeType": "ExpressionStatement",
+                  "src": "292:20:66"
+                }
+              ]
+            },
+            "functionSelector": "0dbd4d6f",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setRole",
+            "nameLocation": "208:7:66",
+            "parameters": {
+              "id": 30519,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 30516,
+                  "mutability": "mutable",
+                  "name": "slot",
+                  "nameLocation": "224:4:66",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 30530,
+                  "src": "217:11:66",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 30515,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "217:6:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 30518,
+                  "mutability": "mutable",
+                  "name": "proxyDex",
+                  "nameLocation": "238:8:66",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 30530,
+                  "src": "230:16:66",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 30517,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "230:7:66",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "216:31:66"
+            },
+            "returnParameters": {
+              "id": 30520,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "255:0:66"
+            },
+            "scope": 30558,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 30557,
+            "nodeType": "FunctionDefinition",
+            "src": "467:191:66",
+            "nodes": [],
+            "body": {
+              "id": 30556,
+              "nodeType": "Block",
+              "src": "553:105:66",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "commonType": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    },
+                    "id": 30554,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "components": [
+                        {
+                          "commonType": {
+                            "typeIdentifier": "t_address",
+                            "typeString": "address"
+                          },
+                          "id": 30544,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "leftExpression": {
+                            "id": 30539,
+                            "name": "proxyDex_",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 30514,
+                            "src": "571:9:66",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          },
+                          "nodeType": "BinaryOperation",
+                          "operator": "==",
+                          "rightExpression": {
+                            "arguments": [
+                              {
+                                "hexValue": "30",
+                                "id": 30542,
+                                "isConstant": false,
+                                "isLValue": false,
+                                "isPure": true,
+                                "kind": "number",
+                                "lValueRequested": false,
+                                "nodeType": "Literal",
+                                "src": "592:1:66",
+                                "typeDescriptions": {
+                                  "typeIdentifier": "t_rational_0_by_1",
+                                  "typeString": "int_const 0"
+                                },
+                                "value": "0"
+                              }
+                            ],
+                            "expression": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_rational_0_by_1",
+                                  "typeString": "int_const 0"
+                                }
+                              ],
+                              "id": 30541,
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "nodeType": "ElementaryTypeNameExpression",
+                              "src": "584:7:66",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_type$_t_address_$",
+                                "typeString": "type(address)"
+                              },
+                              "typeName": {
+                                "id": 30540,
+                                "name": "address",
+                                "nodeType": "ElementaryTypeName",
+                                "src": "584:7:66",
+                                "typeDescriptions": {}
+                              }
+                            },
+                            "id": 30543,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": true,
+                            "kind": "typeConversion",
+                            "lValueRequested": false,
+                            "nameLocations": [],
+                            "names": [],
+                            "nodeType": "FunctionCall",
+                            "src": "584:10:66",
+                            "tryCall": false,
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            }
+                          },
+                          "src": "571:23:66",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          }
+                        }
+                      ],
+                      "id": 30545,
+                      "isConstant": false,
+                      "isInlineArray": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "TupleExpression",
+                      "src": "570:25:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "||",
+                    "rightExpression": {
+                      "components": [
+                        {
+                          "commonType": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          },
+                          "id": 30552,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "leftExpression": {
+                            "commonType": {
+                              "typeIdentifier": "t_uint16",
+                              "typeString": "uint16"
+                            },
+                            "id": 30548,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "leftExpression": {
+                              "id": 30546,
+                              "name": "proxySlot_",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 30512,
+                              "src": "612:10:66",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_uint16",
+                                "typeString": "uint16"
+                              }
+                            },
+                            "nodeType": "BinaryOperation",
+                            "operator": "==",
+                            "rightExpression": {
+                              "id": 30547,
+                              "name": "slot",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 30534,
+                              "src": "626:4:66",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_uint16",
+                                "typeString": "uint16"
+                              }
+                            },
+                            "src": "612:18:66",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_bool",
+                              "typeString": "bool"
+                            }
+                          },
+                          "nodeType": "BinaryOperation",
+                          "operator": "&&",
+                          "rightExpression": {
+                            "commonType": {
+                              "typeIdentifier": "t_address",
+                              "typeString": "address"
+                            },
+                            "id": 30551,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "leftExpression": {
+                              "id": 30549,
+                              "name": "proxyDex_",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 30514,
+                              "src": "634:9:66",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_address",
+                                "typeString": "address"
+                              }
+                            },
+                            "nodeType": "BinaryOperation",
+                            "operator": "==",
+                            "rightExpression": {
+                              "id": 30550,
+                              "name": "dex",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 30532,
+                              "src": "647:3:66",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_address",
+                                "typeString": "address"
+                              }
+                            },
+                            "src": "634:16:66",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_bool",
+                              "typeString": "bool"
+                            }
+                          },
+                          "src": "612:38:66",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_bool",
+                            "typeString": "bool"
+                          }
+                        }
+                      ],
+                      "id": 30553,
+                      "isConstant": false,
+                      "isInlineArray": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "TupleExpression",
+                      "src": "611:40:66",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "570:81:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 30538,
+                  "id": 30555,
+                  "nodeType": "Return",
+                  "src": "563:88:66"
+                }
+              ]
+            },
+            "functionSelector": "ac54c0fc",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "acceptCrocProxyRole",
+            "nameLocation": "476:19:66",
+            "parameters": {
+              "id": 30535,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 30532,
+                  "mutability": "mutable",
+                  "name": "dex",
+                  "nameLocation": "505:3:66",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 30557,
+                  "src": "497:11:66",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 30531,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "497:7:66",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 30534,
+                  "mutability": "mutable",
+                  "name": "slot",
+                  "nameLocation": "517:4:66",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 30557,
+                  "src": "510:11:66",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 30533,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "510:6:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "496:26:66"
+            },
+            "returnParameters": {
+              "id": 30538,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 30537,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 30557,
+                  "src": "547:4:66",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 30536,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "547:4:66",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "546:6:66"
+            },
+            "scope": 30558,
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "MockProxySidecar",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          30558
+        ],
+        "name": "MockProxySidecar",
+        "nameLocation": "114:16:66",
+        "scope": 30559,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 66
+}

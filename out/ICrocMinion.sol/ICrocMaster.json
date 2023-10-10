@@ -1,0 +1,424 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "name": "acceptsCrocAuthority",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "acceptsCrocAuthority()": "7abda6c2"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"acceptsCrocAuthority\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/interfaces/ICrocMinion.sol\":\"ICrocMaster\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/interfaces/ICrocMinion.sol\":{\"keccak256\":\"0xb695d6d4f13432358289384d32433bcf44687603014fbd3d21bf6d6e3ab900b9\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://c06859d4209113bfcbedc097e6810b29a7270d76925851acc465de24c80a72f9\",\"dweb:/ipfs/QmZ3vVp4yze4wYsxSdDXk55p4hBP9JNsp5jC3QLUo96ysr\"]},\"contracts/libraries/CompoundMath.sol\":{\"keccak256\":\"0x0edd6fc9fd81583a32489bfc7ebf6b70eb1d23cd1e6eb79e88ce112b5f444f0c\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://e3e597c6120b2793ae4ec3da35d925805fd7c6a9ae4c73e15c1df19de6b0e6bc\",\"dweb:/ipfs/QmPE1ZLhZXTeHYMU3xXVh8Bud27fDEHe4s8rF9Sraukgnf\"]},\"contracts/libraries/CurveCache.sol\":{\"keccak256\":\"0x3d71c0f289be7de41f5369d64e4404b3335310a2105073c4d99f761d0c444488\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://0b794e4058ae9d3db8f44ffa7b96c4fc3066c7a1fa65f1441ef31aca2dce86b7\",\"dweb:/ipfs/QmeU1XqwTSLm2gk6nrcZHuDpy4yg3pHim7GzghXwgnTYn4\"]},\"contracts/libraries/CurveMath.sol\":{\"keccak256\":\"0x2b1acd7145a21185f9aa0473d4e4b341d4b34d271bc9773833b53b3ecb800869\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://4f2ffeb9365fd05fe45491e0e09c844de656c5147647f441fa031097c0f7a7ec\",\"dweb:/ipfs/QmZ5yp9eJ2eNmnHnbjg8A5uTwtgGc156dxomVYPpX3vBkg\"]},\"contracts/libraries/FixedPoint.sol\":{\"keccak256\":\"0x40a19fd78a58ce39cf26a7408e9efd28853fec9e1a6e46c6ba364002d5a82372\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://2dc685d434c72ce733ae590bd39d44912569d7e3a27093083ada767ba7ae94f1\",\"dweb:/ipfs/QmaA7tmPTRBwhwKaahGUvXfu8qLSjAmPiZrMNuiA68yFtY\"]},\"contracts/libraries/LiquidityMath.sol\":{\"keccak256\":\"0x4be08c2957bf570a04e24e9f1ad9e8c051d8012012b2b6abb9e59d156380fb0d\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://4494cb55e9b8ca079c35805b984ca4b5977fdca8302489fb6c73eb86ed932296\",\"dweb:/ipfs/QmZ9QUyuW4TcvyYKjY9ycdNdBbEPf6DxcgEQYay789kVkC\"]},\"contracts/libraries/SafeCast.sol\":{\"keccak256\":\"0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5\",\"dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg\"]},\"contracts/libraries/TickMath.sol\":{\"keccak256\":\"0xd276edd31578d04c288d0ccf01b06db27101def6cb746e36985df86a3d764121\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://d8bccc39424530cf1c313523e4f369efcda79dc9e2e83a7e4a84d8196d3dd3ea\",\"dweb:/ipfs/QmRvnThuYDQWHdmJxBoz3bbzizcaJt1NyQGNVjwQ25zfHi\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "acceptsCrocAuthority",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/interfaces/ICrocMinion.sol": "ICrocMaster"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/interfaces/ICrocMinion.sol": {
+        "keccak256": "0xb695d6d4f13432358289384d32433bcf44687603014fbd3d21bf6d6e3ab900b9",
+        "urls": [
+          "bzz-raw://c06859d4209113bfcbedc097e6810b29a7270d76925851acc465de24c80a72f9",
+          "dweb:/ipfs/QmZ3vVp4yze4wYsxSdDXk55p4hBP9JNsp5jC3QLUo96ysr"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/CompoundMath.sol": {
+        "keccak256": "0x0edd6fc9fd81583a32489bfc7ebf6b70eb1d23cd1e6eb79e88ce112b5f444f0c",
+        "urls": [
+          "bzz-raw://e3e597c6120b2793ae4ec3da35d925805fd7c6a9ae4c73e15c1df19de6b0e6bc",
+          "dweb:/ipfs/QmPE1ZLhZXTeHYMU3xXVh8Bud27fDEHe4s8rF9Sraukgnf"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/CurveCache.sol": {
+        "keccak256": "0x3d71c0f289be7de41f5369d64e4404b3335310a2105073c4d99f761d0c444488",
+        "urls": [
+          "bzz-raw://0b794e4058ae9d3db8f44ffa7b96c4fc3066c7a1fa65f1441ef31aca2dce86b7",
+          "dweb:/ipfs/QmeU1XqwTSLm2gk6nrcZHuDpy4yg3pHim7GzghXwgnTYn4"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/CurveMath.sol": {
+        "keccak256": "0x2b1acd7145a21185f9aa0473d4e4b341d4b34d271bc9773833b53b3ecb800869",
+        "urls": [
+          "bzz-raw://4f2ffeb9365fd05fe45491e0e09c844de656c5147647f441fa031097c0f7a7ec",
+          "dweb:/ipfs/QmZ5yp9eJ2eNmnHnbjg8A5uTwtgGc156dxomVYPpX3vBkg"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/FixedPoint.sol": {
+        "keccak256": "0x40a19fd78a58ce39cf26a7408e9efd28853fec9e1a6e46c6ba364002d5a82372",
+        "urls": [
+          "bzz-raw://2dc685d434c72ce733ae590bd39d44912569d7e3a27093083ada767ba7ae94f1",
+          "dweb:/ipfs/QmaA7tmPTRBwhwKaahGUvXfu8qLSjAmPiZrMNuiA68yFtY"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/LiquidityMath.sol": {
+        "keccak256": "0x4be08c2957bf570a04e24e9f1ad9e8c051d8012012b2b6abb9e59d156380fb0d",
+        "urls": [
+          "bzz-raw://4494cb55e9b8ca079c35805b984ca4b5977fdca8302489fb6c73eb86ed932296",
+          "dweb:/ipfs/QmZ9QUyuW4TcvyYKjY9ycdNdBbEPf6DxcgEQYay789kVkC"
+        ],
+        "license": "GPL-2.0-or-later"
+      },
+      "contracts/libraries/SafeCast.sol": {
+        "keccak256": "0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916",
+        "urls": [
+          "bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5",
+          "dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg"
+        ],
+        "license": "GPL-2.0-or-later"
+      },
+      "contracts/libraries/TickMath.sol": {
+        "keccak256": "0xd276edd31578d04c288d0ccf01b06db27101def6cb746e36985df86a3d764121",
+        "urls": [
+          "bzz-raw://d8bccc39424530cf1c313523e4f369efcda79dc9e2e83a7e4a84d8196d3dd3ea",
+          "dweb:/ipfs/QmRvnThuYDQWHdmJxBoz3bbzizcaJt1NyQGNVjwQ25zfHi"
+        ],
+        "license": "GPL-2.0-or-later"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/interfaces/ICrocMinion.sol",
+    "id": 5783,
+    "exportedSymbols": {
+      "CompoundMath": [
+        11254
+      ],
+      "CurveCache": [
+        11630
+      ],
+      "CurveMath": [
+        12169
+      ],
+      "FixedPoint": [
+        13719
+      ],
+      "ICrocMaster": [
+        5782
+      ],
+      "ICrocMinion": [
+        5776
+      ],
+      "LiquidityMath": [
+        14980
+      ],
+      "SafeCast": [
+        16160
+      ],
+      "TickMath": [
+        17246
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "36:1444:15",
+    "nodes": [
+      {
+        "id": 5765,
+        "nodeType": "PragmaDirective",
+        "src": "36:23:15",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 5766,
+        "nodeType": "ImportDirective",
+        "src": "61:37:15",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/CurveCache.sol",
+        "file": "../libraries/CurveCache.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 5783,
+        "sourceUnit": 11631,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 5776,
+        "nodeType": "ContractDefinition",
+        "src": "326:842:15",
+        "nodes": [
+          {
+            "id": 5775,
+            "nodeType": "FunctionDefinition",
+            "src": "1070:96:15",
+            "nodes": [],
+            "functionSelector": "13fd34f4",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "protocolCmd",
+            "nameLocation": "1079:11:15",
+            "parameters": {
+              "id": 5773,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5768,
+                  "mutability": "mutable",
+                  "name": "proxyPath",
+                  "nameLocation": "1099:9:15",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5775,
+                  "src": "1092:16:15",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 5767,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1092:6:15",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5770,
+                  "mutability": "mutable",
+                  "name": "cmd",
+                  "nameLocation": "1125:3:15",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5775,
+                  "src": "1110:18:15",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 5769,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1110:5:15",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5772,
+                  "mutability": "mutable",
+                  "name": "sudo",
+                  "nameLocation": "1135:4:15",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5775,
+                  "src": "1130:9:15",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 5771,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1130:4:15",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1091:49:15"
+            },
+            "returnParameters": {
+              "id": 5774,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1165:0:15"
+            },
+            "scope": 5776,
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "ICrocMinion",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          5776
+        ],
+        "name": "ICrocMinion",
+        "nameLocation": "336:11:15",
+        "scope": 5783,
+        "usedErrors": []
+      },
+      {
+        "id": 5782,
+        "nodeType": "ContractDefinition",
+        "src": "1256:224:15",
+        "nodes": [
+          {
+            "id": 5781,
+            "nodeType": "FunctionDefinition",
+            "src": "1422:56:15",
+            "nodes": [],
+            "functionSelector": "7abda6c2",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "acceptsCrocAuthority",
+            "nameLocation": "1431:20:15",
+            "parameters": {
+              "id": 5777,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1451:2:15"
+            },
+            "returnParameters": {
+              "id": 5780,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5779,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5781,
+                  "src": "1472:4:15",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 5778,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1472:4:15",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1471:6:15"
+            },
+            "scope": 5782,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "ICrocMaster",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          5782
+        ],
+        "name": "ICrocMaster",
+        "nameLocation": "1266:11:15",
+        "scope": 5783,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 15
+}

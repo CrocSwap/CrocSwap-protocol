@@ -1,0 +1,3499 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bitmap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "shift",
+          "type": "uint8"
+        }
+      ],
+      "name": "testBitLeft",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bitmap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "shift",
+          "type": "uint8"
+        }
+      ],
+      "name": "testBitRight",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bitmap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "pos",
+          "type": "uint8"
+        }
+      ],
+      "name": "testBitSet",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int8",
+          "name": "x",
+          "type": "int8"
+        }
+      ],
+      "name": "testCastIndex",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int24",
+          "name": "tick",
+          "type": "int24"
+        }
+      ],
+      "name": "testDecomp",
+      "outputs": [
+        {
+          "internalType": "int8",
+          "name": "lobbyKey",
+          "type": "int8"
+        },
+        {
+          "internalType": "int16",
+          "name": "mezzKey",
+          "type": "int16"
+        },
+        {
+          "internalType": "uint8",
+          "name": "lobbyBit",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "mezzBit",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "termBit",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int24",
+          "name": "tick",
+          "type": "int24"
+        },
+        {
+          "internalType": "bool",
+          "name": "isBuy",
+          "type": "bool"
+        }
+      ],
+      "name": "testShiftBump",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bitmap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "shift",
+          "type": "uint8"
+        }
+      ],
+      "name": "testTruncateLeft",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bitmap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "shift",
+          "type": "uint8"
+        }
+      ],
+      "name": "testTruncateRight",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "x",
+          "type": "uint8"
+        }
+      ],
+      "name": "testUncastIndex",
+      "outputs": [
+        {
+          "internalType": "int8",
+          "name": "",
+          "type": "int8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "int8",
+          "name": "lobbyIdx",
+          "type": "int8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "mezzBit",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "termBit",
+          "type": "uint8"
+        }
+      ],
+      "name": "testWeld",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "fullWeld",
+          "type": "int24"
+        },
+        {
+          "internalType": "int16",
+          "name": "mezzWeld",
+          "type": "int16"
+        },
+        {
+          "internalType": "int24",
+          "name": "termWeld",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x608080604052346100165761074c908161001c8239f35b600080fdfe60806040908082526004918236101561001757600080fd5b600091823560e01c90816304a47ef614610575575080630855e1c3146105475780633c526faa1461051357806351e0de5c146104a4578063687c7ffd146104545780636b000acf146103ce57806386c60c93146103a057806396892a4c1461025457806399de84ef146101f15763e6b4b9731461009357600080fd5b346101ed576003199281843601126101e95760ff806100b06106d0565b169184908035841c841b90811591821597886100ec575b5050505060209550846100e0575b505050519015158152f35b161491503880806100d5565b908092939450936101e657506020978492909183906001600160801b038116156101dc575050607f5b67ffffffffffffffff8516156101d357603f190183165b63ffffffff8516156101ca57601f190183165b61ffff8516156101c057600f190183165b848416156101b557600719018316905b600f8516156101aa57500181165b600383161561019e57600119018116916001905b16610192575b50388080806100c7565b90600019011681610188565b9160019060021c610182565b909391501c9161016e565b909360081c93610160565b9360101c93610150565b93891c9361013f565b93871c9361012c565b60801c9450610115565b80fd5b8280fd5b5080fd5b50346101ed5760203660031901126101ed579060ff60a0926102116106e5565b60020b928360101d900b928060081d60010b918361022e866106f5565b825196875284602088015216908501528261010080930716606085015207166080820152f35b50346101ed57806003193601126101ed5760ff91826102716106d0565b169281938535811b901c801595861561029e575b845160ff871681528715156020820152604090f35b0390f35b929594508592818661039c5761029a95969750600160801b81101561038e575b50856801000000000000000083101561037e575b5064010000000082101561036d575b6201000082101561035c575b61010082101561034b575b601082101561033c575b908260029282101561032d575b501015610322575b509190388080610285565b906001011638610317565b908290811c940116928261030f565b92830182169290811c90610302565b929060088391811c920116926102f8565b929060108391811c920116926102ed565b929060208391811c920116926102e1565b83919492811c92011692856102d2565b60809450841c9150386102be565b8780fd5b508290346101e957806003193601126101e9576020925060ff6103c16106d0565b1690519135811b901c8152f35b5082346101e95760603660031901126101e957359081830b82036101e9576103f46106d0565b916044359060ff82168092036104505760609450600291820b908160ff861660010b8260081b60010b019161ff0086519760081b16850b9060101b850b01840b01830b85528060010b602086015260081b820b01900b90820152f35b8480fd5b5091346101ed5760203660031901126101ed57359160ff83168084036101e9576020936080821015610493575060010b607f1901820b905b51910b8152f35b607f190160ff16830b91905061048c565b50346101ed57806003193601126101ed576104bd6106e5565b60243590811515820361050f579160ff8061ffff93816101006020989760020b07169080600014610509576001965b50156104ff57925b519416911601168152f35b81038116926104f4565b866104ec565b8380fd5b5082346101e95760203660031901126101e957359182810b83036101e6575060ff61053f6020936106f5565b915191168152f35b508290346101e957806003193601126101e9576020925060ff6105686106d0565b1690519135811c901b8152f35b929390503461050f5760031982813601126104505793839460ff90816105996106d0565b169383948135811c901b9586159687156105c1575b60ff8716895287151560208a0152604089f35b9193955091939596508095876101e657509161029a9593918593899896906001600160801b03811615156000146106c5575050607f905b67ffffffffffffffff8616156106bb5750603f190183165b63ffffffff8516156106b157601f190183165b61ffff8516156106a757600f190183165b8484161561069c57600719018316905b600f85161561069157500181165b600383161561068557600119018116916001905b16610679575b50909138808080806105ae565b9060001901163861066c565b9160019060021c610666565b909391501c91610652565b909360081c93610644565b9360101c93610634565b9360201c93610623565b9490941c93610610565b60801c9550906105f8565b6024359060ff821682036106e057565b600080fd5b600435908160020b82036106e057565b60ff90608090600081810b90811261070f57508216011690565b905001169056fea2646970667358221220e440a531143c147ab7169f469a0113163861092aea8d992b1704035fdc5c714664736f6c63430008130033",
+    "sourceMap": "99:1897:70:-:0;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x60806040908082526004918236101561001757600080fd5b600091823560e01c90816304a47ef614610575575080630855e1c3146105475780633c526faa1461051357806351e0de5c146104a4578063687c7ffd146104545780636b000acf146103ce57806386c60c93146103a057806396892a4c1461025457806399de84ef146101f15763e6b4b9731461009357600080fd5b346101ed576003199281843601126101e95760ff806100b06106d0565b169184908035841c841b90811591821597886100ec575b5050505060209550846100e0575b505050519015158152f35b161491503880806100d5565b908092939450936101e657506020978492909183906001600160801b038116156101dc575050607f5b67ffffffffffffffff8516156101d357603f190183165b63ffffffff8516156101ca57601f190183165b61ffff8516156101c057600f190183165b848416156101b557600719018316905b600f8516156101aa57500181165b600383161561019e57600119018116916001905b16610192575b50388080806100c7565b90600019011681610188565b9160019060021c610182565b909391501c9161016e565b909360081c93610160565b9360101c93610150565b93891c9361013f565b93871c9361012c565b60801c9450610115565b80fd5b8280fd5b5080fd5b50346101ed5760203660031901126101ed579060ff60a0926102116106e5565b60020b928360101d900b928060081d60010b918361022e866106f5565b825196875284602088015216908501528261010080930716606085015207166080820152f35b50346101ed57806003193601126101ed5760ff91826102716106d0565b169281938535811b901c801595861561029e575b845160ff871681528715156020820152604090f35b0390f35b929594508592818661039c5761029a95969750600160801b81101561038e575b50856801000000000000000083101561037e575b5064010000000082101561036d575b6201000082101561035c575b61010082101561034b575b601082101561033c575b908260029282101561032d575b501015610322575b509190388080610285565b906001011638610317565b908290811c940116928261030f565b92830182169290811c90610302565b929060088391811c920116926102f8565b929060108391811c920116926102ed565b929060208391811c920116926102e1565b83919492811c92011692856102d2565b60809450841c9150386102be565b8780fd5b508290346101e957806003193601126101e9576020925060ff6103c16106d0565b1690519135811b901c8152f35b5082346101e95760603660031901126101e957359081830b82036101e9576103f46106d0565b916044359060ff82168092036104505760609450600291820b908160ff861660010b8260081b60010b019161ff0086519760081b16850b9060101b850b01840b01830b85528060010b602086015260081b820b01900b90820152f35b8480fd5b5091346101ed5760203660031901126101ed57359160ff83168084036101e9576020936080821015610493575060010b607f1901820b905b51910b8152f35b607f190160ff16830b91905061048c565b50346101ed57806003193601126101ed576104bd6106e5565b60243590811515820361050f579160ff8061ffff93816101006020989760020b07169080600014610509576001965b50156104ff57925b519416911601168152f35b81038116926104f4565b866104ec565b8380fd5b5082346101e95760203660031901126101e957359182810b83036101e6575060ff61053f6020936106f5565b915191168152f35b508290346101e957806003193601126101e9576020925060ff6105686106d0565b1690519135811c901b8152f35b929390503461050f5760031982813601126104505793839460ff90816105996106d0565b169383948135811c901b9586159687156105c1575b60ff8716895287151560208a0152604089f35b9193955091939596508095876101e657509161029a9593918593899896906001600160801b03811615156000146106c5575050607f905b67ffffffffffffffff8616156106bb5750603f190183165b63ffffffff8516156106b157601f190183165b61ffff8516156106a757600f190183165b8484161561069c57600719018316905b600f85161561069157500181165b600383161561068557600119018116916001905b16610679575b50909138808080806105ae565b9060001901163861066c565b9160019060021c610666565b909391501c91610652565b909360081c93610644565b9360101c93610634565b9360201c93610623565b9490941c93610610565b60801c9550906105f8565b6024359060ff821682036106e057565b600080fd5b600435908160020b82036106e057565b60ff90608090600081810b90811261070f57508216011690565b905001169056fea2646970667358221220e440a531143c147ab7169f469a0113163861092aea8d992b1704035fdc5c714664736f6c63430008130033",
+    "sourceMap": "99:1897:70:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;2917:32:21;;99:1897:70;;;;;;;2373:11:21;;;2399:7;;;2395:156;;;;99:1897:70;2966:20:21;;;;99:1897:70;2966:20:21;;;;;99:1897:70;;;;;;;;;;;2966:20:21;99:1897:70;2976:10:21;;-1:-1:-1;2966:20:21;;;;;2395:156;2452:35;;;;;;;99:1897:70;;-1:-1:-1;99:1897:70;;2266:7:20;;;;;;-1:-1:-1;;;;;2287:21:20;;:25;99:1897:70;;2328:8:20;;99:1897:70;2283:104:20;99:1897:70;2400:20:20;;:24;99:1897:70;;-1:-1:-1;;99:1897:70;;;2396:101:20;99:1897:70;2510:20:20;;:24;99:1897:70;;-1:-1:-1;;99:1897:70;;;2506:101:20;99:1897:70;2620:20:20;;:24;99:1897:70;;-1:-1:-1;;99:1897:70;;;2616:101:20;2730:19;;;:23;99:1897:70;;-1:-1:-1;;99:1897:70;;;;2726:98:20;2841:3;2837:7;;:11;2841:3;;-1:-1:-1;99:1897:70;;;2833:86:20;99:1897:70;2932:7:20;;:11;2936:3;;-1:-1:-1;;99:1897:70;;;;2944:4:21;;2928:86:20;3027:7;3023:23;;2928:86;2422:118:21;2395:156;;;;;;3023:23:20;99:1897:70;;;;;3023:23:20;;;2928:86;99:1897:70;2944:4:21;99:1897:70;3002:1:20;99:1897:70;2928:86:20;;2833;99:1897:70;;;;;2833:86:20;;;2726:98;99:1897:70;;2812:1:20;99:1897:70;2726:98:20;;;2616:101;99:1897:70;2704:2:20;99:1897:70;2616:101:20;;;2506;99:1897:70;;;2506:101:20;;;2396;99:1897:70;;;2396:101:20;;;2283:104;2373:3;99:1897:70;;-1:-1:-1;2283:104:20;;99:1897:70;;;;;;;;;;;;;;;;;;-1:-1:-1;;99:1897:70;;;;;;;;;;:::i;:::-;;;;;3955:2:21;99:1897:70;;;;;4210:1:21;99:1897:70;;;4516:31:21;;;;;:::i;:::-;99:1897:70;;;;;;;;;;;;;;;4829:3:21;;99:1897:70;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;622:34;;99:1897;;;;;;;2373:11:21;;2399:7;;;2395:156;;99:1897:70;;;;;;;;;;;;;;;;;;;;;;2395:156:21;2506:34;;;-1:-1:-1;2506:34:21;;;;99:1897:70;;;913:35:20;;;;99:1897:70;913:35:20;;908:40;;;904:102;;2395:156:21;1019:24:20;;1024:19;1019:24;;;1015:84;;2395:156:21;1112:16:20;1117:11;1112:16;;;1108:76;;2395:156:21;1202:7:20;1197:12;;;1193:72;;2395:156:21;1283:5:20;1278:10;;;1274:68;;2395:156:21;1360:4:20;1355:9;;;1351:67;;2395:156:21;1431:8:20;;1511:3;1431:8;;;;1427:66;;2395:156:21;1506:8:20;;;1502:20;;2395:156:21;2422:118;2395:156;;;;;;;1502:20:20;99:1897:70;;;;1502:20:20;;;1427:66;99:1897:70;;;;;;;;1427:66:20;;;;1351:67;99:1897:70;;;;;;;;;;1351:67:20;;1274:68;99:1897:70;;1310:1:20;99:1897:70;;;;;;;1274:68:20;;;1193:72;99:1897:70;;1231:2:20;99:1897:70;;;;;;;1193:72:20;;;1108:76;99:1897:70;;1150:2:20;99:1897:70;;;;;;;1108:76:20;;;1015:84;99:1897:70;;;;;;;;;1015:84:20;;;;904:102;913:35;;-1:-1:-1;99:1897:70;;;-1:-1:-1;904:102:20;;;99:1897:70;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;99:1897:70;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;8333:1:21;99:1897:70;;;;;;;;;8333:1:21;99:1897:70;;;;;8285:2:21;99:1897:70;;;;;;;;;;;;;;;;;;8333:1:21;99:1897:70;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;99:1897:70;;;;;;;;;;;;;;;;3573:3:21;3569:7;;3573:3;;;-1:-1:-1;99:1897:70;;-1:-1:-1;;99:1897:70;;;;3569:130:21;99:1897:70;;;;;;3569:130:21;-1:-1:-1;;99:1897:70;;;;;;3569:130:21;-1:-1:-1;3569:130:21;;99:1897:70;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;6037:15:21;;;;;;6047:1;6037:15;;-1:-1:-1;6673:27:21;;;;;99:1897:70;;;;;;;;;;6673:27:21;99:1897:70;;;;;6673:27:21;;6037:15;;;;99:1897:70;;;;;;;;;;;;-1:-1:-1;;99:1897:70;;;;;;;;;;;;;1167:26;99:1897;1167:26;99:1897;1167:26;;:::i;:::-;99:1897;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;780:33;;99:1897;;;;;;;2373:11:21;;;2399:7;;;2395:156;;99:1897:70;;;;;;;;;;;;;;;;2395:156:21;2452:35;;;;;;;;;;;;99:1897:70;;2266:7:20;;99:1897:70;2266:7:20;;;;;;;;2287:21;-1:-1:-1;;;;;2287:21:20;;:25;;2283:104;99:1897:70;;;2328:8:20;;99:1897:70;2283:104:20;;99:1897:70;2400:20:20;;:24;99:1897:70;;-1:-1:-1;;;99:1897:70;;;2396:101:20;99:1897:70;2510:20:20;;:24;99:1897:70;;-1:-1:-1;;99:1897:70;;;2506:101:20;99:1897:70;2620:20:20;;:24;99:1897:70;;-1:-1:-1;;99:1897:70;;;2616:101:20;2730:19;;;:23;99:1897:70;;-1:-1:-1;;99:1897:70;;;;2726:98:20;2841:3;2837:7;;:11;2841:3;;-1:-1:-1;99:1897:70;;;2833:86:20;99:1897:70;2932:7:20;;:11;2936:3;;-1:-1:-1;;99:1897:70;;;;808:4;;2928:86:20;3027:7;3023:23;;2928:86;2422:118:21;2395:156;;;;;;;;;3023:23:20;99:1897:70;;;;;3023:23:20;;;2928:86;99:1897:70;808:4;99:1897;3002:1:20;99:1897:70;2928:86:20;;2833;99:1897:70;;;;;2833:86:20;;;2726:98;99:1897:70;;2812:1:20;99:1897:70;2726:98:20;;;2616:101;99:1897:70;2704:2:20;99:1897:70;2616:101:20;;;2506;99:1897:70;2594:2:20;99:1897:70;2506:101:20;;;2396;99:1897:70;;;;2396:101:20;;;2283:104;2373:3;99:1897:70;;-1:-1:-1;99:1897:70;2283:104:20;;99:1897:70;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;:::o;3080:299:21:-;99:1897:70;;3214:3:21;;3186:1;99:1897:70;;;;3181:6:21;;3186:1;;99:1897:70;;;;;3080:299:21;:::o;3181:134::-;99:1897:70;;;;3080:299:21;:::o",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "testBitLeft(uint256,uint8)": "96892a4c",
+    "testBitRight(uint256,uint8)": "04a47ef6",
+    "testBitSet(uint256,uint8)": "e6b4b973",
+    "testCastIndex(int8)": "3c526faa",
+    "testDecomp(int24)": "99de84ef",
+    "testShiftBump(int24,bool)": "51e0de5c",
+    "testTruncateLeft(uint256,uint8)": "86c60c93",
+    "testTruncateRight(uint256,uint8)": "0855e1c3",
+    "testUncastIndex(uint8)": "687c7ffd",
+    "testWeld(int8,uint8,uint8)": "6b000acf"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"bitmap\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"shift\",\"type\":\"uint8\"}],\"name\":\"testBitLeft\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"bitmap\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"shift\",\"type\":\"uint8\"}],\"name\":\"testBitRight\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"bitmap\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"pos\",\"type\":\"uint8\"}],\"name\":\"testBitSet\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int8\",\"name\":\"x\",\"type\":\"int8\"}],\"name\":\"testCastIndex\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"}],\"name\":\"testDecomp\",\"outputs\":[{\"internalType\":\"int8\",\"name\":\"lobbyKey\",\"type\":\"int8\"},{\"internalType\":\"int16\",\"name\":\"mezzKey\",\"type\":\"int16\"},{\"internalType\":\"uint8\",\"name\":\"lobbyBit\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"mezzBit\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"termBit\",\"type\":\"uint8\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"},{\"internalType\":\"bool\",\"name\":\"isBuy\",\"type\":\"bool\"}],\"name\":\"testShiftBump\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"bitmap\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"shift\",\"type\":\"uint8\"}],\"name\":\"testTruncateLeft\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"bitmap\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"shift\",\"type\":\"uint8\"}],\"name\":\"testTruncateRight\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"x\",\"type\":\"uint8\"}],\"name\":\"testUncastIndex\",\"outputs\":[{\"internalType\":\"int8\",\"name\":\"\",\"type\":\"int8\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"int8\",\"name\":\"lobbyIdx\",\"type\":\"int8\"},{\"internalType\":\"uint8\",\"name\":\"mezzBit\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"termBit\",\"type\":\"uint8\"}],\"name\":\"testWeld\",\"outputs\":[{\"internalType\":\"int24\",\"name\":\"fullWeld\",\"type\":\"int24\"},{\"internalType\":\"int16\",\"name\":\"mezzWeld\",\"type\":\"int16\"},{\"internalType\":\"int24\",\"name\":\"termWeld\",\"type\":\"int24\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/test/TestBitmaps.sol\":\"TestBitmapsLib\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/libraries/BitMath.sol\":{\"keccak256\":\"0x04a037cc35c1bc65a40909ff33b049f848250b9358f4d1452e37ea08dbe7d58c\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://75d9a5c6a7c3f28c3839b6a59e576dc137561e025a087e45b264cff88260c504\",\"dweb:/ipfs/QmRR4xRnr6wTyRBtHeZChxh5mgrsgC3TVYM3mdHqzQFner\"]},\"contracts/libraries/Bitmaps.sol\":{\"keccak256\":\"0x44facc62f716438774561c4c4d3cd6372335c003b1d37b15ae3f140783e824f6\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://209ce75eafca0392b508409a7a1b1068bce6f053cda919e76ff4694a9f00a2a8\",\"dweb:/ipfs/QmenTVCtZxU2EiSEshudacbPNZYdQdrgJdau3TeNcN4ygA\"]},\"contracts/test/TestBitmaps.sol\":{\"keccak256\":\"0x154b2022ce401f114735658c042533ab69387ee1c350eb86d278b70483089995\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://40762dbd85d6ba1430c5a1d4a8b010c3bb8df0ce3cdc07397399df68a1fef994\",\"dweb:/ipfs/QmZJrS9V1qnNN5RJhqTqHHwwE8wdAEbXdkZQvtTbe5oDkP\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "bitmap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "shift",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testBitLeft",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "bitmap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "shift",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testBitRight",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "bitmap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "pos",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testBitSet",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "int8",
+              "name": "x",
+              "type": "int8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testCastIndex",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "int24",
+              "name": "tick",
+              "type": "int24"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testDecomp",
+          "outputs": [
+            {
+              "internalType": "int8",
+              "name": "lobbyKey",
+              "type": "int8"
+            },
+            {
+              "internalType": "int16",
+              "name": "mezzKey",
+              "type": "int16"
+            },
+            {
+              "internalType": "uint8",
+              "name": "lobbyBit",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "mezzBit",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "termBit",
+              "type": "uint8"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "int24",
+              "name": "tick",
+              "type": "int24"
+            },
+            {
+              "internalType": "bool",
+              "name": "isBuy",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testShiftBump",
+          "outputs": [
+            {
+              "internalType": "uint16",
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "bitmap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "shift",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testTruncateLeft",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "bitmap",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "shift",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testTruncateRight",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint8",
+              "name": "x",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testUncastIndex",
+          "outputs": [
+            {
+              "internalType": "int8",
+              "name": "",
+              "type": "int8"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "int8",
+              "name": "lobbyIdx",
+              "type": "int8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "mezzBit",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "termBit",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testWeld",
+          "outputs": [
+            {
+              "internalType": "int24",
+              "name": "fullWeld",
+              "type": "int24"
+            },
+            {
+              "internalType": "int16",
+              "name": "mezzWeld",
+              "type": "int16"
+            },
+            {
+              "internalType": "int24",
+              "name": "termWeld",
+              "type": "int24"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/test/TestBitmaps.sol": "TestBitmapsLib"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/libraries/BitMath.sol": {
+        "keccak256": "0x04a037cc35c1bc65a40909ff33b049f848250b9358f4d1452e37ea08dbe7d58c",
+        "urls": [
+          "bzz-raw://75d9a5c6a7c3f28c3839b6a59e576dc137561e025a087e45b264cff88260c504",
+          "dweb:/ipfs/QmRR4xRnr6wTyRBtHeZChxh5mgrsgC3TVYM3mdHqzQFner"
+        ],
+        "license": "GPL-2.0-or-later"
+      },
+      "contracts/libraries/Bitmaps.sol": {
+        "keccak256": "0x44facc62f716438774561c4c4d3cd6372335c003b1d37b15ae3f140783e824f6",
+        "urls": [
+          "bzz-raw://209ce75eafca0392b508409a7a1b1068bce6f053cda919e76ff4694a9f00a2a8",
+          "dweb:/ipfs/QmenTVCtZxU2EiSEshudacbPNZYdQdrgJdau3TeNcN4ygA"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/test/TestBitmaps.sol": {
+        "keccak256": "0x154b2022ce401f114735658c042533ab69387ee1c350eb86d278b70483089995",
+        "urls": [
+          "bzz-raw://40762dbd85d6ba1430c5a1d4a8b010c3bb8df0ce3cdc07397399df68a1fef994",
+          "dweb:/ipfs/QmZJrS9V1qnNN5RJhqTqHHwwE8wdAEbXdkZQvtTbe5oDkP"
+        ],
+        "license": "GPL-3"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/test/TestBitmaps.sol",
+    "id": 31538,
+    "exportedSymbols": {
+      "BitMath": [
+        9547
+      ],
+      "Bitmaps": [
+        10048
+      ],
+      "TestBitmapsLib": [
+        31537
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "34:1963:70",
+    "nodes": [
+      {
+        "id": 31318,
+        "nodeType": "PragmaDirective",
+        "src": "34:23:70",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 31319,
+        "nodeType": "ImportDirective",
+        "src": "63:34:70",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/Bitmaps.sol",
+        "file": "../libraries/Bitmaps.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 31538,
+        "sourceUnit": 10049,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 31537,
+        "nodeType": "ContractDefinition",
+        "src": "99:1897:70",
+        "nodes": [
+          {
+            "id": 31322,
+            "nodeType": "UsingForDirective",
+            "src": "129:26:70",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 31320,
+              "name": "Bitmaps",
+              "nameLocations": [
+                "135:7:70"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 10048,
+              "src": "135:7:70"
+            },
+            "typeName": {
+              "id": 31321,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "147:7:70",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            }
+          },
+          {
+            "id": 31325,
+            "nodeType": "UsingForDirective",
+            "src": "160:24:70",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 31323,
+              "name": "Bitmaps",
+              "nameLocations": [
+                "166:7:70"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 10048,
+              "src": "166:7:70"
+            },
+            "typeName": {
+              "id": 31324,
+              "name": "int24",
+              "nodeType": "ElementaryTypeName",
+              "src": "178:5:70",
+              "typeDescriptions": {
+                "typeIdentifier": "t_int24",
+                "typeString": "int24"
+              }
+            }
+          },
+          {
+            "id": 31341,
+            "nodeType": "FunctionDefinition",
+            "src": "190:153:70",
+            "nodes": [],
+            "body": {
+              "id": 31340,
+              "nodeType": "Block",
+              "src": "284:59:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31336,
+                        "name": "shift",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31329,
+                        "src": "323:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      {
+                        "hexValue": "66616c7365",
+                        "id": 31337,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "bool",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "330:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        "value": "false"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        },
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31334,
+                        "name": "bitmap",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31327,
+                        "src": "301:6:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "id": 31335,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "308:14:70",
+                      "memberName": "truncateBitmap",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9577,
+                      "src": "301:21:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint16_$_t_bool_$returns$_t_uint256_$attached_to$_t_uint256_$",
+                        "typeString": "function (uint256,uint16,bool) pure returns (uint256)"
+                      }
+                    },
+                    "id": 31338,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "301:35:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 31333,
+                  "id": 31339,
+                  "nodeType": "Return",
+                  "src": "294:42:70"
+                }
+              ]
+            },
+            "functionSelector": "86c60c93",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testTruncateLeft",
+            "nameLocation": "199:16:70",
+            "parameters": {
+              "id": 31330,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31327,
+                  "mutability": "mutable",
+                  "name": "bitmap",
+                  "nameLocation": "225:6:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31341,
+                  "src": "217:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31326,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "217:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31329,
+                  "mutability": "mutable",
+                  "name": "shift",
+                  "nameLocation": "239:5:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31341,
+                  "src": "233:11:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31328,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "233:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "216:29:70"
+            },
+            "returnParameters": {
+              "id": 31333,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31332,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31341,
+                  "src": "275:7:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31331,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "275:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "274:9:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31357,
+            "nodeType": "FunctionDefinition",
+            "src": "349:153:70",
+            "nodes": [],
+            "body": {
+              "id": 31356,
+              "nodeType": "Block",
+              "src": "444:58:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31352,
+                        "name": "shift",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31345,
+                        "src": "483:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      {
+                        "hexValue": "74727565",
+                        "id": 31353,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "bool",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "490:4:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        "value": "true"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        },
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31350,
+                        "name": "bitmap",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31343,
+                        "src": "461:6:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "id": 31351,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "468:14:70",
+                      "memberName": "truncateBitmap",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9577,
+                      "src": "461:21:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint16_$_t_bool_$returns$_t_uint256_$attached_to$_t_uint256_$",
+                        "typeString": "function (uint256,uint16,bool) pure returns (uint256)"
+                      }
+                    },
+                    "id": 31354,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "461:34:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 31349,
+                  "id": 31355,
+                  "nodeType": "Return",
+                  "src": "454:41:70"
+                }
+              ]
+            },
+            "functionSelector": "0855e1c3",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testTruncateRight",
+            "nameLocation": "358:17:70",
+            "parameters": {
+              "id": 31346,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31343,
+                  "mutability": "mutable",
+                  "name": "bitmap",
+                  "nameLocation": "385:6:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31357,
+                  "src": "377:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31342,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "377:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31345,
+                  "mutability": "mutable",
+                  "name": "shift",
+                  "nameLocation": "399:5:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31357,
+                  "src": "393:11:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31344,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "393:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "376:29:70"
+            },
+            "returnParameters": {
+              "id": 31349,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31348,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31357,
+                  "src": "435:7:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31347,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "435:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "434:9:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31375,
+            "nodeType": "FunctionDefinition",
+            "src": "512:151:70",
+            "nodes": [],
+            "body": {
+              "id": 31374,
+              "nodeType": "Block",
+              "src": "605:58:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31370,
+                        "name": "shift",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31361,
+                        "src": "643:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      {
+                        "hexValue": "66616c7365",
+                        "id": 31371,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "bool",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "650:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        "value": "false"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        },
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31368,
+                        "name": "bitmap",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31359,
+                        "src": "622:6:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "id": 31369,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "629:13:70",
+                      "memberName": "bitAfterTrunc",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9623,
+                      "src": "622:20:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint16_$_t_bool_$returns$_t_uint8_$_t_bool_$attached_to$_t_uint256_$",
+                        "typeString": "function (uint256,uint16,bool) pure returns (uint8,bool)"
+                      }
+                    },
+                    "id": 31372,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "622:34:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$_t_uint8_$_t_bool_$",
+                      "typeString": "tuple(uint8,bool)"
+                    }
+                  },
+                  "functionReturnParameters": 31367,
+                  "id": 31373,
+                  "nodeType": "Return",
+                  "src": "615:41:70"
+                }
+              ]
+            },
+            "functionSelector": "96892a4c",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testBitLeft",
+            "nameLocation": "521:11:70",
+            "parameters": {
+              "id": 31362,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31359,
+                  "mutability": "mutable",
+                  "name": "bitmap",
+                  "nameLocation": "542:6:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31375,
+                  "src": "534:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31358,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "534:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31361,
+                  "mutability": "mutable",
+                  "name": "shift",
+                  "nameLocation": "556:5:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31375,
+                  "src": "550:11:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31360,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "550:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "533:29:70"
+            },
+            "returnParameters": {
+              "id": 31367,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31364,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31375,
+                  "src": "592:5:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31363,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "592:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31366,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31375,
+                  "src": "599:4:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 31365,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "599:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "591:13:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31393,
+            "nodeType": "FunctionDefinition",
+            "src": "669:151:70",
+            "nodes": [],
+            "body": {
+              "id": 31392,
+              "nodeType": "Block",
+              "src": "763:57:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31388,
+                        "name": "shift",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31379,
+                        "src": "801:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      },
+                      {
+                        "hexValue": "74727565",
+                        "id": 31389,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "bool",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "808:4:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        "value": "true"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        },
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31386,
+                        "name": "bitmap",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31377,
+                        "src": "780:6:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "id": 31387,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "787:13:70",
+                      "memberName": "bitAfterTrunc",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9623,
+                      "src": "780:20:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint16_$_t_bool_$returns$_t_uint8_$_t_bool_$attached_to$_t_uint256_$",
+                        "typeString": "function (uint256,uint16,bool) pure returns (uint8,bool)"
+                      }
+                    },
+                    "id": 31390,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "780:33:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$_t_uint8_$_t_bool_$",
+                      "typeString": "tuple(uint8,bool)"
+                    }
+                  },
+                  "functionReturnParameters": 31385,
+                  "id": 31391,
+                  "nodeType": "Return",
+                  "src": "773:40:70"
+                }
+              ]
+            },
+            "functionSelector": "04a47ef6",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testBitRight",
+            "nameLocation": "678:12:70",
+            "parameters": {
+              "id": 31380,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31377,
+                  "mutability": "mutable",
+                  "name": "bitmap",
+                  "nameLocation": "700:6:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31393,
+                  "src": "692:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31376,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "692:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31379,
+                  "mutability": "mutable",
+                  "name": "shift",
+                  "nameLocation": "714:5:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31393,
+                  "src": "708:11:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31378,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "708:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "691:29:70"
+            },
+            "returnParameters": {
+              "id": 31385,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31382,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31393,
+                  "src": "750:5:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31381,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "750:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31384,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31393,
+                  "src": "757:4:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 31383,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "757:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "749:13:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31408,
+            "nodeType": "FunctionDefinition",
+            "src": "826:119:70",
+            "nodes": [],
+            "body": {
+              "id": 31407,
+              "nodeType": "Block",
+              "src": "901:44:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31404,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31397,
+                        "src": "934:3:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31402,
+                        "name": "bitmap",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31395,
+                        "src": "918:6:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "id": 31403,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "925:8:70",
+                      "memberName": "isBitSet",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9650,
+                      "src": "918:15:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint8_$returns$_t_bool_$attached_to$_t_uint256_$",
+                        "typeString": "function (uint256,uint8) pure returns (bool)"
+                      }
+                    },
+                    "id": 31405,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "918:20:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "functionReturnParameters": 31401,
+                  "id": 31406,
+                  "nodeType": "Return",
+                  "src": "911:27:70"
+                }
+              ]
+            },
+            "functionSelector": "e6b4b973",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testBitSet",
+            "nameLocation": "835:10:70",
+            "parameters": {
+              "id": 31398,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31395,
+                  "mutability": "mutable",
+                  "name": "bitmap",
+                  "nameLocation": "855:6:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31408,
+                  "src": "847:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 31394,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "847:7:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31397,
+                  "mutability": "mutable",
+                  "name": "pos",
+                  "nameLocation": "869:3:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31408,
+                  "src": "863:9:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31396,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "863:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "846:27:70"
+            },
+            "returnParameters": {
+              "id": 31401,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31400,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31408,
+                  "src": "895:4:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 31399,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "895:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "894:6:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31423,
+            "nodeType": "FunctionDefinition",
+            "src": "951:129:70",
+            "nodes": [],
+            "body": {
+              "id": 31422,
+              "nodeType": "Block",
+              "src": "1036:44:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31419,
+                        "name": "isBuy",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31412,
+                        "src": "1067:5:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31417,
+                        "name": "tick",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31410,
+                        "src": "1053:4:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_int24",
+                          "typeString": "int24"
+                        }
+                      },
+                      "id": 31418,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1058:8:70",
+                      "memberName": "termBump",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9830,
+                      "src": "1053:13:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_int24_$_t_bool_$returns$_t_uint16_$attached_to$_t_int24_$",
+                        "typeString": "function (int24,bool) pure returns (uint16)"
+                      }
+                    },
+                    "id": 31420,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1053:20:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "functionReturnParameters": 31416,
+                  "id": 31421,
+                  "nodeType": "Return",
+                  "src": "1046:27:70"
+                }
+              ]
+            },
+            "functionSelector": "51e0de5c",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testShiftBump",
+            "nameLocation": "960:13:70",
+            "parameters": {
+              "id": 31413,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31410,
+                  "mutability": "mutable",
+                  "name": "tick",
+                  "nameLocation": "981:4:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31423,
+                  "src": "975:10:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 31409,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "975:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31412,
+                  "mutability": "mutable",
+                  "name": "isBuy",
+                  "nameLocation": "992:5:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31423,
+                  "src": "987:10:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 31411,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "987:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "974:24:70"
+            },
+            "returnParameters": {
+              "id": 31416,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31415,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31423,
+                  "src": "1028:6:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 31414,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1028:6:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1027:8:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31436,
+            "nodeType": "FunctionDefinition",
+            "src": "1090:110:70",
+            "nodes": [],
+            "body": {
+              "id": 31435,
+              "nodeType": "Block",
+              "src": "1150:50:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31432,
+                        "name": "x",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31425,
+                        "src": "1191:1:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_int8",
+                          "typeString": "int8"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_int8",
+                          "typeString": "int8"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31430,
+                        "name": "Bitmaps",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 10048,
+                        "src": "1167:7:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_type$_t_contract$_Bitmaps_$10048_$",
+                          "typeString": "type(library Bitmaps)"
+                        }
+                      },
+                      "id": 31431,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1175:15:70",
+                      "memberName": "castBitmapIndex",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9682,
+                      "src": "1167:23:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_int8_$returns$_t_uint8_$",
+                        "typeString": "function (int8) pure returns (uint8)"
+                      }
+                    },
+                    "id": 31433,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1167:26:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "functionReturnParameters": 31429,
+                  "id": 31434,
+                  "nodeType": "Return",
+                  "src": "1160:33:70"
+                }
+              ]
+            },
+            "functionSelector": "3c526faa",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testCastIndex",
+            "nameLocation": "1099:13:70",
+            "parameters": {
+              "id": 31426,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31425,
+                  "mutability": "mutable",
+                  "name": "x",
+                  "nameLocation": "1119:1:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31436,
+                  "src": "1114:6:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int8",
+                    "typeString": "int8"
+                  },
+                  "typeName": {
+                    "id": 31424,
+                    "name": "int8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1114:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1113:8:70"
+            },
+            "returnParameters": {
+              "id": 31429,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31428,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31436,
+                  "src": "1143:5:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31427,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1143:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1142:7:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31449,
+            "nodeType": "FunctionDefinition",
+            "src": "1206:114:70",
+            "nodes": [],
+            "body": {
+              "id": 31448,
+              "nodeType": "Block",
+              "src": "1268:52:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 31445,
+                        "name": "x",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 31438,
+                        "src": "1311:1:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      ],
+                      "expression": {
+                        "id": 31443,
+                        "name": "Bitmaps",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 10048,
+                        "src": "1285:7:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_type$_t_contract$_Bitmaps_$10048_$",
+                          "typeString": "type(library Bitmaps)"
+                        }
+                      },
+                      "id": 31444,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1293:17:70",
+                      "memberName": "uncastBitmapIndex",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 9714,
+                      "src": "1285:25:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_uint8_$returns$_t_int8_$",
+                        "typeString": "function (uint8) pure returns (int8)"
+                      }
+                    },
+                    "id": 31446,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1285:28:70",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "functionReturnParameters": 31442,
+                  "id": 31447,
+                  "nodeType": "Return",
+                  "src": "1278:35:70"
+                }
+              ]
+            },
+            "functionSelector": "687c7ffd",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testUncastIndex",
+            "nameLocation": "1215:15:70",
+            "parameters": {
+              "id": 31439,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31438,
+                  "mutability": "mutable",
+                  "name": "x",
+                  "nameLocation": "1238:1:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31449,
+                  "src": "1232:7:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31437,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1232:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1231:9:70"
+            },
+            "returnParameters": {
+              "id": 31442,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31441,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31449,
+                  "src": "1262:4:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int8",
+                    "typeString": "int8"
+                  },
+                  "typeName": {
+                    "id": 31440,
+                    "name": "int8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1262:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1261:6:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31495,
+            "nodeType": "FunctionDefinition",
+            "src": "1326:319:70",
+            "nodes": [],
+            "body": {
+              "id": 31494,
+              "nodeType": "Block",
+              "src": "1464:181:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 31468,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31464,
+                      "name": "lobbyKey",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31454,
+                      "src": "1474:8:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int8",
+                        "typeString": "int8"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [],
+                      "expression": {
+                        "argumentTypes": [],
+                        "expression": {
+                          "id": 31465,
+                          "name": "tick",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31451,
+                          "src": "1485:4:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int24",
+                            "typeString": "int24"
+                          }
+                        },
+                        "id": 31466,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1490:8:70",
+                        "memberName": "lobbyKey",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9729,
+                        "src": "1485:13:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int24_$returns$_t_int8_$attached_to$_t_int24_$",
+                          "typeString": "function (int24) pure returns (int8)"
+                        }
+                      },
+                      "id": 31467,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1485:15:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int8",
+                        "typeString": "int8"
+                      }
+                    },
+                    "src": "1474:26:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "id": 31469,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1474:26:70"
+                },
+                {
+                  "expression": {
+                    "id": 31474,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31470,
+                      "name": "mezzKey",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31456,
+                      "src": "1510:7:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int16",
+                        "typeString": "int16"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [],
+                      "expression": {
+                        "argumentTypes": [],
+                        "expression": {
+                          "id": 31471,
+                          "name": "tick",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31451,
+                          "src": "1520:4:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int24",
+                            "typeString": "int24"
+                          }
+                        },
+                        "id": 31472,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1525:7:70",
+                        "memberName": "mezzKey",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9744,
+                        "src": "1520:12:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int24_$returns$_t_int16_$attached_to$_t_int24_$",
+                          "typeString": "function (int24) pure returns (int16)"
+                        }
+                      },
+                      "id": 31473,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1520:14:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int16",
+                        "typeString": "int16"
+                      }
+                    },
+                    "src": "1510:24:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int16",
+                      "typeString": "int16"
+                    }
+                  },
+                  "id": 31475,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1510:24:70"
+                },
+                {
+                  "expression": {
+                    "id": 31480,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31476,
+                      "name": "lobbyBit",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31458,
+                      "src": "1544:8:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [],
+                      "expression": {
+                        "argumentTypes": [],
+                        "expression": {
+                          "id": 31477,
+                          "name": "tick",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31451,
+                          "src": "1555:4:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int24",
+                            "typeString": "int24"
+                          }
+                        },
+                        "id": 31478,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1560:8:70",
+                        "memberName": "lobbyBit",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9758,
+                        "src": "1555:13:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int24_$returns$_t_uint8_$attached_to$_t_int24_$",
+                          "typeString": "function (int24) pure returns (uint8)"
+                        }
+                      },
+                      "id": 31479,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1555:15:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "src": "1544:26:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "id": 31481,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1544:26:70"
+                },
+                {
+                  "expression": {
+                    "id": 31486,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31482,
+                      "name": "mezzBit",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31460,
+                      "src": "1580:7:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [],
+                      "expression": {
+                        "argumentTypes": [],
+                        "expression": {
+                          "id": 31483,
+                          "name": "tick",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31451,
+                          "src": "1590:4:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int24",
+                            "typeString": "int24"
+                          }
+                        },
+                        "id": 31484,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1595:7:70",
+                        "memberName": "mezzBit",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9778,
+                        "src": "1590:12:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int24_$returns$_t_uint8_$attached_to$_t_int24_$",
+                          "typeString": "function (int24) pure returns (uint8)"
+                        }
+                      },
+                      "id": 31485,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1590:14:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "src": "1580:24:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "id": 31487,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1580:24:70"
+                },
+                {
+                  "expression": {
+                    "id": 31492,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31488,
+                      "name": "termBit",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31462,
+                      "src": "1614:7:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [],
+                      "expression": {
+                        "argumentTypes": [],
+                        "expression": {
+                          "id": 31489,
+                          "name": "tick",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31451,
+                          "src": "1624:4:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int24",
+                            "typeString": "int24"
+                          }
+                        },
+                        "id": 31490,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1629:7:70",
+                        "memberName": "termBit",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9796,
+                        "src": "1624:12:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int24_$returns$_t_uint8_$attached_to$_t_int24_$",
+                          "typeString": "function (int24) pure returns (uint8)"
+                        }
+                      },
+                      "id": 31491,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1624:14:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint8",
+                        "typeString": "uint8"
+                      }
+                    },
+                    "src": "1614:24:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "id": 31493,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1614:24:70"
+                }
+              ]
+            },
+            "functionSelector": "99de84ef",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testDecomp",
+            "nameLocation": "1335:10:70",
+            "parameters": {
+              "id": 31452,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31451,
+                  "mutability": "mutable",
+                  "name": "tick",
+                  "nameLocation": "1353:4:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1347:10:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 31450,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1347:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1346:12:70"
+            },
+            "returnParameters": {
+              "id": 31463,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31454,
+                  "mutability": "mutable",
+                  "name": "lobbyKey",
+                  "nameLocation": "1393:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1388:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int8",
+                    "typeString": "int8"
+                  },
+                  "typeName": {
+                    "id": 31453,
+                    "name": "int8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1388:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31456,
+                  "mutability": "mutable",
+                  "name": "mezzKey",
+                  "nameLocation": "1409:7:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1403:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int16",
+                    "typeString": "int16"
+                  },
+                  "typeName": {
+                    "id": 31455,
+                    "name": "int16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1403:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int16",
+                      "typeString": "int16"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31458,
+                  "mutability": "mutable",
+                  "name": "lobbyBit",
+                  "nameLocation": "1424:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1418:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31457,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1418:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31460,
+                  "mutability": "mutable",
+                  "name": "mezzBit",
+                  "nameLocation": "1440:7:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1434:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31459,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1434:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31462,
+                  "mutability": "mutable",
+                  "name": "termBit",
+                  "nameLocation": "1455:7:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31495,
+                  "src": "1449:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31461,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1449:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1387:76:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 31536,
+            "nodeType": "FunctionDefinition",
+            "src": "1651:343:70",
+            "nodes": [],
+            "body": {
+              "id": 31535,
+              "nodeType": "Block",
+              "src": "1792:202:70",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 31517,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31510,
+                      "name": "fullWeld",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31504,
+                      "src": "1802:8:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [
+                        {
+                          "id": 31513,
+                          "name": "lobbyIdx",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31497,
+                          "src": "1839:8:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int8",
+                            "typeString": "int8"
+                          }
+                        },
+                        {
+                          "id": 31514,
+                          "name": "mezzBit",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31499,
+                          "src": "1849:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        },
+                        {
+                          "id": 31515,
+                          "name": "termBit",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31501,
+                          "src": "1858:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_int8",
+                            "typeString": "int8"
+                          },
+                          {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          },
+                          {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        ],
+                        "expression": {
+                          "id": 31511,
+                          "name": "Bitmaps",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 10048,
+                          "src": "1813:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_contract$_Bitmaps_$10048_$",
+                            "typeString": "type(library Bitmaps)"
+                          }
+                        },
+                        "id": 31512,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1821:17:70",
+                        "memberName": "weldLobbyMezzTerm",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9943,
+                        "src": "1813:25:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int8_$_t_uint8_$_t_uint8_$returns$_t_int24_$",
+                          "typeString": "function (int8,uint8,uint8) pure returns (int24)"
+                        }
+                      },
+                      "id": 31516,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1813:53:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1802:64:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 31518,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1802:64:70"
+                },
+                {
+                  "expression": {
+                    "id": 31525,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31519,
+                      "name": "mezzWeld",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31506,
+                      "src": "1876:8:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int16",
+                        "typeString": "int16"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [
+                        {
+                          "id": 31522,
+                          "name": "lobbyIdx",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31497,
+                          "src": "1909:8:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int8",
+                            "typeString": "int8"
+                          }
+                        },
+                        {
+                          "id": 31523,
+                          "name": "mezzBit",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31499,
+                          "src": "1919:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_int8",
+                            "typeString": "int8"
+                          },
+                          {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        ],
+                        "expression": {
+                          "id": 31520,
+                          "name": "Bitmaps",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 10048,
+                          "src": "1887:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_contract$_Bitmaps_$10048_$",
+                            "typeString": "type(library Bitmaps)"
+                          }
+                        },
+                        "id": 31521,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1895:13:70",
+                        "memberName": "weldLobbyMezz",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9903,
+                        "src": "1887:21:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int8_$_t_uint8_$returns$_t_int16_$",
+                          "typeString": "function (int8,uint8) pure returns (int16)"
+                        }
+                      },
+                      "id": 31524,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1887:40:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int16",
+                        "typeString": "int16"
+                      }
+                    },
+                    "src": "1876:51:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int16",
+                      "typeString": "int16"
+                    }
+                  },
+                  "id": 31526,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1876:51:70"
+                },
+                {
+                  "expression": {
+                    "id": 31533,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 31527,
+                      "name": "termWeld",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 31508,
+                      "src": "1937:8:70",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "arguments": [
+                        {
+                          "id": 31530,
+                          "name": "mezzWeld",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31506,
+                          "src": "1969:8:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_int16",
+                            "typeString": "int16"
+                          }
+                        },
+                        {
+                          "id": 31531,
+                          "name": "termBit",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 31501,
+                          "src": "1979:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_int16",
+                            "typeString": "int16"
+                          },
+                          {
+                            "typeIdentifier": "t_uint8",
+                            "typeString": "uint8"
+                          }
+                        ],
+                        "expression": {
+                          "id": 31528,
+                          "name": "Bitmaps",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 10048,
+                          "src": "1948:7:70",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_contract$_Bitmaps_$10048_$",
+                            "typeString": "type(library Bitmaps)"
+                          }
+                        },
+                        "id": 31529,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "lValueRequested": false,
+                        "memberLocation": "1956:12:70",
+                        "memberName": "weldMezzTerm",
+                        "nodeType": "MemberAccess",
+                        "referencedDeclaration": 9876,
+                        "src": "1948:20:70",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_pure$_t_int16_$_t_uint8_$returns$_t_int24_$",
+                          "typeString": "function (int16,uint8) pure returns (int24)"
+                        }
+                      },
+                      "id": 31532,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "1948:39:70",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1937:50:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 31534,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1937:50:70"
+                }
+              ]
+            },
+            "functionSelector": "6b000acf",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testWeld",
+            "nameLocation": "1660:8:70",
+            "parameters": {
+              "id": 31502,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31497,
+                  "mutability": "mutable",
+                  "name": "lobbyIdx",
+                  "nameLocation": "1675:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1670:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int8",
+                    "typeString": "int8"
+                  },
+                  "typeName": {
+                    "id": 31496,
+                    "name": "int8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1670:4:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int8",
+                      "typeString": "int8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31499,
+                  "mutability": "mutable",
+                  "name": "mezzBit",
+                  "nameLocation": "1691:7:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1685:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31498,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1685:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31501,
+                  "mutability": "mutable",
+                  "name": "termBit",
+                  "nameLocation": "1706:7:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1700:13:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 31500,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1700:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1669:45:70"
+            },
+            "returnParameters": {
+              "id": 31509,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 31504,
+                  "mutability": "mutable",
+                  "name": "fullWeld",
+                  "nameLocation": "1750:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1744:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 31503,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1744:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31506,
+                  "mutability": "mutable",
+                  "name": "mezzWeld",
+                  "nameLocation": "1766:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1760:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int16",
+                    "typeString": "int16"
+                  },
+                  "typeName": {
+                    "id": 31505,
+                    "name": "int16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1760:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int16",
+                      "typeString": "int16"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 31508,
+                  "mutability": "mutable",
+                  "name": "termWeld",
+                  "nameLocation": "1782:8:70",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 31536,
+                  "src": "1776:14:70",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 31507,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1776:5:70",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1743:48:70"
+            },
+            "scope": 31537,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "TestBitmapsLib",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          31537
+        ],
+        "name": "TestBitmapsLib",
+        "nameLocation": "108:14:70",
+        "scope": 31538,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 70
+}

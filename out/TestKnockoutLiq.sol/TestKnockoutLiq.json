@@ -1,0 +1,2786 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "name": "merkle_",
+      "outputs": [
+        {
+          "internalType": "uint160",
+          "name": "merkleRoot_",
+          "type": "uint160"
+        },
+        {
+          "internalType": "uint32",
+          "name": "pivotTime_",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "feeMileage_",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "isBid",
+          "type": "bool"
+        },
+        {
+          "internalType": "int24",
+          "name": "lower",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upper",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "priceTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint8",
+          "name": "knockoutBits",
+          "type": "uint8"
+        }
+      ],
+      "name": "testAssertValid",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint96",
+          "name": "lots",
+          "type": "uint96"
+        },
+        {
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint16",
+          "name": "range",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint64",
+          "name": "feeMileage",
+          "type": "uint64"
+        }
+      ],
+      "name": "testCommit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "pool",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isBid",
+          "type": "bool"
+        },
+        {
+          "internalType": "int24",
+          "name": "tick",
+          "type": "int24"
+        }
+      ],
+      "name": "testEncodePivotKey",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "pool",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint160",
+          "name": "owner",
+          "type": "uint160"
+        },
+        {
+          "internalType": "bool",
+          "name": "isBid",
+          "type": "bool"
+        },
+        {
+          "internalType": "int24",
+          "name": "lower",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upper",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint32",
+          "name": "pivotTime",
+          "type": "uint32"
+        }
+      ],
+      "name": "testEncodePosKey",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint160",
+          "name": "root",
+          "type": "uint160"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "proof",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "testProof",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x60808060405234610016576107c1908161001c8239f35b600080fdfe6040608081526004908136101561001557600080fd5b600090813560e01c80630cb7f91a146104bc5780631a7387331461038e5780634c496756146102bb5780637e24875e14610125578063a6fd8157146100e95763f07ec0031461006357600080fd5b346100e55760603660031901126100e557602435908115158092036100e15761008a610633565b908051916020830193863585528284015260020b606083015260608252608082019382851067ffffffffffffffff8611176100ce5750602094508390525190208152f35b634e487b7160e01b815260418652602490fd5b8280fd5b5080fd5b50346100e557816003193601126100e557606091549080519160018060a01b038116835263ffffffff8160a01c16602084015260c01c90820152f35b509190346102b857826003193601126102b8578135906001600160a01b0380831683036100e55760249367ffffffffffffffff9285358481116100e557366023820112156100e55780830135968588116100e15760059288841b94828685010198368a116100e1576101956106a9565b9a8c5197603f601f1991011688018881108b8211176102a5578d5287526020998a88019585018b875b83831061029557505050508651156000146101fe575050505050505050808463ffffffff8486015116940151165b63ffffffff8551941684521690820152f35b9a95979496829b5b89518d101561022b576102236001918c8f8c1b8d010151906106df565b9c019b610206565b93975091959a5093988190979397511691160361026e57511561025e5750505051918063ffffffff84861c1693166101ec565b634e487b7160e01b825260329052fd5b875162461bcd60e51b81528083018790526002818601526104b560f41b6044820152606490fd5b82358152918101918d91016101be565b5050634e487b7160e01b83525060419052fd5b80fd5b50346100e55760c03660031901126100e5576024356001600160a01b03811691908290036100e1576044359081151580920361038a576102f9610648565b6084358060020b8091036103865760a4359163ffffffff831680930361038257818461032361068a565b9287845260020b928360208201520152835194602086019689358852858701526060860152608085015260a084015260c083015260c0825260e082019382851067ffffffffffffffff8611176100ce5750602094508390525190208152f35b8680fd5b8580fd5b8380fd5b5082346100e15760803660031901126100e1578035906bffffffffffffffffffffffff821680920361038a576024359163ffffffff83168093036104b8576044359361ffff8516809503610386576064359467ffffffffffffffff9283871687036104b4576020916103fe61068a565b91825283820152019384526000194301924384116104a157509061047461047a9261046f61042a6106a9565b80516020820151918401516001600160a01b03989189169616939190911b6bffffffff000000000000000016904060601b6bffffffffffffffffffffffff1916610710565b610710565b906106df565b915160a01b63ffffffff60a01b1691161760c09190911b6001600160c01b03191617815580f35b634e487b7160e01b875260119052602486fd5b8780fd5b8480fd5b508290346100e15760a03660031901126100e157813580151580910361038a57602435908160020b8092036104b8576104f3610633565b916104fc610648565b906084359360ff851685036104b45761051361068a565b9384528160208501528584019060020b808252600f86166003878a1c1693888515159816159288610595575b50505050508361057e575b50505015610556578280f35b906020606492519162461bcd60e51b8352820152600260248201526125ab60f11b6044820152fd5b61058d93506002111591610733565b84808061054a565b9091929394975003627fffff19627fffff82138183121761062057935162ffffff9182166001841b83161494600282900b908c82131561060e57505081165b83156105f8575b505050816105f0575b5092878080808061053f565b9050876105e4565b811680831c821690921b161490508880806105db565b9080925014610620578a0381166105d4565b634e487b7160e01b8b5260118a5260248bfd5b604435908160020b820361064357565b600080fd5b606435908160020b820361064357565b6060810190811067ffffffffffffffff82111761067457604052565b634e487b7160e01b600052604160045260246000fd5b6040519061069782610658565b60006040838281528260208201520152565b604051906106b682610658565b6000546001600160a01b038116835260a081901c63ffffffff16602084015260c01c6040830152565b604080516001600160a01b039092166020830190815282820193909352815261070781610658565b51902060601c90565b9190820180921161071d57565b634e487b7160e01b600052601160045260246000fd5b805191929091156107645715610757576020015160020b905b60020b9060020b1290565b6040015160020b9061074c565b1561077e576040015160020b905b60020b9060020b121590565b6020015160020b9061077256fea2646970667358221220496d051d092e4b7a03e13e0f918140761f4a771a4fef796a35eb7cd9c47f1cb264736f6c63430008130033",
+    "sourceMap": "103:1651:75:-:0;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x6040608081526004908136101561001557600080fd5b600090813560e01c80630cb7f91a146104bc5780631a7387331461038e5780634c496756146102bb5780637e24875e14610125578063a6fd8157146100e95763f07ec0031461006357600080fd5b346100e55760603660031901126100e557602435908115158092036100e15761008a610633565b908051916020830193863585528284015260020b606083015260608252608082019382851067ffffffffffffffff8611176100ce5750602094508390525190208152f35b634e487b7160e01b815260418652602490fd5b8280fd5b5080fd5b50346100e557816003193601126100e557606091549080519160018060a01b038116835263ffffffff8160a01c16602084015260c01c90820152f35b509190346102b857826003193601126102b8578135906001600160a01b0380831683036100e55760249367ffffffffffffffff9285358481116100e557366023820112156100e55780830135968588116100e15760059288841b94828685010198368a116100e1576101956106a9565b9a8c5197603f601f1991011688018881108b8211176102a5578d5287526020998a88019585018b875b83831061029557505050508651156000146101fe575050505050505050808463ffffffff8486015116940151165b63ffffffff8551941684521690820152f35b9a95979496829b5b89518d101561022b576102236001918c8f8c1b8d010151906106df565b9c019b610206565b93975091959a5093988190979397511691160361026e57511561025e5750505051918063ffffffff84861c1693166101ec565b634e487b7160e01b825260329052fd5b875162461bcd60e51b81528083018790526002818601526104b560f41b6044820152606490fd5b82358152918101918d91016101be565b5050634e487b7160e01b83525060419052fd5b80fd5b50346100e55760c03660031901126100e5576024356001600160a01b03811691908290036100e1576044359081151580920361038a576102f9610648565b6084358060020b8091036103865760a4359163ffffffff831680930361038257818461032361068a565b9287845260020b928360208201520152835194602086019689358852858701526060860152608085015260a084015260c083015260c0825260e082019382851067ffffffffffffffff8611176100ce5750602094508390525190208152f35b8680fd5b8580fd5b8380fd5b5082346100e15760803660031901126100e1578035906bffffffffffffffffffffffff821680920361038a576024359163ffffffff83168093036104b8576044359361ffff8516809503610386576064359467ffffffffffffffff9283871687036104b4576020916103fe61068a565b91825283820152019384526000194301924384116104a157509061047461047a9261046f61042a6106a9565b80516020820151918401516001600160a01b03989189169616939190911b6bffffffff000000000000000016904060601b6bffffffffffffffffffffffff1916610710565b610710565b906106df565b915160a01b63ffffffff60a01b1691161760c09190911b6001600160c01b03191617815580f35b634e487b7160e01b875260119052602486fd5b8780fd5b8480fd5b508290346100e15760a03660031901126100e157813580151580910361038a57602435908160020b8092036104b8576104f3610633565b916104fc610648565b906084359360ff851685036104b45761051361068a565b9384528160208501528584019060020b808252600f86166003878a1c1693888515159816159288610595575b50505050508361057e575b50505015610556578280f35b906020606492519162461bcd60e51b8352820152600260248201526125ab60f11b6044820152fd5b61058d93506002111591610733565b84808061054a565b9091929394975003627fffff19627fffff82138183121761062057935162ffffff9182166001841b83161494600282900b908c82131561060e57505081165b83156105f8575b505050816105f0575b5092878080808061053f565b9050876105e4565b811680831c821690921b161490508880806105db565b9080925014610620578a0381166105d4565b634e487b7160e01b8b5260118a5260248bfd5b604435908160020b820361064357565b600080fd5b606435908160020b820361064357565b6060810190811067ffffffffffffffff82111761067457604052565b634e487b7160e01b600052604160045260246000fd5b6040519061069782610658565b60006040838281528260208201520152565b604051906106b682610658565b6000546001600160a01b038116835260a081901c63ffffffff16602084015260c01c6040830152565b604080516001600160a01b039092166020830190815282820193909352815261070781610658565b51902060601c90565b9190820180921161071d57565b634e487b7160e01b600052601160045260246000fd5b805191929091156107645715610757576020015160020b905b60020b9060020b1290565b6040015160020b9061074c565b1561077e576040015160020b905b60020b9060020b121590565b6020015160020b9061077256fea2646970667358221220496d051d092e4b7a03e13e0f918140761f4a771a4fef796a35eb7cd9c47f1cb264736f6c63430008130033",
+    "sourceMap": "103:1651:75:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;103:1651:75;;;;;;;;;;;;;;;;;:::i;:::-;;;;4511:29:31;103:1651:75;4511:29:31;;103:1651:75;;;;;;;;;;;;;;;;4511:29:31;;103:1651:75;;;;;;;;;;;;;;;;;;;;;4501:40:31;;103:1651:75;;;;-1:-1:-1;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;10479:17:31;:122;;;;10512:17;;;;;;;;;;103:1651:75;10512:17:31;;;103:1651:75;;10531:18:31;;103:1651:75;;10479:122:31;103:1651:75;;;;;;;;;;;;;10479:122:31;10842:28;;;;;10994:10;10989:112;11024:3;103:1651:75;;11006:16:31;;;;;11058:28;103:1651:75;;;;;;;;;;11058:28:31;;:::i;:::-;11024:3;103:1651:75;10994:10:31;;;11006:16;;;;;;;;;;;;;;;103:1651:75;;;;11129:30:31;103:1651:75;;;;;;;;;;;;;;;;;;;10479:122:31;;103:1651:75;-1:-1:-1;;;103:1651:75;;;;;;;;;-1:-1:-1;;;103:1651:75;;;;;;;;;;;;;-1:-1:-1;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;103:1651:75;;-1:-1:-1;103:1651:75;;;;;;;;;;;;;;-1:-1:-1;;103:1651:75;;;;;;-1:-1:-1;;;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;746:14;;103:1651;746:14;;103:1651;778:14;103:1651;;;5875:114:31;103:1651:75;5875:114:31;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;5875:114:31;;103:1651:75;;;;;;;;;;;;;;;;;;;;;5865:125:31;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;1099:17;;;103:1651;1134:16;103:1651;;;;;8022:12:31;103:1651:75;8022:12:31;;103:1651:75;;;;;;9174:96:31;8571:60;103:1651:75;9174:62:31;103:1651:75;;:::i;:::-;;;;8287:17:31;;103:1651:75;8306:18:31;;;103:1651:75;-1:-1:-1;;;;;103:1651:75;;;;;;;;;;;;;;8012:25:31;103:1651:75;;-1:-1:-1;;103:1651:75;9174:62:31;:::i;:::-;:96;:::i;:::-;8571:60;;:::i;:::-;103:1651:75;;;;-1:-1:-1;;;103:1651:75;;;;;;;;;-1:-1:-1;;;;;;103:1651:75;;;;;;;-1:-1:-1;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;:::i;:::-;;;;;;;;;;;;;;:::i;:::-;;;;1617:14;103:1651;1617:14;;103:1651;1649:14;;;103:1651;;;;;;15817:4:31;15802:19;;103:1651:75;;;;;15901:12:31;;;;;15965:19;;:23;13272:39;;;;103:1651:75;13272:93:31;;;;;;;;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;103:1651:75;;;;;13272:93:31;13331:34;15932:13;;103:1651:75;-1:-1:-1;15932:13:31;13331:34;;:::i;:::-;13272:93;;;;;:39;103:1651:75;;;;;;;;;;;;;;;;;;;;;;;;;13749:1:31;103:1651:75;;;;13733:31:31;;103:1651:75;;;;;13829:8:31;;;103:1651:75;;;;;;;13829:39:31;13892:65;15965:23;13892:65;;13829:39;13975:20;;;;;;13829:39;13272;;;;;;;;;13975:20;;;;;;13892:65;103:1651:75;;;;;;;;;;;13911:46:31;;-1:-1:-1;13892:65:31;;;;;13829:39;103:1651:75;;;;;;;;;;;13829:39:31;;103:1651:75;-1:-1:-1;;;103:1651:75;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;;;;;;;:::i;:::-;-1:-1:-1;103:1651:75;;;;;;;;;;;;:::o;:::-;;;;;;;:::i;:::-;;;-1:-1:-1;;;;;103:1651:75;;;;;;;;;;;;;;;;;;;;:::o;8732:206:31:-;103:1651:75;;;-1:-1:-1;;;;;103:1651:75;;;8858:27:31;;;103:1651:75;;;;;;;;;;8858:27:31;;;103:1651:75;8858:27:31;:::i;:::-;103:1651:75;8848:38:31;;103:1651:75;;8732:206:31;:::o;103:1651:75:-;;;;;;;;;;:::o;:::-;;;;;;;;;;;;14175:792:31;103:1651:75;;14175:792:31;;;;103:1651:75;14700:10:31;;14742:40;;;14751:14;;103:1651:75;;;14742:40:31;;103:1651:75;;;;;14803:19:31;14796:26;:::o;14742:40::-;14768:14;;103:1651:75;;;14742:40:31;;;14696:265;14869:40;;;14878:14;;103:1651:75;;;14869:40:31;;103:1651:75;;;;;14930:20:31;;14923:27;:::o;14869:40::-;14895:14;;103:1651:75;;;14869:40:31;;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "merkle_()": "a6fd8157",
+    "testAssertValid(bool,int24,int24,int24,uint8)": "0cb7f91a",
+    "testCommit(uint96,uint32,uint16,uint64)": "1a738733",
+    "testEncodePivotKey(uint256,bool,int24)": "f07ec003",
+    "testEncodePosKey(uint256,uint160,bool,int24,int24,uint32)": "4c496756",
+    "testProof(uint160,uint256[])": "7e24875e"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"merkle_\",\"outputs\":[{\"internalType\":\"uint160\",\"name\":\"merkleRoot_\",\"type\":\"uint160\"},{\"internalType\":\"uint32\",\"name\":\"pivotTime_\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"feeMileage_\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"isBid\",\"type\":\"bool\"},{\"internalType\":\"int24\",\"name\":\"lower\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upper\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"priceTick\",\"type\":\"int24\"},{\"internalType\":\"uint8\",\"name\":\"knockoutBits\",\"type\":\"uint8\"}],\"name\":\"testAssertValid\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint96\",\"name\":\"lots\",\"type\":\"uint96\"},{\"internalType\":\"uint32\",\"name\":\"time\",\"type\":\"uint32\"},{\"internalType\":\"uint16\",\"name\":\"range\",\"type\":\"uint16\"},{\"internalType\":\"uint64\",\"name\":\"feeMileage\",\"type\":\"uint64\"}],\"name\":\"testCommit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"pool\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isBid\",\"type\":\"bool\"},{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"}],\"name\":\"testEncodePivotKey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"pool\",\"type\":\"uint256\"},{\"internalType\":\"uint160\",\"name\":\"owner\",\"type\":\"uint160\"},{\"internalType\":\"bool\",\"name\":\"isBid\",\"type\":\"bool\"},{\"internalType\":\"int24\",\"name\":\"lower\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upper\",\"type\":\"int24\"},{\"internalType\":\"uint32\",\"name\":\"pivotTime\",\"type\":\"uint32\"}],\"name\":\"testEncodePosKey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint160\",\"name\":\"root\",\"type\":\"uint160\"},{\"internalType\":\"uint256[]\",\"name\":\"proof\",\"type\":\"uint256[]\"}],\"name\":\"testProof\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/test/TestKnockoutLiq.sol\":\"TestKnockoutLiq\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/libraries/KnockoutLiq.sol\":{\"keccak256\":\"0x519fc1c3fae4209150a005d344a30ad4167b08f25102aa61bc5c55f3757993a1\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://b7b66e6d93b3257353f2a3be956cbc37042961f5eb2feb4d0b1ccf48c5710b28\",\"dweb:/ipfs/QmRj1u3svg2Ex78ocS234pjgGe2TFaV8qn4EQ43DUQMpmb\"]},\"contracts/test/TestKnockoutLiq.sol\":{\"keccak256\":\"0x46bcd48f69afa36af45d2f04f49d9d697aa8df52e16076abcb160ab68b0ec3f8\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://89488588b5ff234738d932c428d6152702290c2b17eb90bc343a5c82f42091da\",\"dweb:/ipfs/QmXvcDg4fDrhN4q16N1E3qwzYUb9LAB8c8BFfgeVykPaYN\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "merkle_",
+          "outputs": [
+            {
+              "internalType": "uint160",
+              "name": "merkleRoot_",
+              "type": "uint160"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pivotTime_",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "feeMileage_",
+              "type": "uint64"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bool",
+              "name": "isBid",
+              "type": "bool"
+            },
+            {
+              "internalType": "int24",
+              "name": "lower",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upper",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "priceTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint8",
+              "name": "knockoutBits",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testAssertValid"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint96",
+              "name": "lots",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint32",
+              "name": "time",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint16",
+              "name": "range",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint64",
+              "name": "feeMileage",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "testCommit"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "pool",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isBid",
+              "type": "bool"
+            },
+            {
+              "internalType": "int24",
+              "name": "tick",
+              "type": "int24"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testEncodePivotKey",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "pool",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint160",
+              "name": "owner",
+              "type": "uint160"
+            },
+            {
+              "internalType": "bool",
+              "name": "isBid",
+              "type": "bool"
+            },
+            {
+              "internalType": "int24",
+              "name": "lower",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upper",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint32",
+              "name": "pivotTime",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function",
+          "name": "testEncodePosKey",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint160",
+              "name": "root",
+              "type": "uint160"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "proof",
+              "type": "uint256[]"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "testProof",
+          "outputs": [
+            {
+              "internalType": "uint32",
+              "name": "",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "",
+              "type": "uint64"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/test/TestKnockoutLiq.sol": "TestKnockoutLiq"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/libraries/KnockoutLiq.sol": {
+        "keccak256": "0x519fc1c3fae4209150a005d344a30ad4167b08f25102aa61bc5c55f3757993a1",
+        "urls": [
+          "bzz-raw://b7b66e6d93b3257353f2a3be956cbc37042961f5eb2feb4d0b1ccf48c5710b28",
+          "dweb:/ipfs/QmRj1u3svg2Ex78ocS234pjgGe2TFaV8qn4EQ43DUQMpmb"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/test/TestKnockoutLiq.sol": {
+        "keccak256": "0x46bcd48f69afa36af45d2f04f49d9d697aa8df52e16076abcb160ab68b0ec3f8",
+        "urls": [
+          "bzz-raw://89488588b5ff234738d932c428d6152702290c2b17eb90bc343a5c82f42091da",
+          "dweb:/ipfs/QmXvcDg4fDrhN4q16N1E3qwzYUb9LAB8c8BFfgeVykPaYN"
+        ],
+        "license": "GPL-3"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/test/TestKnockoutLiq.sol",
+    "id": 33464,
+    "exportedSymbols": {
+      "KnockoutLiq": [
+        14395
+      ],
+      "TestKnockoutLiq": [
+        33463
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "34:1721:75",
+    "nodes": [
+      {
+        "id": 33264,
+        "nodeType": "PragmaDirective",
+        "src": "34:23:75",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 33265,
+        "nodeType": "ImportDirective",
+        "src": "63:38:75",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/KnockoutLiq.sol",
+        "file": "../libraries/KnockoutLiq.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 33464,
+        "sourceUnit": 14396,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 33463,
+        "nodeType": "ContractDefinition",
+        "src": "103:1651:75",
+        "nodes": [
+          {
+            "id": 33269,
+            "nodeType": "UsingForDirective",
+            "src": "134:49:75",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 33266,
+              "name": "KnockoutLiq",
+              "nameLocations": [
+                "140:11:75"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 14395,
+              "src": "140:11:75"
+            },
+            "typeName": {
+              "id": 33268,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode": {
+                "id": 33267,
+                "name": "KnockoutLiq.KnockoutMerkle",
+                "nameLocations": [
+                  "156:11:75",
+                  "168:14:75"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 13735,
+                "src": "156:26:75"
+              },
+              "referencedDeclaration": 13735,
+              "src": "156:26:75",
+              "typeDescriptions": {
+                "typeIdentifier": "t_struct$_KnockoutMerkle_$13735_storage_ptr",
+                "typeString": "struct KnockoutLiq.KnockoutMerkle"
+              }
+            }
+          },
+          {
+            "id": 33273,
+            "nodeType": "UsingForDirective",
+            "src": "188:48:75",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 33270,
+              "name": "KnockoutLiq",
+              "nameLocations": [
+                "194:11:75"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 14395,
+              "src": "194:11:75"
+            },
+            "typeName": {
+              "id": 33272,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode": {
+                "id": 33271,
+                "name": "KnockoutLiq.KnockoutPivot",
+                "nameLocations": [
+                  "210:11:75",
+                  "222:13:75"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 13728,
+                "src": "210:25:75"
+              },
+              "referencedDeclaration": 13728,
+              "src": "210:25:75",
+              "typeDescriptions": {
+                "typeIdentifier": "t_struct$_KnockoutPivot_$13728_storage_ptr",
+                "typeString": "struct KnockoutLiq.KnockoutPivot"
+              }
+            }
+          },
+          {
+            "id": 33276,
+            "nodeType": "VariableDeclaration",
+            "src": "242:41:75",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "a6fd8157",
+            "mutability": "mutable",
+            "name": "merkle_",
+            "nameLocation": "276:7:75",
+            "scope": 33463,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_struct$_KnockoutMerkle_$13735_storage",
+              "typeString": "struct KnockoutLiq.KnockoutMerkle"
+            },
+            "typeName": {
+              "id": 33275,
+              "nodeType": "UserDefinedTypeName",
+              "pathNode": {
+                "id": 33274,
+                "name": "KnockoutLiq.KnockoutMerkle",
+                "nameLocations": [
+                  "242:11:75",
+                  "254:14:75"
+                ],
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 13735,
+                "src": "242:26:75"
+              },
+              "referencedDeclaration": 13735,
+              "src": "242:26:75",
+              "typeDescriptions": {
+                "typeIdentifier": "t_struct$_KnockoutMerkle_$13735_storage_ptr",
+                "typeString": "struct KnockoutLiq.KnockoutMerkle"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 33298,
+            "nodeType": "FunctionDefinition",
+            "src": "290:184:75",
+            "nodes": [],
+            "body": {
+              "id": 33297,
+              "nodeType": "Block",
+              "src": "396:78:75",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "arguments": [
+                          {
+                            "id": 33291,
+                            "name": "pool",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 33278,
+                            "src": "448:4:75",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          ],
+                          "id": 33290,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "lValueRequested": false,
+                          "nodeType": "ElementaryTypeNameExpression",
+                          "src": "440:7:75",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_bytes32_$",
+                            "typeString": "type(bytes32)"
+                          },
+                          "typeName": {
+                            "id": 33289,
+                            "name": "bytes32",
+                            "nodeType": "ElementaryTypeName",
+                            "src": "440:7:75",
+                            "typeDescriptions": {}
+                          }
+                        },
+                        "id": 33292,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "typeConversion",
+                        "lValueRequested": false,
+                        "nameLocations": [],
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "440:13:75",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      {
+                        "id": 33293,
+                        "name": "isBid",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33280,
+                        "src": "455:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "id": 33294,
+                        "name": "tick",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33282,
+                        "src": "462:4:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_int24",
+                          "typeString": "int24"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        },
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_int24",
+                          "typeString": "int24"
+                        }
+                      ],
+                      "expression": {
+                        "id": 33287,
+                        "name": "KnockoutLiq",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14395,
+                        "src": "413:11:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_type$_t_contract$_KnockoutLiq_$14395_$",
+                          "typeString": "type(library KnockoutLiq)"
+                        }
+                      },
+                      "id": 33288,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "425:14:75",
+                      "memberName": "encodePivotKey",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13795,
+                      "src": "413:26:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_bytes32_$_t_bool_$_t_int24_$returns$_t_bytes32_$",
+                        "typeString": "function (bytes32,bool,int24) pure returns (bytes32)"
+                      }
+                    },
+                    "id": 33295,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "413:54:75",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "functionReturnParameters": 33286,
+                  "id": 33296,
+                  "nodeType": "Return",
+                  "src": "406:61:75"
+                }
+              ]
+            },
+            "functionSelector": "f07ec003",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testEncodePivotKey",
+            "nameLocation": "299:18:75",
+            "parameters": {
+              "id": 33283,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33278,
+                  "mutability": "mutable",
+                  "name": "pool",
+                  "nameLocation": "327:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33298,
+                  "src": "319:12:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 33277,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "319:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33280,
+                  "mutability": "mutable",
+                  "name": "isBid",
+                  "nameLocation": "338:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33298,
+                  "src": "333:10:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 33279,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "333:4:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33282,
+                  "mutability": "mutable",
+                  "name": "tick",
+                  "nameLocation": "351:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33298,
+                  "src": "345:10:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33281,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "345:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "318:38:75"
+            },
+            "returnParameters": {
+              "id": 33286,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33285,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33298,
+                  "src": "387:7:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 33284,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "387:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "386:9:75"
+            },
+            "scope": 33463,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 33354,
+            "nodeType": "FunctionDefinition",
+            "src": "480:415:75",
+            "nodes": [],
+            "body": {
+              "id": 33353,
+              "nodeType": "Block",
+              "src": "661:234:75",
+              "nodes": [],
+              "statements": [
+                {
+                  "assignments": [
+                    33319
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 33319,
+                      "mutability": "mutable",
+                      "name": "pos",
+                      "nameLocation": "705:3:75",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 33353,
+                      "src": "671:37:75",
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                        "typeString": "struct KnockoutLiq.KnockoutPosLoc"
+                      },
+                      "typeName": {
+                        "id": 33318,
+                        "nodeType": "UserDefinedTypeName",
+                        "pathNode": {
+                          "id": 33317,
+                          "name": "KnockoutLiq.KnockoutPosLoc",
+                          "nameLocations": [
+                            "671:11:75",
+                            "683:14:75"
+                          ],
+                          "nodeType": "IdentifierPath",
+                          "referencedDeclaration": 13749,
+                          "src": "671:26:75"
+                        },
+                        "referencedDeclaration": 13749,
+                        "src": "671:26:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_storage_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 33320,
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "671:37:75"
+                },
+                {
+                  "expression": {
+                    "id": 33325,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33321,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33319,
+                        "src": "718:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33323,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "722:6:75",
+                      "memberName": "isBid_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13744,
+                      "src": "718:10:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33324,
+                      "name": "isBid",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33304,
+                      "src": "731:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "718:18:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 33326,
+                  "nodeType": "ExpressionStatement",
+                  "src": "718:18:75"
+                },
+                {
+                  "expression": {
+                    "id": 33331,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33327,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33319,
+                        "src": "746:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33329,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "750:10:75",
+                      "memberName": "lowerTick_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13746,
+                      "src": "746:14:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33330,
+                      "name": "lower",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33306,
+                      "src": "763:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "746:22:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 33332,
+                  "nodeType": "ExpressionStatement",
+                  "src": "746:22:75"
+                },
+                {
+                  "expression": {
+                    "id": 33337,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33333,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33319,
+                        "src": "778:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33335,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "782:10:75",
+                      "memberName": "upperTick_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13748,
+                      "src": "778:14:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33336,
+                      "name": "upper",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33308,
+                      "src": "795:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "778:22:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 33338,
+                  "nodeType": "ExpressionStatement",
+                  "src": "778:22:75"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 33341,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33319,
+                        "src": "842:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      {
+                        "arguments": [
+                          {
+                            "id": 33344,
+                            "name": "pool",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 33300,
+                            "src": "855:4:75",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          ],
+                          "id": 33343,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "lValueRequested": false,
+                          "nodeType": "ElementaryTypeNameExpression",
+                          "src": "847:7:75",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_bytes32_$",
+                            "typeString": "type(bytes32)"
+                          },
+                          "typeName": {
+                            "id": 33342,
+                            "name": "bytes32",
+                            "nodeType": "ElementaryTypeName",
+                            "src": "847:7:75",
+                            "typeDescriptions": {}
+                          }
+                        },
+                        "id": 33345,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "typeConversion",
+                        "lValueRequested": false,
+                        "nameLocations": [],
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "847:13:75",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      {
+                        "arguments": [
+                          {
+                            "id": 33348,
+                            "name": "owner",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 33302,
+                            "src": "870:5:75",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint160",
+                              "typeString": "uint160"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_uint160",
+                              "typeString": "uint160"
+                            }
+                          ],
+                          "id": 33347,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": true,
+                          "lValueRequested": false,
+                          "nodeType": "ElementaryTypeNameExpression",
+                          "src": "862:7:75",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_type$_t_address_$",
+                            "typeString": "type(address)"
+                          },
+                          "typeName": {
+                            "id": 33346,
+                            "name": "address",
+                            "nodeType": "ElementaryTypeName",
+                            "src": "862:7:75",
+                            "typeDescriptions": {}
+                          }
+                        },
+                        "id": 33349,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "typeConversion",
+                        "lValueRequested": false,
+                        "nameLocations": [],
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "862:14:75",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "id": 33350,
+                        "name": "pivotTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33310,
+                        "src": "878:9:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint32",
+                          "typeString": "uint32"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        },
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        },
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint32",
+                          "typeString": "uint32"
+                        }
+                      ],
+                      "expression": {
+                        "id": 33339,
+                        "name": "KnockoutLiq",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14395,
+                        "src": "817:11:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_type$_t_contract$_KnockoutLiq_$14395_$",
+                          "typeString": "type(library KnockoutLiq)"
+                        }
+                      },
+                      "id": 33340,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "829:12:75",
+                      "memberName": "encodePosKey",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13897,
+                      "src": "817:24:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_struct$_KnockoutPosLoc_$13749_memory_ptr_$_t_bytes32_$_t_address_$_t_uint32_$returns$_t_bytes32_$",
+                        "typeString": "function (struct KnockoutLiq.KnockoutPosLoc memory,bytes32,address,uint32) pure returns (bytes32)"
+                      }
+                    },
+                    "id": 33351,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "817:71:75",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "functionReturnParameters": 33314,
+                  "id": 33352,
+                  "nodeType": "Return",
+                  "src": "810:78:75"
+                }
+              ]
+            },
+            "functionSelector": "4c496756",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testEncodePosKey",
+            "nameLocation": "489:16:75",
+            "parameters": {
+              "id": 33311,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33300,
+                  "mutability": "mutable",
+                  "name": "pool",
+                  "nameLocation": "515:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "507:12:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 33299,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "507:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33302,
+                  "mutability": "mutable",
+                  "name": "owner",
+                  "nameLocation": "529:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "521:13:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint160",
+                    "typeString": "uint160"
+                  },
+                  "typeName": {
+                    "id": 33301,
+                    "name": "uint160",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "521:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint160",
+                      "typeString": "uint160"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33304,
+                  "mutability": "mutable",
+                  "name": "isBid",
+                  "nameLocation": "541:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "536:10:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 33303,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "536:4:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33306,
+                  "mutability": "mutable",
+                  "name": "lower",
+                  "nameLocation": "554:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "548:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33305,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "548:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33308,
+                  "mutability": "mutable",
+                  "name": "upper",
+                  "nameLocation": "598:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "592:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33307,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "592:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33310,
+                  "mutability": "mutable",
+                  "name": "pivotTime",
+                  "nameLocation": "612:9:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "605:16:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  },
+                  "typeName": {
+                    "id": 33309,
+                    "name": "uint32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "605:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "506:116:75"
+            },
+            "returnParameters": {
+              "id": 33314,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33313,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33354,
+                  "src": "652:7:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 33312,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "652:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "651:9:75"
+            },
+            "scope": 33463,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 33397,
+            "nodeType": "FunctionDefinition",
+            "src": "901:314:75",
+            "nodes": [],
+            "body": {
+              "id": 33396,
+              "nodeType": "Block",
+              "src": "1013:202:75",
+              "nodes": [],
+              "statements": [
+                {
+                  "assignments": [
+                    33369
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 33369,
+                      "mutability": "mutable",
+                      "name": "pivot",
+                      "nameLocation": "1056:5:75",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 33396,
+                      "src": "1023:38:75",
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                        "typeString": "struct KnockoutLiq.KnockoutPivot"
+                      },
+                      "typeName": {
+                        "id": 33368,
+                        "nodeType": "UserDefinedTypeName",
+                        "pathNode": {
+                          "id": 33367,
+                          "name": "KnockoutLiq.KnockoutPivot",
+                          "nameLocations": [
+                            "1023:11:75",
+                            "1035:13:75"
+                          ],
+                          "nodeType": "IdentifierPath",
+                          "referencedDeclaration": 13728,
+                          "src": "1023:25:75"
+                        },
+                        "referencedDeclaration": 13728,
+                        "src": "1023:25:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_storage_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 33370,
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "1023:38:75"
+                },
+                {
+                  "expression": {
+                    "id": 33375,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33371,
+                        "name": "pivot",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33369,
+                        "src": "1071:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot memory"
+                        }
+                      },
+                      "id": 33373,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1077:5:75",
+                      "memberName": "lots_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13723,
+                      "src": "1071:11:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint96",
+                        "typeString": "uint96"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33374,
+                      "name": "lots",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33356,
+                      "src": "1085:4:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint96",
+                        "typeString": "uint96"
+                      }
+                    },
+                    "src": "1071:18:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint96",
+                      "typeString": "uint96"
+                    }
+                  },
+                  "id": 33376,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1071:18:75"
+                },
+                {
+                  "expression": {
+                    "id": 33381,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33377,
+                        "name": "pivot",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33369,
+                        "src": "1099:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot memory"
+                        }
+                      },
+                      "id": 33379,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1105:11:75",
+                      "memberName": "rangeTicks_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13727,
+                      "src": "1099:17:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33380,
+                      "name": "range",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33360,
+                      "src": "1119:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint16",
+                        "typeString": "uint16"
+                      }
+                    },
+                    "src": "1099:25:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "id": 33382,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1099:25:75"
+                },
+                {
+                  "expression": {
+                    "id": 33387,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33383,
+                        "name": "pivot",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33369,
+                        "src": "1134:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot memory"
+                        }
+                      },
+                      "id": 33385,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1140:10:75",
+                      "memberName": "pivotTime_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13725,
+                      "src": "1134:16:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint32",
+                        "typeString": "uint32"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33386,
+                      "name": "time",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33358,
+                      "src": "1153:4:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint32",
+                        "typeString": "uint32"
+                      }
+                    },
+                    "src": "1134:23:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "id": 33388,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1134:23:75"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 33392,
+                        "name": "pivot",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33369,
+                        "src": "1190:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot memory"
+                        }
+                      },
+                      {
+                        "id": 33393,
+                        "name": "feeMileage",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33362,
+                        "src": "1197:10:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint64",
+                          "typeString": "uint64"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_struct$_KnockoutPivot_$13728_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPivot memory"
+                        },
+                        {
+                          "typeIdentifier": "t_uint64",
+                          "typeString": "uint64"
+                        }
+                      ],
+                      "expression": {
+                        "id": 33389,
+                        "name": "merkle_",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33276,
+                        "src": "1167:7:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutMerkle_$13735_storage",
+                          "typeString": "struct KnockoutLiq.KnockoutMerkle storage ref"
+                        }
+                      },
+                      "id": 33391,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1175:14:75",
+                      "memberName": "commitKnockout",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13932,
+                      "src": "1167:22:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_nonpayable$_t_struct$_KnockoutMerkle_$13735_storage_ptr_$_t_struct$_KnockoutPivot_$13728_memory_ptr_$_t_uint64_$returns$__$attached_to$_t_struct$_KnockoutMerkle_$13735_storage_ptr_$",
+                        "typeString": "function (struct KnockoutLiq.KnockoutMerkle storage pointer,struct KnockoutLiq.KnockoutPivot memory,uint64)"
+                      }
+                    },
+                    "id": 33394,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1167:41:75",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 33395,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1167:41:75"
+                }
+              ]
+            },
+            "functionSelector": "1a738733",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testCommit",
+            "nameLocation": "910:10:75",
+            "parameters": {
+              "id": 33363,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33356,
+                  "mutability": "mutable",
+                  "name": "lots",
+                  "nameLocation": "929:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33397,
+                  "src": "922:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint96",
+                    "typeString": "uint96"
+                  },
+                  "typeName": {
+                    "id": 33355,
+                    "name": "uint96",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "922:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint96",
+                      "typeString": "uint96"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33358,
+                  "mutability": "mutable",
+                  "name": "time",
+                  "nameLocation": "942:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33397,
+                  "src": "935:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  },
+                  "typeName": {
+                    "id": 33357,
+                    "name": "uint32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "935:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33360,
+                  "mutability": "mutable",
+                  "name": "range",
+                  "nameLocation": "955:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33397,
+                  "src": "948:12:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
+                  },
+                  "typeName": {
+                    "id": 33359,
+                    "name": "uint16",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "948:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint16",
+                      "typeString": "uint16"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33362,
+                  "mutability": "mutable",
+                  "name": "feeMileage",
+                  "nameLocation": "994:10:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33397,
+                  "src": "987:17:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint64",
+                    "typeString": "uint64"
+                  },
+                  "typeName": {
+                    "id": 33361,
+                    "name": "uint64",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "987:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint64",
+                      "typeString": "uint64"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "921:84:75"
+            },
+            "returnParameters": {
+              "id": 33364,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1013:0:75"
+            },
+            "scope": 33463,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 33416,
+            "nodeType": "FunctionDefinition",
+            "src": "1221:162:75",
+            "nodes": [],
+            "body": {
+              "id": 33415,
+              "nodeType": "Block",
+              "src": "1326:57:75",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 33411,
+                        "name": "root",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33399,
+                        "src": "1364:4:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint160",
+                          "typeString": "uint160"
+                        }
+                      },
+                      {
+                        "id": 33412,
+                        "name": "proof",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33402,
+                        "src": "1370:5:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                          "typeString": "uint256[] calldata"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_uint160",
+                          "typeString": "uint160"
+                        },
+                        {
+                          "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                          "typeString": "uint256[] calldata"
+                        }
+                      ],
+                      "expression": {
+                        "id": 33409,
+                        "name": "merkle_",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33276,
+                        "src": "1343:7:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutMerkle_$13735_storage",
+                          "typeString": "struct KnockoutLiq.KnockoutMerkle storage ref"
+                        }
+                      },
+                      "id": 33410,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1351:12:75",
+                      "memberName": "proveHistory",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14124,
+                      "src": "1343:20:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_struct$_KnockoutMerkle_$13735_memory_ptr_$_t_uint160_$_t_array$_t_uint256_$dyn_memory_ptr_$returns$_t_uint32_$_t_uint64_$attached_to$_t_struct$_KnockoutMerkle_$13735_memory_ptr_$",
+                        "typeString": "function (struct KnockoutLiq.KnockoutMerkle memory,uint160,uint256[] memory) pure returns (uint32,uint64)"
+                      }
+                    },
+                    "id": 33413,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1343:33:75",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$_t_uint32_$_t_uint64_$",
+                      "typeString": "tuple(uint32,uint64)"
+                    }
+                  },
+                  "functionReturnParameters": 33408,
+                  "id": 33414,
+                  "nodeType": "Return",
+                  "src": "1336:40:75"
+                }
+              ]
+            },
+            "functionSelector": "7e24875e",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testProof",
+            "nameLocation": "1230:9:75",
+            "parameters": {
+              "id": 33403,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33399,
+                  "mutability": "mutable",
+                  "name": "root",
+                  "nameLocation": "1249:4:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33416,
+                  "src": "1241:12:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint160",
+                    "typeString": "uint160"
+                  },
+                  "typeName": {
+                    "id": 33398,
+                    "name": "uint160",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1241:7:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint160",
+                      "typeString": "uint160"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33402,
+                  "mutability": "mutable",
+                  "name": "proof",
+                  "nameLocation": "1274:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33416,
+                  "src": "1255:24:75",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 33400,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1255:7:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 33401,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1255:9:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1240:40:75"
+            },
+            "returnParameters": {
+              "id": 33408,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33405,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33416,
+                  "src": "1310:6:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  },
+                  "typeName": {
+                    "id": 33404,
+                    "name": "uint32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1310:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33407,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33416,
+                  "src": "1318:6:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint64",
+                    "typeString": "uint64"
+                  },
+                  "typeName": {
+                    "id": 33406,
+                    "name": "uint64",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1318:6:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint64",
+                      "typeString": "uint64"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1309:16:75"
+            },
+            "scope": 33463,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 33462,
+            "nodeType": "FunctionDefinition",
+            "src": "1389:363:75",
+            "nodes": [],
+            "body": {
+              "id": 33461,
+              "nodeType": "Block",
+              "src": "1532:220:75",
+              "nodes": [],
+              "statements": [
+                {
+                  "assignments": [
+                    33433
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 33433,
+                      "mutability": "mutable",
+                      "name": "pos",
+                      "nameLocation": "1576:3:75",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 33461,
+                      "src": "1542:37:75",
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                        "typeString": "struct KnockoutLiq.KnockoutPosLoc"
+                      },
+                      "typeName": {
+                        "id": 33432,
+                        "nodeType": "UserDefinedTypeName",
+                        "pathNode": {
+                          "id": 33431,
+                          "name": "KnockoutLiq.KnockoutPosLoc",
+                          "nameLocations": [
+                            "1542:11:75",
+                            "1554:14:75"
+                          ],
+                          "nodeType": "IdentifierPath",
+                          "referencedDeclaration": 13749,
+                          "src": "1542:26:75"
+                        },
+                        "referencedDeclaration": 13749,
+                        "src": "1542:26:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_storage_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 33434,
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "1542:37:75"
+                },
+                {
+                  "expression": {
+                    "id": 33439,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33435,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33433,
+                        "src": "1589:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33437,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1593:6:75",
+                      "memberName": "isBid_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13744,
+                      "src": "1589:10:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33438,
+                      "name": "isBid",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33418,
+                      "src": "1602:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "1589:18:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 33440,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1589:18:75"
+                },
+                {
+                  "expression": {
+                    "id": 33445,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33441,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33433,
+                        "src": "1617:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33443,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1621:10:75",
+                      "memberName": "lowerTick_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13746,
+                      "src": "1617:14:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33444,
+                      "name": "lower",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33420,
+                      "src": "1634:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1617:22:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 33446,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1617:22:75"
+                },
+                {
+                  "expression": {
+                    "id": 33451,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "expression": {
+                        "id": 33447,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33433,
+                        "src": "1649:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      "id": 33449,
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "memberLocation": "1653:10:75",
+                      "memberName": "upperTick_",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 13748,
+                      "src": "1649:14:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 33450,
+                      "name": "upper",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 33422,
+                      "src": "1666:5:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_int24",
+                        "typeString": "int24"
+                      }
+                    },
+                    "src": "1649:22:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "id": 33452,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1649:22:75"
+                },
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 33456,
+                        "name": "pos",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33433,
+                        "src": "1716:3:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        }
+                      },
+                      {
+                        "id": 33457,
+                        "name": "priceTick",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33424,
+                        "src": "1721:9:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_int24",
+                          "typeString": "int24"
+                        }
+                      },
+                      {
+                        "id": 33458,
+                        "name": "knockoutBits",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 33426,
+                        "src": "1732:12:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_struct$_KnockoutPosLoc_$13749_memory_ptr",
+                          "typeString": "struct KnockoutLiq.KnockoutPosLoc memory"
+                        },
+                        {
+                          "typeIdentifier": "t_int24",
+                          "typeString": "int24"
+                        },
+                        {
+                          "typeIdentifier": "t_uint8",
+                          "typeString": "uint8"
+                        }
+                      ],
+                      "expression": {
+                        "id": 33453,
+                        "name": "KnockoutLiq",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 14395,
+                        "src": "1689:11:75",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_type$_t_contract$_KnockoutLiq_$14395_$",
+                          "typeString": "type(library KnockoutLiq)"
+                        }
+                      },
+                      "id": 33455,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1701:14:75",
+                      "memberName": "assertValidPos",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 14221,
+                      "src": "1689:26:75",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_pure$_t_struct$_KnockoutPosLoc_$13749_memory_ptr_$_t_int24_$_t_uint8_$returns$__$",
+                        "typeString": "function (struct KnockoutLiq.KnockoutPosLoc memory,int24,uint8) pure"
+                      }
+                    },
+                    "id": 33459,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "nameLocations": [],
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "1689:56:75",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 33460,
+                  "nodeType": "ExpressionStatement",
+                  "src": "1689:56:75"
+                }
+              ]
+            },
+            "functionSelector": "0cb7f91a",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "testAssertValid",
+            "nameLocation": "1398:15:75",
+            "parameters": {
+              "id": 33427,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 33418,
+                  "mutability": "mutable",
+                  "name": "isBid",
+                  "nameLocation": "1420:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33462,
+                  "src": "1415:10:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 33417,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1415:4:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33420,
+                  "mutability": "mutable",
+                  "name": "lower",
+                  "nameLocation": "1433:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33462,
+                  "src": "1427:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33419,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1427:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33422,
+                  "mutability": "mutable",
+                  "name": "upper",
+                  "nameLocation": "1446:5:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33462,
+                  "src": "1440:11:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33421,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1440:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33424,
+                  "mutability": "mutable",
+                  "name": "priceTick",
+                  "nameLocation": "1489:9:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33462,
+                  "src": "1483:15:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 33423,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1483:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 33426,
+                  "mutability": "mutable",
+                  "name": "knockoutBits",
+                  "nameLocation": "1506:12:75",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 33462,
+                  "src": "1500:18:75",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 33425,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1500:5:75",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1414:105:75"
+            },
+            "returnParameters": {
+              "id": 33428,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1532:0:75"
+            },
+            "scope": 33463,
+            "stateMutability": "pure",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "TestKnockoutLiq",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          33463
+        ],
+        "name": "TestKnockoutLiq",
+        "nameLocation": "112:15:75",
+        "scope": 33464,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 75
+}
