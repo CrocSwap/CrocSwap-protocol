@@ -1,0 +1,1329 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea26469706673582212205441242790facd4d7f2a7141355c3a275620428b0ab555f9939f4b5863d99f5264736f6c63430008130033",
+    "sourceMap": "283:8969:28:-:0;;;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x600080fdfea26469706673582212205441242790facd4d7f2a7141355c3a275620428b0ab555f9939f4b5863d99f5264736f6c63430008130033",
+    "sourceMap": "283:8969:28:-:0;;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {},
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/libraries/Directives.sol\":\"Directives\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/libraries/Directives.sol\":{\"keccak256\":\"0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585\",\"dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17\"]},\"contracts/libraries/SafeCast.sol\":{\"keccak256\":\"0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5\",\"dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/libraries/Directives.sol": "Directives"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/libraries/Directives.sol": {
+        "keccak256": "0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0",
+        "urls": [
+          "bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585",
+          "dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/SafeCast.sol": {
+        "keccak256": "0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916",
+        "urls": [
+          "bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5",
+          "dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg"
+        ],
+        "license": "GPL-2.0-or-later"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/libraries/Directives.sol",
+    "id": 13071,
+    "exportedSymbols": {
+      "Directives": [
+        13070
+      ],
+      "SafeCast": [
+        16160
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "35:9218:28",
+    "nodes": [
+      {
+        "id": 12974,
+        "nodeType": "PragmaDirective",
+        "src": "35:23:28",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 12975,
+        "nodeType": "PragmaDirective",
+        "src": "59:33:28",
+        "nodes": [],
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ]
+      },
+      {
+        "id": 12976,
+        "nodeType": "ImportDirective",
+        "src": "94:24:28",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/SafeCast.sol",
+        "file": "./SafeCast.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 13071,
+        "sourceUnit": 16161,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 13070,
+        "nodeType": "ContractDefinition",
+        "src": "283:8969:28",
+        "nodes": [
+          {
+            "id": 12979,
+            "nodeType": "UsingForDirective",
+            "src": "308:26:28",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 12977,
+              "name": "SafeCast",
+              "nameLocations": [
+                "314:8:28"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 16160,
+              "src": "314:8:28"
+            },
+            "typeName": {
+              "id": 12978,
+              "name": "int256",
+              "nodeType": "ElementaryTypeName",
+              "src": "327:6:28",
+              "typeDescriptions": {
+                "typeIdentifier": "t_int256",
+                "typeString": "int256"
+              }
+            }
+          },
+          {
+            "id": 12982,
+            "nodeType": "UsingForDirective",
+            "src": "339:27:28",
+            "nodes": [],
+            "global": false,
+            "libraryName": {
+              "id": 12980,
+              "name": "SafeCast",
+              "nameLocations": [
+                "345:8:28"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 16160,
+              "src": "345:8:28"
+            },
+            "typeName": {
+              "id": 12981,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "358:7:28",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            }
+          },
+          {
+            "id": 12993,
+            "nodeType": "StructDefinition",
+            "src": "1592:150:28",
+            "nodes": [],
+            "canonicalName": "Directives.SwapDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 12984,
+                "mutability": "mutable",
+                "name": "isBuy_",
+                "nameLocation": "1628:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 12993,
+                "src": "1623:11:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 12983,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1623:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12986,
+                "mutability": "mutable",
+                "name": "inBaseQty_",
+                "nameLocation": "1649:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 12993,
+                "src": "1644:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 12985,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1644:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12988,
+                "mutability": "mutable",
+                "name": "rollType_",
+                "nameLocation": "1675:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 12993,
+                "src": "1669:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
+                },
+                "typeName": {
+                  "id": 12987,
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1669:5:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12990,
+                "mutability": "mutable",
+                "name": "qty_",
+                "nameLocation": "1702:4:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 12993,
+                "src": "1694:12:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint128",
+                  "typeString": "uint128"
+                },
+                "typeName": {
+                  "id": 12989,
+                  "name": "uint128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1694:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12992,
+                "mutability": "mutable",
+                "name": "limitPrice_",
+                "nameLocation": "1724:11:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 12993,
+                "src": "1716:19:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint128",
+                  "typeString": "uint128"
+                },
+                "typeName": {
+                  "id": 12991,
+                  "name": "uint128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "1716:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "SwapDirective",
+            "nameLocation": "1599:13:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13006,
+            "nodeType": "StructDefinition",
+            "src": "3195:184:28",
+            "nodes": [],
+            "canonicalName": "Directives.ConcentratedDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 12995,
+                "mutability": "mutable",
+                "name": "lowTick_",
+                "nameLocation": "3240:8:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3234:14:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_int24",
+                  "typeString": "int24"
+                },
+                "typeName": {
+                  "id": 12994,
+                  "name": "int24",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3234:5:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12997,
+                "mutability": "mutable",
+                "name": "highTick_",
+                "nameLocation": "3264:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3258:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_int24",
+                  "typeString": "int24"
+                },
+                "typeName": {
+                  "id": 12996,
+                  "name": "int24",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3258:5:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 12999,
+                "mutability": "mutable",
+                "name": "isAdd_",
+                "nameLocation": "3288:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3283:11:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 12998,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3283:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13001,
+                "mutability": "mutable",
+                "name": "isTickRel_",
+                "nameLocation": "3309:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3304:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13000,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3304:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13003,
+                "mutability": "mutable",
+                "name": "rollType_",
+                "nameLocation": "3335:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3329:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
+                },
+                "typeName": {
+                  "id": 13002,
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3329:5:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13005,
+                "mutability": "mutable",
+                "name": "liquidity_",
+                "nameLocation": "3362:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13006,
+                "src": "3354:18:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint128",
+                  "typeString": "uint128"
+                },
+                "typeName": {
+                  "id": 13004,
+                  "name": "uint128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3354:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ConcentratedDirective",
+            "nameLocation": "3202:21:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13013,
+            "nodeType": "StructDefinition",
+            "src": "4538:105:28",
+            "nodes": [],
+            "canonicalName": "Directives.AmbientDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 13008,
+                "mutability": "mutable",
+                "name": "isAdd_",
+                "nameLocation": "4577:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13013,
+                "src": "4572:11:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13007,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "4572:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13010,
+                "mutability": "mutable",
+                "name": "rollType_",
+                "nameLocation": "4599:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13013,
+                "src": "4593:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
+                },
+                "typeName": {
+                  "id": 13009,
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "4593:5:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13012,
+                "mutability": "mutable",
+                "name": "liquidity_",
+                "nameLocation": "4626:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13013,
+                "src": "4618:18:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint128",
+                  "typeString": "uint128"
+                },
+                "typeName": {
+                  "id": 13011,
+                  "name": "uint128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "4618:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "AmbientDirective",
+            "nameLocation": "4545:16:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13020,
+            "nodeType": "StructDefinition",
+            "src": "5155:106:28",
+            "nodes": [],
+            "canonicalName": "Directives.ChainingFlags",
+            "members": [
+              {
+                "constant": false,
+                "id": 13015,
+                "mutability": "mutable",
+                "name": "rollExit_",
+                "nameLocation": "5191:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13020,
+                "src": "5186:14:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13014,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "5186:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13017,
+                "mutability": "mutable",
+                "name": "swapDefer_",
+                "nameLocation": "5215:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13020,
+                "src": "5210:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13016,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "5210:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13019,
+                "mutability": "mutable",
+                "name": "offsetSurplus_",
+                "nameLocation": "5240:14:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13020,
+                "src": "5235:19:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13018,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "5235:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ChainingFlags",
+            "nameLocation": "5162:13:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13036,
+            "nodeType": "StructDefinition",
+            "src": "5912:187:28",
+            "nodes": [],
+            "canonicalName": "Directives.PoolDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 13022,
+                "mutability": "mutable",
+                "name": "poolIdx_",
+                "nameLocation": "5951:8:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13036,
+                "src": "5943:16:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 13021,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "5943:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13025,
+                "mutability": "mutable",
+                "name": "ambient_",
+                "nameLocation": "5986:8:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13036,
+                "src": "5969:25:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_AmbientDirective_$13013_storage_ptr",
+                  "typeString": "struct Directives.AmbientDirective"
+                },
+                "typeName": {
+                  "id": 13024,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13023,
+                    "name": "AmbientDirective",
+                    "nameLocations": [
+                      "5969:16:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 13013,
+                    "src": "5969:16:28"
+                  },
+                  "referencedDeclaration": 13013,
+                  "src": "5969:16:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_AmbientDirective_$13013_storage_ptr",
+                    "typeString": "struct Directives.AmbientDirective"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13029,
+                "mutability": "mutable",
+                "name": "conc_",
+                "nameLocation": "6028:5:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13036,
+                "src": "6004:29:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_ConcentratedDirective_$13006_storage_$dyn_storage_ptr",
+                  "typeString": "struct Directives.ConcentratedDirective[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 13027,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 13026,
+                      "name": "ConcentratedDirective",
+                      "nameLocations": [
+                        "6004:21:28"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 13006,
+                      "src": "6004:21:28"
+                    },
+                    "referencedDeclaration": 13006,
+                    "src": "6004:21:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_ConcentratedDirective_$13006_storage_ptr",
+                      "typeString": "struct Directives.ConcentratedDirective"
+                    }
+                  },
+                  "id": 13028,
+                  "nodeType": "ArrayTypeName",
+                  "src": "6004:23:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_ConcentratedDirective_$13006_storage_$dyn_storage_ptr",
+                    "typeString": "struct Directives.ConcentratedDirective[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13032,
+                "mutability": "mutable",
+                "name": "swap_",
+                "nameLocation": "6057:5:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13036,
+                "src": "6043:19:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_SwapDirective_$12993_storage_ptr",
+                  "typeString": "struct Directives.SwapDirective"
+                },
+                "typeName": {
+                  "id": 13031,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13030,
+                    "name": "SwapDirective",
+                    "nameLocations": [
+                      "6043:13:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 12993,
+                    "src": "6043:13:28"
+                  },
+                  "referencedDeclaration": 12993,
+                  "src": "6043:13:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_SwapDirective_$12993_storage_ptr",
+                    "typeString": "struct Directives.SwapDirective"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13035,
+                "mutability": "mutable",
+                "name": "chain_",
+                "nameLocation": "6086:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13036,
+                "src": "6072:20:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ChainingFlags_$13020_storage_ptr",
+                  "typeString": "struct Directives.ChainingFlags"
+                },
+                "typeName": {
+                  "id": 13034,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13033,
+                    "name": "ChainingFlags",
+                    "nameLocations": [
+                      "6072:13:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 13020,
+                    "src": "6072:13:28"
+                  },
+                  "referencedDeclaration": 13020,
+                  "src": "6072:13:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ChainingFlags_$13020_storage_ptr",
+                    "typeString": "struct Directives.ChainingFlags"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "PoolDirective",
+            "nameLocation": "5919:13:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13045,
+            "nodeType": "StructDefinition",
+            "src": "7259:137:28",
+            "nodes": [],
+            "canonicalName": "Directives.SettlementChannel",
+            "members": [
+              {
+                "constant": false,
+                "id": 13038,
+                "mutability": "mutable",
+                "name": "token_",
+                "nameLocation": "7302:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13045,
+                "src": "7294:14:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                },
+                "typeName": {
+                  "id": 13037,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "7294:7:28",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13040,
+                "mutability": "mutable",
+                "name": "limitQty_",
+                "nameLocation": "7325:9:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13045,
+                "src": "7318:16:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_int128",
+                  "typeString": "int128"
+                },
+                "typeName": {
+                  "id": 13039,
+                  "name": "int128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "7318:6:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int128",
+                    "typeString": "int128"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13042,
+                "mutability": "mutable",
+                "name": "dustThresh_",
+                "nameLocation": "7352:11:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13045,
+                "src": "7344:19:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint128",
+                  "typeString": "uint128"
+                },
+                "typeName": {
+                  "id": 13041,
+                  "name": "uint128",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "7344:7:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13044,
+                "mutability": "mutable",
+                "name": "useSurplus_",
+                "nameLocation": "7378:11:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13045,
+                "src": "7373:16:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13043,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "7373:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "SettlementChannel",
+            "nameLocation": "7266:17:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13050,
+            "nodeType": "StructDefinition",
+            "src": "8033:82:28",
+            "nodes": [],
+            "canonicalName": "Directives.PriceImproveReq",
+            "members": [
+              {
+                "constant": false,
+                "id": 13047,
+                "mutability": "mutable",
+                "name": "isEnabled_",
+                "nameLocation": "8071:10:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13050,
+                "src": "8066:15:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13046,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "8066:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13049,
+                "mutability": "mutable",
+                "name": "useBaseSide_",
+                "nameLocation": "8096:12:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13050,
+                "src": "8091:17:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bool",
+                  "typeString": "bool"
+                },
+                "typeName": {
+                  "id": 13048,
+                  "name": "bool",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "8091:4:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "PriceImproveReq",
+            "nameLocation": "8040:15:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13061,
+            "nodeType": "StructDefinition",
+            "src": "8580:128:28",
+            "nodes": [],
+            "canonicalName": "Directives.HopDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 13054,
+                "mutability": "mutable",
+                "name": "pools_",
+                "nameLocation": "8626:6:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13061,
+                "src": "8610:22:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_PoolDirective_$13036_storage_$dyn_storage_ptr",
+                  "typeString": "struct Directives.PoolDirective[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 13052,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 13051,
+                      "name": "PoolDirective",
+                      "nameLocations": [
+                        "8610:13:28"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 13036,
+                      "src": "8610:13:28"
+                    },
+                    "referencedDeclaration": 13036,
+                    "src": "8610:13:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_PoolDirective_$13036_storage_ptr",
+                      "typeString": "struct Directives.PoolDirective"
+                    }
+                  },
+                  "id": 13053,
+                  "nodeType": "ArrayTypeName",
+                  "src": "8610:15:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_PoolDirective_$13036_storage_$dyn_storage_ptr",
+                    "typeString": "struct Directives.PoolDirective[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13057,
+                "mutability": "mutable",
+                "name": "settle_",
+                "nameLocation": "8660:7:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13061,
+                "src": "8642:25:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_SettlementChannel_$13045_storage_ptr",
+                  "typeString": "struct Directives.SettlementChannel"
+                },
+                "typeName": {
+                  "id": 13056,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13055,
+                    "name": "SettlementChannel",
+                    "nameLocations": [
+                      "8642:17:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 13045,
+                    "src": "8642:17:28"
+                  },
+                  "referencedDeclaration": 13045,
+                  "src": "8642:17:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_SettlementChannel_$13045_storage_ptr",
+                    "typeString": "struct Directives.SettlementChannel"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13060,
+                "mutability": "mutable",
+                "name": "improve_",
+                "nameLocation": "8693:8:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13061,
+                "src": "8677:24:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_PriceImproveReq_$13050_storage_ptr",
+                  "typeString": "struct Directives.PriceImproveReq"
+                },
+                "typeName": {
+                  "id": 13059,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13058,
+                    "name": "PriceImproveReq",
+                    "nameLocations": [
+                      "8677:15:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 13050,
+                    "src": "8677:15:28"
+                  },
+                  "referencedDeclaration": 13050,
+                  "src": "8677:15:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_PriceImproveReq_$13050_storage_ptr",
+                    "typeString": "struct Directives.PriceImproveReq"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "HopDirective",
+            "nameLocation": "8587:12:28",
+            "scope": 13070,
+            "visibility": "public"
+          },
+          {
+            "id": 13069,
+            "nodeType": "StructDefinition",
+            "src": "9157:92:28",
+            "nodes": [],
+            "canonicalName": "Directives.OrderDirective",
+            "members": [
+              {
+                "constant": false,
+                "id": 13064,
+                "mutability": "mutable",
+                "name": "open_",
+                "nameLocation": "9207:5:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13069,
+                "src": "9189:23:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_SettlementChannel_$13045_storage_ptr",
+                  "typeString": "struct Directives.SettlementChannel"
+                },
+                "typeName": {
+                  "id": 13063,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 13062,
+                    "name": "SettlementChannel",
+                    "nameLocations": [
+                      "9189:17:28"
+                    ],
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 13045,
+                    "src": "9189:17:28"
+                  },
+                  "referencedDeclaration": 13045,
+                  "src": "9189:17:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_SettlementChannel_$13045_storage_ptr",
+                    "typeString": "struct Directives.SettlementChannel"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 13068,
+                "mutability": "mutable",
+                "name": "hops_",
+                "nameLocation": "9237:5:28",
+                "nodeType": "VariableDeclaration",
+                "scope": 13069,
+                "src": "9222:20:28",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_HopDirective_$13061_storage_$dyn_storage_ptr",
+                  "typeString": "struct Directives.HopDirective[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 13066,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 13065,
+                      "name": "HopDirective",
+                      "nameLocations": [
+                        "9222:12:28"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 13061,
+                      "src": "9222:12:28"
+                    },
+                    "referencedDeclaration": 13061,
+                    "src": "9222:12:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_HopDirective_$13061_storage_ptr",
+                      "typeString": "struct Directives.HopDirective"
+                    }
+                  },
+                  "id": 13067,
+                  "nodeType": "ArrayTypeName",
+                  "src": "9222:14:28",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_HopDirective_$13061_storage_$dyn_storage_ptr",
+                    "typeString": "struct Directives.HopDirective[]"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "OrderDirective",
+            "nameLocation": "9164:14:28",
+            "scope": 13070,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "Directives",
+        "contractDependencies": [],
+        "contractKind": "library",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          13070
+        ],
+        "name": "Directives",
+        "nameLocation": "291:10:28",
+        "scope": 13071,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 28
+}

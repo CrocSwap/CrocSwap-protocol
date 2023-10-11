@@ -1,0 +1,771 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "poolHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "int24",
+          "name": "lowerTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upperTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint128",
+          "name": "liq",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint72",
+          "name": "mileage",
+          "type": "uint72"
+        }
+      ],
+      "name": "depositCrocLiq",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "poolHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "int24",
+          "name": "lowerTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "upperTick",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint128",
+          "name": "liq",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint72",
+          "name": "mileage",
+          "type": "uint72"
+        }
+      ],
+      "name": "withdrawCrocLiq",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "depositCrocLiq(address,bytes32,int24,int24,uint128,uint72)": "668e2cdb",
+    "withdrawCrocLiq(address,bytes32,int24,int24,uint128,uint72)": "93835c1e"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.19+commit.7dd6d404\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"poolHash\",\"type\":\"bytes32\"},{\"internalType\":\"int24\",\"name\":\"lowerTick\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upperTick\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"liq\",\"type\":\"uint128\"},{\"internalType\":\"uint72\",\"name\":\"mileage\",\"type\":\"uint72\"}],\"name\":\"depositCrocLiq\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"poolHash\",\"type\":\"bytes32\"},{\"internalType\":\"int24\",\"name\":\"lowerTick\",\"type\":\"int24\"},{\"internalType\":\"int24\",\"name\":\"upperTick\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"liq\",\"type\":\"uint128\"},{\"internalType\":\"uint72\",\"name\":\"mileage\",\"type\":\"uint72\"}],\"name\":\"withdrawCrocLiq\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/interfaces/ICrocLpConduit.sol\":\"ICrocLpConduit\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@rari-capital/=node_modules/@rari-capital/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-deploy/=node_modules/hardhat-deploy/\",\":hardhat/=node_modules/hardhat/\",\":solidity-code-metrics/=node_modules/solidity-code-metrics/\"],\"viaIR\":true},\"sources\":{\"contracts/interfaces/ICrocLpConduit.sol\":{\"keccak256\":\"0x2e7ec87b1050365c16ba74f7d9beecea883d4791ec1def08e8ae45dd3510e27a\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://8f283048c17c0a0b2c525bcaf313b0fa31a3cd78a69b782f3974088352992524\",\"dweb:/ipfs/QmTuewpvVVBotRkDNUtZcZsbDDEfMLSUiCGRjiThWFevx7\"]},\"contracts/libraries/Directives.sol\":{\"keccak256\":\"0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0\",\"license\":\"GPL-3\",\"urls\":[\"bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585\",\"dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17\"]},\"contracts/libraries/SafeCast.sol\":{\"keccak256\":\"0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916\",\"license\":\"GPL-2.0-or-later\",\"urls\":[\"bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5\",\"dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.19+commit.7dd6d404"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "poolHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "int24",
+              "name": "lowerTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upperTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liq",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint72",
+              "name": "mileage",
+              "type": "uint72"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "depositCrocLiq",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "poolHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "int24",
+              "name": "lowerTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "int24",
+              "name": "upperTick",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liq",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint72",
+              "name": "mileage",
+              "type": "uint72"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "withdrawCrocLiq",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/=node_modules/@openzeppelin/",
+        "@rari-capital/=node_modules/@rari-capital/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "forge-std/=lib/forge-std/src/",
+        "hardhat-deploy/=node_modules/hardhat-deploy/",
+        "hardhat/=node_modules/hardhat/",
+        "solidity-code-metrics/=node_modules/solidity-code-metrics/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/interfaces/ICrocLpConduit.sol": "ICrocLpConduit"
+      },
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/interfaces/ICrocLpConduit.sol": {
+        "keccak256": "0x2e7ec87b1050365c16ba74f7d9beecea883d4791ec1def08e8ae45dd3510e27a",
+        "urls": [
+          "bzz-raw://8f283048c17c0a0b2c525bcaf313b0fa31a3cd78a69b782f3974088352992524",
+          "dweb:/ipfs/QmTuewpvVVBotRkDNUtZcZsbDDEfMLSUiCGRjiThWFevx7"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/Directives.sol": {
+        "keccak256": "0x349193c45904235db59b908070f910310ff88e33ca17de4aaf971a40ddbfb0e0",
+        "urls": [
+          "bzz-raw://ff2062cc76d966adae1811773b929a90878965a9673d18bc41d86ba6f354a585",
+          "dweb:/ipfs/QmYJmJ8BxYptvnt8SyTNfK6kvfhV1wYeKzqo9of6AEMp17"
+        ],
+        "license": "GPL-3"
+      },
+      "contracts/libraries/SafeCast.sol": {
+        "keccak256": "0xf898eb103e1a643b06af1bdf2bd548e6f3f5cd20a1fb0c14adce5eabd69f3916",
+        "urls": [
+          "bzz-raw://7d14c65f9b5c726154c73d5e2d0d2b41d4449b7586376a03cf57ccff8c4361e5",
+          "dweb:/ipfs/QmPf4bHt9WRgKAqzb7nN8GGSoDVHYfnbdZE8Qxt1cvzZBg"
+        ],
+        "license": "GPL-2.0-or-later"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/interfaces/ICrocLpConduit.sol",
+    "id": 5764,
+    "exportedSymbols": {
+      "Directives": [
+        13070
+      ],
+      "ICrocLpConduit": [
+        5763
+      ],
+      "SafeCast": [
+        16160
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "36:2067:14",
+    "nodes": [
+      {
+        "id": 5727,
+        "nodeType": "PragmaDirective",
+        "src": "36:23:14",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".19"
+        ]
+      },
+      {
+        "id": 5728,
+        "nodeType": "ImportDirective",
+        "src": "61:37:14",
+        "nodes": [],
+        "absolutePath": "contracts/libraries/Directives.sol",
+        "file": "../libraries/Directives.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 5764,
+        "sourceUnit": 13071,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 5763,
+        "nodeType": "ContractDefinition",
+        "src": "306:1796:14",
+        "nodes": [
+          {
+            "id": 5745,
+            "nodeType": "FunctionDefinition",
+            "src": "1683:204:14",
+            "nodes": [],
+            "functionSelector": "668e2cdb",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "depositCrocLiq",
+            "nameLocation": "1692:14:14",
+            "parameters": {
+              "id": 5741,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5730,
+                  "mutability": "mutable",
+                  "name": "sender",
+                  "nameLocation": "1716:6:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1708:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 5729,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1708:7:14",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5732,
+                  "mutability": "mutable",
+                  "name": "poolHash",
+                  "nameLocation": "1732:8:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1724:16:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 5731,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1724:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5734,
+                  "mutability": "mutable",
+                  "name": "lowerTick",
+                  "nameLocation": "1777:9:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1771:15:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 5733,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1771:5:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5736,
+                  "mutability": "mutable",
+                  "name": "upperTick",
+                  "nameLocation": "1794:9:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1788:15:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 5735,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1788:5:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5738,
+                  "mutability": "mutable",
+                  "name": "liq",
+                  "nameLocation": "1842:3:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1834:11:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 5737,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1834:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5740,
+                  "mutability": "mutable",
+                  "name": "mileage",
+                  "nameLocation": "1854:7:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1847:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint72",
+                    "typeString": "uint72"
+                  },
+                  "typeName": {
+                    "id": 5739,
+                    "name": "uint72",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1847:6:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1707:155:14"
+            },
+            "returnParameters": {
+              "id": 5744,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5743,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5745,
+                  "src": "1881:4:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 5742,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1881:4:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1880:6:14"
+            },
+            "scope": 5763,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 5762,
+            "nodeType": "FunctionDefinition",
+            "src": "1893:207:14",
+            "nodes": [],
+            "functionSelector": "93835c1e",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdrawCrocLiq",
+            "nameLocation": "1902:15:14",
+            "parameters": {
+              "id": 5758,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5747,
+                  "mutability": "mutable",
+                  "name": "sender",
+                  "nameLocation": "1927:6:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "1919:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 5746,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1919:7:14",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5749,
+                  "mutability": "mutable",
+                  "name": "poolHash",
+                  "nameLocation": "1943:8:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "1935:16:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 5748,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1935:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5751,
+                  "mutability": "mutable",
+                  "name": "lowerTick",
+                  "nameLocation": "1989:9:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "1983:15:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 5750,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1983:5:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5753,
+                  "mutability": "mutable",
+                  "name": "upperTick",
+                  "nameLocation": "2006:9:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "2000:15:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_int24",
+                    "typeString": "int24"
+                  },
+                  "typeName": {
+                    "id": 5752,
+                    "name": "int24",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2000:5:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_int24",
+                      "typeString": "int24"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5755,
+                  "mutability": "mutable",
+                  "name": "liq",
+                  "nameLocation": "2055:3:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "2047:11:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 5754,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2047:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 5757,
+                  "mutability": "mutable",
+                  "name": "mileage",
+                  "nameLocation": "2067:7:14",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "2060:14:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint72",
+                    "typeString": "uint72"
+                  },
+                  "typeName": {
+                    "id": 5756,
+                    "name": "uint72",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2060:6:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint72",
+                      "typeString": "uint72"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1918:157:14"
+            },
+            "returnParameters": {
+              "id": 5761,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 5760,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 5762,
+                  "src": "2094:4:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 5759,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2094:4:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2093:6:14"
+            },
+            "scope": 5763,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "ICrocLpConduit",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          5763
+        ],
+        "name": "ICrocLpConduit",
+        "nameLocation": "316:14:14",
+        "scope": 5764,
+        "usedErrors": []
+      }
+    ],
+    "license": "GPL-3"
+  },
+  "id": 14
+}
