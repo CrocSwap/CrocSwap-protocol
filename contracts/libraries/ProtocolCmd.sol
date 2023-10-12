@@ -119,4 +119,5 @@ library UserCmd {
     ////////////////////////////////////////////////////////////////////////////
     uint8 constant CLAIM_CONC_REWARDS_CODE = 101;
     uint8 constant CLAIM_AMB_REWARDS_CODE = 102;
+    uint8 constant ACCRUE_CONC_POSITION_CODE = 103;
 }

@@ -39,13 +39,15 @@ contract LiquidityMiningPath is LiquidityMining {
     /* @notice Consolidated method for user commands.
      *         Used for claiming liquidity mining rewards. */
     function userCmd(bytes calldata input) public payable {
-        (uint8 code, bytes32 poolHash, int24 lowerTick, int24 upperTick, uint32[] memory weeksToClaim) =
-            abi.decode(input, (uint8, bytes32, int24, int24, uint32[]));
+        (uint8 code, bytes32 poolHash, int24 lowerTick, int24 upperTick, uint32[] memory weeksToClaim, uint32 timeLimit) =
+            abi.decode(input, (uint8, bytes32, int24, int24, uint32[], uint32));
 
         if (code == UserCmd.CLAIM_CONC_REWARDS_CODE) {
             claimConcentratedRewards(poolHash, lowerTick, upperTick, weeksToClaim);
         } else if (code == UserCmd.CLAIM_AMB_REWARDS_CODE) {
             claimAmbientRewards(poolHash, weeksToClaim);
+        } else if (code == UserCmd.ACCRUE_CONC_POSITION_CODE) {
+            accrueConcentratedPositionTimeWeightedLiquidity(poolHash, lowerTick, upperTick, timeLimit);
         } else {
             revert("Invalid user command");
         }
