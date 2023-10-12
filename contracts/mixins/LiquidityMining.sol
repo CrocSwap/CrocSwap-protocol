@@ -120,7 +120,7 @@ contract LiquidityMining is PositionRegistrar {
                                 // Exit was in this week, continue with next tick
                                 tickActiveEnd = tickTracking.exitTimestamp;
                                 tickTrackingIndex++;
-                                dt = tickActiveEnd - tickActiveStart;
+                                dt = tickActiveEnd - time;
                             } else {
                                 // Exit was in next week, we need to consider the current tick there (i.e. not increase the index)
                                 tickActiveEnd = nextWeek;
