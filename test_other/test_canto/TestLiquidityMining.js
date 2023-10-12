@@ -218,7 +218,6 @@ describe("Liquidity Mining Tests", function () {
 		);
 		tx = await dex.userCmd(2, mintConcentratedLiqCmd, {
 			gasLimit: 6000000,
-			value: ethers.utils.parseUnits("10", "ether"),
 		});
 		await tx.wait();
 
@@ -267,7 +266,9 @@ describe("Liquidity Mining Tests", function () {
 				BigNumber.from("1000000000000000000"), // 1 CANTO per week distributed
 			]
 		);
-		tx = await dex.protocolCmd(8, setRewards, true);
+		tx = await dex.protocolCmd(8, setRewards, true, {
+			value: ethers.utils.parseUnits("10", "ether"),
+		});
 		await tx.wait();
 
 		await time.increase(604800 * 5); // fast forward 1000 seconds so that rewards accrue
