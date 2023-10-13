@@ -159,7 +159,7 @@ describe("Liquidity Mining Tests", function () {
         */
 		let templateCmd = abi.encode(
 			["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
-			[110, 36000, 500, 1, 2, 64, 0]
+			[110, 36000, 100, 1, 2, 64, 0]
 		);
 		tx = await dex.protocolCmd(3, templateCmd, false);
 		await tx.wait();
