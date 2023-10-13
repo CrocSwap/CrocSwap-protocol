@@ -47,10 +47,13 @@ contract LiquidityMining is PositionRegistrar {
         if (lastAccrued != 0) {
             uint256 liquidity = curve.concLiq_;
             uint32 time = lastAccrued;
+            uint32 currWeek;
+            uint32 nextWeek;
+            uint32 dt;
             while (time < block.timestamp) {
-                uint32 currWeek = uint32((time / WEEK) * WEEK);
-                uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                uint32 dt = uint32(
+                currWeek = uint32((time / WEEK) * WEEK);
+                nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
+                dt = uint32(
                     nextWeek < block.timestamp
                         ? nextWeek - time
                         : block.timestamp - time
@@ -92,12 +95,15 @@ contract LiquidityMining is PositionRegistrar {
                 uint32 origIndex = tickTrackingIndex;
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
                 uint32 time = lastAccrued;
+                uint32 currWeek;
+                uint32 nextWeek;
+                uint32 dt;
                 // Loop through all in-range time spans for the tick or up to the current time (if it is still in range)
                 while (time < timeLimit && tickTrackingIndex < numTickTracking) {
                     TickTracking memory tickTracking = tickTracking_[poolIdx][i][tickTrackingIndex];
-                    uint32 currWeek = uint32((time / WEEK) * WEEK);
-                    uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                    uint32 dt = uint32(
+                    currWeek = uint32((time / WEEK) * WEEK);
+                    nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
+                    dt = uint32(
                         nextWeek < timeLimit
                             ? nextWeek - time
                             : timeLimit - time
