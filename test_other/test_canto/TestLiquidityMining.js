@@ -281,7 +281,7 @@ describe("Liquidity Mining Tests", function () {
 		const ownerBalBefore = await ethers.provider.getBalance(owner.address);
 
 		let claim = abi.encode(
-			["uint8", "bytes32", "int24", "int24", "uint32[]"],
+			["uint8", "bytes32", "int24", "int24", "uint32[]", "uint32"],
 			[
 				101,
 				keccak256(poolHash),
@@ -291,6 +291,7 @@ describe("Liquidity Mining Tests", function () {
 					Math.floor(timestampBefore / 604800) * 604800 + 604800,
 					Math.floor(timestampBefore / 604800) * 604800 + 604800 * 2,
 				],
+				0,
 			]
 		);
 		tx = await dex.userCmd(8, claim);

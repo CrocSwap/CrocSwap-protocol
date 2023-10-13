@@ -47,10 +47,13 @@ contract LiquidityMining is PositionRegistrar {
         if (lastAccrued != 0) {
             uint256 liquidity = curve.concLiq_;
             uint32 time = lastAccrued;
+            uint32 currWeek;
+            uint32 nextWeek;
+            uint32 dt;
             while (time < block.timestamp) {
-                uint32 currWeek = uint32((time / WEEK) * WEEK);
-                uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                uint32 dt = uint32(
+                currWeek = uint32((time / WEEK) * WEEK);
+                nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
+                dt = uint32(
                     nextWeek < block.timestamp
                         ? nextWeek - time
                         : block.timestamp - time
@@ -70,7 +73,8 @@ contract LiquidityMining is PositionRegistrar {
         address payable owner,
         bytes32 poolIdx,
         int24 lowerTick,
-        int24 upperTick
+        int24 upperTick,
+        uint32 timeLimit
     ) internal {
         RangePosition72 storage pos = lookupPosition(
             owner,
@@ -82,6 +86,7 @@ contract LiquidityMining is PositionRegistrar {
         uint32 lastAccrued = timeWeightedWeeklyPositionConcLiquidityLastSet_[
             poolIdx
         ][posKey];
+        require(timeLimit >= lastAccrued, "Invalid time limit");
         // Only set time on first call
         if (lastAccrued != 0) {
             uint256 liquidity = pos.liquidity_;
@@ -90,15 +95,18 @@ contract LiquidityMining is PositionRegistrar {
                 uint32 origIndex = tickTrackingIndex;
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
                 uint32 time = lastAccrued;
+                uint32 currWeek;
+                uint32 nextWeek;
+                uint32 dt;
                 // Loop through all in-range time spans for the tick or up to the current time (if it is still in range)
-                while (time < block.timestamp && tickTrackingIndex < numTickTracking) {
+                while (time < timeLimit && tickTrackingIndex < numTickTracking) {
                     TickTracking memory tickTracking = tickTracking_[poolIdx][i][tickTrackingIndex];
-                    uint32 currWeek = uint32((time / WEEK) * WEEK);
-                    uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                    uint32 dt = uint32(
-                        nextWeek < block.timestamp
+                    currWeek = uint32((time / WEEK) * WEEK);
+                    nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
+                    dt = uint32(
+                        nextWeek < timeLimit
                             ? nextWeek - time
-                            : block.timestamp - time
+                            : timeLimit - time
                     );
                     uint32 tickActiveStart; // Timestamp to use for the liquidity addition
                     uint32 tickActiveEnd;
@@ -113,7 +121,7 @@ contract LiquidityMining is PositionRegistrar {
                         }
                         if (tickTracking.exitTimestamp == 0) {
                             // Tick still active, do not increase index because we need to continue from here
-                            tickActiveEnd = uint32(nextWeek < block.timestamp ? nextWeek : block.timestamp);
+                            tickActiveEnd = uint32(nextWeek < timeLimit ? nextWeek : timeLimit);
                         } else {
                             // Tick is no longer active
                             if (tickTracking.exitTimestamp <= nextWeek) {
@@ -150,7 +158,25 @@ contract LiquidityMining is PositionRegistrar {
         }
         timeWeightedWeeklyPositionConcLiquidityLastSet_[poolIdx][
             posKey
-        ] = uint32(block.timestamp);
+        ] = timeLimit;
+    }
+
+    /// @notice Allows user to trigger accrual with a time limit to prevent out-of-gas
+    function accrueConcentratedPositionTimeWeightedLiquidity(
+        bytes32 poolIdx,
+        int24 lowerTick,
+        int24 upperTick,
+        uint32 timeLimit
+    ) internal {
+        bytes32 posKey = encodePosKey(msg.sender, poolIdx, lowerTick, upperTick);
+        require(timeWeightedWeeklyPositionConcLiquidityLastSet_[poolIdx][posKey] > 0, "Non-existing position");
+        accrueConcentratedPositionTimeWeightedLiquidity(
+            payable(msg.sender),
+            poolIdx,
+            lowerTick,
+            upperTick,
+            timeLimit
+        );
     }
 
     function claimConcentratedRewards(
@@ -164,7 +190,8 @@ contract LiquidityMining is PositionRegistrar {
             owner,
             poolIdx,
             lowerTick,
-            upperTick
+            upperTick,
+            uint32(block.timestamp)
         );
         CurveMath.CurveState memory curve = curves_[poolIdx];
         // Need to do a global accrual in case the current tick was already in range for a long time without any modifications that triggered an accrual

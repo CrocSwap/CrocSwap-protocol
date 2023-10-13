@@ -139,7 +139,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
         
         accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
         // Can be used to increase position, need to accrue first
-        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
+        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick, uint32(block.timestamp));
         mintPosLiq(lpOwner, poolHash, lowTick, highTick,
                      liquidity, feeMileage);
         depositConduit(poolHash, lowTick, highTick, liquidity, feeMileage, lpOwner);
@@ -175,7 +175,7 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
                                           liquidity.liquidityToLots(),
                                           curve.concGrowth_);
         accrueConcentratedGlobalTimeWeightedLiquidity(poolHash, curve);
-        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick);
+        accrueConcentratedPositionTimeWeightedLiquidity(payable(lpOwner), poolHash, lowTick, highTick, uint32(block.timestamp));
         uint64 rewards = burnPosLiq(lpOwner, poolHash, lowTick, highTick, liquidity,
                                     feeMileage);
         withdrawConduit(poolHash, lowTick, highTick,
