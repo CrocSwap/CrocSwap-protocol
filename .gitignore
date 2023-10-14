@@ -12,3 +12,5 @@ yarn-error.log
 tenderly.yaml
 coverage.json
 coverage/
+hardhat.config.ts
+forge-cache/
