@@ -63,9 +63,6 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
     function mintAmbient (CurveMath.CurveState memory curve, uint128 liqAdded, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        // Can be used to increase position, need to accrue first
-        accrueAmbientGlobalTimeWeightedLiquidity(poolHash, curve);
-        accrueAmbientPositionTimeWeightedLiquidity(payable(lpOwner), poolHash);
         uint128 liqSeeds = mintPosLiq(lpOwner, poolHash, liqAdded,
                                       curve.seedDeflator_);
         depositConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
@@ -100,8 +97,6 @@ contract TradeMatcher is LiquidityMining, LiquidityCurve, KnockoutCounter,
     function burnAmbient (CurveMath.CurveState memory curve, uint128 liqBurned, 
                           bytes32 poolHash, address lpOwner)
         internal returns (int128, int128) {
-        accrueAmbientGlobalTimeWeightedLiquidity(poolHash, curve);
-        accrueAmbientPositionTimeWeightedLiquidity(payable(lpOwner), poolHash);
         uint128 liqSeeds = burnPosLiq(lpOwner, poolHash, liqBurned, curve.seedDeflator_);
         withdrawConduit(poolHash, liqSeeds, curve.seedDeflator_, lpOwner);
         

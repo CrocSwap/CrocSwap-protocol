@@ -90,7 +90,7 @@ contract LiquidityMining is PositionRegistrar {
         // Only set time on first call
         if (lastAccrued != 0) {
             uint256 liquidity = pos.liquidity_;
-            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+            for (int24 i = lowerTick + 100; i <= upperTick - 100; ++i) {
                 uint32 tickTrackingIndex = tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i];
                 uint32 origIndex = tickTrackingIndex;
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
@@ -144,7 +144,7 @@ contract LiquidityMining is PositionRegistrar {
                 }
             }
         } else {
-            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+            for (int24 i = lowerTick + 100; i <= upperTick - 100; ++i) {
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
                 if (numTickTracking > 0) {
                     if (tickTracking_[poolIdx][i][numTickTracking - 1].exitTimestamp == 0) {
@@ -208,106 +208,13 @@ contract LiquidityMining is PositionRegistrar {
             uint256 overallInRangeLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][week];
             if (overallInRangeLiquidity > 0) {
                 uint256 inRangeLiquidityOfPosition;
-                for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
+                for (int24 j = lowerTick + 100; j <= upperTick - 100; ++j) {
                     inRangeLiquidityOfPosition += timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][week][j];
                 }
                 // Percentage of this weeks overall in range liquidity that was provided by the user times the overall weekly rewards
                 rewardsToSend += inRangeLiquidityOfPosition * concRewardPerWeek_[poolIdx][week] / overallInRangeLiquidity;
             }
             concLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
-        }
-        if (rewardsToSend > 0) {
-            (bool sent, ) = owner.call{value: rewardsToSend}("");
-            require(sent, "Sending rewards failed");
-        }
-    }
-
-    function accrueAmbientGlobalTimeWeightedLiquidity(
-        bytes32 poolIdx,
-        CurveMath.CurveState memory curve
-    ) internal {
-        uint32 lastAccrued = timeWeightedWeeklyGlobalAmbLiquidityLastSet_[poolIdx];
-        // Only set time on first call
-        if (lastAccrued != 0) {
-            uint256 liquidity = curve.ambientSeeds_;
-            uint32 time = lastAccrued;
-            while (time < block.timestamp) {
-                uint32 currWeek = uint32((time / WEEK) * WEEK);
-                uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                uint32 dt = uint32(
-                    nextWeek < block.timestamp
-                        ? nextWeek - time
-                        : block.timestamp - time
-                );
-                timeWeightedWeeklyGlobalAmbLiquidity_[poolIdx][currWeek] += dt * liquidity;
-                time += dt;
-            }
-        }
-        timeWeightedWeeklyGlobalAmbLiquidityLastSet_[poolIdx] = uint32(
-            block.timestamp
-        );
-    }
-
-    function accrueAmbientPositionTimeWeightedLiquidity(
-        address payable owner,
-        bytes32 poolIdx
-    ) internal {
-        bytes32 posKey = encodePosKey(owner, poolIdx);
-        uint32 lastAccrued = timeWeightedWeeklyPositionAmbLiquidityLastSet_[
-            poolIdx
-        ][posKey];
-        // Only init time on first call
-        if (lastAccrued != 0) {
-            AmbientPosition storage pos = lookupPosition(owner, poolIdx);
-            uint256 liquidity = pos.seeds_;
-            uint32 time = lastAccrued;
-            while (time < block.timestamp) {
-                uint32 currWeek = uint32((time / WEEK) * WEEK);
-                uint32 nextWeek = uint32(((time + WEEK) / WEEK) * WEEK);
-                uint32 dt = uint32(
-                    nextWeek < block.timestamp
-                        ? nextWeek - time
-                        : block.timestamp - time
-                );
-                timeWeightedWeeklyPositionAmbLiquidity_[poolIdx][posKey][
-                    currWeek
-                ] += dt * liquidity;
-                time += dt;
-            }
-        }
-        timeWeightedWeeklyPositionAmbLiquidityLastSet_[poolIdx][
-            posKey
-        ] = uint32(block.timestamp);
-    }
-
-    function claimAmbientRewards(
-        address owner,
-        bytes32 poolIdx,
-        uint32[] memory weeksToClaim
-    ) internal {
-        CurveMath.CurveState memory curve = curves_[poolIdx];
-        accrueAmbientPositionTimeWeightedLiquidity(payable(owner), poolIdx);
-        accrueAmbientGlobalTimeWeightedLiquidity(poolIdx, curve);
-        bytes32 posKey = encodePosKey(owner, poolIdx);
-        uint256 rewardsToSend;
-        for (uint256 i; i < weeksToClaim.length; ++i) {
-            uint32 week = weeksToClaim[i];
-            require(week + WEEK < block.timestamp, "Week not over yet");
-            require(
-                !ambLiquidityRewardsClaimed_[poolIdx][posKey][week],
-                "Already claimed"
-            );
-            uint256 overallTimeWeightedLiquidity = timeWeightedWeeklyGlobalAmbLiquidity_[
-                    poolIdx
-                ][week];
-            if (overallTimeWeightedLiquidity > 0) {
-                uint256 rewardsForWeek = (timeWeightedWeeklyPositionAmbLiquidity_[
-                    poolIdx
-                ][posKey][week] * ambRewardPerWeek_[poolIdx][week]) /
-                    overallTimeWeightedLiquidity;
-                rewardsToSend += rewardsForWeek;
-            }
-            ambLiquidityRewardsClaimed_[poolIdx][posKey][week] = true;
         }
         if (rewardsToSend > 0) {
             (bool sent, ) = owner.call{value: rewardsToSend}("");

@@ -251,8 +251,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (, address auth) =
             abi.decode(cmd, (uint8, address));
 
-        require(auth != address(0) && auth.code.length > 0 && 
-            ICrocMaster(auth).acceptsCrocAuthority(), "Invalid Authority");
+        require(auth != address(0) && auth.code.length > 0, "Invalid Authority");
         
         emit CrocEvents.AuthorityTransfer(authority_);
         authority_ = auth;
