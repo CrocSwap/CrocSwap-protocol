@@ -90,7 +90,7 @@ contract LiquidityMining is PositionRegistrar {
         // Only set time on first call
         if (lastAccrued != 0) {
             uint256 liquidity = pos.liquidity_;
-            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+            for (int24 i = lowerTick + 100; i <= upperTick - 100; ++i) {
                 uint32 tickTrackingIndex = tickTrackingIndexAccruedUpTo_[poolIdx][posKey][i];
                 uint32 origIndex = tickTrackingIndex;
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
@@ -144,7 +144,7 @@ contract LiquidityMining is PositionRegistrar {
                 }
             }
         } else {
-            for (int24 i = lowerTick + 10; i <= upperTick - 10; ++i) {
+            for (int24 i = lowerTick + 100; i <= upperTick - 100; ++i) {
                 uint32 numTickTracking = uint32(tickTracking_[poolIdx][i].length);
                 if (numTickTracking > 0) {
                     if (tickTracking_[poolIdx][i][numTickTracking - 1].exitTimestamp == 0) {
@@ -208,7 +208,7 @@ contract LiquidityMining is PositionRegistrar {
             uint256 overallInRangeLiquidity = timeWeightedWeeklyGlobalConcLiquidity_[poolIdx][week];
             if (overallInRangeLiquidity > 0) {
                 uint256 inRangeLiquidityOfPosition;
-                for (int24 j = lowerTick + 10; j <= upperTick - 10; ++j) {
+                for (int24 j = lowerTick + 100; j <= upperTick - 100; ++j) {
                     inRangeLiquidityOfPosition += timeWeightedWeeklyPositionInRangeConcLiquidity_[poolIdx][posKey][week][j];
                 }
                 // Percentage of this weeks overall in range liquidity that was provided by the user times the overall weekly rewards
