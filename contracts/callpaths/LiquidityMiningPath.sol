@@ -29,8 +29,6 @@ contract LiquidityMiningPath is LiquidityMining {
 
         if (code == ProtocolCmd.SET_CONC_REWARDS_CODE) {
             setConcRewards(poolHash, weekFrom, weekTo, weeklyReward);
-        } else if (code == ProtocolCmd.SET_AMB_REWARDS_CODE) {
-            setAmbRewards(poolHash, weekFrom, weekTo, weeklyReward);
         } else {
             revert("Invalid protocol command");
         }
@@ -39,13 +37,11 @@ contract LiquidityMiningPath is LiquidityMining {
     /* @notice Consolidated method for user commands.
      *         Used for claiming liquidity mining rewards. */
     function userCmd(bytes calldata input) public payable {
-        (uint8 code, bytes32 poolHash, int24 lowerTick, int24 upperTick, uint32[] memory weeksToClaim, uint32 timeLimit) =
-            abi.decode(input, (uint8, bytes32, int24, int24, uint32[], uint32));
+        (uint8 code, bytes32 poolHash, int24 lowerTick, int24 upperTick, uint32[] memory weeksToClaim, uint32 timeLimit)
+        = abi.decode(input, (uint8, bytes32, int24, int24, uint32[], uint32));
 
         if (code == UserCmd.CLAIM_CONC_REWARDS_CODE) {
             claimConcentratedRewards(poolHash, lowerTick, upperTick, weeksToClaim);
-        } else if (code == UserCmd.CLAIM_AMB_REWARDS_CODE) {
-            claimAmbientRewards(poolHash, weeksToClaim);
         } else if (code == UserCmd.ACCRUE_CONC_POSITION_CODE) {
             accrueConcentratedPositionTimeWeightedLiquidity(poolHash, lowerTick, upperTick, timeLimit);
         } else {
@@ -60,24 +56,11 @@ contract LiquidityMiningPath is LiquidityMining {
         claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, weeksToClaim);
     }
 
-    function claimAmbientRewards(bytes32 poolIdx, uint32[] memory weeksToClaim) public payable {
-        claimAmbientRewards(payable(msg.sender), poolIdx, weeksToClaim);
-    }
-
     function setConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
         // require(msg.sender == governance_, "Only callable by governance");
         require(weekFrom % WEEK == 0 && weekTo % WEEK == 0, "Invalid weeks");
         while (weekFrom <= weekTo) {
             concRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
-            weekFrom += uint32(WEEK);
-        }
-    }
-
-    function setAmbRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
-        // require(msg.sender == governance_, "Only callable by governance");
-        require(weekFrom % WEEK == 0 && weekTo % WEEK == 0, "Invalid weeks");
-        while (weekFrom <= weekTo) {
-            ambRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
             weekFrom += uint32(WEEK);
         }
     }
