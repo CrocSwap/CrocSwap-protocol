@@ -44,6 +44,8 @@ contract LiquidityMiningPath is LiquidityMining {
             claimConcentratedRewards(poolHash, lowerTick, upperTick, weeksToClaim);
         } else if (code == UserCmd.ACCRUE_CONC_POSITION_CODE) {
             accrueConcentratedPositionTimeWeightedLiquidity(poolHash, lowerTick, upperTick, timeLimit);
+        } else if (code == UserCmd.SEND_REWARDS) { 
+            // empty block; do nothing when receiving rewards
         } else {
             revert("Invalid user command");
         }
