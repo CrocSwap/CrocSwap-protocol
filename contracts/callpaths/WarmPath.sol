@@ -37,6 +37,8 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    event CrocWarmCmd(bytes,int128,int128);
+
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    We consolidate multiple call types into a single method to reduce the 
      *         contract size in the main contract by paring down methods.
@@ -58,6 +60,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
             commitLP(code, base, quote, poolIdx, bidTick, askTick,
                      liq, limitLower, limitHigher, lpConduit);
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
+        emit CrocWarmCmd(input, baseFlow, quoteFlow);
     }
 
     
