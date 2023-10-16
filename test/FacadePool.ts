@@ -14,7 +14,7 @@ import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
 import { BootPath } from "../contracts/typechain";
-import { buildCrocSwapSex } from "./SetupDex";
+import { BOOT_PROXY_IDX, COLD_PROXY_IDX, KNOCKOUT_LP_PROXY_IDX, LONG_PROXY_IDX, LP_PROXY_IDX, SAFE_MODE_PROXY_PATH, SWAP_PROXY_IDX, buildCrocSwapSex } from "./SetupDex";
 
 chai.use(solidity);
 
@@ -440,13 +440,13 @@ export class TestPool {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
 
-    readonly BOOT_PROXY: number = 0;
-    readonly HOT_PROXY: number = 1;
-    readonly WARM_PROXY: number = 2;
-    readonly COLD_PROXY: number = 3;
-    readonly LONG_PROXY: number = 4;
-    readonly KNOCKOUT_PROXY: number = 7;
-    readonly EMERGENCY_PROXY: number = 9999
+    readonly BOOT_PROXY: number = BOOT_PROXY_IDX
+    readonly HOT_PROXY: number = SWAP_PROXY_IDX
+    readonly WARM_PROXY: number = LP_PROXY_IDX
+    readonly COLD_PROXY: number = COLD_PROXY_IDX
+    readonly LONG_PROXY: number = LONG_PROXY_IDX
+    readonly KNOCKOUT_PROXY: number = KNOCKOUT_LP_PROXY_IDX
+    readonly EMERGENCY_PROXY: number = SAFE_MODE_PROXY_PATH
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
