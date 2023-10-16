@@ -338,7 +338,7 @@ describe('Pool Relayer Agent', () => {
         let initBal = await baseToken.balanceOf(other)
 
        let cmd = disburseCmd(other, 5000)
-       let cond = formCond(10000, 5000, 0, 0, AddressZero)
+       let cond = formCond(30000, 25000, 0, 0, AddressZero)
        let tip = formTip(0, other)
        let signature = await formSignature(test.COLD_PROXY, cmd, cond, tip)
        
