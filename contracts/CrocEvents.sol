@@ -81,4 +81,23 @@ library CrocEvents {
      * @param If true indicates emergency safe mode is turned on
      *        If false indicates emergency safe mode is turned off */
     event SafeMode (bool);
+
+    event CrocSwap (address indexed base, address indexed quote,
+                    bool isBuy, bool inBaseQty,
+                    int128 baseFlow, int128 quoteFlow);
+    
+    event CrocHotCmd (bytes input, int128 baseFlow, int128 quoteFlow);
+    event CrocColdCmd (bytes input);
+    event CrocColdProtocolCmd (bytes input);
+    event CrocWarmCmd (bytes input, int128 baseFlow, int128 quoteFlow);
+    event CrocKnockoutCmd (bytes input, int128 baseFlow, int128 quoteFlow);
+
+    event CrocMicroMintAmbient(bytes input, bytes output);
+    event CrocMicroMintRange(bytes input, bytes output);
+    event CrocMicroBurnAmbient(bytes input, bytes output);
+    event CrocMicroBurnRange(bytes input, bytes output);
+    event CrocMicroSwap(bytes input, bytes output);
+
+    event CrocClaimConcRewards(bytes32 poolIdx, int24 lowerTick, int24 upperTick, uint32[] weeksToClaim);
+    event CrocSetConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward);
 }

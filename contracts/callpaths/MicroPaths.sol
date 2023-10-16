@@ -11,6 +11,7 @@ import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
+import '../CrocEvents.sol';
 
 /* @title Micro paths callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -62,6 +63,11 @@ contract MicroPaths is MarketSequencer {
 
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
+
+        emit CrocEvents.CrocMicroBurnRange
+            (abi.encode(price, priceTick, seed, conc, seedGrowth, concGrowth,
+                        lowTick, highTick, liq, poolHash), 
+            abi.encode(baseFlow, quoteFlow, concOut, seedOut));
     }
 
 
@@ -103,6 +109,11 @@ contract MicroPaths is MarketSequencer {
 
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
+
+        emit CrocEvents.CrocMicroMintRange
+            (abi.encode(price, priceTick, seed, conc, seedGrowth, concGrowth,
+                        lowTick, highTick, liq, poolHash), 
+            abi.encode(baseFlow, quoteFlow, concOut, seedOut));
     }
     
     /* @notice Burns liquidity from an ambient liquidity position on a single curve.
@@ -136,6 +147,11 @@ contract MicroPaths is MarketSequencer {
         (baseFlow, quoteFlow) = burnAmbient(curve, liq, poolHash, lockHolder_);
         
         seedOut = curve.ambientSeeds_;
+
+        emit CrocEvents.CrocMicroBurnAmbient
+            (abi.encode(price, seed, conc, seedGrowth, concGrowth,
+                        liq, poolHash), 
+            abi.encode(baseFlow, quoteFlow, seedOut));
     }
 
     /* @notice Mints liquidity from an ambient liquidity position on a single curve.
@@ -169,6 +185,11 @@ contract MicroPaths is MarketSequencer {
         (baseFlow, quoteFlow) = mintAmbient(curve, liq, poolHash, lockHolder_);
 
         seedOut = curve.ambientSeeds_;
+
+        emit CrocEvents.CrocMicroMintAmbient
+            (abi.encode(price, seed, conc, seedGrowth, concGrowth,
+                        liq, poolHash), 
+            abi.encode(baseFlow, quoteFlow, seedOut));
     }
 
     /* @notice Executes a user-directed swap through a single liquidity curve.
@@ -200,6 +221,10 @@ contract MicroPaths is MarketSequencer {
         concOut = curve.concLiq_;
         ambientOut = curve.seedDeflator_;
         concGrowthOut = curve.concGrowth_;
+
+        emit CrocEvents.CrocMicroSwap(
+            abi.encode(curve, midTick, swap, pool),
+            abi.encode(accum, priceOut, seedOut, concOut, ambientOut, concGrowthOut));
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

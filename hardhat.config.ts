@@ -17,7 +17,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 17900
+            runs: 14900
           },
           viaIR: true,
           outputSelection: {

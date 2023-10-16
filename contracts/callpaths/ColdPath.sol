@@ -33,12 +33,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using Chaining for Chaining.PairFlow;
     using ProtocolCmd for bytes;
 
-    event CrocColdCmd(bytes);
-    event CrocColdProtocolCmd(bytes);
-
     /* @notice Consolidated method for protocol control related commands. */
     function protocolCmd (bytes calldata cmd) virtual public {
-        emit CrocColdProtocolCmd(cmd);
         uint8 code = uint8(cmd[31]);
 
         if (code == ProtocolCmd.DISABLE_TEMPLATE_CODE) {
@@ -60,6 +56,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         } else {
             sudoCmd(cmd);
         }
+
+        emit CrocEvents.CrocColdProtocolCmd(cmd);
     }
 
     /* @notice Subset of highly privileged commands that are only allowed to run in sudo
@@ -84,7 +82,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     }
     
     function userCmd (bytes calldata cmd) virtual public payable {
-        emit CrocColdCmd(cmd);
         uint8 cmdCode = uint8(cmd[31]);
         
         if (cmdCode == UserCmd.INIT_POOL_CODE) {
@@ -111,6 +108,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             revert("Invalid command");
         }
 
+        emit CrocEvents.CrocColdCmd(cmd);
     }
     
     /* @notice Initializes the pool type for the pair.

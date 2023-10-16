@@ -6,6 +6,7 @@ import "../libraries/SafeCast.sol";
 import "../mixins/StorageLayout.sol";
 import "../mixins/LiquidityMining.sol";
 import "../libraries/ProtocolCmd.sol";
+import "../CrocEvents.sol";
 
 /* @title Liquidity mining callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -21,10 +22,6 @@ import "../libraries/ProtocolCmd.sol";
  *      fail on any. Because of this, this contract should never be used in any other
  *      context besides a proxy sidecar to CrocSwapDex. */
 contract LiquidityMiningPath is LiquidityMining {
-
-    event ClaimConcentratedRewards(address indexed user, bytes32 indexed poolIdx, int24, int24, uint32[]);
-    event SetConcentratedRewards(bytes32 indexed poolIdx, uint32, uint32, uint64);
-
     /* @notice Consolidated method for protocol control related commands. 
      *         Used to set reward rates */
     function protocolCmd(bytes calldata cmd) public virtual {
@@ -59,18 +56,18 @@ contract LiquidityMiningPath is LiquidityMining {
         public
         payable
     {
-        emit ClaimConcentratedRewards(msg.sender, poolIdx, lowerTick, upperTick, weeksToClaim);
         claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, weeksToClaim);
+        emit CrocEvents.CrocClaimConcRewards(poolIdx, lowerTick, upperTick, weeksToClaim);
     }
 
     function setConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
-        emit SetConcentratedRewards(poolIdx, weekFrom, weekTo, weeklyReward);
         // require(msg.sender == governance_, "Only callable by governance");
         require(weekFrom % WEEK == 0 && weekTo % WEEK == 0, "Invalid weeks");
         while (weekFrom <= weekTo) {
             concRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
             weekFrom += uint32(WEEK);
         }
+        emit CrocEvents.CrocSetConcRewards(poolIdx, weekFrom, weekTo, weeklyReward);
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

@@ -29,7 +29,6 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    event CrocSwap(address indexed base, address indexed quote,uint256,bool,bool,uint128,uint16,uint128,uint128,uint8,int128,int128);
 
     /* @notice Executes a swap on an arbitrary pool. */
     function swapExecute (address base, address quote,
@@ -47,7 +46,6 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         pivotOutFlow(flow, minOutput, isBuy, inBaseQty);        
         settleFlows(base, quote, flow.baseFlow_, flow.quoteFlow_, reserveFlags);
         accumProtocolFees(flow, base, quote);
-        emit CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip, limitPrice, minOutput, reserveFlags, baseFlow, quoteFlow);
     }
 
     /* @notice Final check at swap completion to verify that the non-fixed side of the 

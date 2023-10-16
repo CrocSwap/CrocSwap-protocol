@@ -10,6 +10,7 @@ import '../libraries/ProtocolCmd.sol';
 import '../mixins/SettleLayer.sol';
 import '../mixins/PoolRegistry.sol';
 import '../mixins/TradeMatcher.sol';
+import '../CrocEvents.sol';
 
 /* @title Knockout Flag Proxy
  * @notice This is an internal library callpath that's called when a swap triggers a 
@@ -67,7 +68,11 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
 
     function userCmd (bytes calldata cmd) public payable returns
         (int128 baseFlow, int128 quoteFlow) {
-        
+        (baseFlow, quoteFlow) = innerCmd(cmd);
+        emit CrocEvents.CrocKnockoutCmd(cmd, baseFlow, quoteFlow);
+    }
+
+    function innerCmd (bytes calldata cmd) private returns (int128, int128) {
         (uint8 code, address base, address quote, uint256 poolIdx,
          int24 bidTick, int24 askTick, bool isBid, uint8 reserveFlags,
          bytes memory args) = abi.decode
