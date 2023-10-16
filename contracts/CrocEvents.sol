@@ -97,4 +97,7 @@ library CrocEvents {
     event CrocMicroBurnAmbient(bytes input, bytes output);
     event CrocMicroBurnRange(bytes input, bytes output);
     event CrocMicroSwap(bytes input, bytes output);
+
+    event CrocClaimConcRewards(bytes32 poolIdx, int24 lowerTick, int24 upperTick, uint32[] weeksToClaim);
+    event CrocSetConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward);
 }

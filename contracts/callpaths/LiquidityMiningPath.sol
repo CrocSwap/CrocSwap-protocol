@@ -6,6 +6,7 @@ import "../libraries/SafeCast.sol";
 import "../mixins/StorageLayout.sol";
 import "../mixins/LiquidityMining.sol";
 import "../libraries/ProtocolCmd.sol";
+import "../CrocEvents.sol";
 
 /* @title Liquidity mining callpath sidecar.
  * @notice Defines a proxy sidecar contract that's used to move code outside the 
@@ -56,6 +57,7 @@ contract LiquidityMiningPath is LiquidityMining {
         payable
     {
         claimConcentratedRewards(payable(msg.sender), poolIdx, lowerTick, upperTick, weeksToClaim);
+        emit CrocEvents.CrocClaimConcRewards(poolIdx, lowerTick, upperTick, weeksToClaim);
     }
 
     function setConcRewards(bytes32 poolIdx, uint32 weekFrom, uint32 weekTo, uint64 weeklyReward) public payable {
@@ -65,6 +67,7 @@ contract LiquidityMiningPath is LiquidityMining {
             concRewardPerWeek_[poolIdx][weekFrom] = weeklyReward;
             weekFrom += uint32(WEEK);
         }
+        emit CrocEvents.CrocSetConcRewards(poolIdx, weekFrom, weekTo, weeklyReward);
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
