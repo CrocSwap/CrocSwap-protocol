@@ -173,12 +173,38 @@ const goerliAddrsDryRun: CrocAddrs = {
 }
 
     
+// Scroll Testnet Sepolia
+const scrollSepolia: CrocAddrs = {
+    dex: '0xaaAAAaa6612bd88cD409cb0D70C99556C87A0E8c',
+    cold: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+    warm: '0xa89820D83E1871D8f271939a129Fa7993dB35b75',
+    long: '0x3d7baE85731D056889383b5765C37530deAA98A2',
+    micro: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483',
+    hot: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+    knockout: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+    koCross: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+    policy: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+    query: '0x43eC1302FE3587862e15B2D52AD9653575FD79e9',
+    impact: '0x9B28970D51A231741416D8D3e5281d9c51a50892',
+    shell: '',
+    policyShell: '',
+    deployer: '0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005',
+    govern: {
+      multisigTreasury: '',
+      multisigOps: '',
+      multisigEmergency: '',
+      timelockTreasury: '',
+      timelockOps: '',
+      timelockEmergency: ''
+    }
+  }
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
     '0x1389': mantleTestAddrs,
     'mock': mockAddrs,
+    '0x8274f': scrollSepolia,
 }
 
 // Goerli
@@ -194,6 +220,7 @@ export let POOL_IDXS = {
     '0x5': 36000,
     '0x1': 420,
     '0x1389': 36000,
+    '0x8274f': 36000,
 }
 
 export const BOOT_PROXY_IDX = 0;

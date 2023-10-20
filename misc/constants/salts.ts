@@ -12,6 +12,10 @@ CREATE2_SALTS.set('0x25662C94D28DA775C4E4FDCA987B14D704B4b349'.toLowerCase(),
 CREATE2_SALTS.set('0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C'.toLowerCase(),
     '0xaa648ca9a669467563048f9854d0c61d261957924a3753296908131cee781714')    
 
+// Scroll Sepolia testnet
+CREATE2_SALTS.set('0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005'.toLowerCase(), 
+    '0xc0ecfc1b13b4a60842489dad84e28486ed400db20be14d4ed3ccc9ee72da3bac')
+
 export function mapSalt (deployerAddr: string): BigNumber {
     const lookup = CREATE2_SALTS.get(deployerAddr.toLowerCase())
     if (!lookup) {
