@@ -376,6 +376,7 @@ describe('LevelBook', () => {
     })
 })
 
+/* Test the 72-bit version of LevelBook mixin class functions. */
 describe('LevelBook 72 bit', () => {
     let book: TestLevelBook72Bit
 

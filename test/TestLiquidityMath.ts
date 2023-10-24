@@ -39,20 +39,28 @@ describe('LiquidityMath', () => {
       expect(liq.testMinus(100, 101)).to.be.reverted;
    })
 
+   // Represents the round-down offset used to conservatively round deltaRewards
+   // calculation. 
    const DELTA_OFFSET = 2
 
+   /* Test LiquidityMath::deltaRewardsRate() */
    it("delta rewards", async() => {
+      // Test delta rewards for a simple rewards accumulator case.
       let result = await liq.testDeltaRewards(5000, 4000)
       expect(await result.toNumber()).to.eq(1000 - DELTA_OFFSET)
 
+      // Test delta rewards when the ending value is near the uint64 max boundary
       let bigMileage = BigNumber.from(2).pow(64).sub(50000)
       result = await liq.testDeltaRewards(bigMileage, 50000)
       expect(await result).to.eq(bigMileage.sub(50000 + DELTA_OFFSET))
 
+      // Test delta rewards when the ending value is the uint64 boundary
       result = await liq.testDeltaRewards(bigMileage, bigMileage.sub(50000))
       expect(await result).to.eq(50000 - DELTA_OFFSET)
    })
 
+   /* Test LiquidityMath::deltaRewardsRate() to verify that small increment and negative deltas
+    * cast to a zero boundary and don't underflow. */
    it("delta rewards oversize", async() => {
       // Negative deltas cast to zero and don't overflow
       let bigMileage = BigNumber.from(2).pow(64).sub(50000)
@@ -73,18 +81,25 @@ describe('LiquidityMath', () => {
       expect(await result).to.eq(1)
    })
 
+   /* Test LiquidityMath::deltaRewardsRate72() */
    it("delta rewards 72-bit", async() => {
+      // Test delta rewards for a simple rewards accumulator case.
       let result = await liq.testDeltaRewards72(5000, 4000)
       expect(await result.toNumber()).to.eq(1000 - DELTA_OFFSET)
 
+      // Test delta rewards when the ending value is above 2^64 and the starting balue
+      // is below
       let bigMileage = BigNumber.from(2).pow(64).add(50000)
       result = await liq.testDeltaRewards72(bigMileage, 50000)
       expect(await result).to.eq(bigMileage.sub(50000 + DELTA_OFFSET))
 
+      // Test delta rewards when the starting and ending value are both above 2^64
       result = await liq.testDeltaRewards72(bigMileage, bigMileage.sub(50000))
       expect(await result).to.eq(50000 - DELTA_OFFSET)
    })
 
+   /* Test LiquidityMath::deltaRewardsRate72() to verify that small increment and negative deltas
+    * cast to boundaries and don't underflow. */
    it("delta rewards 72-bit oversize", async() => {
       // Negative deltas cast to zero and don't overflow
       let bigMileage = BigNumber.from(2).pow(64).add(50000)
@@ -104,13 +119,15 @@ describe('LiquidityMath', () => {
       result = await liq.testDeltaRewards72(10003, 10000)
       expect(await result).to.eq(1)
 
-      // Gap over uint64 max
+      // Verify that delta rewards exceeding uint64 max correctly cap at uint64 max
       let maxMileage64Bit = BigNumber.from(2).pow(64).sub(1)
       result = await liq.testDeltaRewards72(bigMileage, 0)
       expect(await result).to.eq(maxMileage64Bit)
    })
 
+   /* Test the legacy LiquidityMath::calcBlend() function */
    it("blend mileage", async() => {
+      // Test a simple case of blending two different weighted mileage values
       let blended = await liq.testBlendMileage(1000, 75, 2000, 25)
       expect(blended).to.eq(1250 + DELTA_OFFSET)
 
@@ -124,7 +141,7 @@ describe('LiquidityMath', () => {
       blended = await liq.testBlendMileage(2000, 150, 2000, 200)
       expect(blended).to.eq(2000)
 
-      // Make sure very mileage blends correctly
+      // Make sure mileage with very large differences blends correctly
       let bigOffset = BigNumber.from(2).pow(64).sub(3000)
       blended = await liq.testBlendMileage(bigOffset.add(1000), 75, bigOffset.add(2000), 25)
       expect(blended).to.eq(bigOffset.add(1250 + DELTA_OFFSET))
@@ -134,11 +151,14 @@ describe('LiquidityMath', () => {
       blended = await liq.testBlendMileage(1000, hugeWeight, 2000, hugeWeight.div(2))
       expect(blended).to.eq(1332 + DELTA_OFFSET)
 
+      // Make sure we can handle large weights and large mileage accumulator values
       blended = await liq.testBlendMileage(bigOffset.add(1000), hugeWeight, bigOffset.add(2000), hugeWeight.div(2))
       expect(blended).to.eq(bigOffset.add(1333 + DELTA_OFFSET))
    })
 
+   /* Test the legacy LiquidityMath::calcBlend() function */
    it("blend mileage 72 bit", async() => {
+      // Test a simple case of blending two different weighted mileage values
       let blended = await liq.testBlendMileage72(1000, 75, 2000, 25)
       expect(blended).to.eq(1250 + DELTA_OFFSET)
 
@@ -152,7 +172,7 @@ describe('LiquidityMath', () => {
       blended = await liq.testBlendMileage72(2000, 150, 2000, 200)
       expect(blended).to.eq(2000)
 
-      // Make sure very mileage blends correctly
+      // Make sure mileage with very large differences blends correctly
       let bigOffset = BigNumber.from(2).pow(70).sub(3000)
       blended = await liq.testBlendMileage72(bigOffset.add(1000), 75, bigOffset.add(2000), 25)
       expect(blended).to.eq(bigOffset.add(1250 + DELTA_OFFSET))
@@ -162,6 +182,7 @@ describe('LiquidityMath', () => {
       blended = await liq.testBlendMileage72(1000, hugeWeight, 2000, hugeWeight.div(2))
       expect(blended).to.eq(1332 + DELTA_OFFSET)
 
+      // Make sure we can handle large weights and large mileage accumulator values
       blended = await liq.testBlendMileage72(bigOffset.add(1000), hugeWeight, bigOffset.add(2000), hugeWeight.div(2))
       expect(blended).to.eq(bigOffset.add(1333 + DELTA_OFFSET))
    })
