@@ -197,14 +197,40 @@ const scrollSepolia: CrocAddrs = {
       timelockOps: '',
       timelockEmergency: ''
     }
+}
+
+const scrollMainnet: CrocAddrs = {
+  dex: '0xaaaaAAAACB71BF2C8CaE522EA5fa455571A74106',
+  cold: '0xa01C4E40FE62c3FFd7152569E20a5BDAd23F171D',
+  warm: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  long: '0xe3150C65446Dc05505ac33B51D742E9458fE0BfE',
+  micro: '0x646929453E753565467f330110850885eAd93fA9',
+  hot: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  knockout: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  koCross: '0x67231C7Db63e5D7378596AaDD6BA69345E6a53aA',
+  policy: '0x70b161F2f0A18Bd1865021F25f9e895021E9DC4f',
+  query: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  impact: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '0x81956099675d25363d17B983125dD99269A9f26F',
+    multisigOps: '0x1E0cc2fbEb09e320223A380357978d651ed652bC',
+    multisigEmergency: '0x81956099675d25363d17B983125dD99269A9f26F',
+    timelockTreasury: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916',
+    timelockOps: '0xDb0eE1193C4D05eb644efb2a1db13275b8F5994f',
+    timelockEmergency: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916'
   }
+}
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
     '0x1389': mantleTestAddrs,
-    'mock': mockAddrs,
     '0x8274f': scrollSepolia,
+    '0x82750': scrollMainnet,
+    'mock': mockAddrs,
 }
 
 // Goerli
@@ -221,6 +247,7 @@ export let POOL_IDXS = {
     '0x1': 420,
     '0x1389': 36000,
     '0x8274f': 36000,
+    '0x82750': 420,
 }
 
 export const BOOT_PROXY_IDX = 0;

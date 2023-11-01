@@ -12,12 +12,14 @@ import { opsResolution, populateTimelockCalls } from '../../libs/governance';
 const abi = new AbiCoder()
 let cmd
 
+const txArgs = { gasLimit: 1000000 }
+
 async function install() {
     let { addrs, chainId, wallet: authority } = initChain()
 
     let policy = (await refContract("CrocPolicy", addrs.policy, authority)) as CrocPolicy
     await traceContractTx(policy.transferGovernance(addrs.govern.timelockOps, 
-        addrs.govern.timelockTreasury, addrs.govern.timelockEmergency),
+        addrs.govern.timelockTreasury, addrs.govern.timelockEmergency, txArgs),
         "Transfer CrocPolicy to Timelocks")
 }
 

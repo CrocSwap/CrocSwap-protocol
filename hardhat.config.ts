@@ -77,5 +77,25 @@ module.exports = {
         chainId: 43113,
       },
 
+      scroll: {
+        url: "https://rpc.scroll.io",
+        chainId: 534352,
+      }
+    },
+
+    etherscan: {
+      apiKey: {
+        scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF"
+      },
+      customChains: [
+        {
+          network: "scroll",
+          chainId: 534352,
+          urls: {
+            apiURL: "https://api.scrollscan.com/api",
+            browserURL: "https://scrollscan.io"
+          }
+        }
+      ]
     }
 };

@@ -16,6 +16,10 @@ CREATE2_SALTS.set('0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C'.toLowerCase(),
 CREATE2_SALTS.set('0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005'.toLowerCase(), 
     '0xc0ecfc1b13b4a60842489dad84e28486ed400db20be14d4ed3ccc9ee72da3bac')
 
+// Scroll Mainnet salt
+CREATE2_SALTS.set('0x754EEF5862082607184e7A3aB08CEA76EF928285'.toLowerCase(), 
+    '0x7bdf2029500c02474d9b3c61fb3ab3fbce5329b7dc7445234bb7251c8036d386')
+
 export function mapSalt (deployerAddr: string): BigNumber {
     const lookup = CREATE2_SALTS.get(deployerAddr.toLowerCase())
     if (!lookup) {
