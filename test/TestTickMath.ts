@@ -42,6 +42,16 @@ describe('Tick Math', () => {
         expect(tickHigh).to.equal(24999)
     })
 
+    it ("tick boundary", async() => {
+        let ratioOne = await math.testRatio(0)
+        let tickOne = await math.testTick(ratioOne)
+        let tickPlusOne = await math.testTick(ratioOne.add(1))
+        let tickMinusOne = await math.testTick(ratioOne.sub(1))        
+
+        expect(tickOne).to.equal(0)
+        expect(tickPlusOne).to.equal(0)
+        expect(tickMinusOne).to.equal(-1)
+    })
 
     it("min tick", async() => {
         let ratio = await math.testRatio(await math.minTick())
