@@ -80,12 +80,18 @@ module.exports = {
       scroll: {
         url: "https://rpc.scroll.io",
         chainId: 534352,
+      },
+
+      beraTestnet: {
+        url: "https://rpc.berachain-internal.com/",
+        chainId: 2061,
       }
     },
 
     etherscan: {
       apiKey: {
-        scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF"
+        scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
+        beraTestnet: "xxxxx"
       },
       customChains: [
         {
@@ -94,6 +100,15 @@ module.exports = {
           urls: {
             apiURL: "https://api.scrollscan.com/api",
             browserURL: "https://scrollscan.io"
+          }
+        },
+
+        {
+          network: "beraTestnet",
+          chainId: 2061,
+          urls: {
+            apiURL: "https://scan-api.berachain-internal.com/api/",
+            browserURL: "https://scan.berachain-internal.com"
           }
         }
       ]

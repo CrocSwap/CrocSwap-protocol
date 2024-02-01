@@ -63,5 +63,6 @@ export const CROC_POOL_PARAMS = {
     '0x1': mainnetParams,
     '0x5': goerliDryRunParams,
     '0x8274f': l2TestnetParams,
-    '0x82750': l2MainnetParams
+    '0x82750': l2MainnetParams,
+    '0x80D': l2TestnetParams,
 }
