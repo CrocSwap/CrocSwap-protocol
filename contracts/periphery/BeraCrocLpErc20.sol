@@ -20,7 +20,7 @@ contract BeraCrocLpErc20 is BGTEligibleERC20, ICrocLpConduit {
         // token could be 0x0, which means the pair is against native ETH. quote
         // will never be 0x0 because native ETH will always be the base side of
         // the pair.
-        require(quote != address(0) && quote > base, "Invalid Token Pair");
+        require(quote > base, "Invalid Token Pair");
 
         baseToken = base;
         quoteToken = quote;

@@ -36,38 +36,4 @@ library Cosmos {
         uint256 amount;
         string denom;
     }
-
-    struct PageRequest {
-        string key;
-        uint64 offset;
-        uint64 limit;
-        bool countTotal;
-        bool reverse;
-    }
-
-    struct PageResponse {
-        string nextKey;
-        uint64 total;
-    }
-
-    /**
-     * @dev Represents a Cosmos SDK `codectypes.Any`.
-     */
-    struct CodecAny {
-        string typeURL;
-        bytes value;
-    }
-}
-
-/**
- * @dev This contract uses types in the Cosmos library.
- */
-contract CosmosTypes {
-    function coin(Cosmos.Coin calldata) public pure {}
-
-    function pageRequest(Cosmos.PageRequest calldata) public pure {}
-
-    function pageResponse(Cosmos.PageResponse calldata) public pure {}
-
-    function codecAny(Cosmos.CodecAny calldata) public pure {}
 }
