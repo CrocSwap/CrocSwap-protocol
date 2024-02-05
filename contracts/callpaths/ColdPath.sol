@@ -13,6 +13,7 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
+import '../periphery/BeraCrocLpErc20.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
 
@@ -129,6 +130,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+
+        BeraCrocLpErc20 lpToken = new BeraCrocLpErc20(base, quote, poolIdx);
+        emit CrocEvents.BeraCrocLPCreated(address(lpToken));
     }
 
     /* @notice Disables an existing pool template. Any previously instantiated pools on
