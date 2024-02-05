@@ -156,7 +156,11 @@ contract BGTEligibleERC20 is ERC20 {
         updateGlobalBGT();
         updateUserBGT(onBehalfOf, 0, false);
         require(msg.sender == onBehalfOf || authorizedSpender[onBehalfOf] == msg.sender, "unauthorized");
-        users[onBehalfOf].accBGT -= amount;
+        uint256 _accBGT = users[onBehalfOf].accBGT;
+        amount = FixedPointMathLib.min(_accBGT, amount);
+        unchecked {
+            users[onBehalfOf].accBGT = _accBGT - amount;
+        }
         Cosmos.Coin[] memory rewards = rewardsModule.withdrawDepositorRewardsTo(address(this), recipient, amount);
         require(rewards.length == 1, "too many coins returned");
         require(rewards[0].amount == amount, "withdraw amount incorrect");
