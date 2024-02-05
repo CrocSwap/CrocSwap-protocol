@@ -13,7 +13,7 @@ import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
-import { BootPath } from "../contracts/typechain";
+import { BootPath } from "../typechain";
 import { buildCrocSwapSex } from "./SetupDex";
 
 chai.use(solidity);
@@ -445,6 +445,7 @@ export class TestPool {
     readonly WARM_PROXY: number = 2;
     readonly COLD_PROXY: number = 3;
     readonly LONG_PROXY: number = 4;
+    readonly MULTI_PROXY: number = 6;
     readonly KNOCKOUT_PROXY: number = 7;
     readonly EMERGENCY_PROXY: number = 9999
 
