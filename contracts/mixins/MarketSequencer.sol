@@ -186,12 +186,17 @@ contract MarketSequencer is TradeMatcher {
     function mintOverPool (uint128 liq, PoolSpecs.PoolCursor memory pool,
                            uint128 minPrice, uint128 maxPrice, address lpConduit)
         internal returns (int128 baseFlow, int128 quoteFlow) {
-        require(BeraCrocLpErc20(lpConduit), "LT");
-        CurveMath.CurveState memory curve = snapCurveInRange
+        // Attempt to treat lpConduit as a BeraCrocLpErc20 contract and call a method
+        try BeraCrocLpErc20(lpConduit).getPendingBGT(address(this)) {
+            // If the call succeeds, proceed
+            CurveMath.CurveState memory curve = snapCurveInRange
             (pool.hash_, minPrice, maxPrice);
-        (baseFlow, quoteFlow) =
-            mintAmbient(curve, liq, pool.hash_, lpConduit);
-        commitCurve(pool.hash_, curve);
+            (baseFlow, quoteFlow) =
+                mintAmbient(curve, liq, pool.hash_, lpConduit);
+            commitCurve(pool.hash_, curve);
+        } catch {
+            revert("LT");
+        }
     }
 
     
