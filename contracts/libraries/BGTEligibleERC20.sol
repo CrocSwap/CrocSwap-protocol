@@ -20,10 +20,10 @@
 
 pragma solidity >=0.8.10;
 
-import {ERC20} from "./ERC20.sol";
-import {FixedPointMathLib} from "./FixedPointMathLib.sol";
-import {IRewardsModule} from "./IRewards.sol";
-import {Cosmos} from "./CosmosTypes.sol";
+import { ERC20 } from "solady/src/tokens/ERC20.sol";
+import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { IRewardsModule } from "@berachain/IRewards.sol";
+import { Cosmos } from "@berachain/CosmosTypes.sol";
 
 contract BGTEligibleERC20 is ERC20 {
     /*//////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ contract BGTEligibleERC20 is ERC20 {
         return users[user].accBGT + _accBGTPerShare * userShares / PRECISION - debtBGT;
     }
 
-    function claimBGT(uint256 amount, address recipient, address onBehalfOf) external {
+    function claimBGT(uint256 amount, address recipient, address onBehalfOf) external returns (uint256) {
         updateGlobalBGT();
         updateUserBGT(onBehalfOf, 0, false);
         require(msg.sender == onBehalfOf || authorizedSpender[onBehalfOf] == msg.sender, "unauthorized");
@@ -165,6 +165,7 @@ contract BGTEligibleERC20 is ERC20 {
         require(rewards.length == 1, "too many coins returned");
         require(rewards[0].amount == amount, "withdraw amount incorrect");
         updateGlobalBGT(); // update again to reset the available BGT amount after withdrawal
+        return amount;
     }
 
     function setAuthorizedSpender(address spender) external {
