@@ -138,8 +138,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         BeraCrocLpErc20(pair).initialize(base, quote, poolIdx);
-
-        // BeraCrocLpErc20()
         emit CrocEvents.BeraCrocLPCreated(pair);
     }
 
