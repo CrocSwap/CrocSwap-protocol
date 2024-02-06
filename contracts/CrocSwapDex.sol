@@ -93,6 +93,20 @@ contract CrocSwapDex is HotPath, ICrocMinion {
             minOut, reserveFlags, baseQuote, quoteFlow);
     }
 
+    // // [(100,0),(0,0),(0,80)]
+    // struct swapStep {
+    //     address base
+    //     address quote
+    //     uint128 qty
+    //     uint128 minOut
+    // }
+
+    // function batchSwap (swapStep[] memory steps) public {
+    //     for (uint256 i = 0; i < steps.length; i++) {
+    //         swap(steps[i].base, steps[i].quote, steps[i].qty, steps[i].minOut);
+    //     }
+    // }
+
     /* @notice Consolidated method for protocol control related commands.
      * @dev    We consolidate multiple protocol control types into a single method to 
      *         reduce the contract size in the main contract by paring down methods.

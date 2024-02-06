@@ -20,8 +20,10 @@
 
 pragma solidity >=0.8.10;
 
-import { IRewardsModule } from "../interfaces/IRewards.sol";
+import { IRewardsModule } from "../interfaces/IRewardsModule.sol";
 import { Cosmos } from "./CosmosTypes.sol";
+import { ERC20 } from "solady/src/tokens/ERC20.sol";
+import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
 contract BGTEligibleERC20 is ERC20 {
     /*//////////////////////////////////////////////////////////////

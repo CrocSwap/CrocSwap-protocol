@@ -6,7 +6,7 @@ import "../libraries/BGTEligibleERC20.sol";
 import "../libraries/PoolSpecs.sol";
 import "../interfaces/ICrocLpConduit.sol";
 
-contract BeraCrocLpErc20 is BGTEligibleERC20, ICrocLpConduit {
+contract BeraCrocLpErc20 is ICrocLpConduit, BGTEligibleERC20 {
 
     bytes32 public immutable poolHash;
     address public immutable baseToken;
@@ -14,7 +14,7 @@ contract BeraCrocLpErc20 is BGTEligibleERC20, ICrocLpConduit {
     uint256 public immutable poolType;
     
     constructor (address base, address quote, uint256 poolIdx)
-        ERC20 ("Bera Croc LP ERC20 Token", "LP-BeraCroc", 18) {
+        BGTEligibleERC20 ("Bera Croc LP ERC20 Token", "LP-BeraCroc") {
 
         // CrocSwap protocol uses 0x0 for native ETH, so it's possible that base
         // token could be 0x0, which means the pair is against native ETH. quote
@@ -30,7 +30,7 @@ contract BeraCrocLpErc20 is BGTEligibleERC20, ICrocLpConduit {
     
     function depositCrocLiq (address sender, bytes32 pool,
                              int24 lowerTick, int24 upperTick, uint128 seeds,
-                             uint72) public override returns (bool) {
+                             uint64) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-BeraCroc LP Deposit");
         _mint(sender, seeds);
@@ -39,7 +39,7 @@ contract BeraCrocLpErc20 is BGTEligibleERC20, ICrocLpConduit {
 
     function withdrawCrocLiq (address sender, bytes32 pool,
                               int24 lowerTick, int24 upperTick, uint128 seeds,
-                              uint72) public override returns (bool) {
+                              uint64) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-BeraCroc LP Deposit");
         _burn(sender, seeds);

@@ -131,7 +131,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
 
-        BeraCrocLpErc20 lpToken = new BeraCrocLpErc20(base, quote, poolIdx);
+        bytes32 salt = keccak256(abi.encodePacked(base, quote));
+        BeraCrocLpErc20 lpToken = new BeraCrocLpErc20{salt: salt}(base, quote, poolIdx);
         emit CrocEvents.BeraCrocLPCreated(address(lpToken));
     }
 
