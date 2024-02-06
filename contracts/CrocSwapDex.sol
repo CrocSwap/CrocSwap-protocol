@@ -10,7 +10,6 @@ import './libraries/SwapHelpers.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
-import './mixins/MarketSequencer.sol';
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/BootPath.sol';
@@ -104,7 +103,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow) = swap(steps[i].base, steps[i].quote, steps[i].poolIdx, true, 
-                    true, amountIn, 0, 340282366920938463463374607431768211455, steps[i].minAmountOut, 2);
+                    true, amountIn, 0, type(uint128).max, steps[i].minAmountOut, 2);
                 amountIn = uint128(quoteFlow);
             }
             return amountIn;

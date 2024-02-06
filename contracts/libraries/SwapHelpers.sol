@@ -18,7 +18,7 @@
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
 // TITLE.
 
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 library SwapHelpers {
     struct SwapStep {
