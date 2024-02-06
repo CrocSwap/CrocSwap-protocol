@@ -6,6 +6,7 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
+import './libraries/SwapHelpers.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -91,6 +92,19 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                                 limitPrice, minOut, reserveFlags);
         emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, tip, limitPrice, 
             minOut, reserveFlags, baseQuote, quoteFlow);
+    }
+
+    function multiSwap (SwapHelpers.SwapStep[] memory steps) reEntrantLock public payable 
+        returns (uint128 out) {
+            require(steps.length > 0, "No steps provided");
+            require(steps[0].amount > 0, "No amount provided");
+            uint128 amountIn = steps[0].amount;
+            for (uint256 i = 0; i < steps.length; i++) {
+                (, int128 quoteFlow) = swap(steps[i].base, steps[i].quote, steps[i].poolIdx, true, 
+                    true, amountIn, 0, 0, steps[i].minAmountOut, 0x2);
+                amountIn = uint128(quoteFlow);
+            }
+            return amountIn;
     }
 
     /* @notice Consolidated method for protocol control related commands.
