@@ -8,7 +8,7 @@ import "../interfaces/ICrocLpConduit.sol";
 
 contract BeraCrocLpErc20 is ICrocLpConduit, BGTEligibleERC20 {
 
-    address public factory;
+    address public immutable factory;
     bytes32 public poolHash;
     address public baseToken;
     address public quoteToken;
