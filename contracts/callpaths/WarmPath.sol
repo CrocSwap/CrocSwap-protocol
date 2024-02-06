@@ -166,6 +166,25 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
                                     bidTick, askTick, inBase);
     }
 
+    /* @notice Burns ambient liquidity that's active at every price.
+     * @param base The base-side token in the pair.
+     * @param quote The quote-side token in the par.
+     * @param poolIdx The index of the pool type being burned on.
+     * @param liq The total amount of liquidity being burned. Represented as sqrt(X*Y)
+     *            for the equivalent constant-product AMM.
+     * @param limitLower Exists to make sure the user is happy with the price the 
+     *                   liquidity is burned at. Transaction fails if the curve price
+     *                   at call time is below this value.
+     * @param limitUpper Transaction fails if the curve price at call time is above this
+     *                   threshold. */
+    function burnAmbientLiq (address base, address quote, uint256 poolIdx, uint128 liq,
+                   address lpConduit, uint128 limitLower, uint128 limitHigher) internal
+        returns (int128, int128) {
+        PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
+        verifyPermitBurn(pool, base, quote, 0, 0, liq);
+        return burnOverPool(liq, pool, limitLower, limitHigher, lpConduit);
+    }
+
     function burnAmbientQty (address base, address quote, uint256 poolIdx, bool inBase,
                       uint128 qty, address lpConduit,
                       uint128 limitLower, uint128 limitHigher) internal
@@ -175,19 +194,6 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         uint128 liq = Chaining.sizeAmbientLiq(qty, false, curve.priceRoot_, inBase);
         return burnAmbientLiq(base, quote, poolIdx, liq, lpConduit,
                     limitLower, limitHigher);
-    }
-
-    function burnConcentratedQty (address base, address quote, uint256 poolIdx,
-                      int24 bidTick, int24 askTick, bool inBase,
-                      uint128 qty, address lpConduit,
-                      uint128 limitLower, uint128 limitHigher)
-        internal returns (int128, int128) {
-        bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
-        CurveMath.CurveState memory curve = snapCurve(poolKey);
-        uint128 liq = Chaining.sizeConcLiq(qty, false, curve.priceRoot_,
-                                           bidTick, askTick, inBase);
-        return burnConcentratedLiq(base, quote, poolIdx, bidTick, askTick,
-                    liq, lpConduit, limitLower, limitHigher);
     }
     
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

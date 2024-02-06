@@ -94,4 +94,6 @@ library CrocEvents {
     event CrocMicroBurnAmbient(bytes input, bytes output);
     event CrocMicroBurnRange(bytes input, bytes output);
     event CrocMicroSwap(bytes input, bytes output);
+
+    event BeraCrocLPCreated(address token);
 }

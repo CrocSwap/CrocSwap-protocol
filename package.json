@@ -40,6 +40,7 @@
     "@nomicfoundation/hardhat-verify": "^1.0.1",
     "@openzeppelin/contracts": "^4.9.0",
     "@rari-capital/solmate": "^6.4.0",
+    "solady": "github:vectorized/solady",
     "solidity-code-metrics": "^0.0.19"
   }
 }

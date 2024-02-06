@@ -13,6 +13,7 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
+import '../periphery/BeraCrocLpErc20.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
 
@@ -121,7 +122,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
-
+        require(poolIdx == 420, "PT");
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
                                                    
@@ -129,6 +130,15 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
         settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+
+        bytes memory bytecode = type(BeraCrocLpErc20).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(base, quote)); // don't need poolIdx because it is enforced above
+        address pair;
+        assembly {
+            pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        BeraCrocLpErc20(pair).initialize(base, quote, poolIdx);
+        emit CrocEvents.BeraCrocLPCreated(pair);
     }
 
     /* @notice Disables an existing pool template. Any previously instantiated pools on

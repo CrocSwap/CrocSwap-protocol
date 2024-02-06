@@ -11,6 +11,7 @@
     "J": "Pool not initialized",
     "K": "Settle flow below required qty",
     "L": "Max liquidity exceeded",
+    "LT": "Must be bera variant LP token",
     "M": "Mezzanine bitmap broken",
     "MQ": "Max quote liquidity",
     "N": "Already initialized",
