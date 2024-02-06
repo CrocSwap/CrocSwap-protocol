@@ -109,13 +109,16 @@ contract CrocSwapDex is HotPath, ICrocMinion {
             require(steps.length > 0, "No steps provided");
             require(steps[0].amount > 0, "No amount provided");
             uint128 amountIn = steps[0].amount;
+            address baseAsset = steps[0].base;
             for (uint256 i = 0; i < steps.length; i++) {
+                require(steps[i].base == baseAsset, "Base asset mismatch");
                 // We use the max uint128 as the limit price to ensure the swap executes
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow) = swap(steps[i].base, steps[i].quote, steps[i].poolIdx, true, 
                     true, amountIn, 0, type(uint128).max, steps[i].minAmountOut, 2);
                 amountIn = uint128(quoteFlow);
+                baseAsset = steps[i].quote;
             }
             return amountIn;
     }
