@@ -21,6 +21,14 @@
 pragma solidity ^0.8.19;
 
 library SwapHelpers {
+
+    /* @notice A single leg of a swap, specifying the pool to use, the tokens to swap,
+     *
+     * @param poolIdx The index of the pool to use for the swap.
+     * @param base The token to swap from.
+     * @param amount The amount of `base` to swap.
+     * @param quote The token to swap to.
+     * @param minAmountOut The minimum amount of `quote` to receive. */
     struct SwapStep {
         uint256 poolIdx;
         address base;

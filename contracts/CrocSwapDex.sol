@@ -93,6 +93,17 @@ contract CrocSwapDex is HotPath, ICrocMinion {
             minOut, reserveFlags, baseQuote, quoteFlow);
     }
 
+    /* @notice Performs a series of swaps between multiple pools.
+     *
+     * @dev A convenience method for performing a series of swaps in sequence. This is
+     *      to be used in conjunction with some form of an off-chain router as the input
+     *      arguments assume the user already knows the exact sequence of swaps to
+     *      perform.
+     *  
+     * @param steps The series of swap steps to be performed in sequence.
+     * @return The token base and quote token flows associated with this swap action. 
+     *         (Negative indicates a credit paid to the user, positive a debit collected
+     *         from the user) */
     function multiSwap (SwapHelpers.SwapStep[] memory steps) reEntrantLock public payable 
         returns (uint128 out) {
             require(steps.length > 0, "No steps provided");
