@@ -120,7 +120,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                 (, int128 quoteFlow) = swap(step.base, step.quote, step.poolIdx, true, 
                     true, amountIn, 0, type(uint128).max, step.minAmountOut, 2);
                 amountIn = uint128(quoteFlow);
-                baseAsset = steps[i].quote;
+                baseAsset = step.quote;
                 
             }
             return amountIn;
