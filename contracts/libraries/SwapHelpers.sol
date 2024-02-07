@@ -35,5 +35,6 @@ library SwapHelpers {
         uint128 amount;
         address quote;
         uint128 minAmountOut;
+        bool isBuy;
     }
 }
