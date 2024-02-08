@@ -26,16 +26,12 @@ library SwapHelpers {
      *
      * @param poolIdx The index of the pool to use for the swap.
      * @param base The token to swap from.
-     * @param amount The amount of `base` to swap.
      * @param quote The token to swap to.
-     * @param minAmountOut The minimum amount of `quote` to receive. 
      * @param isBuy If true, the swap is a buy, and the base asset is used as an input */
     struct SwapStep {
         uint256 poolIdx;
         address base;
-        uint128 amount;
         address quote;
-        uint128 minAmountOut;
         bool isBuy;
     }
 }
