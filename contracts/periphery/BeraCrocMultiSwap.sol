@@ -111,7 +111,7 @@ contract BeraCrocMultiSwap {
         uint128 _minOut
     ) internal returns (uint128 out, address nextAsset) {
         uint256 beraQuantity = 0;
-        if (_step.base == address(0)) {
+        if (_step.base != address(0)) {
             IERC20Minimal(_step.base).approve(address(crocSwapDex), uint256(_amount));
         } else {
             beraQuantity = uint256(_amount);
