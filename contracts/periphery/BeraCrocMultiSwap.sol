@@ -78,43 +78,73 @@ contract BeraCrocMultiSwap {
             uint128 _minOut
         ) public payable returns (uint128 out) {
             require(_steps.length != 0, "No steps provided");
+
+            // Variables for the series of steps
             SwapHelpers.SwapStep memory initStep = _steps[0];
             uint128 quantity = _amount;
             uint128 minOut = 0;
             address nextAsset;
-            initStep.isBuy ? nextAsset = initStep.base : nextAsset = initStep.quote;
-            IERC20Minimal(nextAsset).transferFrom(msg.sender, address(this), uint256(quantity));
+            nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
+
+            // Take the input asset if it is an ERC20
+            if (nextAsset != address(0)) {
+                IERC20Minimal(nextAsset).transferFrom(msg.sender, address(this), uint256(quantity));
+            }
             for (uint256 i=0; i < _steps.length; ) {
                 SwapHelpers.SwapStep memory step = _steps[i];
-                address swapAsset;
-                step.isBuy ? swapAsset = step.base : swapAsset = step.quote;
+                address swapAsset = step.isBuy ? step.base : step.quote;
                 require(nextAsset == swapAsset, "Invalid swap sequence");
                 // Set the minOut to the last step's minOut
                 if (i == _steps.length-1) {
                     minOut = _minOut;
                 }
-                IERC20Minimal(nextAsset).approve(address(crocSwapDex), uint256(quantity));                
+
+                // Perform the swap step
                 if (step.isBuy) {
-                    // We use the max uint128 as the limit price to ensure the swap executes
-                    // Given that we have full range liquidity, there is no min limit price
-                    // Slippage can be controlled by the minOut parameter
-                    (, int128 quoteFlow) = crocSwapDex.swap(step.base, step.quote, step.poolIdx,
-                    step.isBuy, true, quantity, 0, type(uint128).max, minOut, 2);
-                    // Received amount is always negative
-                    quantity = uint128(-quoteFlow);
-                    nextAsset = step.quote;
+                    (quantity, nextAsset) = _performBuy(step, quantity, minOut);
+                    
                 } else {
-                    // Limit price is 0 here for the inverse reason above
-                    (int128 baseFlow,) = crocSwapDex.swap(step.base, step.quote, step.poolIdx,
-                    step.isBuy, false, quantity, 0, 0, minOut, 2);
-                    // Received amount is always negative
-                    quantity = uint128(-baseFlow);
-                    nextAsset = step.base;
+                    (quantity, nextAsset) = _performSell(step, quantity, minOut);
                 }
                 unchecked { i++; }
             }
-            IERC20Minimal(nextAsset).transfer(msg.sender, uint256(quantity));
+            if (nextAsset != address(0)) {
+                IERC20Minimal(nextAsset).transfer(msg.sender, uint256(quantity));
+            } else {
+                payable(msg.sender).transfer(uint256(quantity));
+            }
+            
             return quantity;
+    }
+
+    function _performBuy(
+        SwapHelpers.SwapStep memory _step,
+        uint128 _amount,
+        uint128 _minOut
+    ) internal returns (uint128 out, address nextAsset) {
+        uint256 beraQuantity = 0;
+        if (_step.base == address(0)) {
+            IERC20Minimal(_step.base).approve(address(crocSwapDex), uint256(_amount));
+        } else {
+            beraQuantity = uint256(_amount);
+        }
+        // We use the max uint128 as the limit price to ensure the swap executes
+        // Given that we have full range liquidity, there is no min limit price
+        // Slippage can be controlled by the minOut parameter
+        (, int128 quoteFlow) = crocSwapDex.swap{value: beraQuantity}(_step.base, _step.quote,
+                            _step.poolIdx, true, true, _amount, 0, type(uint128).max, _minOut, 2);
+        return (uint128(-quoteFlow), _step.quote);
+    }
+
+    function _performSell(
+        SwapHelpers.SwapStep memory _step,
+        uint128 _amount,
+        uint128 _minOut
+    ) internal returns (uint128 out, address nextAsset) {
+        // Limit price is 0 here for the inverse reason above
+        (int128 baseFlow,) = crocSwapDex.swap(_step.base, _step.quote,
+                        _step.poolIdx, false, false, _amount, 0, 0, _minOut, 2);
+        return (uint128(-baseFlow), _step.base);
     }
 
     function retire() external {
