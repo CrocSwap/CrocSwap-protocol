@@ -154,6 +154,16 @@ contract SettleLayer is AgentMask {
     function settleFlat (address debitor, address creditor,
                          address base, int128 baseFlow,
                          address quote, int128 quoteFlow, uint8 reserveFlags) private {
+
+        // A hacky flag to indicate that the flow is native. This will only ever be used
+        // in the case where the specified output is the native token. We will also
+        // always assume that the flow is on the quote end.
+        if (reserveFlagOutputNative(reserveFlags)) {
+            transactEther(debitor, creditor, quoteFlow, true);
+            transactToken(debitor, creidtor, baseFlow, base, false);
+            return;
+        }
+
         if (base.isEtherNative()) {
             transactEther(debitor, creditor, baseFlow, useReservesBase(reserveFlags));
         } else {
@@ -176,10 +186,15 @@ contract SettleLayer is AgentMask {
         return reserveFlags & QUOTE_RESERVE_FLAG > 0;
     }
 
+    function reserveFlagOutputNative (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & BASE_RESERVE_FLAG_NATIVE > 0;
+    }
+
     uint8 constant NO_RESERVE_FLAGS = 0x0;
     uint8 constant BASE_RESERVE_FLAG = 0x1;
     uint8 constant QUOTE_RESERVE_FLAG = 0x2;    
     uint8 constant BOTH_RESERVE_FLAGS = 0x3;
+    uint8 constant BASE_RESERVE_FLAG_NATIVE = 0x4;
 
     /* @notice Performs check to make sure the new balance matches the expected 
      * transfer amount. */

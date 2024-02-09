@@ -38,6 +38,9 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    /// @dev The address of wrapped bera. This address is constant.
+    address private constant _wbera = 0x5806E416dA447b267cEA759358cF22Cc41FAE80F;
+
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    We consolidate multiple call types into a single method to reduce the 
      *         contract size in the main contract by paring down methods.
@@ -52,6 +55,9 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
          uint8 reserveFlags, address lpConduit) =
             abi.decode(input, (uint8,address,address,uint256,int24,int24,
                                uint128,uint128,uint128,uint8,address));
+        
+        if (base == address(0)) { base = _wbera; }
+        else if ( quote == address(0)) { quote = _wbera; }
 
         if (lpConduit == address(0)) { lpConduit = lockHolder_; }
         
