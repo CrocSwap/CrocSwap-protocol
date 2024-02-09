@@ -125,8 +125,8 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
-        if (base == address(0)) { base = wbera; }
-        else if (quote == address(0)) { quote = wbera; }
+        if (base == address(0)) { base = _wbera; }
+        else if (quote == address(0)) { quote = _wbera; }
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
             registerPool(base, quote, poolIdx);
         verifyPermitInit(pool, base, quote, poolIdx);
