@@ -32,13 +32,10 @@ contract BeraCrocMultiSwap {
         require(_steps.length != 0, "No steps provided");
         SwapHelpers.SwapStep memory initStep = _steps[0]; 
         uint128 quantity = _amount;
-        address nextAsset;
-        initStep.isBuy ? nextAsset = initStep.base : nextAsset = initStep.quote;
+        address nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
         for (uint256 i=0; i < _steps.length; ) {
             SwapHelpers.SwapStep memory step = _steps[i];
-            address swapAsset;
-            step.isBuy ? swapAsset = step.base : swapAsset = step.quote;
-            require(nextAsset == swapAsset, "Invalid swap sequence");
+            require(nextAsset == (step.isBuy ? step.base : step.quote), "Invalid swap sequence");
             if (step.isBuy) {
                 // We use the max uint128 as the limit price to ensure the swap executes
                 // Given that we have full range liquidity, there is no min limit price
@@ -82,9 +79,7 @@ contract BeraCrocMultiSwap {
             // Variables for the series of steps
             SwapHelpers.SwapStep memory initStep = _steps[0];
             uint128 quantity = _amount;
-            uint128 minOut = 0;
-            address nextAsset;
-            nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
+            address nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
 
             // Take the input asset if it is an ERC20
             if (nextAsset != address(0)) {
@@ -92,19 +87,12 @@ contract BeraCrocMultiSwap {
             }
             for (uint256 i=0; i < _steps.length; ) {
                 SwapHelpers.SwapStep memory step = _steps[i];
-                address swapAsset = step.isBuy ? step.base : step.quote;
-                require(nextAsset == swapAsset, "Invalid swap sequence");
-                // Set the minOut to the last step's minOut
-                if (i == _steps.length-1) {
-                    minOut = _minOut;
-                }
-
+                require(nextAsset == (step.isBuy ? step.base : step.quote), "Invalid swap sequence");
                 // Perform the swap step
                 if (step.isBuy) {
-                    (quantity, nextAsset) = _performBuy(step, quantity, minOut);
-                    
+                    (quantity, nextAsset) = _performBuy(step, quantity, (i == _steps.length-1) ? _minOut : 0);
                 } else {
-                    (quantity, nextAsset) = _performSell(step, quantity, minOut);
+                    (quantity, nextAsset) = _performSell(step, quantity, (i == _steps.length-1) ? _minOut : 0);
                 }
                 unchecked { i++; }
             }
