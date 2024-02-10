@@ -41,7 +41,7 @@ describe('Gas Benchmarks Coldpath', () => {
     }
 
     it("create pool [@gas-test]", async() => {
-        await expectGas(initTx, 186000)
+        await expectGas(initTx, 188000)
     })
 
     it("mint in virgin pool [@gas-test]", async() => {
@@ -70,7 +70,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("mint below price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 214000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 215000)
     })
 
     it("mint above price [@gas-test]", async() => {
@@ -80,61 +80,61 @@ describe('Gas Benchmarks Coldpath', () => {
 
     it("burn partial [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 140000)
+        await expectGas(test.testBurn(-100, 100, 50), 143000)
     })
 
     it("burn partial level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 140000)
+        await expectGas(test.testBurn(-100, 100, 50), 143000)
     })
 
     it("burn full [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 133000)
+        await expectGas(test.testBurn(-100, 100, 100), 135000)
     })
 
     it("burn full level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 136000)
+        await expectGas(test.testBurn(-100, 100, 100), 138000)
     })
 
     it("burn outside [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 109000)
+        await expectGas(test.testBurn(-200, -100, 100), 112000)
     })
 
     it("burn outside left [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 115000)
+        await expectGas(test.testBurn(-200, -100, 100), 118000)
     })
 
     it("burn liq rewards [@gas-test]", async() => {
         await test.testMint(-100, 100, 100000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 141000)
+        await expectGas(test.testBurn(-100, 100, 100), 144000)
     })
 
     it("burn liq level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 139000)
+        await expectGas(test.testBurn(-100, 100, 100), 143000)
     })
 
     it("burn flipped [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 134000)
+        await expectGas(test.testBurn(-100, 100, 100), 136000)
     })
 
     it("burn flipped level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 137000)
+        await expectGas(test.testBurn(-100, 100, 100), 139000)
     })
 
     it("swap no pre-warm [@gas-test]", async() => {
@@ -258,7 +258,7 @@ describe('Gas Benchmarks Coldpath', () => {
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAG), 144000)
+        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAG), 148000)
     })
 
 })

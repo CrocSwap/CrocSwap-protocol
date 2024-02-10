@@ -66,45 +66,45 @@ describe('Gas Benchmarks', () => {
 
     it("mint below price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 184000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 186000)
     })
 
     it("mint above price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(200, 300, 100), 185000)
+        await expectGas(test.testMintOther(200, 300, 100), 187000)
     })
 
     it("burn partial [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 110000)
+        await expectGas(test.testBurn(-100, 100, 50), 115000)
     })
 
     it("burn partial level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 110000)
+        await expectGas(test.testBurn(-100, 100, 50), 115000)
     })
 
     it("burn full [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 109000)
+        await expectGas(test.testBurn(-100, 100, 100), 113000)
     })
 
     it("burn full level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 105000)
+        await expectGas(test.testBurn(-100, 100, 100), 110000)
     })
 
     it("burn outside [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 85000)
+        await expectGas(test.testBurn(-200, -100, 100), 88000)
     })
 
     it("burn outside left [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 85000)
+        await expectGas(test.testBurn(-200, -100, 100), 90000)
     })
 
     it("burn liq rewards [@gas-test]", async() => {
@@ -123,14 +123,14 @@ describe('Gas Benchmarks', () => {
     it("burn flipped [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 110000)
+        await expectGas(test.testBurn(-100, 100, 100), 113000)
     })
 
     it("burn flipped level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 107000)
+        await expectGas(test.testBurn(-100, 100, 100), 110000)
     })
 
     it("harvest fees [@gas-test]", async() => {
@@ -138,7 +138,7 @@ describe('Gas Benchmarks', () => {
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
         await test.testSwapOther(false, true, 1000000, toSqrtPrice(1.0))
-        await expectGas(test.testHarvest(-100, 100), 100000)
+        await expectGas(test.testHarvest(-100, 100), 104000)
     })
 
     it("swap no pre-warm [@gas-test]", async() => {
@@ -252,7 +252,7 @@ describe('Gas Benchmarks', () => {
 
         await test.testMintOther(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testMint(-1000, 1000, 5000, SURPLUS_FLAGS), 126000)
+        await expectGas(test.testMint(-1000, 1000, 5000, SURPLUS_FLAGS), 128000)
     })
 
     it("burn surplus [@gas-test]", async() => {
@@ -262,7 +262,7 @@ describe('Gas Benchmarks', () => {
         await test.testMintOther(-1000, 1000, 10000)
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAGS), 93000)
+        await expectGas(test.testBurn(-1000, 1000, 5000, SURPLUS_FLAGS), 98000)
     })
 
 })

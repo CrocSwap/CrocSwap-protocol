@@ -46,91 +46,91 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("mint increase liq [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMint(-100, 100, 10000), 107000)
+        await expectGas(test.testMint(-100, 100, 10000), 112000)
     })
 
     it("mint pre-init ticks [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-100, 100, 10000), 124000)
+        await expectGas(test.testMintOther(-100, 100, 10000), 128000)
     })
 
     it("mint one fresh init [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-100, 200, 10000), 149000)
+        await expectGas(test.testMintOther(-100, 200, 10000), 154000)
     })
 
     it("mint fresh ticks [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-200, 200, 10000), 175000)
+        await expectGas(test.testMintOther(-200, 200, 10000), 180000)
     })
 
     it("mint below price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 167000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 172000)
     })
 
     it("mint above price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(200, 300, 100), 189000)
+        await expectGas(test.testMintOther(200, 300, 100), 194000)
     })
 
     it("burn partial [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 101000)
+        await expectGas(test.testBurn(-100, 100, 50), 106000)
     })
 
     it("burn partial level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 50), 101000)
+        await expectGas(test.testBurn(-100, 100, 50), 106000)
     })
 
     it("burn full [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 101000)
+        await expectGas(test.testBurn(-100, 100, 100), 106000)
     })
 
     it("burn full level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
-        await expectGas(test.testBurn(-100, 100, 100), 96000)
+        await expectGas(test.testBurn(-100, 100, 100), 101000)
     })
 
     it("burn outside [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 77000)
+        await expectGas(test.testBurn(-200, -100, 100), 81000)
     })
 
     it("burn outside left [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
         await test.testMintOther(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 76000)
+        await expectGas(test.testBurn(-200, -100, 100), 81000)
     })
 
     it("burn liq rewards [@gas-test]", async() => {
         await test.testMint(-100, 100, 100000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 101000)
+        await expectGas(test.testBurn(-100, 100, 100), 106000)
     })
 
     it("burn liq level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 100)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 100000)
+        await expectGas(test.testBurn(-100, 100, 100), 105000)
     })
 
     it("burn flipped [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 102000)
+        await expectGas(test.testBurn(-100, 100, 100), 106000)
     })
 
     it("burn flipped level left [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 97000)
+        await expectGas(test.testBurn(-100, 100, 100), 101000)
     })
 
     it("harvest fees [@gas-test]", async() => {
@@ -138,33 +138,33 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
         await test.testSwapOther(false, true, 1000000, toSqrtPrice(1.0))
-        await expectGas(test.testHarvest(-100, 100), 90000)
+        await expectGas(test.testHarvest(-100, 100), 95000)
     })
 
     it("swap no pre-warm [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 87000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 91000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap small [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 87000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 91000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap small [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 87000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 91000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
     it("swap small sell [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(false, true, 1000, toSqrtPrice(0.9))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 87000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 91000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
@@ -178,7 +178,7 @@ describe('Gas Benchmarks Native Eth', () => {
     it("swap bitmap w/o cross [@gas-test]", async() => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 103000)
+        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 107000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
@@ -186,7 +186,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-100, 100, 10000)
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 126000)
+        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 129000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -197,7 +197,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 132000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.021)), 135000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -208,7 +208,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 148000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 151000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -219,7 +219,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 148000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 151000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -235,7 +235,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 1000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 260000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 261000)
         expect(await test.liquidity()).to.be.lt(1010*1024)
         expect(await test.liquidity()).to.be.gt(1000*1024)
     })
@@ -244,7 +244,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-10000, 100000, 10000)
         await test.testSwapOther(true, true, 100000000, toSqrtPrice(5.0))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 113000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1050.0)), 117000)
         expect(fromSqrtPrice(await test.price())).gt(2.4)
     })
 

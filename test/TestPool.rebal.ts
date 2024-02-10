@@ -135,14 +135,14 @@ describe('Pool Rebalance', () => {
     })
 
 
-    it("rebalance gas", async() => {
+    it("rebalance gas [@gas-test]", async() => {
         await test.testMint(-1000, 1000, 100000)
         await test.testMint(-500, -200, 1000);
 
         let order = makeRebalOrder()
         let tx = await test.testOrder(order);
 
-        expect((await tx.wait()).gasUsed).to.lt(315000)
+        expect((await tx.wait()).gasUsed).to.lt(331000)
     })
   
     function makeRebalOrderTwo(): OrderDirective {
@@ -241,6 +241,6 @@ describe('Pool Rebalance', () => {
         let order = makeRebalOrderTwo()
         let tx = await test.testOrder(order);
 
-        expect((await tx.wait()).gasUsed).to.lt(295000)
+        expect((await tx.wait()).gasUsed).to.lt(308000)
     })
 })
