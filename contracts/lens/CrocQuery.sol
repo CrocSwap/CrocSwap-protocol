@@ -42,6 +42,35 @@ contract CrocQuery {
         curve.concGrowth_ = uint64(valTwo >> 192);
     }
 
+    function queryPoolParams (address base, address quote, uint256 poolIdx)
+        public view returns (PoolSpecs.Pool memory pool) {
+        bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
+        bytes32 slot = keccak256(abi.encode(key, CrocSlots.POOL_PARAM_SLOT));
+        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        pool.schema_ = uint8(valOne);
+        pool.feeRate_ = uint16(valOne >> 8);
+        pool.protocolTake_ = uint8(valOne >> 24);
+        pool.tickSize_ = uint16(valOne >> 32);
+        pool.jitThresh_ = uint8(valOne >> 48);
+        pool.knockoutBits_ = uint8(valOne >> 56);
+        pool.oracleFlags_ = uint8(valOne >> 64);
+    }
+
+    function queryPoolTemplate (uint256 poolIdx)
+        public view returns (PoolSpecs.Pool memory pool) {
+        bytes32 slot = keccak256(abi.encode(poolIdx, CrocSlots.POOL_TEMPL_SLOT));
+        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+
+        pool.schema_ = uint8(valOne);
+        pool.feeRate_ = uint16(valOne >> 8);
+        pool.protocolTake_ = uint8(valOne >> 24);
+        pool.tickSize_ = uint16(valOne >> 32);
+        pool.jitThresh_ = uint8(valOne >> 48);
+        pool.knockoutBits_ = uint8(valOne >> 56);
+        pool.oracleFlags_ = uint8(valOne >> 64);
+    }
+
     /* @notice Queries and returns the 24-bit price tick for a given pool curve.
      * 
      * @param base The base token address of the pair
