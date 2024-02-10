@@ -93,8 +93,20 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         if (msgValue > 0) {
             _wbera.call{value: msgValue}(abi.encodeWithSignature("deposit()"));
         }
-        if (base == address(0)) { base = _wbera; }
-        if (quote == address(0)) { quote = _wbera; }
+        if (base == address(0)) {
+            base = _wbera;
+            // Specifies that the user wants bera out of the swap
+            if (!isBuy) {
+                reserveFlags = 0x4;
+            }
+        }
+        if (quote == address(0)) {
+            quote = _wbera;
+            // Specifies that the user wants bera out of the swap
+            if (isBuy) {
+                reserveFlags = 0x4;
+            }
+        }
         (baseQuote, quoteFlow) = swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
                                 limitPrice, minOut, reserveFlags);
         emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, tip, limitPrice, 
