@@ -160,11 +160,11 @@ contract SettleLayer is AgentMask {
         // always assume that the flow is on the quote end.
         if (reserveFlagOutputNative(reserveFlags)) {
             if (quoteFlow > 0) {
-                transactEther(debitor, creditor, quoteFlow, true);
-                transactToken(debitor, creditor, baseFlow, base, false);
-            } else {
                 transactEther(debitor, creditor, baseFlow, false);
                 transactToken(debitor, creditor, quoteFlow, quote, true);
+            } else {
+                transactEther(debitor, creditor, quoteFlow, true);
+                transactToken(debitor, creditor, baseFlow, base, false);
             }
             return;
         }
