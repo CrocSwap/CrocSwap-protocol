@@ -27,7 +27,7 @@ const mainnetParams: CrocPoolParams = {
         jitThresh: 30,
         tickSize: 16,
         feeBps: 27,
-        knockoutOn: true
+        knockoutOn: false
     }
 }
 
@@ -36,4 +36,5 @@ const goerliDryRunParams = mainnetParams
 export const CROC_POOL_PARAMS = {
     '0x1': mainnetParams,
     '0x5': goerliDryRunParams,
+    '0x524421': mainnetParams
 }
