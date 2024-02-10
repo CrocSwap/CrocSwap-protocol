@@ -85,7 +85,7 @@ const mainnetAddrs: CrocAddrs = {
   knockout: '0x7F5D75AdE75646919c923C98D53E9Cc7Be7ea794',
   koCross: '0x509DE582af6B4658a1830f7882077FBA5523C957',
   policy: '0x0b6CD0ECb176cb39Ad99B3A0E4294167a80B68a3',
-  query: '0xBC75a2965dDAdFF9856c661d45941E738779B305',
+  query: '',
   impact: '0x3e3EDd3eD7621891E574E5d7f47b1f30A994c0D0',
   shell: '',
   policyShell: '',
