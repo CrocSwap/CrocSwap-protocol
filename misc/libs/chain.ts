@@ -5,6 +5,7 @@ import { TimelockAccepts } from "../../typechain";
 import { CrocAddrs, CROC_ADDRS } from "../constants/addrs";
 import { CrocCrossPoolParams, CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
 import { RPC_URLS } from "../constants/rpcs";
+import { CrocSwapDex } from "../../contracts/typechain";
 
 export async function traceContractDeploy 
     (deployTx: Promise<Contract>, tag: string): Promise<Contract> {
@@ -85,3 +86,54 @@ export function initProvider (chainId?: string):
     return { addrs, provider, chainId, poolParams }
 }
 
+export async function validateDeploy (addr: string, contractName: string, provider: Provider,
+    ...args: any[]) {
+    const [deployer] = await ethers.getSigners();
+    await setupContractDependencies(args, provider)
+
+    let factory = (await ethers.getContractFactory(contractName))
+    let contract = await factory.connect(deployer).deploy(...args)
+    await contract.deployTransaction.wait()
+    let sourceBytecode = await ethers.provider.getCode(contract.address)
+    let chainBytecode = await provider.getCode(addr)
+
+    let isMatch = sourceBytecode === chainBytecode
+    if (!isMatch) {
+        explainMismatch(contractName, addr, sourceBytecode, chainBytecode)
+    } else {
+        console.log(`Success: Contract ${contractName} deployed at ${addr} matches source`)
+    }
+}
+
+function explainMismatch (contractName: string, addr: string, sourceBytecode: string, chainBytecode: string) {
+    if (sourceBytecode.length - chainBytecode.length !== 0) {
+        const lengthClause = `source: ${sourceBytecode.length} vs chain: ${chainBytecode.length}`
+        console.log(`Failure: Contract ${contractName} deployed at ${addr} differs from source in length (${lengthClause})`)
+        return;
+    }
+    let byteMismatch;
+    for (let i = 0; i < sourceBytecode.length; i += 64) {
+        if (sourceBytecode.slice(i, i + 1) !== chainBytecode.slice(i, i + 1)) {
+            byteMismatch = i
+            break
+        }
+    }
+    console.log(`Failure: Contract ${contractName} deployed at ${addr} differs from source at byte ${byteMismatch} of ${sourceBytecode.length}`)
+}
+
+async function setupContractDependencies (args: any[], provider: Provider) {
+    for (let i = 0; i < args.length; i++) {
+        if (isAddressArg(args[i])) {
+            await injectCodeFromChain(args[i], provider, ethers.provider)
+        }
+    }
+}
+
+async function injectCodeFromChain (address: string, chainProvider: Provider, simProvider: Provider) {
+    let chainBytecode = await chainProvider.getCode(address)
+    await (simProvider as any).send("hardhat_setCode", [address, chainBytecode]);
+}
+
+function isAddressArg (arg: string): boolean {
+    return arg.length === 42 && arg.slice(0, 2) === '0x'
+}
