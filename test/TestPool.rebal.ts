@@ -135,7 +135,7 @@ describe('Pool Rebalance', () => {
     })
 
 
-    it("rebalance gas", async() => {
+    it("rebalance gas [@gas-test]", async() => {
         await test.testMint(-1000, 1000, 100000)
         await test.testMint(-500, -200, 1000);
 
