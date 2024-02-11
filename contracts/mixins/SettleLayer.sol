@@ -17,6 +17,9 @@ contract SettleLayer is AgentMask {
     using SafeCast for uint128;
     using TokenFlow for address;
 
+    /// @dev The address of wrapped bera. This address is constant.
+    address private constant _wbera = 0x5806E416dA447b267cEA759358cF22Cc41FAE80F;
+
     /* @notice Completes the user<->exchange collateral settlement at the final hop
      *         in the transaction. Settles both the token from the last leg in the chain
      *         as well as closes out the previous net Ether flows.
@@ -264,11 +267,11 @@ contract SettleLayer is AgentMask {
                             int128 flow, bool useReserves)
         private {
         // This is the only point in a standard transaction where msg.value is accessed.
-        uint128 recvEth = popMsgVal();
+        // uint128 recvEth = popMsgVal();
         if (flow != 0) {
-            transactFlow(debitor, creditor, flow, address(0), recvEth, useReserves);
+            transactFlow(debitor, creditor, flow, address(0), 0, useReserves);
         } else {
-            refundEther(creditor, recvEth);
+            refundEther(creditor, 0);
         }
     }
 
@@ -298,8 +301,9 @@ contract SettleLayer is AgentMask {
         if (isDebit(flow)) {
             debitUser(debitor, uint128(flow), token, bookedEth, useReserves);
         } else if (isCredit(flow)) {
+            _wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(bookedEth)));
             creditUser(creditor, uint128(-flow), token, bookedEth, useReserves);
-        }           
+        }
     }
 
     /* @notice Collects a collateral debit from the user depending on the asset type
@@ -390,6 +394,7 @@ contract SettleLayer is AgentMask {
     /* @notice Refunds any overpaid native Eth (if any) */
     function refundEther (address recv, uint128 overpay) private {
         if (overpay > 0) {
+            _wbera.call(abi.encodeWithSignature("withdraw(uint256)", overpay));
             TransferHelper.safeEtherSend(recv, overpay);
         }
     }
