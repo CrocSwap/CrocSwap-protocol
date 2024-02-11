@@ -7,10 +7,10 @@ async function validate() {
     let { addrs, provider: provider } = initProvider()
 
     validateDeploy(addrs.cold, "ColdPath", provider)
-    validateDeploy(addrs.hot, "HotPath", provider)
+    validateDeploy(addrs.hot, "HotProxy", provider)
     validateDeploy(addrs.long, "LongPath", provider)
-    validateDeploy(addrs.long, "MicroPaths", provider)
-    validateDeploy(addrs.long, "WarmPath", provider)
+    validateDeploy(addrs.micro, "MicroPaths", provider)
+    validateDeploy(addrs.warm, "WarmPath", provider)
     validateDeploy(addrs.knockout, "KnockoutLiqPath", provider)
     validateDeploy(addrs.koCross, "KnockoutFlagPath", provider)
     validateDeploy(addrs.dex, "CrocSwapDex", provider)
