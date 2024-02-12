@@ -12,3 +12,4 @@ yarn-error.log
 tenderly.yaml
 coverage.json
 coverage/
+layout.*.json
