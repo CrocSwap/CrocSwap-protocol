@@ -13,7 +13,8 @@ import {
     CrocImpact,
     KnockoutFlagPath,
     KnockoutLiqPath,
-    MultiPath
+    MultiPath,
+    BeraCrocMultiSwap
 } from "../../typechain";
 
 interface CrocAddrs {
@@ -30,6 +31,7 @@ interface CrocAddrs {
     query: string | undefined;
     impact: string | undefined;
     shell: string | undefined;
+    multiswap: string | undefined;
 }
 
 /* Ropsten */
@@ -107,38 +109,39 @@ interface CrocAddrs {
   }*/
 
 // Fuji
-// let addrs: CrocAddrs = {
-//   dex: undefined,
-//   cold: undefined,
-//   warm: undefined,
-//   long: undefined,
-//   micro: undefined,
-//   multi: undefined,
-//   hot: undefined,
-//   knockout: undefined,
-//   koCross: undefined,
-//   policy: undefined,
-//   query: undefined,
-//   impact: undefined,
-//   shell: undefined,
-// };
-
-// Berachain-Artio
-let addrs: CrocAddrs = {
-    dex: "0xD2e387D096275f84C574600913C4eD313f6Cf8db",
-    cold: "0x711ae0AE98938EA285ABd98Df7BeF2eF2250C622",
-    warm: "0x697277B0F681ca67ef3cEFae2021aD3151A67452",
-    long: "0xB0E54de4ef2bA2D34C487d6598Ad6Befb538dd44",
-    micro: "0x7F44A86925054694a847252856686f1ec0e9309A",
-    multi: "0xd49b591fDB6E2b3918C7f32F550ad69978F1546A",
-    hot: "0x0ea4c779A8f54b8a867572daeF1747D4A5789489",
-    knockout: "0xbf8CA83Ab34282d00E805D7B5EaAee6c31516fB5",
-    koCross: "0x778a396F3fDcEA7E0E49a5F3a2592dfdda1a1f3c",
-    policy: "0x0a547ABFBf60C8860690c4840Be974091908D9b3",
-    query: "0x5750b36167aC5Fb6C041954a33dc9B53B5F1E330",
-    impact: "0xD391Bf862BB7c4ce9a654f16E0F8f0DD1F3b2799",
-    shell: "0xD391Bf862BB7c4ce9a654f16E0F8f0DD1F3b2799",
+const addrs: CrocAddrs = {
+  dex: undefined,
+  cold: undefined,
+  warm: undefined,
+  long: undefined,
+  micro: undefined,
+  multi: undefined,
+  hot: undefined,
+  knockout: undefined,
+  koCross: undefined,
+  policy: undefined,
+  query: undefined,
+  impact: undefined,
+  shell: undefined,
+  multiswap: undefined,
 };
+
+// // Berachain-Artio
+// let addrs: CrocAddrs = {
+//     dex: "0xD2e387D096275f84C574600913C4eD313f6Cf8db",
+//     cold: "0x711ae0AE98938EA285ABd98Df7BeF2eF2250C622",
+//     warm: "0x697277B0F681ca67ef3cEFae2021aD3151A67452",
+//     long: "0xB0E54de4ef2bA2D34C487d6598Ad6Befb538dd44",
+//     micro: "0x7F44A86925054694a847252856686f1ec0e9309A",
+//     multi: "0xd49b591fDB6E2b3918C7f32F550ad69978F1546A",
+//     hot: "0x0ea4c779A8f54b8a867572daeF1747D4A5789489",
+//     knockout: "0xbf8CA83Ab34282d00E805D7B5EaAee6c31516fB5",
+//     koCross: "0x778a396F3fDcEA7E0E49a5F3a2592dfdda1a1f3c",
+//     policy: "0x0a547ABFBf60C8860690c4840Be974091908D9b3",
+//     query: "0x5750b36167aC5Fb6C041954a33dc9B53B5F1E330",
+//     impact: "0xD391Bf862BB7c4ce9a654f16E0F8f0DD1F3b2799",
+//     shell: "0xD391Bf862BB7c4ce9a654f16E0F8f0DD1F3b2799",
+// };
 
 // Ropsten
 /*let tokens = {
@@ -155,7 +158,7 @@ let addrs: CrocAddrs = {
 }*/
 
 // Goerli
-let tokens = {
+const tokens = {
     eth: ZERO_ADDR,
     dai: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
     usdc: "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C",
@@ -174,50 +177,50 @@ const KNOCKOUT_LP_PROXY_IDX = 7;
 const FLAG_CROSS_PROXY_IDX = 3500;
 const SAFE_MODE_PROXY_PATH = 9999;
 
-let abi = new ethers.utils.AbiCoder();
+const abi = new ethers.utils.AbiCoder();
 const override = {gasLimit: 6000000};
 
 async function createDexContracts(): Promise<CrocSwapDex> {
     let factory;
 
     factory = await ethers.getContractFactory("WarmPath");
-    let warmPath = addrs.warm ? factory.attach(addrs.warm) : ((await factory.deploy(override)) as WarmPath);
+    const warmPath = addrs.warm ? factory.attach(addrs.warm) : ((await factory.deploy(override)) as WarmPath);
     addrs.warm = warmPath.address;
 
     factory = await ethers.getContractFactory("LongPath");
-    let longPath = addrs.long ? factory.attach(addrs.long) : ((await factory.deploy(override)) as LongPath);
+    const longPath = addrs.long ? factory.attach(addrs.long) : ((await factory.deploy(override)) as LongPath);
     addrs.long = longPath.address;
 
     factory = await ethers.getContractFactory("MicroPaths");
-    let microPath = addrs.micro ? factory.attach(addrs.micro) : ((await factory.deploy(override)) as MicroPaths);
+    const microPath = addrs.micro ? factory.attach(addrs.micro) : ((await factory.deploy(override)) as MicroPaths);
     addrs.micro = microPath.address;
 
     factory = await ethers.getContractFactory("MultiPath");
-    let multiPath = addrs.multi ? factory.attach(addrs.multi) : ((await factory.deploy(override)) as MultiPath);
+    const multiPath = addrs.multi ? factory.attach(addrs.multi) : ((await factory.deploy(override)) as MultiPath);
     addrs.multi = multiPath.address;
 
     factory = await ethers.getContractFactory("ColdPath");
-    let coldPath = addrs.cold ? factory.attach(addrs.cold) : ((await factory.deploy(override)) as ColdPath);
+    const coldPath = addrs.cold ? factory.attach(addrs.cold) : ((await factory.deploy(override)) as ColdPath);
     addrs.cold = coldPath.address;
 
     factory = await ethers.getContractFactory("HotProxy");
-    let hotPath = addrs.hot ? factory.attach(addrs.hot) : ((await factory.deploy(override)) as HotPath);
+    const hotPath = addrs.hot ? factory.attach(addrs.hot) : ((await factory.deploy(override)) as HotPath);
     addrs.hot = hotPath.address;
 
     factory = await ethers.getContractFactory("KnockoutLiqPath");
-    let knockoutPath = addrs.knockout
+    const knockoutPath = addrs.knockout
         ? factory.attach(addrs.knockout)
         : ((await factory.deploy(override)) as KnockoutLiqPath);
     addrs.knockout = knockoutPath.address;
 
     factory = await ethers.getContractFactory("KnockoutFlagPath");
-    let crossPath = addrs.koCross
+    const crossPath = addrs.koCross
         ? factory.attach(addrs.koCross)
         : ((await factory.deploy(override)) as KnockoutFlagPath);
     addrs.koCross = crossPath.address;
 
     factory = await ethers.getContractFactory("CrocSwapDex");
-    let dex = (addrs.dex ? factory.attach(addrs.dex) : await factory.deploy(override)) as CrocSwapDex;
+    const dex = (addrs.dex ? factory.attach(addrs.dex) : await factory.deploy(override)) as CrocSwapDex;
     addrs.dex = dex.address;
 
     console.log(addrs);
@@ -228,33 +231,38 @@ async function createPeripheryContracts(dexAddr: string): Promise<CrocPolicy> {
     let factory;
 
     factory = await ethers.getContractFactory("CrocPolicy");
-    let policy = (addrs.policy ? factory.attach(addrs.policy) : await factory.deploy(dexAddr)) as CrocPolicy;
+    const policy = (addrs.policy ? factory.attach(addrs.policy) : await factory.deploy(dexAddr, override)) as CrocPolicy;
     addrs.policy = policy.address;
 
     factory = await ethers.getContractFactory("CrocQuery");
-    let query = (addrs.query ? factory.attach(addrs.query) : await factory.deploy(dexAddr, override)) as CrocQuery;
+    const query = (addrs.query ? factory.attach(addrs.query) : await factory.deploy(dexAddr, override)) as CrocQuery;
     addrs.query = query.address;
 
     factory = await ethers.getContractFactory("CrocImpact");
-    let impact = (addrs.impact ? factory.attach(addrs.impact) : await factory.deploy(dexAddr, override)) as CrocImpact;
+    const impact = (addrs.impact ? factory.attach(addrs.impact) : await factory.deploy(dexAddr, override)) as CrocImpact;
     addrs.impact = impact.address;
 
     factory = await ethers.getContractFactory("CrocShell");
-    let shell = (addrs.shell ? factory.attach(addrs.shell) : await factory.deploy(override)) as CrocShell;
+    const shell = (addrs.shell ? factory.attach(addrs.shell) : await factory.deploy(override)) as CrocShell;
     addrs.shell = shell.address;
+
+    factory = await ethers.getContractFactory("BeraCrocMultiSwap");
+    const multiswap = (addrs.multiswap ? factory.attach(addrs.multiswap) : await factory.deploy(addrs.dex, addrs.impact, override)) as CrocShell;
+    addrs.multiswap = multiswap.address;
+
 
     console.log(addrs);
     return policy;
 }
 
 async function installPolicy(dex: CrocSwapDex) {
-    let authCmd = abi.encode(["uint8", "address"], [20, addrs.policy]);
-    let tx = await dex.protocolCmd(COLD_PROXY_IDX, authCmd, true, override);
+    const authCmd = abi.encode(["uint8", "address"], [20, addrs.policy]);
+    const tx = await dex.protocolCmd(COLD_PROXY_IDX, authCmd, true, override);
     await tx.wait();
 }
 
 async function installSidecars(dex: CrocSwapDex) {
-    let abi = new ethers.utils.AbiCoder();
+    const abi = new ethers.utils.AbiCoder();
     let tx;
     let cmd;
 
@@ -302,11 +310,11 @@ async function initPoolTemplate(policy: CrocPolicy) {
     const knockoutFlag = KNOCKOUT_ON_FLAG + KNOCKOUT_TICKS_FLAG;
 
     if (addrs.dex) {
-        let setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, POOL_INIT_LIQ]);
+        const setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, POOL_INIT_LIQ]);
         let tx = await policy.treasuryResolution(addrs.dex, COLD_PROXY_IDX, setPoolLiqCmd, false, override);
         await tx.wait();
 
-        let templateCmd = abi.encode(
+        const templateCmd = abi.encode(
             ["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
             [110, POOL_IDX, FEE_BPS * 100, TICK_SIZE, JIT_THRESH, knockoutFlag, 0],
         );
@@ -316,13 +324,13 @@ async function initPoolTemplate(policy: CrocPolicy) {
 }
 
 async function deploy() {
-    let authority = (await ethers.getSigners())[0];
+    const authority = (await ethers.getSigners())[0];
 
     console.log("Deploying with the following addresses...");
     console.log("Protocol Authority: ", await authority.address);
 
-    let dex = await createDexContracts();
-    let policy = await createPeripheryContracts(dex.address);
+    const dex = await createDexContracts();
+    const policy = await createPeripheryContracts(dex.address);
 
     await installSidecars(dex);
     await installPolicy(dex);

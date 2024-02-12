@@ -35,7 +35,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using Chaining for Chaining.PairFlow;
 
     /// @dev The address of wrapped bera. This address is constant.
-    address private constant _wbera = 0x5806E416dA447b267cEA759358cF22Cc41FAE80F;
+    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
 
     constructor() {
         // Authority is originally set to deployer address, which can then transfer to

@@ -20,7 +20,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000000,
+            runs: 200,
           },
           outputSelection: {
             "*": {
@@ -77,6 +77,15 @@ module.exports = {
     artio: {
       url: "https://artio.rpc.berachain.com/",
       chainId: 80085,
+      gasPrice: 10000000000,
+      accounts: [
+        (process.env.WALLET_KEY as string) ??
+          "0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a",
+      ],
+    },
+    artio2: {
+      url: "http://eth-val-1-v2.berachain-devnet.com:8545",
+      chainId: 7,
       gasPrice: 10000000000,
       accounts: [
         (process.env.WALLET_KEY as string) ??

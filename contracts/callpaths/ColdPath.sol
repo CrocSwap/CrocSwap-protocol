@@ -35,7 +35,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using ProtocolCmd for bytes;
 
     /// @dev The address of wrapped bera. This address is constant.
-    address private constant _wbera = 0x5806E416dA447b267cEA759358cF22Cc41FAE80F;
+    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
 
     /* @notice Consolidated method for protocol control related commands. */
     function protocolCmd (bytes calldata cmd) virtual public {
