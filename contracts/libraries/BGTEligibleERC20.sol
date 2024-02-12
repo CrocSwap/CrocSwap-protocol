@@ -131,13 +131,15 @@ contract BGTEligibleERC20 is ERC20 {
 
     // returns how much BGT has accrued to the vault contract since last measured
     function getPendingBGT() private view returns (uint256 availableBGT, uint256 pendingBGT) {
-        // assuming there is only 1 reward returned and its denom is "abgt".
-        Cosmos.Coin[] memory rewards = rewardsModule.getOutstandingRewards(address(this));
-        if (rewards.length != 1) {
-            return (0, 0);
-        }
-        availableBGT = rewards[0].amount;
-        pendingBGT = FixedPointMathLib.zeroFloorSub(availableBGT, lastAccruedBGT);
+        // TODO: Re-enable this when rewards are done
+        return (0, 0);
+        // // assuming there is only 1 reward returned and its denom is "abgt".
+        // Cosmos.Coin[] memory rewards = rewardsModule.getOutstandingRewards(address(this));
+        // if (rewards.length != 1) {
+        //     return (0, 0);
+        // }
+        // availableBGT = rewards[0].amount;
+        // pendingBGT = FixedPointMathLib.zeroFloorSub(availableBGT, lastAccruedBGT);
     }
 
     function previewAccruedBGT(address user) external view returns (uint256) {
