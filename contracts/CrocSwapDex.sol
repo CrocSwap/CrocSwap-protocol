@@ -34,9 +34,6 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    /// @dev The address of wrapped bera. This address is constant.
-    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
-
     constructor() {
         // Authority is originally set to deployer address, which can then transfer to
         // proper governance contract (if deployer already isn't)
@@ -89,24 +86,6 @@ contract CrocSwapDex is HotPath, ICrocMinion {
         // disable by toggling the force proxy flag. If so, users should point to
         // swapProxy.
         require(hotPathOpen_);
-        uint256 msgValue = popMsgVal();
-        if (msgValue > 0) {
-            _wbera.call{value: msgValue}(abi.encodeWithSignature("deposit()"));
-        }
-        if (base == address(0)) {
-            base = _wbera;
-            // Specifies that the user wants bera out of the swap
-            if (!isBuy) {
-                reserveFlags = 0x4;
-            }
-        }
-        if (quote == address(0)) {
-            quote = _wbera;
-            // Specifies that the user wants bera out of the swap
-            if (isBuy) {
-                reserveFlags = 0x4;
-            }
-        }
         (baseQuote, quoteFlow) = swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, tip,
                                 limitPrice, minOut, reserveFlags);
         emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, tip, limitPrice, 
@@ -137,11 +116,6 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @return Arbitrary byte data (if any) returned by the command. */
     function userCmd (uint16 callpath, bytes calldata cmd) reEntrantLock
         public payable returns (bytes memory) {
-        // Always wrap paid amounts
-        uint256 msgValue = popMsgVal();
-        if (msgValue > 0) {
-            _wbera.call{value: msgValue}(abi.encodeWithSignature("deposit()"));
-        }
         return callUserCmd(callpath, cmd);
     }
 

@@ -83,7 +83,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         } else {
             revert("Invalid command");
         }
-
     }
     
     function userCmd (bytes calldata cmd) virtual public payable {
@@ -125,14 +124,28 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
-        if (base == address(0)) { base = _wbera; }
-        else if (quote == address(0)) { quote = _wbera; }
-        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
-            registerPool(base, quote, poolIdx);
+        bool nativeBera = false;
+        if (base == address(0)) {
+            base = _wbera;
+            nativeBera = true;
+        } else if (quote == address(0)) {
+            quote = _wbera;
+            nativeBera = true;
+        }
+        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) = registerPool(base, quote, poolIdx);
         verifyPermitInit(pool, base, quote, poolIdx);
         
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
-        settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+
+        if (nativeBera) {
+            if (base == _wbera) {
+                settleInitFlowBera(lockHolder_, base, baseFlow, quote, quoteFlow);
+            } else {
+                settleInitFlowBera(lockHolder_, quote, quoteFlow, base, baseFlow);
+            }
+        } else {
+            settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+        }
 
         bytes memory bytecode = type(BeraCrocLpErc20).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(base, quote)); // don't need poolIdx because it is enforced above

@@ -30,6 +30,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    /// @dev The address of wrapped bera. This address is constant.
+    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
 
     /* @notice Executes a swap on an arbitrary pool. */
     function swapExecute (address base, address quote,
@@ -38,6 +40,25 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
                           uint8 reserveFlags) internal
         returns (int128 baseFlow, int128 quoteFlow) {
         
+        // Ensure reserve flags are valid
+        require(reserveFlags < 0x4, "RF");
+
+        if (base == address(0)) {
+            base = _wbera;
+            // Determine the base value to add based on `isBuy`
+            uint8 baseValue = isBuy ? 0x4 : 0x6;
+            // Adjust the base value based on `reserveFlags & 0x1`
+            reserveFlags = (reserveFlags & 0x1) == 0 ? baseValue : baseValue + 1;
+        }
+
+        if (quote == address(0)) {
+            quote = _wbera;
+            // Determine the base value to add based on `isBuy`
+            uint8 baseValue = isBuy ? 0x6 : 0x4;
+            // Adjust the base value based on `reserveFlags & 0x1`
+            reserveFlags = (reserveFlags & 0x1) == 0 ? baseValue : baseValue + 1;
+        }
+
         PoolSpecs.PoolCursor memory pool = preparePoolCntx
             (base, quote, poolIdx, poolTip, isBuy, inBaseQty, qty);
 

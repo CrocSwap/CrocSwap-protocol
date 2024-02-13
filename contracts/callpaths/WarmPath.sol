@@ -55,6 +55,18 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
          uint8 reserveFlags, address lpConduit) =
             abi.decode(input, (uint8,address,address,uint256,int24,int24,
                                uint128,uint128,uint128,uint8,address));
+
+        // Ensure reserve flags are valid
+        require(reserveFlags < 0x4, "RF");
+        if (base == address(0)) {
+            base = _wbera;
+            reserveFlags = 0x4;
+        }
+
+        if (quote == address(0)) {
+            quote = _wbera;
+            reserveFlags = 0x5;
+        }
         
         if (base == address(0)) { base = _wbera; }
         else if ( quote == address(0)) { quote = _wbera; }

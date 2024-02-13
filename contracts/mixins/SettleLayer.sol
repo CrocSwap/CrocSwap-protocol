@@ -151,22 +151,62 @@ contract SettleLayer is AgentMask {
         assertCloseMatches(quote, quoteSnap, quoteFlow);
     }
 
+    // We always pass in wbera as the base token here.
+    function settleInitFlowBera (address recv,
+                             address base, int128 baseFlow,
+                             address quote, int128 quoteFlow) internal {
+        (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
+        wrapBeraAndDeposit(uint128(-baseFlow));
+        transactToken(recv, recv, quoteFlow, quote, false);
+        assertCloseMatches(base, baseSnap, baseFlow);
+        assertCloseMatches(quote, quoteSnap, quoteFlow);
+    }
+
     /* @notice Settles the collateral exchanged associated with the flow in a single 
      *         pair.
      * @dev    This must only be used when no other pairs settle in the transaction. */
     function settleFlat (address debitor, address creditor,
                          address base, int128 baseFlow,
                          address quote, int128 quoteFlow, uint8 reserveFlags) private {
+        if (nativeInReserveUseBase(reserveFlags)) {
+            if (base == _wbera) {
+                wrapBeraAndDeposit(uint128(-baseFlow));
+                transactToken(debitor, creditor, quoteFlow, quote, false);
+            } else {
+                wrapBeraAndDeposit(uint128(-quoteFlow));
+                transactToken(debitor, creditor, baseFlow, base, true);
+            }
+            return;
+        }
 
-        // A hacky flag to indicate that the flow is native. This will only ever be used
-        // in the case where the specified output is the native token. We will also
-        // always assume that the flow is on the quote end.
-        if (reserveFlagOutputNative(reserveFlags)) {
-            if (quoteFlow > 0) {
-                transactEther(debitor, creditor, baseFlow, false);
+        if (nativeInReserveUseQuote(reserveFlags)) {
+            if (base == _wbera) {
+                wrapBeraAndDeposit(uint128(-baseFlow));
                 transactToken(debitor, creditor, quoteFlow, quote, true);
             } else {
-                transactEther(debitor, creditor, quoteFlow, true);
+                wrapBeraAndDeposit(uint128(-quoteFlow));
+                transactToken(debitor, creditor, baseFlow, base, false);
+            }
+            return;
+        }
+
+        if (nativeOutReserveFlagBase(reserveFlags)) {
+            if (base == _wbera) {
+                unwrapWberaAndSend(creditor, uint128(-baseFlow));
+                transactToken(debitor, creditor, quoteFlow, quote, false);
+            } else {
+                unwrapWberaAndSend(creditor, uint128(-quoteFlow));
+                transactToken(debitor, creditor, baseFlow, base, true);
+            }
+            return;
+        }
+
+        if (nativeOutReserveFlagQuote(reserveFlags)) {
+            if (base == _wbera) {
+                unwrapWberaAndSend(creditor, uint128(-baseFlow));
+                transactToken(debitor, creditor, quoteFlow, quote, true);
+            } else {
+                unwrapWberaAndSend(creditor, uint128(-quoteFlow));
                 transactToken(debitor, creditor, baseFlow, base, false);
             }
             return;
@@ -194,15 +234,30 @@ contract SettleLayer is AgentMask {
         return reserveFlags & QUOTE_RESERVE_FLAG > 0;
     }
 
-    function reserveFlagOutputNative (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & BASE_RESERVE_FLAG_NATIVE > 0;
+    function nativeInReserveUseBase (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & RESERVE_FLAG_NATIVE_IN_BASE > 0;
+    }
+
+    function nativeInReserveUseQuote (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & RESERVE_FLAG_NATIVE_IN_QUOTE > 0;
+    }
+
+    function nativeOutReserveFlagBase (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & RESERVE_FLAG_NATIVE_OUT_BASE > 0;
+    }
+
+    function nativeOutReserveFlagQuote (uint8 reserveFlags) private pure returns (bool) {
+        return reserveFlags & RESERVE_FLAG_NATIVE_OUT_QUOTE > 0;
     }
 
     uint8 constant NO_RESERVE_FLAGS = 0x0;
     uint8 constant BASE_RESERVE_FLAG = 0x1;
     uint8 constant QUOTE_RESERVE_FLAG = 0x2;    
     uint8 constant BOTH_RESERVE_FLAGS = 0x3;
-    uint8 constant BASE_RESERVE_FLAG_NATIVE = 0x4;
+    uint8 constant RESERVE_FLAG_NATIVE_IN_BASE = 0x4;
+    uint8 constant RESERVE_FLAG_NATIVE_IN_QUOTE = 0x5;
+    uint8 constant RESERVE_FLAG_NATIVE_OUT_BASE = 0x6;
+    uint8 constant RESERVE_FLAG_NATIVE_OUT_QUOTE = 0x7;
 
     /* @notice Performs check to make sure the new balance matches the expected 
      * transfer amount. */
@@ -267,11 +322,11 @@ contract SettleLayer is AgentMask {
                             int128 flow, bool useReserves)
         private {
         // This is the only point in a standard transaction where msg.value is accessed.
-        // uint128 recvEth = popMsgVal();
+        uint128 recvEth = popMsgVal();
         if (flow != 0) {
-            transactFlow(debitor, creditor, flow, address(0), 0, useReserves);
+            transactFlow(debitor, creditor, flow, address(0), recvEth, useReserves);
         } else {
-            refundEther(creditor, 0);
+            refundEther(creditor, recvEth);
         }
     }
 
@@ -301,9 +356,8 @@ contract SettleLayer is AgentMask {
         if (isDebit(flow)) {
             debitUser(debitor, uint128(flow), token, bookedEth, useReserves);
         } else if (isCredit(flow)) {
-            _wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(bookedEth)));
             creditUser(creditor, uint128(-flow), token, bookedEth, useReserves);
-        }
+        }           
     }
 
     /* @notice Collects a collateral debit from the user depending on the asset type
@@ -394,7 +448,6 @@ contract SettleLayer is AgentMask {
     /* @notice Refunds any overpaid native Eth (if any) */
     function refundEther (address recv, uint128 overpay) private {
         if (overpay > 0) {
-            _wbera.call(abi.encodeWithSignature("withdraw(uint256)", overpay));
             TransferHelper.safeEtherSend(recv, overpay);
         }
     }
@@ -454,5 +507,14 @@ contract SettleLayer is AgentMask {
         }
     }
 
-}
+    function unwrapWberaAndSend (address recv, uint128 value) internal {
+        _wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(value)));
+        TransferHelper.safeTransfer(_wbera, recv, value);
+    }
 
+    function wrapBeraAndDeposit (uint128 value) internal {
+        uint128 msgValue = popMsgVal();
+        require(msgValue >= value, "TF");
+        _wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
+    }
+}
