@@ -3,8 +3,6 @@ import { decodePolicySched, treasuryResolution, CrocProtocolCmd } from '../libs/
 import { CrocSwapDex, TimelockAccepts } from '../../typechain';
 import { CrocPolicy } from '../../typechain';
 import { AbiCoder } from '@ethersproject/abi';
-import { BOOT_PROXY_IDX, COLD_PROXY_IDX, LP_PROXY_IDX } from '../constants/addrs';
-
 
 async function decode (calldata: string) {
     let { addrs } = initProvider()
