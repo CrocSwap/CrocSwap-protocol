@@ -173,4 +173,49 @@ describe('Pool Tick Boundaries', () => {
         await test.testSwap(true, true, 1000000, toSqrtPrice(1.01))
         expect (await test.liquidity()).to.eq(0)
     })
+
+    it("swap to exact upper bound", async() => {
+        await test.testMint(-20000, 0, 250)
+        await test.testMint(0, 1000, 70)
+        await test.testMint(-100000, 100000, 100)
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(false, true, 1000000, toSqrtPrice(0.9))
+        expect (await test.liquidity()).to.eq(350*1024)
+
+        await test.testSwap(true, true, 1000000, toSqrtPrice(1.0))
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(true, true, 1000000, toSqrtPrice(1.00001))
+        expect (await test.liquidity()).to.eq(170*1024)
+    })
+
+    it("swap to exact lower bound", async() => {
+        await test.testMint(-20000, 0, 250)
+        await test.testMint(0, 100000, 70)
+        await test.testMint(-100000, 100000, 100)
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(true, true, 1000000, toSqrtPrice(1.1))
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(false, true, 1000000, toSqrtPrice(1.0))
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(false, true, 1000000, toSqrtPrice(0.999))
+        expect (await test.liquidity()).to.eq(350*1024)
+    })
+
+    it("swap to exact lower cross", async() => {
+        await test.testMint(-20000, 0, 250)
+        await test.testMint(0, 100000, 70)
+        await test.testMint(-100000, 100000, 100)
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(true, true, 1000000, toSqrtPrice(1.1))
+        expect (await test.liquidity()).to.eq(170*1024)
+
+        await test.testSwap(false, true, 1000000, toSqrtPrice(1.0).sub(1))
+        expect (await test.liquidity()).to.eq(350*1024)
+    })
 })
