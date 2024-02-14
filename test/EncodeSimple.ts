@@ -75,7 +75,7 @@ export function simpleMintAmbient (poolIdx: BigNumberish, liq: number): PoolDire
 }
 
 export function simpleSwap (poolIdx: BigNumberish, isBuy: boolean, inBaseQty: boolean, 
-    qty: number, limitPrice: BigNumber): PoolDirective  {
+    qty: BigNumberish, limitPrice: BigNumber): PoolDirective  {
     return { 
        poolIdx: poolIdx,
        passive: {

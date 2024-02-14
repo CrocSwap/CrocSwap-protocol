@@ -425,7 +425,7 @@ export class TestPool {
         return this.testBurnFrom(await this.other, lower, upper, liq)
     }
 
-    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
+    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: BigNumberish, price: BigNumber): 
         Promise<ContractTransaction> {
         return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price)
     }
@@ -545,7 +545,7 @@ export class TestPool {
         return (await this.dex).connect(await this.trader).userCmd(this.KNOCKOUT_PROXY, await inputBytes, this.overrides)
     }
 
-    async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
+    async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: BigNumberish, price: BigNumber,
         useSurplus: number = 0): Promise<ContractTransaction> {
         const slippage = inBaseQty == isBuy ? BigNumber.from(0) : BigNumber.from(2).pow(126)
         await this.snapStart()
@@ -557,7 +557,7 @@ export class TestPool {
                 this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
-                (await this.quote).address, simpleSwap(this.poolIdx, isBuy, inBaseQty, Math.abs(qty), price))
+                (await this.quote).address, simpleSwap(this.poolIdx, isBuy, inBaseQty, BigNumber.from(qty).abs(), price))
             let inputBytes = encodeOrderDirective(directive);
             return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
