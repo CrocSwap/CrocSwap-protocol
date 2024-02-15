@@ -235,19 +235,19 @@ contract SettleLayer is AgentMask {
     }
 
     function nativeInReserveUseBase (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & RESERVE_FLAG_NATIVE_IN_BASE > 0;
+        return reserveFlags ^ RESERVE_FLAG_NATIVE_IN_BASE == 0;
     }
 
     function nativeInReserveUseQuote (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & RESERVE_FLAG_NATIVE_IN_QUOTE > 0;
+        return reserveFlags ^ RESERVE_FLAG_NATIVE_IN_QUOTE == 0;
     }
 
     function nativeOutReserveFlagBase (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & RESERVE_FLAG_NATIVE_OUT_BASE > 0;
+        return reserveFlags ^ RESERVE_FLAG_NATIVE_OUT_BASE == 0;
     }
 
     function nativeOutReserveFlagQuote (uint8 reserveFlags) private pure returns (bool) {
-        return reserveFlags & RESERVE_FLAG_NATIVE_OUT_QUOTE > 0;
+        return reserveFlags ^ RESERVE_FLAG_NATIVE_OUT_QUOTE == 0;
     }
 
     uint8 constant NO_RESERVE_FLAGS = 0x0;
