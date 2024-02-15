@@ -48,7 +48,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
             // Determine the base value to add based on `isBuy`
             uint8 baseValue = isBuy ? 0x4 : 0x6;
             // Adjust the base value based on `reserveFlags & 0x1`
-            reserveFlags = (reserveFlags & 0x1) == 0 ? baseValue : baseValue + 1;
+            reserveFlags = (reserveFlags ^ 0x1) == 0 ? baseValue : baseValue + 1;
         }
 
         if (quote == address(0)) {
@@ -56,7 +56,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
             // Determine the base value to add based on `isBuy`
             uint8 baseValue = isBuy ? 0x6 : 0x4;
             // Adjust the base value based on `reserveFlags & 0x1`
-            reserveFlags = (reserveFlags & 0x1) == 0 ? baseValue : baseValue + 1;
+            reserveFlags = (reserveFlags ^ 0x1) == 0 ? baseValue : baseValue + 1;
         }
 
         PoolSpecs.PoolCursor memory pool = preparePoolCntx
