@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -8,6 +8,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
 import { ConcentratedDirective } from './EncodeOrder';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -17,8 +18,14 @@ describe('Roll Pools', () => {
     const pool2 = 48395
     const pool3 = 5934
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+    
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
 
        await test.initPool(feeRate, 0, 1, 1.5)
        await test.initPoolIdx(pool2, feeRate, 0, 10, 1.7)

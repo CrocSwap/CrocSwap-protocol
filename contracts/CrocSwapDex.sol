@@ -34,7 +34,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    constructor() {
+    constructor(address initialWbera) HotPath(initialWbera){
         // Authority is originally set to deployer address, which can then transfer to
         // proper governance contract (if deployer already isn't)
         authority_ = msg.sender;
@@ -179,16 +179,16 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 /* @notice Alternative constructor to CrocSwapDex that's more convenient. However
  *     the deploy transaction is several hundred kilobytes and will get droppped by 
  *     geth. Useful for testing environments though. */
-contract CrocSwapDexSeed  is CrocSwapDex {
+contract CrocSwapDexSeed is CrocSwapDex {
     
-    constructor() {
-        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
-        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
-        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
+constructor(address initialWbera) CrocSwapDex(initialWbera) {
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath(initialWbera));
+        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath(initialWbera));
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath(initialWbera));
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
-        proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
-        proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath());
+        proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath(initialWbera));
+        proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath(initialWbera));
     }
 }
 

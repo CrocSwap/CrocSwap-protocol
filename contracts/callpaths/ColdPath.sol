@@ -34,9 +34,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using Chaining for Chaining.PairFlow;
     using ProtocolCmd for bytes;
 
-    /// @dev The address of wrapped bera. This address is constant.
-    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
 
+    constructor(address initialWbera) DepositDesk(initialWbera) {
+    }
     /* @notice Consolidated method for protocol control related commands. */
     function protocolCmd (bytes calldata cmd) virtual public {
         uint8 code = uint8(cmd[31]);
@@ -126,10 +126,10 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
         bool nativeBera = false;
         if (base == address(0)) {
-            base = _wbera;
+            base = wbera;
             nativeBera = true;
         } else if (quote == address(0)) {
-            quote = _wbera;
+            quote = wbera;
             nativeBera = true;
         }
         (PoolSpecs.PoolCursor memory pool, uint128 initLiq) = registerPool(base, quote, poolIdx);
@@ -138,7 +138,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
 
         if (nativeBera) {
-            if (base == _wbera) {
+            if (base == wbera) {
                 settleInitFlowBera(lockHolder_, base, baseFlow, quote, quoteFlow);
             } else {
                 settleInitFlowBera(lockHolder_, quote, quoteFlow, base, baseFlow);

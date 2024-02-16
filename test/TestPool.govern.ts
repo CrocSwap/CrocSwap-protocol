@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool, NativeEther } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, NativeEther, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -9,7 +9,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, Wallet, Signer, BytesLike, ContractFactory } from 'ethers';
 import { CrocPolicy } from '../typechain/CrocPolicy';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { BootPath, ColdPath, MockMaster, MockTimelock } from '../typechain';
+import { BootPath, ColdPath, MockMaster, MockTimelock, WBERA } from '../typechain';
 
 const hre = require("hardhat");
 chai.use(solidity);
@@ -32,8 +32,14 @@ describe('Pool Governance', () => {
     let pool: CrocSwapDex
     const feeRate = 225 * 100
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+    
     beforeEach("deploy",  async () => {
-      test = await makeTokenPool()
+      test = await makeTokenPool(wbera)
       baseToken = await test.base
       quoteToken = await test.quote
       sender = await (await test.trader).getAddress() 

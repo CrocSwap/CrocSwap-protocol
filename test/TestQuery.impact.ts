@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,7 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, BigNumberish } from 'ethers';
-import { CrocImpact } from '../typechain';
+import { CrocImpact, WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -17,9 +17,13 @@ describe('Query Impact', () => {
     let baseToken: Token
     let quoteToken: Token
     const feeRate = 225 * 100
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       pool = await makeTokenPool()
+       pool = await makeTokenPool(wbera)
        baseToken = await pool.base
        quoteToken = await pool.quote
 

@@ -17,8 +17,11 @@ contract SettleLayer is AgentMask {
     using SafeCast for uint128;
     using TokenFlow for address;
 
-    /// @dev The address of wrapped bera. This address is constant.
-    address private constant _wbera = 0x3945f611Fe77A51C7F3e1f84709C1a2fDcDfAC5B;
+    address public wbera;
+
+    constructor(address initialWbera) {
+        wbera = initialWbera;
+    }
 
     /* @notice Completes the user<->exchange collateral settlement at the final hop
      *         in the transaction. Settles both the token from the last leg in the chain
@@ -169,7 +172,7 @@ contract SettleLayer is AgentMask {
                          address base, int128 baseFlow,
                          address quote, int128 quoteFlow, uint8 reserveFlags) private {
         if (nativeInReserveUseBase(reserveFlags)) {
-            if (base == _wbera) {
+            if (base == wbera) {
                 wrapBeraAndDeposit(uint128(-baseFlow));
                 transactToken(debitor, creditor, quoteFlow, quote, false);
             } else {
@@ -180,7 +183,7 @@ contract SettleLayer is AgentMask {
         }
 
         if (nativeInReserveUseQuote(reserveFlags)) {
-            if (base == _wbera) {
+            if (base == wbera) {
                 wrapBeraAndDeposit(uint128(-baseFlow));
                 transactToken(debitor, creditor, quoteFlow, quote, true);
             } else {
@@ -191,7 +194,7 @@ contract SettleLayer is AgentMask {
         }
 
         if (nativeOutReserveFlagBase(reserveFlags)) {
-            if (base == _wbera) {
+            if (base == wbera) {
                 unwrapWberaAndSend(creditor, uint128(-baseFlow));
                 transactToken(debitor, creditor, quoteFlow, quote, false);
             } else {
@@ -202,7 +205,7 @@ contract SettleLayer is AgentMask {
         }
 
         if (nativeOutReserveFlagQuote(reserveFlags)) {
-            if (base == _wbera) {
+            if (base == wbera) {
                 unwrapWberaAndSend(creditor, uint128(-baseFlow));
                 transactToken(debitor, creditor, quoteFlow, quote, true);
             } else {
@@ -508,13 +511,13 @@ contract SettleLayer is AgentMask {
     }
 
     function unwrapWberaAndSend (address recv, uint128 value) internal {
-        _wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(value)));
-        TransferHelper.safeTransfer(_wbera, recv, value);
+        wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(value)));
+        TransferHelper.safeTransfer(wbera, recv, value);
     }
 
     function wrapBeraAndDeposit (uint128 value) internal {
         uint128 msgValue = popMsgVal();
         require(msgValue >= value, "TF");
-        _wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
+        wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
     }
 }

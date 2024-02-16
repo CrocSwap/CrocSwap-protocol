@@ -11,6 +11,8 @@ import './ColdPath.sol';
  *         all calls besides sudo mode admin actions. */
 contract SafeModePath is ColdPath {
 
+    constructor(address initialWbera) ColdPath(initialWbera) {}
+
     function protocolCmd (bytes calldata cmd) override public {
         sudoCmd(cmd);
     }
