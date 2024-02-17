@@ -1,41 +1,43 @@
-import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
-import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
+import { toSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
-import { OrderDirective, PassiveDirective, SwapDirective, PoolDirective, encodeOrderDirective } from './EncodeOrder';
+import { OrderDirective, PoolDirective, encodeOrderDirective } from './EncodeOrder';
 import { MockERC20 } from '../typechain/MockERC20';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
-import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, Contract, PayableOverrides, Bytes, BigNumberish } from 'ethers';
-import { simpleSettle, singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools, doubleHop } from './EncodeSimple';
+import { Signer, ContractFactory, BigNumber, ContractTransaction, BytesLike, PayableOverrides, BigNumberish } from 'ethers';
+import { singleHop, simpleMint, simpleSwap, simpleMintAmbient, singleHopPools } from './EncodeSimple';
 import { MockPermit } from '../typechain/MockPermit';
-import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
-import { BootPath, WBERA } from "../typechain";
+import { WBERA } from "../typechain";
 import { buildCrocSwapSex } from "./SetupDex";
+import { getCrocErc20LpAddress } from "../misc/utils/getCrocErc20LpAddress";
+import { parseEther } from "ethers/lib/utils";
 
 chai.use(solidity);
 
 const MAX_LIMIT = BigNumber.from("10").pow(21)
 const MIN_LIMIT = BigNumber.from("0")
-const INIT_BAL = 1000000000
+const INIT_BAL = parseEther('100')
 export const POOL_IDX = 85365
+
+export interface BeraResponse {
+    calldata: BytesLike
+    pathId: any
+}
 
 export async function makeTokenPool(wbera: WBERA): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
     let tokenY = new ERC20Token((await factory.deploy() as MockERC20))
-
     return makePoolFrom(tokenX, tokenY, wbera)
 }
 
 export async function createWbera(): Promise<WBERA> {
     let factory = await ethers.getContractFactory("WBERA") as ContractFactory
     let wbera = await factory.deploy() as WBERA
-    console.log("WBERA address: ", wbera.address)
-
     return wbera
 }
 
@@ -78,20 +80,26 @@ export async function makeTokenNext(pool: TestPool, wbera: WBERA): Promise<TestP
 }
 
 export async function makePoolFrom(tokenX: Token, tokenY: Token, wbera: WBERA, dex?: CrocSwapDex): Promise<TestPool> {
-    let base = sortBaseToken(tokenX, tokenY)
-    let quote = sortQuoteToken(tokenX, tokenY)
-
+    const [base, quote] = sortBaseQuoteTokens(tokenX, tokenY, new WBERAToken(wbera))
     let pool = new TestPool(base, quote, wbera, dex)
     await pool.fundTokens()
     return pool
 }
 
-export async function makeEtherPool(wbera: WBERA): Promise<TestPool> {
+export async function makeEtherPool(wbera: WBERA,  dex?: CrocSwapDex): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let quote = await factory.deploy() as MockERC20
 
-    let pool = new TestPool(new NativeEther(), new ERC20Token(await quote), wbera)
+    let pool = new TestPool(new NativeEther(wbera), new ERC20Token(await quote), wbera, dex)
     await pool.fundTokens()
+    return pool
+}
+
+export async function makeWberaPool(wbera: WBERA): Promise<TestPool> {
+    const wberaToken: WBERAToken = new WBERAToken(wbera)
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let quote = await factory.deploy() as MockERC20
+    let pool = await makePoolFrom(wberaToken, new ERC20Token(await quote), wbera)
     return pool
 }
 
@@ -123,15 +131,36 @@ export class ERC20Token implements Token {
     }
 }
 
+export class WBERAToken implements Token {
+    address: string
+    contract: WBERA
+    sendEth: boolean
+
+    constructor(token: WBERA) {
+        this.address = token.address
+        this.contract = token
+        this.sendEth = false;
+    }
+
+    async balanceOf(address: string): Promise<BigNumber> {
+        return this.contract.balanceOf(address)
+    }
+
+    async fund(s: Signer, dex: string, val: BigNumberish): Promise<void> {
+        await this.contract.connect(s).deposit({value: BigNumber.from(val)})
+        await this.contract.connect(s).approve(dex, BigNumber.from(val))
+    }
+}
+
 export class NativeEther implements Token {
     address: string
     balanceFinder: Promise<TestSettleLayer>
     sendEth: boolean
 
-    constructor() {
+    constructor(wbera: WBERA) {
         this.address = ZERO_ADDR
         let factory = ethers.getContractFactory("TestSettleLayer") as Promise<ContractFactory>
-        this.balanceFinder = factory.then(f => f.deploy(ZERO_ADDR)) as Promise<TestSettleLayer>
+        this.balanceFinder = factory.then(f => f.deploy(ZERO_ADDR, wbera.address)) as Promise<TestSettleLayer>
         this.sendEth = true;
     }
 
@@ -154,6 +183,7 @@ export class TestPool {
     permit: Promise<MockPermit>
     base: Token
     quote: Token
+    wberaToken: WBERAToken
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
@@ -171,7 +201,7 @@ export class TestPool {
         this.base = base
         this.quote = quote
         this.poolIdx = POOL_IDX
-
+        this.wberaToken = new WBERAToken(wbera)
         let factory = ethers.getContractFactory("MockPermit") as Promise<ContractFactory>
         this.permit = factory.then(f => f.deploy()) as Promise<MockPermit>
 
@@ -240,6 +270,34 @@ export class TestPool {
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
     }
+
+    async initPoolCalldata(feeRate: number, protoTake: number, tickSize: number,
+        price: number | BigNumber, noOverrides?: boolean): Promise<BeraResponse> {
+        return this.initPoolIdxCalldata(this.poolIdx, feeRate, protoTake, tickSize, price)
+    }
+
+    async initPoolIdxCalldata(poolIdx: BigNumberish, feeRate: number, protoTake: number, tickSize: number,
+        price: number | BigNumber, noOverrides?: boolean): Promise<BeraResponse> {
+        let overrides = noOverrides ? {} : this.overrides
+
+        await this.setProtocolTake(protoTake)
+
+        if (this.initTemplBefore) {
+            await this.initTempl(feeRate, tickSize, poolIdx)
+        }
+
+        if(this.base.address !== ZERO_ADDR) {
+            this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
+        }
+        if(this.quote.address !== ZERO_ADDR) {
+            this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
+        }
+        return {
+            calldata: await this.encodeInitPool(poolIdx, price),
+            pathId: this.COLD_PROXY,
+        }
+    }
+
 
     async initTempl(feeRate: number, tickSize: number, poolIdx?: BigNumberish): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
@@ -341,15 +399,31 @@ export class TestPool {
             [callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit]);
     }
 
+    async encodeBNMintAmbientPath(liq: BigNumber, limitLow: BigNumber, limitHigh: BigNumber,
+        useSurplus: number): Promise<BeraResponse> {
+        let abiCoder = new ethers.utils.AbiCoder()
+        let base = (await this.base).address
+        let quote = (await this.quote).address
+        const callCode = this.lpCallCode(3, 31, 32);
+        const calldata =  abiCoder.encode(
+            ["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
+            [31, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit]);
+        return {
+            calldata: calldata,
+            pathId: this.WARM_PROXY
+        }
+    }
+
     async encodeBurnAmbientPath(liq: number, limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
+        const conduitAddress = await getCrocErc20LpAddress(this.base.address, this.quote.address, (await this.dex).address)
         const callCode = this.lpCallCode(4, 41, 42);
         return abiCoder.encode(
             ["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-            [callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit]);
+            [callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, conduitAddress]);
     }
 
     lpCallCode(liqCode: number, baseCode: number, quoteCode: number): number {
@@ -844,15 +918,66 @@ export class TestPool {
         }
         return order
     }
+    public async transformLimits (limits: [number,number]): Promise<[BigNumber,BigNumber]> {
+        let left = this.fromDisplayPrice(limits[0])
+        let right = this.fromDisplayPrice(limits[1])
+        return (await left < await right) ?
+            [encodeCrocPrice(await left),encodeCrocPrice(await right)] :
+            [encodeCrocPrice(await right), encodeCrocPrice(await left)]
+    }
+    async fromDisplayPrice (dispPrice: number): Promise<number> {
+        return fromDisplayPrice(dispPrice, 18, 18)
+    }
 
-}
+    public encodeWarmPath(
+        baseAddress: string,
+        quoteAddress: string,
+        callCode: number,
+        lowerTick: number,
+        upperTick: number,
+        qty: BigNumber,
+        limitLow: BigNumber,
+        limitHigh: BigNumber,
+        useSurplus: number,
+        conduitLpAddress?: string
+      ): string {
+        let abiCoder = new ethers.utils.AbiCoder()
+        return abiCoder.encode([
+            "uint8", // Type call
+            "address", // Base
+            "address", // Quote
+            "uint24", // Pool Index
+            "int24", // Lower Tick
+            "int24", // Upper Tick
+            "uint128", // Liquidity
+            "uint128", // Lower limit
+            "uint128", // Upper limit
+            "uint8", // reserve flags
+            "address", // deposit vault
+          ], [
+          callCode,
+          baseAddress,
+          quoteAddress,
+          this.poolIdx,
+          lowerTick,
+          upperTick,
+          qty,
+          limitLow.toString(),
+          limitHigh.toString(),
+          useSurplus,
+          conduitLpAddress,
+        ]);
+      }
 
-export function sortBaseToken(tokenX: Token, tokenY: Token): Token {
+    }
+
+
+export function sortBaseToken(tokenX: Token, tokenY: Token, wbera: WBERAToken): Token {
     return addrLessThan(tokenX.address, tokenY.address) ?
         tokenX : tokenY;
 }
 
-export function sortQuoteToken(tokenX: Token, tokenY: Token): Token {
+export function sortQuoteToken(tokenX: Token, tokenY: Token, wbera: WBERAToken): Token {
     return addrLessThan(tokenX.address, tokenY.address) ?
         tokenY : tokenX;
 }
@@ -860,3 +985,44 @@ export function sortQuoteToken(tokenX: Token, tokenY: Token): Token {
 export function addrLessThan(addrX: string, addrY: string): boolean {
     return addrX.toLowerCase().localeCompare(addrY.toLowerCase()) < 0
 }
+
+export function sortBaseQuoteTokens(base: Token, quote: Token, wbera: WBERAToken): [Token, Token] {
+    if(base.address.toLowerCase() === ZERO_ADDR.toLowerCase() && wbera.address.toLowerCase() > quote.address.toLowerCase()) {
+        return [quote, base]
+      }
+      if(quote.address.toLowerCase() === ZERO_ADDR.toLowerCase() && wbera.address.toLowerCase() < base.address.toLowerCase()) { 
+        return [quote, base]
+      }
+    return base.address.toLowerCase() < quote.address.toLowerCase() ?
+      [base, quote] : [quote, base]
+}
+
+export function fromDisplayPrice(
+    price: number,
+    baseDecimals: number,
+    quoteDecimals: number,
+    isInverted = false
+  ): number {
+    const scaled = isInverted ? 1 / price : price
+    return scaled * Math.pow(10, baseDecimals - quoteDecimals)
+  }
+  
+
+
+export function encodeCrocPrice(price: number): BigNumber {
+    let floatPrice = Math.sqrt(price) * 2 ** 64;
+    let scale = 0;
+  
+    const PRECISION_BITS = 16;
+    while (floatPrice > Number.MAX_SAFE_INTEGER) {
+      floatPrice = floatPrice / 2 ** PRECISION_BITS;
+      scale = scale + PRECISION_BITS;
+    }
+  
+    const pinPrice = Math.round(floatPrice);
+    const bnSeed = BigNumber.from(pinPrice);
+  
+    return bnSeed.mul(BigNumber.from(2).pow(scale));
+  }
+
+  

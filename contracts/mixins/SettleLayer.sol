@@ -517,7 +517,7 @@ contract SettleLayer is AgentMask {
 
     function wrapBeraAndDeposit (uint128 value) internal {
         uint128 msgValue = popMsgVal();
-        require(msgValue >= value, "TF");
+        require(msgValue >= value, "TF4");
         wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
     }
 }

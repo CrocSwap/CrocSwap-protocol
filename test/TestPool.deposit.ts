@@ -53,7 +53,7 @@ describe('Pool Surplus Deposits', () => {
     })
 
     it("deposit native", async() => {
-      let nativeEth = new NativeEther()
+      let nativeEth = new NativeEther(wbera)
       let pool = await test.dex
       let query = await test.query
       let initSurplus = await query.querySurplus(sender, ZERO_ADDR)
@@ -119,7 +119,7 @@ describe('Pool Surplus Deposits', () => {
     })
 
     it("disburse native", async() => {
-      let nativeEth = new NativeEther()
+      let nativeEth = new NativeEther(wbera)
       let pool = await test.dex
       let query = await test.query
 

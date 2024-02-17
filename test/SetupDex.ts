@@ -11,6 +11,7 @@ export const LP_PROXY_IDX = 2;
 export const COLD_PROXY_IDX = 3;
 export const LONG_PROXY_IDX = 4;
 export const MICRO_PROXY_IDX = 5;
+export const MULTICALL_PROXY_IDX = 6;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;
@@ -61,5 +62,9 @@ export async function buildCrocSwapSex (auth: Promise<Signer>, wbera: WBERA): Pr
     cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, SAFE_MODE_PROXY_PATH])
     await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true) 
 
+    factory = await ethers.getContractFactory("MultiPath");
+    proxy = await factory.deploy();
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, MULTICALL_PROXY_IDX]);
+    await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
     return dex
 }

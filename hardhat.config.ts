@@ -9,6 +9,7 @@ import "@nomicfoundation/hardhat-verify";
 import "hardhat-storage-layout";
 import "solidity-coverage";
 import { config } from "dotenv";
+// require("hardhat-tracer");
 
 config();
 
