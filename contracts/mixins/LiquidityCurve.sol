@@ -11,6 +11,7 @@ import '../libraries/PoolSpecs.sol';
 import '../libraries/CurveMath.sol';
 import '../libraries/CurveCache.sol';
 import './StorageLayout.sol';
+import 'hardhat/console.sol';
 
 /* @title Liquidity Curve Mixin
  * @notice Tracks the state of the locally stable constant product AMM liquid curve
@@ -29,9 +30,9 @@ contract LiquidityCurve is StorageLayout {
      * @dev    Use for light-weight gas ergonomics when iterarively operating on the 
      *         curve. But it's the callers responsibility to persist the changes back
      *         to storage when complete. */
-    function snapCurve (bytes32 poolIdx) view internal returns
+    function snapCurve (bytes32 poolKey) view internal returns
         (CurveMath.CurveState memory curve) {
-        curve = curves_[poolIdx];
+        curve = curves_[poolKey];
         require(curve.priceRoot_ > 0);
     }
 

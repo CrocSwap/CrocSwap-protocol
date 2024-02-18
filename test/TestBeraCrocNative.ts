@@ -25,9 +25,6 @@ describe('Testing Native BERA Pools', () => {
     it("deploy a native BERA Pool", async () => {
         baseToken = await test.base
         quoteToken = await test.quote
-
-        console.log("baseToken", baseToken.address)
-        console.log("quoteToken", quoteToken.address)
         const price = 1
         // const slippage = 0.01
         const initPoolCallData = await test.initPoolCalldata(feeRate, 0, 1, price)

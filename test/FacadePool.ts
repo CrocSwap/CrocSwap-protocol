@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { toSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
@@ -14,6 +14,7 @@ import { CrocQuery } from "../typechain/CrocQuery";
 import { WBERA } from "../typechain";
 import { buildCrocSwapSex } from "./SetupDex";
 import { getCrocErc20LpAddress } from "../misc/utils/getCrocErc20LpAddress";
+import { parseEther } from "ethers/lib/utils";
 
 chai.use(solidity);
 
@@ -124,8 +125,8 @@ export class ERC20Token implements Token {
     }
 
     async fund(s: Signer, dex: string, val: BigNumberish): Promise<void> {
-        await this.contract.deposit(await s.getAddress(), BigNumber.from(val))
-        await this.contract.approveFor(await s.getAddress(), dex, BigNumber.from(val))
+        await this.contract.deposit(await s.getAddress(), parseEther('100'))
+        await this.contract.approveFor(await s.getAddress(), dex, parseEther('10000'))
     }
 }
 
@@ -145,8 +146,12 @@ export class WBERAToken implements Token {
     }
 
     async fund(s: Signer, dex: string, val: BigNumberish): Promise<void> {
-        await this.contract.connect(s).deposit({value: BigNumber.from(val)})
-        await this.contract.connect(s).approve(dex, BigNumber.from('10000').pow(18))
+        await network.provider.send("hardhat_setBalance", [
+            await s.getAddress(),
+            "0x10000000000000000000000000000000000000",
+          ]);
+        await this.contract.connect(s).deposit({value: parseEther('100')})
+        await this.contract.connect(s).approve(dex, parseEther('10000'))
     }
 }
 

@@ -143,15 +143,16 @@ contract BGTEligibleERC20 is ERC20 {
     }
 
     function previewAccruedBGT(address user) external view returns (uint256) {
-        uint256 supply = totalSupply();
-        if (supply == 0) {
-            return 0;
-        }
-        (, uint256 pendingBGT) = getPendingBGT();
-        uint256 _accBGTPerShare = accBGTPerShare + (pendingBGT * PRECISION) / supply;
-        uint256 userShares = balanceOf(user);
-        uint256 debtBGT = users[user].debtBGT;
-        return users[user].accBGT + _accBGTPerShare * userShares / PRECISION - debtBGT;
+        return 0;
+        // uint256 supply = totalSupply();
+        // if (supply == 0) {
+        //     return 0;
+        // }
+        // (, uint256 pendingBGT) = getPendingBGT();
+        // uint256 _accBGTPerShare = accBGTPerShare + (pendingBGT * PRECISION) / supply;
+        // uint256 userShares = balanceOf(user);
+        // uint256 debtBGT = users[user].debtBGT;
+        // return users[user].accBGT + _accBGTPerShare * userShares / PRECISION - debtBGT;
     }
 
     function claimBGT(uint256 amount, address recipient, address onBehalfOf) external returns (uint256) {

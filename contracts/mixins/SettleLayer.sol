@@ -159,7 +159,7 @@ contract SettleLayer is AgentMask {
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
-        wrapBeraAndDeposit(uint128(baseFlow));
+        wrapBeraAndDeposit(baseFlow);
         transactToken(recv, recv, quoteFlow, quote, false);
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
@@ -173,10 +173,10 @@ contract SettleLayer is AgentMask {
                          address quote, int128 quoteFlow, uint8 reserveFlags) private {
         if (nativeInReserveUseBase(reserveFlags)) {
             if (base == wbera) {
-                wrapBeraAndDeposit(uint128(-baseFlow));
+                wrapBeraAndDeposit(baseFlow);
                 transactToken(debitor, creditor, quoteFlow, quote, false);
             } else {
-                wrapBeraAndDeposit(uint128(-quoteFlow));
+                wrapBeraAndDeposit(quoteFlow);
                 transactToken(debitor, creditor, baseFlow, base, true);
             }
             return;
@@ -184,10 +184,10 @@ contract SettleLayer is AgentMask {
 
         if (nativeInReserveUseQuote(reserveFlags)) {
             if (base == wbera) {
-                wrapBeraAndDeposit(uint128(-baseFlow));
+                wrapBeraAndDeposit(baseFlow);
                 transactToken(debitor, creditor, quoteFlow, quote, true);
             } else {
-                wrapBeraAndDeposit(uint128(-quoteFlow));
+                wrapBeraAndDeposit(quoteFlow);
                 transactToken(debitor, creditor, baseFlow, base, false);
             }
             return;
@@ -195,10 +195,10 @@ contract SettleLayer is AgentMask {
 
         if (nativeOutReserveFlagBase(reserveFlags)) {
             if (base == wbera) {
-                unwrapWberaAndSend(creditor, uint128(-baseFlow));
+                unwrapWberaAndSend(creditor, baseFlow);
                 transactToken(debitor, creditor, quoteFlow, quote, false);
             } else {
-                unwrapWberaAndSend(creditor, uint128(-quoteFlow));
+                unwrapWberaAndSend(creditor, quoteFlow);
                 transactToken(debitor, creditor, baseFlow, base, true);
             }
             return;
@@ -206,10 +206,10 @@ contract SettleLayer is AgentMask {
 
         if (nativeOutReserveFlagQuote(reserveFlags)) {
             if (base == wbera) {
-                unwrapWberaAndSend(creditor, uint128(-baseFlow));
+                unwrapWberaAndSend(creditor, baseFlow);
                 transactToken(debitor, creditor, quoteFlow, quote, true);
             } else {
-                unwrapWberaAndSend(creditor, uint128(-quoteFlow));
+                unwrapWberaAndSend(creditor, quoteFlow);
                 transactToken(debitor, creditor, baseFlow, base, false);
             }
             return;
@@ -510,14 +510,18 @@ contract SettleLayer is AgentMask {
         }
     }
 
-    function unwrapWberaAndSend (address recv, uint128 value) internal {
-        wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(value)));
-        TransferHelper.safeTransfer(wbera, recv, value);
+    function unwrapWberaAndSend (address recv, int128 value) internal {
+        wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(abs(value))));
+        TransferHelper.safeTransfer(wbera, recv, abs(-value));
     }
 
-    function wrapBeraAndDeposit (uint128 value) internal {
+    function wrapBeraAndDeposit (int128 value) internal {
         uint128 msgValue = popMsgVal();
-        require(msgValue >= value, "TF4");
+        require(msgValue >= abs(value), "TF4");
         wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
+    }
+
+    function abs(int128 x) internal pure returns (uint128) {
+        return x >= 0 ? uint128(x) : uint128(-x);
     }
 }
