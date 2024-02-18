@@ -159,7 +159,7 @@ contract SettleLayer is AgentMask {
                              address base, int128 baseFlow,
                              address quote, int128 quoteFlow) internal {
         (uint256 baseSnap, uint256 quoteSnap) = snapOpenBalance(base, quote);
-        wrapBeraAndDeposit(uint128(-baseFlow));
+        wrapBeraAndDeposit(uint128(baseFlow));
         transactToken(recv, recv, quoteFlow, quote, false);
         assertCloseMatches(base, baseSnap, baseFlow);
         assertCloseMatches(quote, quoteSnap, quoteFlow);
