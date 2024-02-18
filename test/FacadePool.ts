@@ -14,13 +14,12 @@ import { CrocQuery } from "../typechain/CrocQuery";
 import { WBERA } from "../typechain";
 import { buildCrocSwapSex } from "./SetupDex";
 import { getCrocErc20LpAddress } from "../misc/utils/getCrocErc20LpAddress";
-import { parseEther } from "ethers/lib/utils";
 
 chai.use(solidity);
 
 const MAX_LIMIT = BigNumber.from("10").pow(21)
 const MIN_LIMIT = BigNumber.from("0")
-const INIT_BAL = parseEther('100')
+const INIT_BAL = BigNumber.from('10').pow(18)
 export const POOL_IDX = 85365
 
 export interface BeraResponse {
@@ -89,7 +88,6 @@ export async function makePoolFrom(tokenX: Token, tokenY: Token, wbera: WBERA, d
 export async function makeEtherPool(wbera: WBERA,  dex?: CrocSwapDex): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let quote = await factory.deploy() as MockERC20
-
     let pool = new TestPool(new NativeEther(wbera), new ERC20Token(await quote), wbera, dex)
     await pool.fundTokens()
     return pool
@@ -148,7 +146,7 @@ export class WBERAToken implements Token {
 
     async fund(s: Signer, dex: string, val: BigNumberish): Promise<void> {
         await this.contract.connect(s).deposit({value: BigNumber.from(val)})
-        await this.contract.connect(s).approve(dex, BigNumber.from(val))
+        await this.contract.connect(s).approve(dex, BigNumber.from('10000').pow(18))
     }
 }
 
@@ -1025,4 +1023,13 @@ export function encodeCrocPrice(price: number): BigNumber {
     return bnSeed.mul(BigNumber.from(2).pow(scale));
   }
 
+
+  export function decodeCrocPrice(val: BigNumber) {
+    const x = val.lt(Number.MAX_SAFE_INTEGER - 1)
+      ? val.toNumber()
+      : parseFloat(val.toString());
+    const sq = x / 2 ** 64;
+    return sq * sq;
+  }
+  
   

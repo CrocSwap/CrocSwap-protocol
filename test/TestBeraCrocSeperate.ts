@@ -5,6 +5,7 @@ import chai from "chai";
 import { CrocQuery, WBERA } from '../typechain';
 import { parseUnits } from 'ethers/lib/utils';
 import { getCrocErc20LpAddress } from '../misc/utils/getCrocErc20LpAddress';
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -42,7 +43,7 @@ describe('Test Single Step init pool & mint liqudity PRICE = 1', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = parseUnits('1', 18)
+    const initialLiquidity = BigNumber.from('1').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,
@@ -77,7 +78,7 @@ describe('Test Single Step init pool & mint liqudity PRICE = 1', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = parseUnits('1', 18)
+    const initialLiquidity = BigNumber.from('1').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,
@@ -95,11 +96,11 @@ describe('Test Single Step init pool & mint liqudity PRICE = 1', () => {
     await dexWithSigner['userCmd(uint16,bytes)'](test.WARM_PROXY, mintCalldata)
   })
 
-  it("deploy & add liquidity via single step price = 20", async () => {
+  it("deploy & add liquidity via single step price = 5", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
-    const price = 0.001
+    const price = 5
     const slippage = 0.01
     const initPoolCallData = await test.initPoolCalldata(feeRate, 0, 1, price)
 
@@ -112,7 +113,7 @@ describe('Test Single Step init pool & mint liqudity PRICE = 1', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = parseUnits('1', 18)
+    const initialLiquidity = BigNumber.from('1').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,

@@ -6,6 +6,7 @@ import chai from "chai";
 import { CrocQuery, WBERA } from '../typechain';
 import { parseUnits } from 'ethers/lib/utils';
 import { getCrocErc20LpAddress } from '../misc/utils/getCrocErc20LpAddress';
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -27,7 +28,7 @@ describe('Test Multpath init pool & mint liqudity PRICE = 1', () => {
   })
 
   it("deploy & add liquidity via multipath price = 1", async () => {
-    baseToken = await test.wberaToken
+    baseToken = await test.base
     quoteToken = await test.quote
 
     const price = 1
@@ -41,7 +42,7 @@ describe('Test Multpath init pool & mint liqudity PRICE = 1', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = parseUnits('1', 18)
+    const initialLiquidity = BigNumber.from('1').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,
