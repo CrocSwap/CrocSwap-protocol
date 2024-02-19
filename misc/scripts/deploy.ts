@@ -111,41 +111,41 @@ interface CrocAddrs {
   }*/
 
 // Fuji
-// const addrs: CrocAddrs = {
-//   dex: undefined,
-//   cold: undefined,
-//   warm: undefined,
-//   long: undefined,
-//   micro: undefined,
-//   multi: undefined,
-//   hot: undefined,
-//   knockout: undefined,
-//   koCross: undefined,
-//   policy: undefined,
-//   query: undefined,
-//   impact: undefined,
-//   shell: undefined,
-//   multiswap: undefined,
-//   wbera: '0x459C653FaAE6E13b59cf8E005F5f709C7b2c2EB4',
-// };
-
 const addrs: CrocAddrs = {
-    dex: undefined,
-    cold: undefined,
-    warm: undefined,
-    long: undefined,
-    micro: undefined,
-    multi: undefined,
-    hot: undefined,
-    knockout: undefined,
-    koCross: undefined,
-    policy: undefined,
-    query: undefined,
-    impact: undefined,
-    shell: undefined,
-    multiswap: undefined,
-    wbera: undefined,
-  };
+  dex: undefined,
+  cold: undefined,
+  warm: undefined,
+  long: undefined,
+  micro: undefined,
+  multi: undefined,
+  hot: undefined,
+  knockout: undefined,
+  koCross: undefined,
+  policy: undefined,
+  query: undefined,
+  impact: undefined,
+  shell: undefined,
+  multiswap: undefined,
+  wbera: '0x459C653FaAE6E13b59cf8E005F5f709C7b2c2EB4',
+};
+
+// const addrs: CrocAddrs = {
+//     dex: undefined,
+//     cold: undefined,
+//     warm: undefined,
+//     long: undefined,
+//     micro: undefined,
+//     multi: undefined,
+//     hot: undefined,
+//     knockout: undefined,
+//     koCross: undefined,
+//     policy: undefined,
+//     query: undefined,
+//     impact: undefined,
+//     shell: undefined,
+//     multiswap: undefined,
+//     wbera: undefined,
+//   };
 
 // // Berachain-Artio
 // let addrs: CrocAddrs = {

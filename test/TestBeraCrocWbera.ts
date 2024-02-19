@@ -79,10 +79,17 @@ describe('Testing WBERA Pools', () => {
         // this is minting based on the base token. There is an edge case here where the native token is not always
         // the base token due to the sorting. Maybe if thats the case we should swap the callpath to be mintquote
         // instead of mint base
+
+        console.log({
+            baseTokenAddress,
+            quoteTokenAddress,
+            limits,
+            initialLiquidity
+        })
         const mintCalldata = await test.encodeWarmPath(
             baseTokenAddress,
             quoteTokenAddress,
-            baseTokenAddress === ZERO_ADDR ? 31 : 32, // mint base callpath
+            31, // mint base callpath
             0,
             0,
             initialLiquidity,

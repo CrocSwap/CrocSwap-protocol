@@ -15,6 +15,7 @@ import { WBERA } from "../typechain";
 import { buildCrocSwapSex } from "./SetupDex";
 import { getCrocErc20LpAddress } from "../misc/utils/getCrocErc20LpAddress";
 import { parseEther } from "ethers/lib/utils";
+import { BeraCrocMultiSwap } from "../contracts/typechain";
 
 chai.use(solidity);
 
@@ -100,6 +101,17 @@ export async function makeWberaPool(wbera: WBERA): Promise<TestPool> {
     let quote = await factory.deploy() as MockERC20
     let pool = await makePoolFrom(wberaToken, new ERC20Token(await quote), wbera)
     return pool
+}
+
+export async function makeMultiswap(dex: string): Promise<BeraCrocMultiSwap> {
+    console.log('dex addresss', dex)
+    let factory = await ethers.getContractFactory("CrocImpact");
+    let impact = await factory.deploy(dex);
+
+    factory = await ethers.getContractFactory("BeraCrocMultiSwap");
+    const multiSwap = await factory.deploy(dex, impact.address) as BeraCrocMultiSwap;
+
+    return multiSwap;
 }
 
 export interface Token {

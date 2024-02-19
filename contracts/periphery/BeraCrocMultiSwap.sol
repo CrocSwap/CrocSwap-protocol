@@ -4,6 +4,7 @@ import "../CrocSwapDex.sol";
 import "../lens/CrocImpact.sol";
 import "../libraries/SwapHelpers.sol";
 import "../interfaces/IERC20Minimal.sol";
+import "hardhat/console.sol";
 
 contract BeraCrocMultiSwap {
     CrocSwapDex public immutable crocSwapDex;
@@ -129,8 +130,14 @@ contract BeraCrocMultiSwap {
         uint128 _amount,
         uint128 _minOut
     ) internal returns (uint128 out, address nextAsset) {
+        uint256 beraQuantity = 0;
+        if (_step.quote != address(0)) {
+            IERC20Minimal(_step.quote).approve(address(crocSwapDex), uint256(_amount));
+        } else {
+            beraQuantity = uint256(_amount);
+        }
         // Limit price is 0 here for the inverse reason above
-        (int128 baseFlow,) = crocSwapDex.swap(_step.base, _step.quote,
+        (int128 baseFlow,) = crocSwapDex.swap{value: beraQuantity}(_step.base, _step.quote,
                         _step.poolIdx, false, false, _amount, 0, 0, _minOut, 2);
         return (uint128(-baseFlow), _step.base);
     }

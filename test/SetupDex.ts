@@ -66,5 +66,9 @@ export async function buildCrocSwapSex (auth: Promise<Signer>, wbera: WBERA): Pr
     proxy = await factory.deploy();
     cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, MULTICALL_PROXY_IDX]);
     await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
+
+    
     return dex
+    
 }
+
