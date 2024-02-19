@@ -85,13 +85,16 @@ module.exports = {
       ],
     },
     artio2: {
-      url: "http://eth-val-1-v2.berachain-devnet.com:8545",
+      url: "http://localhost:8545",
       chainId: 7,
       gasPrice: 10000000000,
-      accounts: [
-        (process.env.WALLET_KEY as string) ??
-          "0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a",
-      ],
+      accounts: ["0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"],
+    },
+    artio3: {
+      url: "http://eth-rpc-1-v2.berachain-devnet.com:8545",
+      chainId: 7,
+      gasPrice: 10000000000,
+      accounts: ["0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"],
     },
   },
 };
