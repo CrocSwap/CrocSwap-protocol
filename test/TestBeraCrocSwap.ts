@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe.only('Test Multiswap', () => {
+describe('Test Multiswap', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token
@@ -64,8 +64,8 @@ describe.only('Test Multiswap', () => {
 
     await dexWithSigner['userCmd(uint16,bytes)'](test.WARM_PROXY, mintCalldata)
 
-    await baseToken.fund(await test.trader, (await test.dex).address, BigNumber.from('100'))
-    await quoteToken.fund(await test.trader, (await test.dex).address, BigNumber.from('100'))
-    await dexWithSigner.swap(baseToken.address, quoteToken.address, 3600, true, true, parseEther('1'), 0, BigNumber.from('340282366920938463463374607431768211455'), 0 , 2)
+    await baseToken.fund(await test.trader, (await test.dex).address, BigNumber.from('100').pow(18))
+    await quoteToken.fund(await test.trader, (await test.dex).address, BigNumber.from('100').pow(18))
+    await dexWithSigner.swap(baseToken.address, quoteToken.address, test.poolIdx, true, true, parseEther('1'), 0, BigNumber.from('340282366920938463463374607431768211455'), 0 , 2)
   })
 })

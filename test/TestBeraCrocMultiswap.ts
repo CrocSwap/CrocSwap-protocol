@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe('Test Multiswap', () => {
+describe.only('Test Multiswap', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token
@@ -75,7 +75,7 @@ describe('Test Multiswap', () => {
     // const args = [36000,baseToken.address,quoteToken.address,true] as any
 
     const args = [{
-        poolIdx: BigNumber.from('36000'),
+        poolIdx: test.poolIdx,
         base: baseToken.address,
         quote: quoteToken.address,
         isBuy: true
