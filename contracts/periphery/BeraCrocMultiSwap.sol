@@ -4,7 +4,6 @@ import "../CrocSwapDex.sol";
 import "../lens/CrocImpact.sol";
 import "../libraries/SwapHelpers.sol";
 import "../interfaces/IERC20Minimal.sol";
-import "hardhat/console.sol";
 
 contract BeraCrocMultiSwap {
     CrocSwapDex public immutable crocSwapDex;
@@ -49,7 +48,7 @@ contract BeraCrocMultiSwap {
             } else {
                 // Limit price is 0 here for the inverse reason above
                 (int128 baseFlow,,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, false, quantity, 0, 0);
+                step.isBuy, false, quantity, 0, type(uint128).max);
                 // Received amount is always negative
                 quantity = uint128(-baseFlow);
                 nextAsset = step.base;
