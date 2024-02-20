@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe.only('Test Multiswap', () => {
+describe('Test Multiswap MinAmountOut = 0', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token
