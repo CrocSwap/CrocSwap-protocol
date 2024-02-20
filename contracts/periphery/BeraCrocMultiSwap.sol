@@ -48,7 +48,7 @@ contract BeraCrocMultiSwap {
             } else {
                 // Limit price is 0 here for the inverse reason above
                 (int128 baseFlow,,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, false, quantity, 0, type(uint128).max);
+                step.isBuy, false, quantity, 0, quantity);
                 // Received amount is always negative
                 quantity = uint128(-baseFlow);
                 nextAsset = step.base;
