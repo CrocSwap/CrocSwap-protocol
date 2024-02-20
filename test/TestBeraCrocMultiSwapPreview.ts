@@ -2,7 +2,7 @@ import { TestPool, makeTokenPool, Token, createWbera, makeMultiswap } from './Fa
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { solidity } from "ethereum-waffle";
-import chai from "chai";
+import chai, { expect } from "chai";
 import { CrocQuery, WBERA } from '../typechain';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import { getCrocErc20LpAddress } from '../misc/utils/getCrocErc20LpAddress';
@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe('Test Multiswap With Preview', () => {
+describe.only('Test Multiswap With Preview', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token
@@ -157,6 +157,7 @@ describe('Test Multiswap With Preview', () => {
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
     console.log('previewAmount', previewAmount.toString())
+    expect(previewAmount).to.be.gt(BigNumber.from('0'))
     // await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
   })
 })
