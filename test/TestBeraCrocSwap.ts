@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe('Test Multiswap', () => {
+describe('Test Single Swap', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token
@@ -30,7 +30,7 @@ describe('Test Multiswap', () => {
     multiswap = await makeMultiswap((await test.dex).address)
   })
 
-  it("deploy & add liquidity via multipath price = 1", async () => {
+  it("test swap", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
