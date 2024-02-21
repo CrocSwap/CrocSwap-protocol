@@ -1,11 +1,9 @@
 import { JsonRpcProvider, Provider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
-import { BigNumber, BytesLike, Contract, ContractTransaction, Signer, Wallet } from "ethers";
+import { Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
-import { TimelockAccepts } from "../../typechain";
 import { CrocAddrs, CROC_ADDRS } from "../constants/addrs";
-import { CrocCrossPoolParams, CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
+import { CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
 import { RPC_URLS } from "../constants/rpcs";
-import { CrocSwapDex } from "../../contracts/typechain";
 
 export async function traceContractDeploy 
     (deployTx: Promise<Contract>, tag: string): Promise<Contract> {
