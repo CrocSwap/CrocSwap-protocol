@@ -42,7 +42,7 @@ contract BeraCrocMultiSwap {
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, true, quantity, 0, type(uint128).max);
+                step.isBuy, true, quantity, 0, TickMath.MAX_SQRT_RATIO);
                 // Received amount is always negative
                 quantity = uint128(-quoteFlow);
                 nextAsset = step.quote;
@@ -121,7 +121,7 @@ contract BeraCrocMultiSwap {
         // Given that we have full range liquidity, there is no min limit price
         // Slippage can be controlled by the minOut parameter
         (, int128 quoteFlow) = crocSwapDex.swap{value: beraQuantity}(_step.base, _step.quote,
-                            _step.poolIdx, true, true, _amount, 0, type(uint128).max, _minOut, 0x1);
+                            _step.poolIdx, true, true, _amount, 0, TickMath.MAX_SQRT_RATIO, _minOut, 0x1);
         return (uint128(-quoteFlow), _step.quote);
     }
 
