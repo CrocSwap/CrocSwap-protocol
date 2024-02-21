@@ -95,7 +95,7 @@ describe.only('Test Multiswap With Preview', () => {
     console.log('previewAmount', previewAmount.toString())
     // await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
   })
-  it("deploy & add liquidity & multiswap with preview ISBUY FALSE", async () => {
+  it.only("deploy & add liquidity & multiswap with preview ISBUY FALSE", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
@@ -110,7 +110,7 @@ describe.only('Test Multiswap With Preview', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = BigNumber.from('1').pow(18)
+    const initialLiquidity = BigNumber.from('10').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,
@@ -152,12 +152,12 @@ describe.only('Test Multiswap With Preview', () => {
         isBuy: false
     }]
 
-    const amount = parseEther('1')
+    const amount = parseEther('0.000001')
 
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
     console.log('previewAmount', previewAmount.toString())
     expect(previewAmount).to.be.gt(BigNumber.from('0'))
-    // await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
+    await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
   })
 })
