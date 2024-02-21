@@ -161,15 +161,18 @@ export const INIT_TIMELOCK_DELAY = 30
 export async function decodePolicySched (timelock: TimelockAccepts, policy: CrocPolicy,
     dex: CrocSwapDex, schedData: string) {
 
-    let schedCall = timelock.interface.decodeFunctionData("schedule", schedData)
+    let decodeFn = schedData.slice(0, 10) == timelock.interface.getSighash("schedule") ?
+        "schedule" : "execute"
+    let schedCall = timelock.interface.decodeFunctionData(decodeFn, schedData)
     console.log()
-    console.log("Decoded schedule call: ", schedCall)
+    console.log(`Decoded ${decodeFn} call: `, schedCall)
     if (schedCall.target.toLowerCase() !== policy.address.toLowerCase()) {
         throw new Error("Target of schedule call is not CrocPolicy contract")
     }
 
     let policyFn
-    let sigHash = schedCall.data.slice(0, 10)
+    let payload = schedCall.data || schedCall.payload
+    let sigHash = payload.slice(0, 10)
     if (sigHash === policy.interface.getSighash("opsResolution")) {
         policyFn = "opsResolution"
     } else if (sigHash === policy.interface.getSighash("treasuryResolution")) {
@@ -177,7 +180,7 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
     } else {
         throw new Error("Schedule call is not to a known policy function")
     }
-    let policyCall = policy.interface.decodeFunctionData(policyFn, schedCall.data)
+    let policyCall = policy.interface.decodeFunctionData(policyFn, payload)
 
     console.log()
     console.log(`Decoded ${policyFn} call: `, policyCall)
@@ -214,11 +217,11 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
     })
 
     console.log()
-    if (callCode === PROTOCOL_AUTH_TRANSFER_CMD) {
+    if (callCode === PROTOCOL_AUTH_TRANSFER_CMD && policyCall.proxyPath === COLD_PROXY_IDX) {
         console.log(`Decoded protocolCmd as AuthTransfer to new CrocPolicy`)
         console.log(`New authority: ` + "0x" + chunks[1].slice(24, 64))
 
-    } else if (callCode === PROTOCOL_UPGRADE_CMD) {
+    } else if (callCode === PROTOCOL_UPGRADE_CMD && policyCall.proxyPath === BOOT_PROXY_IDX) {
         let proxySlot = BigNumber.from("0x" + chunks[2]).toNumber()
         let proxyLabel = "Unknown"
 
@@ -244,7 +247,7 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
         console.log(`Proxy Slot: ${proxyLabel} (slot ${proxySlot})`)
         console.log(`New contract: ` + "0x" + chunks[1].slice(24, 64))
 
-    } else if (callCode === PROTOCOL_HOT_OPEN_CMD) {
+    } else if (callCode === PROTOCOL_HOT_OPEN_CMD && policyCall.proxyPath === COLD_PROXY_IDX) {
         let isOpen = BigNumber.from("0x" + chunks[1]).toNumber() > 0
         console.log(`Decoded protocolCmd as HotPath ${isOpen ? "Open" : "Close"}`)
 
