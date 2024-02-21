@@ -289,7 +289,7 @@ export class TestPool {
             [ base,      quote,     this.poolIdx, isBuy,     inBase,    qty,      tip,      limitLow, limitHigh, useSurplus]);
     }
 
-    async encodeMintPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
+    async encodeMintPath (lower: number, upper: number, liq: BigNumberish, limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
@@ -397,7 +397,7 @@ export class TestPool {
             [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
     }
 
-    async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
+    async testMint (lower: number, upper: number, liq: BigNumberish, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
@@ -448,14 +448,15 @@ export class TestPool {
     readonly KNOCKOUT_PROXY: number = KNOCKOUT_LP_PROXY_IDX
     readonly EMERGENCY_PROXY: number = SAFE_MODE_PROXY_PATH
 
-    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: BigNumberish, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
+        const lots = BigNumber.from(liq).mul(1024)
         if (this.useHotPath) {
-            let inputBytes = this.encodeMintPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+            let inputBytes = this.encodeMintPath(lower, upper, lots, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, liq*1024))
+            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, lots))
             let inputBytes = encodeOrderDirective(directive);
             return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }

@@ -377,7 +377,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
         
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
-        bool doMore = true;
+        bool doMore = hasSwapLeft(curve, swap);
         while (doMore) {
             // Swap to furthest point we can based on the local bitmap. Don't bother
             // seeking a bump outside the local neighborhood yet, because we're not sure

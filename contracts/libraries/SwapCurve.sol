@@ -51,6 +51,7 @@ library SwapCurve {
                           Directives.SwapDirective memory swap,
                           PoolSpecs.Pool memory pool, int24 bumpTick) pure internal {
         uint128 limitPrice = determineLimit(bumpTick, swap.limitPrice_, swap.isBuy_);
+        uint128 startPrice = curve.priceRoot_;
 
         (int128 paidBase, int128 paidQuote, uint128 paidProto) =
             bookExchFees(curve, swap.qty_, pool, swap.inBaseQty_, limitPrice);
@@ -64,6 +65,12 @@ library SwapCurve {
         (paidBase, paidQuote, swap.qty_) = swapOverCurve
             (curve, swap.inBaseQty_, swap.isBuy_, swap.qty_, limitPrice);
         accum.accumSwap(swap.inBaseQty_, paidBase, paidQuote, 0);
+        assertPriceDirection(swap.isBuy_, curve, startPrice);
+    }
+
+    /* @notice Validates the invariant that the price change is in the direction of the swap. */
+    function assertPriceDirection (bool isBuy, CurveMath.CurveState memory curve, uint128 startPrice) pure private {
+        require(isBuy ? curve.priceRoot_ >= startPrice : curve.priceRoot_ <= startPrice);
     }
 
     /* @notice Calculates the exchange fee given a swap directive and limitPrice. Note 
@@ -124,6 +131,10 @@ library SwapCurve {
                             bool inBaseQty, bool isBuy, uint128 swapQty,
                             uint128 limitPrice) pure private
         returns (int128 paidBase, int128 paidQuote, uint128 qtyLeft) {
+
+        // Invariant check swap direction matches price direction
+        require(isBuy ? limitPrice >= curve.priceRoot_ : limitPrice <= curve.priceRoot_);
+
         uint128 realFlows = curve.calcLimitFlows(swapQty, inBaseQty, limitPrice);
         bool hitsLimit = realFlows < swapQty;
 
@@ -133,9 +144,11 @@ library SwapCurve {
             assertPriceEndStable(curve, qtyLeft, limitPrice);
 
         } else {
+            uint128 startPrice = curve.priceRoot_;
             (paidBase, paidQuote, qtyLeft) = curve.rollFlow
                 (realFlows, inBaseQty, isBuy, swapQty);
             assertFlowEndStable(curve, qtyLeft, isBuy, limitPrice);
+            assertPriceDirection(isBuy, curve, startPrice);
         }
     }
 

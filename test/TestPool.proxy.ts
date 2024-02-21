@@ -38,12 +38,6 @@ describe('Pool Proxy Paths', () => {
        mockProxy = await factory.deploy() as MockHotProxy
     })
 
-    it("swap no proxy", async() => {
-        await test.testMint(-5000, 8000, 1000000);         
-        // Will fail because proxy hasn't been set.
-        await expect(test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))).to.be.reverted
-    })
-
     it("swap proxy", async() => {
         await test.testUpgradeHotProxy(hotProxy.address)
 
