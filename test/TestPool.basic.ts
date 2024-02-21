@@ -21,7 +21,6 @@ describe('Pool', () => {
        quoteToken = await test.quote
 
        await test.initPool(feeRate, 0, 1, 1.5)
-       
        test.useHotPath = false;
     })
 
