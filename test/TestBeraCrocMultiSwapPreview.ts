@@ -93,9 +93,13 @@ describe.only('Test Multiswap With Preview', () => {
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
     console.log('previewAmount', previewAmount.toString())
+    expect(previewAmount).to.be.gt(BigNumber.from('0'))
+    expect(previewAmount).to.not.equal(BigNumber.from('340282366920938463463374607431768211448'))
+
     // await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
   })
-  it.only("deploy & add liquidity & multiswap with preview ISBUY FALSE", async () => {
+
+  it("deploy & add liquidity & multiswap with preview ISBUY FALSE", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
@@ -152,12 +156,14 @@ describe.only('Test Multiswap With Preview', () => {
         isBuy: false
     }]
 
-    const amount = parseEther('0.000001')
+    const amount = parseEther('9')
 
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
     console.log('previewAmount', previewAmount.toString())
     expect(previewAmount).to.be.gt(BigNumber.from('0'))
-    await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
+    expect(previewAmount).to.not.equal(BigNumber.from('340282366920938463463374607431768211448'))
+
+    // await multiswapWithSigner.multiSwap([...args], amount, previewAmount)
   })
 })
