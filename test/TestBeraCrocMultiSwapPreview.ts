@@ -11,7 +11,7 @@ import { BeraCrocMultiSwap } from '../contracts/typechain';
 
 chai.use(solidity);
 
-describe.only('Test Multiswap With Preview', () => {
+describe('Test Multiswap With Preview', () => {
   let test: TestPool
   let baseToken: Token
   let quoteToken: Token

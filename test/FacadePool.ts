@@ -99,6 +99,17 @@ export async function makeWberaPool(wbera: WBERA): Promise<TestPool> {
     const wberaToken: WBERAToken = new WBERAToken(wbera)
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let quote = await factory.deploy() as MockERC20
+    // while(quote.address.toLowerCase() > wberaToken.address.toLowerCase()) {
+    //     quote = await factory.deploy() as MockERC20
+    // }
+    let pool = await makePoolFrom(wberaToken, new ERC20Token(await quote), wbera)
+    return pool
+}
+
+export async function makeWberaPoolWithQuote(wbera: WBERA): Promise<TestPool> {
+    const wberaToken: WBERAToken = new WBERAToken(wbera)
+    let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
+    let quote = await factory.deploy() as MockERC20
     let pool = await makePoolFrom(wberaToken, new ERC20Token(await quote), wbera)
     return pool
 }
@@ -137,8 +148,8 @@ export class ERC20Token implements Token {
     }
 
     async fund(s: Signer, dex: string, val: BigNumberish): Promise<void> {
-        await this.contract.deposit(await s.getAddress(), parseEther('100'))
-        await this.contract.approveFor(await s.getAddress(), dex, parseEther('10000'))
+        await this.contract.deposit(await s.getAddress(), parseEther('1000000000000'))
+        await this.contract.connect(s).approve(dex, parseEther('1000000'))
     }
 }
 
@@ -162,8 +173,8 @@ export class WBERAToken implements Token {
             await s.getAddress(),
             "0x10000000000000000000000000000000000000",
           ]);
-        await this.contract.connect(s).deposit({value: parseEther('100')})
-        await this.contract.connect(s).approve(dex, parseEther('10000'))
+        await this.contract.connect(s).deposit({value: parseEther('10000')})
+        await this.contract.connect(s).approve(dex, parseEther('1000000'))
     }
 }
 
