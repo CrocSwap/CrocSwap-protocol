@@ -512,7 +512,7 @@ contract SettleLayer is AgentMask {
 
     function unwrapWberaAndSend (address recv, int128 value) internal {
         wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(abs(value))));
-        TransferHelper.safeTransfer(wbera, recv, abs(-value));
+        TransferHelper.safeEtherSend(recv, abs(value));
     }
 
     function wrapBeraAndDeposit (int128 value) internal {
