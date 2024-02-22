@@ -36,7 +36,7 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     quoteToken = await test.quote
 
     const price = 0.001
-    const slippage = 0.1
+    const slippage = 0.01
     const initPoolCallData = await test.initPoolCalldata(feeRate, 0, 16, price)
 
     const dexWithSigner = await (await test.dex).connect((await test.trader))
@@ -108,8 +108,10 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
 
 
     console.log("args", args)
+
+    const swapSlippage = 0.9
     const amount = parseEther('0.1')
-    const s = parseUnits(slippage.toString(), 18)
+    const s = parseUnits(swapSlippage.toString(), 18)
 
     let previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], amount)
     let minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
@@ -165,7 +167,7 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
       await getCrocErc20LpAddress(baseToken.address, quoteToken.address, (await test.dex).address)
     )
 
-    const res = await dexWithSigner['userCmd(uint16,bytes)'](test.WARM_PROXY, mintCalldata)
+    await dexWithSigner['userCmd(uint16,bytes)'](test.WARM_PROXY, mintCalldata)
 
     const multiswapWithSigner = await multiswap.connect((await test.trader))
 
