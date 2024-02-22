@@ -31,9 +31,23 @@ const mainnetParams: CrocPoolParams = {
     }
 }
 
+const testnetParams: CrocPoolParams = {
+    universal: {
+        initLiq: 10000
+    },
+    stdPoolIdx: 36000,
+    stdPoolParams: {
+        jitThresh: 30,
+        tickSize: 16,
+        feeBps: 27,
+        knockoutOn: true
+    }
+}
+
 const goerliDryRunParams = mainnetParams
 
 export const CROC_POOL_PARAMS = {
     '0x1': mainnetParams,
     '0x5': goerliDryRunParams,
+    '0xaa36a7': mainnetParams,
 }
