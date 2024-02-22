@@ -31,7 +31,7 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     multiswap = await makeMultiswap((await test.dex).address)
   })
 
-  it("deploy & add liquidity & multiswap with native bera WITH SLIPPAGE", async () => {
+  it.only("deploy & add liquidity & multiswap with native bera WITH SLIPPAGE", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
@@ -96,7 +96,7 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
       poolIdx: test.poolIdx,
       base: baseTokenAddress,
       quote: quoteTokenAddress,
-      isBuy: false
+      isBuy: true
     }]
 
     const args2 = [{
@@ -109,28 +109,45 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
 
     console.log("args", args)
 
-    const swapSlippage = 0.9
-    const amount = parseEther('0.1')
+    const swapSlippage = 0.01
+    const amount = parseEther('1')
     const s = parseUnits(swapSlippage.toString(), 18)
 
     let previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], amount)
     let minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
 
     console.log("minAmountOut", minAmountOut.toString())
+
+    const trader = await (await test.trader).getAddress()
+    let quoteBalanceB4 = await quoteToken.balanceOf(trader)
+    console.log(quoteBalanceB4.toString())
+    console.log('SWAP 1')
     await multiswapWithSigner.multiSwap([...args], amount, minAmountOut, {
       value: amount
     })
-    previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs2], amount)
+    let quoteBalanceAfter = await quoteToken.balanceOf(trader)
+    console.log(quoteBalanceAfter.toString())
+
+    let diff = quoteBalanceAfter.sub(quoteBalanceB4).toString()
+    console.log("diff", diff)
+
+    const newswapamount2 = parseEther('0.001')
+    previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], newswapamount2)
     minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
 
-    await multiswapWithSigner.multiSwap([...args2], amount, minAmountOut, {
-      value: amount
+    console.log('SWAP 2', minAmountOut.toString())
+    await multiswapWithSigner.multiSwap([...args], newswapamount2, minAmountOut, {
+      value: newswapamount2
     })
-    previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], amount)
+    console.log('AFTER SWAP 2')
+
+    const newswapamount = parseEther('1')
+    previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], newswapamount)
     minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
 
-    await multiswapWithSigner.multiSwap([...args], amount, minAmountOut, {
-      value: amount
+    console.log('SWAP 3', minAmountOut.toString())
+    await multiswapWithSigner.multiSwap([...args], newswapamount, minAmountOut, {
+      value: newswapamount
     })
     // const balanceAfter = await (await test.trader).getBalance()
     // expect(balanceAfter).to.be.gt(balanceBefore)
@@ -198,7 +215,7 @@ describe.only('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
 
 
     console.log("args", args)
-    const amount = parseEther('0.1')
+    const amount = parseEther('1')
     await multiswapWithSigner.multiSwap([...args], amount, 0, {
       value: amount
     })
