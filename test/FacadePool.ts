@@ -173,8 +173,8 @@ export class WBERAToken implements Token {
             await s.getAddress(),
             "0x10000000000000000000000000000000000000",
           ]);
-        await this.contract.connect(s).deposit({value: parseEther('10000')})
-        await this.contract.connect(s).approve(dex, parseEther('1000000'))
+        await this.contract.connect(s).deposit({value: parseEther('1000000000000')})
+        await this.contract.connect(s).approve(dex, parseEther('10000000000'))
     }
 }
 
