@@ -144,7 +144,7 @@ const addrs: CrocAddrs = {
     impact: undefined,
     shell: undefined,
     multiswap: undefined,
-    wbera: undefined,
+    wbera: "0x5eB2ef04616cf2d2aC7Ba7F6B084bD9aF160A9f3",
   };
 
 // // Berachain-Artio

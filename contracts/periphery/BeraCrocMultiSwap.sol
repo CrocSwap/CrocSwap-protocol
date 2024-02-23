@@ -17,6 +17,8 @@ contract BeraCrocMultiSwap {
         _deployer = msg.sender;
     }
 
+    receive() external payable {}
+
     /* @notice Preview a series of swaps between multiple pools.
      *
      * @dev A convenience method for previewing a series of swaps in sequence. This is

@@ -34,7 +34,7 @@ describe('Test Multiswap With Preview', () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
-    const price = 0.01
+    const price = 0.0001
     const slippage = 0.1
 
     const initPoolCallData = await test.initPoolCalldata(feeRate, 0, 1, price)
@@ -45,7 +45,7 @@ describe('Test Multiswap With Preview', () => {
     };
 
     const limits = await test.transformLimits([priceLimits.min, priceLimits.max])
-    const initialLiquidity = BigNumber.from('1').pow(18)
+    const initialLiquidity = BigNumber.from('10').pow(18)
 
     const mintCalldata = await test.encodeWarmPath(
       test.base.address,
@@ -88,7 +88,7 @@ describe('Test Multiswap With Preview', () => {
         isBuy: true
     }]
 
-    const amount = parseEther('1')
+    const amount = parseEther('0.22')
 
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
@@ -103,7 +103,7 @@ describe('Test Multiswap With Preview', () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
-    const price = 0.01
+    const price = 0.0001
     const slippage = 0.1
 
     const initPoolCallData = await test.initPoolCalldata(feeRate, 0, 1, price)
@@ -156,7 +156,7 @@ describe('Test Multiswap With Preview', () => {
         isBuy: false
     }]
 
-    const amount = parseEther('9')
+    const amount = parseEther('1')
 
     const previewAmount = await multiswapWithSigner.previewMultiSwap([...args], amount)
 
