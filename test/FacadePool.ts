@@ -15,6 +15,7 @@ import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
 import { BootPath } from "../contracts/typechain";
 import { buildCrocSwapSex } from "./SetupDex";
+import { CrocSwapRouter, CrocSwapRouterBypass } from "../typechain";
 
 chai.use(solidity);
 
@@ -92,6 +93,7 @@ export interface Token {
     balanceOf: (address: string) => Promise<BigNumber>
     fund: (s: Signer, dex: string, val: BigNumberish) => Promise<void>
     sendEth: boolean
+    approve: (s: Signer, addr: string, val: BigNumberish) => Promise<void>
 }
 
 export class ERC20Token implements Token {
@@ -112,6 +114,10 @@ export class ERC20Token implements Token {
     async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         await this.contract.deposit(await s.getAddress(), BigNumber.from(val))
         await this.contract.approveFor(await s.getAddress(), dex, BigNumber.from(val))
+    }
+
+    async approve (s: Signer, addr: string, val: BigNumberish): Promise<void> {
+        await this.contract.approveFor(await s.getAddress(), addr, BigNumber.from(val))
     }
 }
 
@@ -134,11 +140,14 @@ export class NativeEther implements Token {
     async fund (s: Signer, dex: string, val: BigNumberish): Promise<void> {
         // Signed should already be funded
     }
+    async approve (s: Signer, addr: string, val: BigNumberish): Promise<void> { }
 }
 
 export class TestPool {
     dex: Promise<CrocSwapDex>
     query: Promise<CrocQuery>
+    router: Promise<CrocSwapRouter>
+    routerBypass: Promise<CrocSwapRouterBypass>
     trader: Promise<Signer>
     auth: Promise<Signer>
     other: Promise<Signer>
@@ -149,7 +158,7 @@ export class TestPool {
     baseSnap: Promise<BigNumber>
     quoteSnap: Promise<BigNumber>
     useHotPath: boolean
-    useSwapProxy: { optimal: boolean, base: boolean }
+    useSwapProxy: { optimal: boolean, base: boolean, router: boolean, bypass: boolean }
     lpConduit: string
     startLimit: BigNumber
     overrides: PayableOverrides
@@ -158,6 +167,8 @@ export class TestPool {
     liqQty: boolean
     liqBase: boolean
     initTemplBefore: boolean
+    slippage?: BigNumber
+    gasSpent: BigNumber
 
     constructor (base: Token, quote: Token, dex?: CrocSwapDex) {
         this.base = base
@@ -175,6 +186,7 @@ export class TestPool {
         this.liqQty = false
         this.liqBase = true
         this.initTemplBefore = true
+        this.gasSpent = BigNumber.from(0)
 
         factory = ethers.getContractFactory("CrocSwapDexSeed")
         if (dex) {
@@ -186,12 +198,20 @@ export class TestPool {
         factory = ethers.getContractFactory("CrocQuery")
         this.query = factory.then(f => this.dex.then(
             d => f.deploy(d.address))) as Promise<CrocQuery>
+
+        factory = ethers.getContractFactory("CrocSwapRouter")
+        this.router = factory.then(f => this.dex.then(
+            d => f.deploy(d.address))) as Promise<CrocSwapRouter>
+
+        factory = ethers.getContractFactory("CrocSwapRouterBypass")
+        this.routerBypass = factory.then(f => this.dex.then(
+            d => f.deploy(d.address))) as Promise<CrocSwapRouterBypass>
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
         this.useHotPath = false;
-        this.useSwapProxy = { optimal: false, base: false }
+        this.useSwapProxy = { optimal: false, base: false, router: false, bypass: false }
         this.lpConduit = ZERO_ADDR
         this.startLimit = BigNumber.from(0)
         this.knockoutBits = 0
@@ -289,7 +309,7 @@ export class TestPool {
             [ base,      quote,     this.poolIdx, isBuy,     inBase,    qty,      tip,      limitLow, limitHigh, useSurplus]);
     }
 
-    async encodeMintPath (lower: number, upper: number, liq: number, limitLow: BigNumber, limitHigh: BigNumber,
+    async encodeMintPath (lower: number, upper: number, liq: BigNumberish, limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
@@ -397,7 +417,7 @@ export class TestPool {
             [ callCode, base, quote, this.poolIdx, bidTick, askTick, isBid, useSurplus, inner])
     }
 
-    async testMint (lower: number, upper: number, liq: number, useSurplus?: number): Promise<ContractTransaction> {
+    async testMint (lower: number, upper: number, liq: BigNumberish, useSurplus?: number): Promise<ContractTransaction> {
         return this.testMintFrom(await this.trader, lower, upper, liq, useSurplus)
     }
 
@@ -448,14 +468,15 @@ export class TestPool {
     readonly KNOCKOUT_PROXY: number = 7;
     readonly EMERGENCY_PROXY: number = 9999
 
-    async testMintFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: BigNumberish, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
+        const lots = BigNumber.from(liq).mul(1024)
         if (this.useHotPath) {
-            let inputBytes = this.encodeMintPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+            let inputBytes = this.encodeMintPath(lower, upper, lots, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, liq*1024))
+            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, lots))
             let inputBytes = encodeOrderDirective(directive);
             return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
@@ -547,20 +568,39 @@ export class TestPool {
 
     async testSwapFrom (from: Signer, isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
         useSurplus: number = 0): Promise<ContractTransaction> {
-        const slippage = inBaseQty == isBuy ? BigNumber.from(0) : BigNumber.from(2).pow(126)
+        const slippage = this.slippage ? this.slippage :
+            (inBaseQty == isBuy ? BigNumber.from(0) : BigNumber.from(2).pow(126))
         await this.snapStart()
-        if (this.useSwapProxy.base) {
+
+        let tx;
+        if (this.useSwapProxy.router) {
+            tx = (await this.router).connect(from).swap((await this.base).address, (await this.quote).address, 
+                this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
+        } else if (this.useSwapProxy.bypass) {
+            tx = (await this.routerBypass).connect(from).swap((await this.base).address, (await this.quote).address, 
+                this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
+        } else if (this.useSwapProxy.base) {
             let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, slippage, useSurplus)
-            return (await this.dex).connect(from).userCmd(this.HOT_PROXY, encoded, this.overrides)
+            tx = (await this.dex).connect(from).userCmd(this.HOT_PROXY, encoded, this.overrides)
         } else if (this.useHotPath) {
-            return (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address, 
+            tx = (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address, 
                 this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
                 (await this.quote).address, simpleSwap(this.poolIdx, isBuy, inBaseQty, Math.abs(qty), price))
             let inputBytes = encodeOrderDirective(directive);
-            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
+            tx = (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }
+
+        await this.incrementGasSpend(await tx)
+        return tx
+    }
+
+    async incrementGasSpend (tx: ContractTransaction) {
+        let gasSpent = (await tx.wait()).gasUsed
+        let gasPrice = (tx.gasPrice || BigNumber.from(0))
+        let gasCost = gasPrice.mul(gasSpent)
+        this.gasSpent = this.gasSpent.add(gasCost)
     }
 
     async testOrder (order: OrderDirective, noOverrides?: boolean): Promise<ContractTransaction> {
@@ -763,7 +803,11 @@ export class TestPool {
     async snapBaseOwed(): Promise<BigNumber> {
         let lastSnap = await this.baseSnap
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
-        return lastSnap.sub(await this.baseSnap)
+        if (this.base.address == ZERO_ADDR) {
+            return lastSnap.sub(await this.baseSnap).sub(this.gasSpent)
+        } else {
+            return lastSnap.sub(await this.baseSnap)
+        }
     }
 
     async snapQuoteOwed(): Promise<BigNumber> {
@@ -773,6 +817,7 @@ export class TestPool {
     }
 
     async snapStart() {
+        this.gasSpent = BigNumber.from(0)
         await this.snapBaseOwed();
         await this.snapQuoteOwed();
     }
