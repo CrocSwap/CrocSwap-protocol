@@ -14,6 +14,8 @@ export interface CrocAddrs {
     query: string,
     impact: string,
     shell: string,
+    swapRouter?: string,
+    swapBypass?: string,
     policyShell: string,
     deployer: string,
     govern: CrocGovAddrs
@@ -97,7 +99,9 @@ const mainnetAddrs: CrocAddrs = {
     timelockTreasury: '0x7237C120FCA2081f1A36AB933B065389174962B7',
     timelockOps: '0x41114A13230625A2735FaA7183e528Ed2538cB7b',
     timelockEmergency: '0x7237C120FCA2081f1A36AB933B065389174962B7'
-  }
+  },
+  swapRouter: '0x533E164ded63f4c55E83E1f409BDf2BaC5278035',
+  swapBypass: '0xa3e58B0cB05447398358B6C59E4B2465342EFEd2'
 }
 
 
