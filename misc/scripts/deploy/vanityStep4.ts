@@ -38,6 +38,11 @@ async function install() {
     addrs.impact = (await inflateAddr("CrocImpact", addrs.impact, authority, addrs.dex)).address
     console.log(addrs)
 
+    addrs.swapRouter = (await inflateAddr("CrocSwapRouter", addrs.swapRouter || "", authority, addrs.dex)).address
+    console.log(addrs)
+
+    addrs.swapBypass = (await inflateAddr("CrocSwapRouterBypass", addrs.swapBypass || "", authority, addrs.dex)).address
+    console.log(addrs)
 }
 
 install()

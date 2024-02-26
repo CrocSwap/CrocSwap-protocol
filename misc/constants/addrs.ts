@@ -14,9 +14,11 @@ export interface CrocAddrs {
     query: string,
     impact: string,
     shell: string,
+    swapRouter?: string,
+    swapBypass?: string,
     policyShell: string,
     deployer: string,
-    govern: CrocGovAddrs
+    govern: CrocGovAddrs,
 }
 
 export interface CrocGovAddrs {
