@@ -223,7 +223,9 @@ const scrollMainnet: CrocAddrs = {
     timelockTreasury: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916',
     timelockOps: '0xDb0eE1193C4D05eb644efb2a1db13275b8F5994f',
     timelockEmergency: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916'
-  }
+  },
+  swapRouter: '0xfB5f26851E03449A0403Ca945eBB4201415fd1fc',
+  swapBypass: '0xED5535C6237f72BD9b4fDEAa3b6D8d9998b4C4e4'
 }
 
 const beraTestnet: CrocAddrs = {
