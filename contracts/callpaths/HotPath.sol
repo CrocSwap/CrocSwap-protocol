@@ -112,6 +112,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
             limitPrice, minOutput, reserveFlags);
     }
 
+    /* @notice Wraps a swap call with a log event. */
     function swapExecuteLogged (address base, address quote,
                           uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
                           uint16 poolTip, uint128 limitPrice, uint128 minOutput,
