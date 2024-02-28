@@ -14,6 +14,7 @@ export const MICRO_PROXY_IDX = 131;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;
+export const BLAST_PROXY_PATH = 24648;
 
 export async function buildCrocSwapSex (auth: Promise<Signer>): Promise<CrocSwapDex> {
     const abi = new AbiCoder()
@@ -60,6 +61,11 @@ export async function buildCrocSwapSex (auth: Promise<Signer>): Promise<CrocSwap
     proxy = await factory.deploy()
     cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, SAFE_MODE_PROXY_PATH])
     await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true) 
+
+    factory = await ethers.getContractFactory("BlastPath")
+    proxy = await factory.deploy()
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, proxy.address, BLAST_PROXY_PATH])
+    await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true)
 
     return dex
 }
