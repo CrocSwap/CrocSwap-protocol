@@ -208,6 +208,8 @@ library CrocSlots {
     uint16 constant LONG_PROXY_LEGACY_IDX = 4;
     uint16 constant MICRO_PROXY_LEGACY_IDX = 5;
 
+    // Blast Extension proxy contract
+    uint16 constant BLAST_PROXY_INDEX = 24648;
 }
 
 // Not used in production. Just used so we can easily check struct size in hardhat.
