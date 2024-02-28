@@ -37,7 +37,7 @@ export function simpleSettle (token: string): SettlementDirective {
         dustThresh: BigNumber.from(0), useSurplus: false }
 }
 
-export function simpleMint (poolIdx: BigNumberish, lowerTick: number, upperTick: number, liq: number): PoolDirective  {
+export function simpleMint (poolIdx: BigNumberish, lowerTick: number, upperTick: number, liq: BigNumberish): PoolDirective  {
      return { 
         poolIdx: poolIdx,
         passive: {

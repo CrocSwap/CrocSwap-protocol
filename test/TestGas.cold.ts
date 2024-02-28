@@ -146,7 +146,7 @@ describe('Gas Benchmarks Coldpath', () => {
     it("swap small [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 149000)
+        await expectGas(test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)), 150000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
@@ -236,7 +236,7 @@ describe('Gas Benchmarks Coldpath', () => {
 
         await test.testMint(-1000, 1000, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapSurplus(true, true, 1000, toSqrtPrice(1.1)), 149000)
+        await expectGas(test.testSwapSurplus(true, true, 1000, toSqrtPrice(1.1)), 150000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 

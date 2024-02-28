@@ -120,7 +120,6 @@ contract HotProxy is HotPath {
 
     function userCmd (bytes calldata input) public payable
         returns (int128 baseFlow, int128 quoteFlow) {
-        require(!hotPathOpen_, "Hot path enabled");
         (baseFlow, quoteFlow) = swapEncoded(input);
         emit CrocEvents.CrocHotCmd(input, baseFlow, quoteFlow);
     }

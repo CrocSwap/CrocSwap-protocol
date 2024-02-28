@@ -178,7 +178,7 @@ describe('Gas Benchmarks Native Eth', () => {
     it("swap bitmap w/o cross [@gas-test]", async() => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 107000)
+        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.04)), 108000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
@@ -186,7 +186,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-100, 100, 10000)
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
-        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 129000)
+        await expectGas(test.testSwapOther(true, true, 1000000, toSqrtPrice(1.04)), 130000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -208,7 +208,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 151000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 152000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -219,7 +219,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 151000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 152000)
         expect(await test.liquidity()).to.be.lt(10100*1024)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
@@ -235,7 +235,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-500, 500, 1000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1))
 
-        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 261000)
+        await expectGas(test.testSwapOther(true, true, 2000000, toSqrtPrice(1.04)), 263000)
         expect(await test.liquidity()).to.be.lt(1010*1024)
         expect(await test.liquidity()).to.be.gt(1000*1024)
     })

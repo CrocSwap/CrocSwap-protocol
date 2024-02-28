@@ -14,9 +14,11 @@ export interface CrocAddrs {
     query: string,
     impact: string,
     shell: string,
+    swapRouter?: string,
+    swapBypass?: string,
     policyShell: string,
     deployer: string,
-    govern: CrocGovAddrs
+    govern: CrocGovAddrs,
 }
 
 export interface CrocGovAddrs {
@@ -204,8 +206,8 @@ const scrollMainnet: CrocAddrs = {
   cold: '0xa01C4E40FE62c3FFd7152569E20a5BDAd23F171D',
   warm: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
   long: '0xe3150C65446Dc05505ac33B51D742E9458fE0BfE',
-  micro: '0x646929453E753565467f330110850885eAd93fA9',
-  hot: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  micro: '0x418C68Ce5B73783abe178dB12dfEe9375D965dbb',
+  hot: '0xe1eC23F5069586cd4CDe4E693A354e7a45E12608',
   knockout: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
   koCross: '0x67231C7Db63e5D7378596AaDD6BA69345E6a53aA',
   policy: '0x70b161F2f0A18Bd1865021F25f9e895021E9DC4f',
@@ -221,7 +223,9 @@ const scrollMainnet: CrocAddrs = {
     timelockTreasury: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916',
     timelockOps: '0xDb0eE1193C4D05eb644efb2a1db13275b8F5994f',
     timelockEmergency: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916'
-  }
+  },
+  swapRouter: '0xfB5f26851E03449A0403Ca945eBB4201415fd1fc',
+  swapBypass: '0xED5535C6237f72BD9b4fDEAa3b6D8d9998b4C4e4'
 }
 
 const beraTestnet: CrocAddrs = {
