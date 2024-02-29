@@ -11,6 +11,7 @@ export interface CrocAddrs {
     knockout: string,
     koCross: string,
     policy: string,
+    blast?: string,
     query: string,
     impact: string,
     shell: string,
@@ -253,6 +254,34 @@ const beraTestnet: CrocAddrs = {
   }
 }
 
+const blastSepolia: CrocAddrs = {
+  dex: '0xf65976C7f25b6320c7CD81b1db10cEe97F2bb7AC',
+  cold: '0x568eA644AB4F4a6A310C748c424f50B831338CAE',
+  warm: '0x2bf2366A4Be0b618C9f3c616e13306F68A197Df4',
+  long: '0xE962D52000eB6c694C7d746F7e85784bce242A2f',
+  micro: '0xD4ebD9fD0842e3c5AA02c8b6a5DF5fDa2F5f7C0A',
+  hot: '0x64D6EbE3E1Bd4B833c8c2b18a742Cd6141883522',
+  knockout: '0xac7f282fe13dec369eb739Be244ae553C4Cd53fB',
+  koCross: '0x8cBe64923066691AF90e60DC8907223962A074cF',
+  policy: '0x384e0bF86FB52Be54c47d020C3eD9f74f2C285E2',
+  query: '0x7757BAEC9c492691eAE235c6f01FB99AaA622975',
+  impact: '0x5D42d6046927DEE12b9b4a235be0ceCd55D0E0fb',
+  shell: '',
+  policyShell: '',
+  deployer: '0x343733Aa5bFaE9fD7160e675F0E284590056D0ad',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0xdCB3b5ec9170beF68E9fff21F0EDD622F72f1899',
+  swapBypass: '0x3A6E9cff691a473D4D0742E1dFc8Ea263a99F6d0',
+  blast: '0x0b9C892DBd5d241E0678Ba8641e9b6ffAAB63Fc9'
+}
+
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
@@ -260,6 +289,7 @@ export let CROC_ADDRS = {
     '0x8274f': scrollSepolia,
     '0x82750': scrollMainnet,
     '0x80D': beraTestnet,
+    '0xa0c71fd': blastSepolia,
     'mock': mockAddrs,
 }
 
@@ -278,7 +308,8 @@ export let POOL_IDXS = {
     '0x1389': 36000,
     '0x8274f': 36000,
     '0x82750': 420,
-    '0x80D': 36000
+    '0x80D': 36000,
+    '0xa0c71fd': 36000,
 }
 
 export const BOOT_PROXY_IDX = 0;

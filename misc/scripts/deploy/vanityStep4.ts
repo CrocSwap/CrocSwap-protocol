@@ -29,6 +29,9 @@ async function install() {
     addrs.warm = (await inflateAddr("WarmPath", addrs.warm, authority)).address
     console.log(addrs)
 
+    addrs.blast = (await inflateAddr("BlastPath", addrs.blast || "", authority)).address
+    console.log(addrs)
+
     addrs.policy = (await inflateAddr("CrocPolicy", addrs.policy, authority, addrs.dex)).address
     console.log(addrs)
 

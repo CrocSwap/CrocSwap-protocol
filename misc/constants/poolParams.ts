@@ -65,4 +65,5 @@ export const CROC_POOL_PARAMS = {
     '0x8274f': l2TestnetParams,
     '0x82750': l2MainnetParams,
     '0x80D': l2TestnetParams,
+    '0xa0c71fd': l2TestnetParams,
 }

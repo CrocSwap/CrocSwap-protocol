@@ -1,6 +1,7 @@
 /* Installs the major sidecar proxy contracts to CrocSwapDex through CrocPolicy
  * calls. */
 
+import { BLAST_PROXY_PATH } from '../../../test/SetupDex';
 import { ColdPath, CrocPolicy, CrocSwapDex } from '../../../typechain';
 import { BOOT_PROXY_IDX, FLAG_CROSS_PROXY_IDX, KNOCKOUT_LP_PROXY_IDX, LONG_PROXY_IDX, LP_PROXY_IDX, MICRO_PROXY_IDX, SWAP_PROXY_IDX } from '../../constants/addrs';
 import { inflateAddr, initChain, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
@@ -39,6 +40,10 @@ async function install() {
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.koCross, FLAG_CROSS_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
         addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install knockout cross proxy path")
+
+    cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.blast, BLAST_PROXY_PATH])
+    await traceContractTx(policy.treasuryResolution(
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install blast proxy path")
 }
 
 install()

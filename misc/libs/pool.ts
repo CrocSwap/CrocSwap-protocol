@@ -2,6 +2,7 @@ import { AbiCoder } from "@ethersproject/abi";
 import { COLD_PROXY_IDX } from "../constants/addrs";
 import { CrocPoolParams } from "../constants/poolParams";
 import { CrocProtocolCmd } from "./governance";
+import { BLAST_PROXY_PATH } from "../../test/SetupDex";
 
 export function initLiqCmd (params: CrocPoolParams): CrocProtocolCmd {
     const abi = new AbiCoder()
@@ -46,5 +47,56 @@ export function poolStdTemplCmd (params: CrocPoolParams): CrocProtocolCmd {
         protocolCmd: templCmd,
         callpath: COLD_PROXY_IDX,
         sudo: false
+    }
+}
+
+export function blastConfigYieldTestnetCmd() {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        userCmd: abiCoder.encode(["uint256"], [182354])
+    }
+}
+
+export function blastConfigYieldMainnetCmd() {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        userCmd: abiCoder.encode(["uint256"], [182354])
+    }
+}
+
+const BLAST_USDB_TESTNET = '0x4200000000000000000000000000000000000022'
+const BLAST_USDB_MAINNET = '0x4300000000000000000000000000000000000003'
+
+export function blastConfigUsdbTestnet() {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        userCmd: abiCoder.encode(["uint256", "address"], [182356, BLAST_USDB_TESTNET])
+    }
+}
+
+export function blastConfigUsdbMainnet() {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        userCmd: abiCoder.encode(["uint256", "address"], [182356, BLAST_USDB_MAINNET])
+    }
+}
+
+export function blastConfigPointsTestnet (pointsOperator: string) {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        protocolCmd: abiCoder.encode(["uint256", "address"], [182352, pointsOperator])
+    }
+}
+
+export function blastConfigPointsMainnet (pointsOperator: string) {
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        protocolCmd: abiCoder.encode(["uint256", "address"], [182351, pointsOperator])
     }
 }
