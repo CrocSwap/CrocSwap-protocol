@@ -9,5 +9,6 @@ export const RPC_URLS = {
     '0x82750': 'https://rpc.scroll.io',
     '0x80D': 'https://rpc.berachain-internal.com/',
     '0xa0c71fd': 'https://sepolia.blast.io',
+    "0x13e31": "https://rpc.ankr.com/blast"
 }
 

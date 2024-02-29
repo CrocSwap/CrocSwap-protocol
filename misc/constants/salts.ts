@@ -23,12 +23,16 @@ CREATE2_SALTS.set('0x754EEF5862082607184e7A3aB08CEA76EF928285'.toLowerCase(),
 // Blast Sepolia salt
 CREATE2_SALTS.set('0x343733Aa5bFaE9fD7160e675F0E284590056D0ad'.toLowerCase(), 
     '0x7bdf2029500c02474d9b3c61fb3ab3fbce5329b7dc7445234bb7251c8036d386')
-    
+
+// Blast Mainnet salt
+CREATE2_SALTS.set('0x754EEF5862082607184e7A3aB08CEA76EF928285'.toLowerCase(), 
+    '0x79649194a80994b86c379f158f2879e062551218a7b7f156bdaedfd1792afc37')
 
 export function mapSalt (deployerAddr: string): BigNumber {
     const lookup = CREATE2_SALTS.get(deployerAddr.toLowerCase())
     if (!lookup) {
         throw new Error(`No salt found for ${deployerAddr}`)
     }
+    console.log(lookup)
     return BigNumber.from(lookup)
 }

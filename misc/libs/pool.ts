@@ -85,7 +85,8 @@ export function blastConfigUsdbMainnet() {
     }
 }
 
-export function blastConfigPointsTestnet (pointsOperator: string) {
+// Flips the command code, because the listed ProtocolCmd has mainnet and testnet inverted
+export function blastConfigPointsMainnet (pointsOperator: string) {
     let abiCoder = new AbiCoder()
     return {
         callpath: BLAST_PROXY_PATH,
@@ -93,7 +94,7 @@ export function blastConfigPointsTestnet (pointsOperator: string) {
     }
 }
 
-export function blastConfigPointsMainnet (pointsOperator: string) {
+export function blastConfigPointsTestnet (pointsOperator: string) {
     let abiCoder = new AbiCoder()
     return {
         callpath: BLAST_PROXY_PATH,
