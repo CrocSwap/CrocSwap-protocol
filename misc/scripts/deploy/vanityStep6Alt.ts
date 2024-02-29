@@ -20,7 +20,7 @@ async function install() {
     let policy = (await inflateAddr("CrocPolicy", addrs.policy, authority)) as CrocPolicy
     let dex = (await inflateAddr("CrocSwapDex", addrs.dex, authority)) as CrocSwapDex
 
-    /*let initCmd = initLiqCmd(poolParams)
+    let initCmd = initLiqCmd(poolParams)
     await traceContractTx(policy.opsResolution(addrs.dex, initCmd.callpath, 
         initCmd.protocolCmd, txArgs), "Set pool init liquidity")
 
@@ -38,14 +38,14 @@ async function install() {
         let pointsCmd = blastConfigPointsTestnet(authority.address)
         await traceContractTx(policy.treasuryResolution(addrs.dex, pointsCmd.callpath, pointsCmd.protocolCmd, true),
             "Set points config")
-    }*/
+    }
 
     if (chainId === "0x13e31") {
-        /*let yieldCmd = blastConfigYieldMainnetCmd()
+        let yieldCmd = blastConfigYieldMainnetCmd()
         await traceContractTx(dex.userCmd(yieldCmd.callpath, yieldCmd.userCmd),  "Set yield config")
 
         let usdbCmd = blastConfigUsdbMainnet()
-        await traceContractTx(dex.userCmd(usdbCmd.callpath, usdbCmd.userCmd),  "Set usdb yield config")*/
+        await traceContractTx(dex.userCmd(usdbCmd.callpath, usdbCmd.userCmd),  "Set usdb yield config")
 
         let pointsCmd = blastConfigPointsTestnet(authority.address)
         await traceContractTx(policy.treasuryResolution(addrs.dex, pointsCmd.callpath, pointsCmd.protocolCmd, true),
