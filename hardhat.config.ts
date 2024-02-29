@@ -85,13 +85,19 @@ module.exports = {
       beraTestnet: {
         url: "https://rpc.berachain-internal.com/",
         chainId: 2061,
+      },
+
+      blastSepolia: {
+        url: "https://sepolia.blast.io",
+        chainId: 168587773,
       }
     },
 
     etherscan: {
       apiKey: {
         scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
-        beraTestnet: "xxxxx"
+        beraTestnet: "xxxxx",
+        blastSepolia: "xxxxx"
       },
       customChains: [
         {
@@ -109,6 +115,15 @@ module.exports = {
           urls: {
             apiURL: "https://scan-api.berachain-internal.com/api/",
             browserURL: "https://scan.berachain-internal.com"
+          }
+        },
+
+        {
+          network: "blastSepolia",
+          chainId: 168587773,
+          urls: {
+            apiURL: "https://api.routescan.io/v2/network/testnet/evm/168587773/etherscan",
+            browserURL: "https://testnet.blastscan.io"
           }
         }
       ]
