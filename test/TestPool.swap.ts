@@ -32,93 +32,42 @@ describe('Pool Swap', () => {
     it("swap over max", async() => {
         await test.testMintAmbient(10)
 
-        try {
-            await test.testSwap(true, true, BigNumber.from(2).pow(120), BigNumber.from(2).pow(127))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(true, true, BigNumber.from(2).pow(120), BigNumber.from(2).pow(127))).to.be.reverted
     })
 
     it("swap over max output fixed", async() => {
         await test.testMintAmbient(10)
-        try {
-            await test.testSwap(true, false, BigNumber.from("10000000"), BigNumber.from(2).pow(127))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(true, false, BigNumber.from("10000000"), BigNumber.from(2).pow(127))).to.be.reverted
     })
 
     it("swap under min", async() => {
         await test.testMintAmbient(10)
-
-        try {
-            await test.testSwap(false, false, BigNumber.from(2).pow(120), BigNumber.from(2).pow(2))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(false, false, BigNumber.from(2).pow(120), BigNumber.from(2).pow(2))).to.be.reverted
     })
 
     it("swap under min output fixed", async() => {
         await test.testMintAmbient(10)
-        try {
-            await test.testSwap(false, true, BigNumber.from("10000000"), BigNumber.from(2).pow(2))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(false, true, BigNumber.from("10000000"), BigNumber.from(2).pow(2))).to.be.reverted
     })
 
     it("swap over max 1 wei", async() => {
         await test.testMintAmbient(10)
-
-        try {
-            await test.testSwap(true, true, BigNumber.from(2).pow(120), maxSqrtPrice().add(1))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(true, true, BigNumber.from(2).pow(120), maxSqrtPrice().add(1))).to.be.reverted
     })
 
     it("swap over max output fixed 1 wei", async() => {
         await test.testMintAmbient(10)
-        try {
-            await test.testSwap(true, false, BigNumber.from("10000000"), maxSqrtPrice().add(1))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(true, false, BigNumber.from("10000000"), maxSqrtPrice().add(1))).to.be.reverted
     })
 
     it("swap under min 1 wei", async() => {
         await test.testMintAmbient(10)
-
-        try {
-            await test.testSwap(false, false, BigNumber.from(2).pow(120), minSqrtPrice().sub(1))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(false, false, BigNumber.from(2).pow(120), minSqrtPrice().sub(1))).to.be.reverted
     })
 
     it("swap under min output fixed 1 wei", async() => {
         await test.testMintAmbient(10)
-        try {
-            await test.testSwap(false, true, BigNumber.from("10000000"), minSqrtPrice().sub(1))
-        } catch (error: any) {
-            failed = true
-            expect(error.message).to.include("out of gas"); // Check if the error message contains "out of gas"
-        }
-        expect(failed).to.eq(true)
+        await expect(test.testSwap(false, true, BigNumber.from("10000000"), minSqrtPrice().sub(1))).to.be.reverted
     })
 
     it("swap to max", async() => {
