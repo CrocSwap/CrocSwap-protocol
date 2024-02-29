@@ -12,6 +12,7 @@ export interface CrocAddrs {
     koCross: string,
     policy: string,
     blast?: string,
+    blastPointsOps?: string
     query: string,
     impact: string,
     shell: string,
@@ -294,6 +295,7 @@ const blastMainnet: CrocAddrs  = {
   policy: '0x503E3DfDdD22D1c4A9787D2DAc8643AFc58c162C',
   query: '0xA3BD3bE19012De72190c885FB270beb93e36a8A7',
   impact: '0x6A699AB45ADce02891E6115b81Dfb46CAa5efDb9',
+  blastPointsOps: "0xd45C74BFB150Bc2Cb94e471638283e99E4Da14EB",
   shell: '',
   policyShell: '',
   deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
