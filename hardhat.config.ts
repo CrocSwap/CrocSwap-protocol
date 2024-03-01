@@ -90,6 +90,11 @@ module.exports = {
       blastSepolia: {
         url: "https://sepolia.blast.io",
         chainId: 168587773,
+      },
+
+      blast: {
+        url: "https://rpc.ankr.com/blast",
+        chainId: 81457,
       }
     },
 
@@ -97,7 +102,8 @@ module.exports = {
       apiKey: {
         scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
         beraTestnet: "xxxxx",
-        blastSepolia: "xxxxx"
+        blastSepolia: "xxxxx",
+        blast: "YJ2H4UVVK2Q783PVB2SJYN38D5D6HXE5BY"
       },
       customChains: [
         {
@@ -124,6 +130,15 @@ module.exports = {
           urls: {
             apiURL: "https://api.routescan.io/v2/network/testnet/evm/168587773/etherscan",
             browserURL: "https://testnet.blastscan.io"
+          }
+        },
+
+        {
+          network: "blast",
+          chainId: 81457,
+          urls: {
+            apiURL: "https://api.blastscan.io/api",
+            browserURL: "https://blastscan.io"
           }
         }
       ]
