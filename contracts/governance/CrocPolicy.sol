@@ -90,7 +90,7 @@ contract CrocPolicy is ICrocMaster {
     
     /* @param dex Underlying CrocSwapDex contract */
     constructor (address dex) {
-        require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
+        require(dex != address(0) && CrocSwapDex(payable(dex)).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
         opsAuthority_ = msg.sender;
         treasuryAuthority_ = msg.sender;

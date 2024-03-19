@@ -56,3 +56,19 @@ export function maxSqrtPrice(): BigNumber {
 export function minSqrtPrice(): BigNumber {
     return BigNumber.from("65538")
 }
+
+export function encodeCrocPrice(price: number): BigNumber {
+    let floatPrice = Math.sqrt(price) * 2 ** 64;
+    let scale = 0;
+  
+    const PRECISION_BITS = 16;
+    while (floatPrice > Number.MAX_SAFE_INTEGER) {
+      floatPrice = floatPrice / 2 ** PRECISION_BITS;
+      scale = scale + PRECISION_BITS;
+    }
+  
+    const pinPrice = Math.round(floatPrice);
+    const bnSeed = BigNumber.from(pinPrice);
+  
+    return bnSeed.mul(BigNumber.from(2).pow(scale));
+  }

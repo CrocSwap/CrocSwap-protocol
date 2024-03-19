@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -8,6 +8,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { ContractTransaction, BigNumber, ContractFactory } from 'ethers';
 import { HotProxy } from '../typechain/HotProxy';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -20,8 +21,14 @@ describe('Gas Benchmarks Proxy Sidecars', () => {
     const feeRate = 225 * 100
     let hotProxy: HotProxy
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        await test.fundTokens()
 
        let factory = await ethers.getContractFactory("HotProxy") as ContractFactory

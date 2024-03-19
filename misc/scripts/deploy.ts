@@ -14,7 +14,8 @@ import {
     KnockoutFlagPath,
     KnockoutLiqPath,
     MultiPath,
-    BeraCrocMultiSwap
+    BeraCrocMultiSwap,
+    WBERA
 } from "../../typechain";
 
 interface CrocAddrs {
@@ -32,6 +33,7 @@ interface CrocAddrs {
     impact: string | undefined;
     shell: string | undefined;
     multiswap: string | undefined;
+    wbera: string | undefined;
 }
 
 /* Ropsten */
@@ -109,22 +111,41 @@ interface CrocAddrs {
   }*/
 
 // Fuji
+// const addrs: CrocAddrs = {
+//   dex: undefined,
+//   cold: undefined,
+//   warm: undefined,
+//   long: undefined,
+//   micro: undefined,
+//   multi: undefined,
+//   hot: undefined,
+//   knockout: undefined,
+//   koCross: undefined,
+//   policy: undefined,
+//   query: undefined,
+//   impact: undefined,
+//   shell: undefined,
+//   multiswap: undefined,
+//   wbera: '0x459C653FaAE6E13b59cf8E005F5f709C7b2c2EB4',
+// };
+
 const addrs: CrocAddrs = {
-  dex: undefined,
-  cold: undefined,
-  warm: undefined,
-  long: undefined,
-  micro: undefined,
-  multi: undefined,
-  hot: undefined,
-  knockout: undefined,
-  koCross: undefined,
-  policy: undefined,
-  query: undefined,
-  impact: undefined,
-  shell: undefined,
-  multiswap: undefined,
-};
+    dex: undefined,
+    cold: undefined,
+    warm: undefined,
+    long: undefined,
+    micro: undefined,
+    multi: undefined,
+    hot: undefined,
+    knockout: undefined,
+    koCross: undefined,
+    policy: undefined,
+    query: undefined,
+    impact: undefined,
+    shell: undefined,
+    multiswap: undefined,
+    wbera: "0x5eB2ef04616cf2d2aC7Ba7F6B084bD9aF160A9f3",
+  };
 
 // // Berachain-Artio
 // let addrs: CrocAddrs = {
@@ -183,12 +204,16 @@ const override = {gasLimit: 6000000};
 async function createDexContracts(): Promise<CrocSwapDex> {
     let factory;
 
+    factory = await ethers.getContractFactory("WBERA")
+    const wbera = addrs.wbera ? factory.attach(addrs.wbera) : ((await factory.deploy(override)) as WBERA);
+    addrs.wbera = wbera.address;
+
     factory = await ethers.getContractFactory("WarmPath");
-    const warmPath = addrs.warm ? factory.attach(addrs.warm) : ((await factory.deploy(override)) as WarmPath);
+    const warmPath = addrs.warm ? factory.attach(addrs.warm) : ((await factory.deploy(addrs.wbera, override)) as WarmPath);
     addrs.warm = warmPath.address;
 
     factory = await ethers.getContractFactory("LongPath");
-    const longPath = addrs.long ? factory.attach(addrs.long) : ((await factory.deploy(override)) as LongPath);
+    const longPath = addrs.long ? factory.attach(addrs.long) : ((await factory.deploy(addrs.wbera, override)) as LongPath);
     addrs.long = longPath.address;
 
     factory = await ethers.getContractFactory("MicroPaths");
@@ -200,17 +225,17 @@ async function createDexContracts(): Promise<CrocSwapDex> {
     addrs.multi = multiPath.address;
 
     factory = await ethers.getContractFactory("ColdPath");
-    const coldPath = addrs.cold ? factory.attach(addrs.cold) : ((await factory.deploy(override)) as ColdPath);
+    const coldPath = addrs.cold ? factory.attach(addrs.cold) : ((await factory.deploy(addrs.wbera, override)) as ColdPath);
     addrs.cold = coldPath.address;
 
     factory = await ethers.getContractFactory("HotProxy");
-    const hotPath = addrs.hot ? factory.attach(addrs.hot) : ((await factory.deploy(override)) as HotPath);
+    const hotPath = addrs.hot ? factory.attach(addrs.hot) : ((await factory.deploy(addrs.wbera, override)) as HotPath);
     addrs.hot = hotPath.address;
 
     factory = await ethers.getContractFactory("KnockoutLiqPath");
     const knockoutPath = addrs.knockout
         ? factory.attach(addrs.knockout)
-        : ((await factory.deploy(override)) as KnockoutLiqPath);
+        : ((await factory.deploy(addrs.wbera, override)) as KnockoutLiqPath);
     addrs.knockout = knockoutPath.address;
 
     factory = await ethers.getContractFactory("KnockoutFlagPath");
@@ -220,7 +245,7 @@ async function createDexContracts(): Promise<CrocSwapDex> {
     addrs.koCross = crossPath.address;
 
     factory = await ethers.getContractFactory("CrocSwapDex");
-    const dex = (addrs.dex ? factory.attach(addrs.dex) : await factory.deploy(override)) as CrocSwapDex;
+    const dex = (addrs.dex ? factory.attach(addrs.dex) : await factory.deploy(addrs.wbera, override)) as CrocSwapDex;
     addrs.dex = dex.address;
 
     console.log(addrs);
@@ -256,9 +281,11 @@ async function createPeripheryContracts(dexAddr: string): Promise<CrocPolicy> {
 }
 
 async function installPolicy(dex: CrocSwapDex) {
+    console.log("Installing Policy...");
     const authCmd = abi.encode(["uint8", "address"], [20, addrs.policy]);
     const tx = await dex.protocolCmd(COLD_PROXY_IDX, authCmd, true, override);
     await tx.wait();
+    console.log("Policy installed.");
 }
 
 async function installSidecars(dex: CrocSwapDex) {
@@ -267,37 +294,54 @@ async function installSidecars(dex: CrocSwapDex) {
     let cmd;
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.cold, COLD_PROXY_IDX]);
+    console.log("Installing Cold Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Cold Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.warm, LP_PROXY_IDX]);
+    console.log("Installing LP Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("LP Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.hot, SWAP_PROXY_IDX]);
+    console.log("Installing Swap Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Swap Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.long, LONG_PROXY_IDX]);
+    console.log("Installing Long Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Long Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.micro, MICRO_PROXY_IDX]);
+    console.log("Installing Micro Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Micro Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.multi, MULTICALL_PROXY_IDX]);
+    console.log("Installing Multicall Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Multicall Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.knockout, KNOCKOUT_LP_PROXY_IDX]);
+    console.log("Installing Knockout LP Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Knockout LP Path installed.");
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.koCross, FLAG_CROSS_PROXY_IDX]);
+    console.log("Installing Knockout Cross Path...");
     tx = await dex.protocolCmd(BOOT_PROXY_IDX, cmd, true);
-    await tx;
+    await tx.wait();
+    console.log("Knockout Cross Path installed.");
 }
+
 
 async function initPoolTemplate(policy: CrocPolicy) {
     const POOL_INIT_LIQ = 10000;
@@ -310,16 +354,22 @@ async function initPoolTemplate(policy: CrocPolicy) {
     const knockoutFlag = KNOCKOUT_ON_FLAG + KNOCKOUT_TICKS_FLAG;
 
     if (addrs.dex) {
+        console.log("Installing Treasury Resolution...");
+
         const setPoolLiqCmd = abi.encode(["uint8", "uint128"], [112, POOL_INIT_LIQ]);
         let tx = await policy.treasuryResolution(addrs.dex, COLD_PROXY_IDX, setPoolLiqCmd, false, override);
         await tx.wait();
+        console.log("Treasury Resolution installed.");
 
+        console.log("Installing Ops Resolution...");
         const templateCmd = abi.encode(
             ["uint8", "uint256", "uint16", "uint16", "uint8", "uint8", "uint8"],
             [110, POOL_IDX, FEE_BPS * 100, TICK_SIZE, JIT_THRESH, knockoutFlag, 0],
         );
         tx = await policy.opsResolution(addrs.dex, COLD_PROXY_IDX, templateCmd, override);
         await tx.wait();
+        console.log("Ops Resolution installed.");
+        return
     }
 }
 
@@ -336,6 +386,8 @@ async function deploy() {
     await installPolicy(dex);
 
     await initPoolTemplate(policy);
+
+    return
 
     // let factory = await ethers.getContractFactory("MockERC20");
     // let dai = (await factory.deploy()) as MockERC20;

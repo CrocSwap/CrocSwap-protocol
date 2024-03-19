@@ -138,16 +138,28 @@ library CurveMath {
     function calcLimitFlows (CurveState memory curve, uint128 swapQty,
                              bool inBaseQty, uint128 limitPrice)
         internal pure returns (uint128) {
-        uint128 limitFlow = calcLimitFlows(curve, inBaseQty, limitPrice);
-        return limitFlow > swapQty ? swapQty : limitFlow;
+        // Calculates the total swap flow it takes to reach the limit price
+        uint256 limitFlow = calcLimitFlows(curve, inBaseQty, limitPrice);
+
+        // If the swap qty exceeds the limit flow, it implies we'll reach the limit
+        // price on this swap step, and should only collect fees on the flow for this
+        // step. 
+        if (limitFlow < type(uint128).max) {
+            return limitFlow > swapQty ? swapQty : limitFlow.toUint128();
+        } else {
+            // If estimated limitFlow exceeds uint128.max that bounds token flows, (which can
+            // happen when we're trying to swap with no effective limit price), then swapQty
+            // by definition is less than the limitFlow value, since it's a uint128 val
+            return swapQty;
+        }
     }
     
     function calcLimitFlows (CurveState memory curve, bool inBaseQty,
-                             uint128 limitPrice) private pure returns (uint128) {
+                             uint128 limitPrice) private pure returns (uint256) {
         uint128 liq = activeLiquidity(curve);
         return inBaseQty ?
-            deltaBase(liq, curve.priceRoot_, limitPrice) :
-            deltaQuote(liq, curve.priceRoot_, limitPrice);
+            deltaBase256(liq, curve.priceRoot_, limitPrice) :
+            deltaQuote256(liq, curve.priceRoot_, limitPrice);
     }
 
     /* @notice Calculates the change to base token reserves associated with a price
@@ -165,6 +177,16 @@ library CurveMath {
         }
     }
 
+    /* @notice Same as deltaBase() but does not cast to uint128. */
+    function deltaBase256 (uint128 liq, uint128 priceX, uint128 priceY)
+        internal pure returns (uint256) {
+        unchecked {
+        uint128 priceDelta = priceX > priceY ?
+            priceX - priceY : priceY - priceX; // Condition assures never underflows
+        return reserveAtPrice256(liq, priceDelta, true);
+        }
+    }
+
     /* @notice Calculates the change to quote token reserves associated with a price
      *   move along an AMM curve of constant liquidity.
      * 
@@ -173,6 +195,12 @@ library CurveMath {
      *   below the true mathematical value. Caller should account for this */
     function deltaQuote (uint128 liq, uint128 price, uint128 limitPrice)
         internal pure returns (uint128) {
+        return deltaQuote256(liq, price, limitPrice).toUint128();
+    }
+
+    /* @notice Same as deltaQuote() but does not cast to uint128. */
+    function deltaQuote256 (uint128 liq, uint128 price, uint128 limitPrice)
+        internal pure returns (uint256) {
         // For purposes of downstream calculations, we make sure that limit price is
         // larger. End result is symmetrical anyway
         if (limitPrice > price) {
@@ -216,7 +244,7 @@ library CurveMath {
      *    Y2/Z2 >= 1
      *    Z2 >= Y2 */
     function calcQuoteDelta (uint128 liq, uint128 priceBig, uint128 priceSmall)
-        private pure returns (uint128) {
+        private pure returns (uint256) {
         uint128 priceDelta = priceBig - priceSmall;
 
         // This is cast to uint256 but is guaranteed to be less than 2^192 based off
@@ -232,7 +260,7 @@ library CurveMath {
         // condition of Z2 >= Y2 is satisfied and the equation caps at a maximum of 2
         // wei of precision loss.
         uint256 termTwo = termOne * uint256(priceDelta) / uint256(priceBig);
-        return termTwo.toUint128();
+        return termTwo;
     }
 
     /* @notice Returns the amount of virtual reserves give the price and liquidity of the
@@ -252,9 +280,15 @@ library CurveMath {
      *   classical constant- product AMM without concentrated liquidity.  */
     function reserveAtPrice (uint128 liq, uint128 price, bool inBaseQty)
         internal pure returns (uint128) {
+        return reserveAtPrice256(liq, price, inBaseQty).toUint128();
+    }
+
+    /* @notice Same as reserveAtPrice() but does not cast to uint128. */
+    function reserveAtPrice256 (uint128 liq, uint128 price, bool inBaseQty)
+        internal pure returns (uint256) {
         return (inBaseQty ?
                     uint256(FixedPoint.mulQ64(liq, price)) :
-                    uint256(FixedPoint.divQ64(liq, price))).toUint128();
+                    uint256(FixedPoint.divQ64(liq, price)));
     }
 
     /* @notice Calculated the amount of concentrated liquidity within a price range

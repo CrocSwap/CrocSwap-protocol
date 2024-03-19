@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { ContractTransaction, BigNumber } from 'ethers';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -17,9 +18,14 @@ describe('Gas Benchmarks Coldpath', () => {
     let test: TestPool
     let initTx: Promise<ContractTransaction>
     const feeRate = 225 * 100
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
 
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        await test.fundTokens()
 
        initTx = test.initPool(feeRate, 0, 1, 1.0)

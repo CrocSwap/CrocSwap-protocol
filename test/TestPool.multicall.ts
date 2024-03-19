@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -11,6 +11,7 @@ import { BytesLike, Wallet, Signer, BigNumber, Transaction } from 'ethers';
 import { AddressZero } from '@ethersproject/constants';
 import { CrocSwapDex } from '../typechain/CrocSwapDex';
 import { CrocQuery } from '../typechain/CrocQuery';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -30,9 +31,13 @@ describe('Pool Multi Path', () => {
     const feeRate = 225 * 100
     const SALT = 2500
     const initBal = 100000
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 

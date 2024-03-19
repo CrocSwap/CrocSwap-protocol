@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -9,6 +9,7 @@ import { MockERC20 } from '../typechain/MockERC20';
 import { MockCrocNonceOracle } from '../typechain/MockCrocNonceOracle';
 import { BytesLike, Wallet, Signer, BigNumber, Transaction } from 'ethers';
 import { AddressZero } from '@ethersproject/constants';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -21,8 +22,14 @@ describe('Pool Router Agent', () => {
     let third: string
     const feeRate = 225 * 100
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
@@ -123,9 +130,14 @@ describe('Pool Relayer Agent', () => {
     let accts: Wallet[]
     const feeRate = 225 * 100
     const SALT = 2500
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
 
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 

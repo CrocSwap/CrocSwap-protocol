@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -9,7 +9,7 @@ import chai from "chai";
 // import { HotProxy } from '../typechain/HotProxy';
 import { ContractFactory } from 'ethers';
 import { MockHotProxy } from '../typechain/MockHotProxy';
-import { HotProxy, MockProxySidecar } from '../typechain';
+import { HotProxy, MockProxySidecar, WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -20,9 +20,13 @@ describe('Pool Proxy Paths', () => {
     let hotProxy: HotProxy
     let mockProxy: MockHotProxy
     const feeRate = 225 * 100
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 

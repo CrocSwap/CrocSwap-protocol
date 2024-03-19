@@ -17,7 +17,7 @@ contract CrocQuery {
 
     /* @param dex The address of the CrocSwapDex contract. */    
     constructor (address dex) {
-        require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
+        require(dex != address(0) && CrocSwapDex(payable(dex)).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
     }
     
@@ -32,8 +32,8 @@ contract CrocQuery {
         public view returns (CurveMath.CurveState memory curve) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
-        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
-        uint256 valTwo = CrocSwapDex(dex_).readSlot(uint256(slot)+1);
+        uint256 valOne = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
+        uint256 valTwo = CrocSwapDex(payable(dex_)).readSlot(uint256(slot)+1);
         
         curve.priceRoot_ = uint128((valOne << 128) >> 128);
         curve.ambientSeeds_ = uint128(valOne >> 128);
@@ -46,7 +46,7 @@ contract CrocQuery {
         public view returns (PoolSpecs.Pool memory pool) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.POOL_PARAM_SLOT));
-        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 valOne = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         pool.schema_ = uint8(valOne);
         pool.feeRate_ = uint16(valOne >> 8);
@@ -60,7 +60,7 @@ contract CrocQuery {
     function queryPoolTemplate (uint256 poolIdx)
         public view returns (PoolSpecs.Pool memory pool) {
         bytes32 slot = keccak256(abi.encode(poolIdx, CrocSlots.POOL_TEMPL_SLOT));
-        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 valOne = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         pool.schema_ = uint8(valOne);
         pool.feeRate_ = uint16(valOne >> 8);
@@ -82,7 +82,7 @@ contract CrocQuery {
         public view returns (int24) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
-        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 valOne = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
         
         uint128 curvePrice = uint128((valOne << 128) >> 128);
         return TickMath.getTickAtSqrtRatio(curvePrice);
@@ -124,7 +124,7 @@ contract CrocQuery {
         public view returns (uint128 surplus) {
         bytes32 key = keccak256(abi.encode(owner, token));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.BAL_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
         surplus = uint128((val << 128) >> 128);
     }
 
@@ -146,7 +146,7 @@ contract CrocQuery {
     function queryProtocolAccum (address token) public view returns (uint128) {
         bytes32 key = bytes32(uint256(uint160(token)));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.FEE_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
         return uint128(val);
     }
 
@@ -170,7 +170,7 @@ contract CrocQuery {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 key = keccak256(abi.encodePacked(poolHash, tick));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.LVL_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         odometer = uint64(val >> 192);
         askLots = uint96((val << 64) >> 160);
@@ -198,7 +198,7 @@ contract CrocQuery {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 key = KnockoutLiq.encodePivotKey(poolHash, isBid, tick);
         bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_PIVOT_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         lots = uint96((val << 160) >> 160);
         pivot = uint32((val << 128) >> 224);
@@ -227,7 +227,7 @@ contract CrocQuery {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 key = KnockoutLiq.encodePivotKey(poolHash, isBid, tick);
         bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_MERKLE_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         root = uint160((val << 96) >> 96);
         pivot = uint32((val << 64) >> 224);
@@ -280,7 +280,7 @@ contract CrocQuery {
         private view returns (uint96 lots, uint64 mileage, uint32 timestamp) {
         bytes32 key = KnockoutLiq.encodePosKey(loc, poolHash, owner, pivot);
         bytes32 slot = keccak256(abi.encodePacked(key, CrocSlots.KO_POS_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         lots = uint96((val << 160) >> 160);
         mileage = uint64((val << 96) >> 224);
@@ -310,7 +310,7 @@ contract CrocQuery {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 posKey = keccak256(abi.encodePacked(owner, poolHash, lowerTick, upperTick));
         bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.POS_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         liq = uint128((val << 128) >> 128);
         fee = uint64((val >> 128) << (128 + 64) >> (128 + 64));
@@ -334,7 +334,7 @@ contract CrocQuery {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 posKey = keccak256(abi.encodePacked(owner, poolHash));
         bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.AMB_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         seeds = uint128((val << 128) >> 128);
         timestamp = uint32((val >> (128)) << (128 + 32) >> (128 + 32));

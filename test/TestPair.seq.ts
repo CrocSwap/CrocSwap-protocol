@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeTokenNext, makeTokenSeq, makeTokenTriangle } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeTokenNext, makeTokenSeq, makeTokenTriangle, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -8,6 +8,7 @@ import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
 import { ConcentratedDirective } from './EncodeOrder';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -16,9 +17,13 @@ describe('Sequence Pair', () => {
     let test2: TestPool
     let test3: TestPool
     const feeRate = 0
-    
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-        let tests = await makeTokenSeq()
+        let tests = await makeTokenSeq(wbera)
         test = tests[0]
         test2 = tests[1]
         test3 = tests[2]
@@ -276,9 +281,13 @@ describe('Sequence Triangle', () => {
     let test2: TestPool
     let test3: TestPool
     const feeRate = 0
-    
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-        let tests = await makeTokenTriangle()
+        let tests = await makeTokenTriangle(wbera)
         test = tests[0]
         test2 = tests[1]
         test3 = tests[2]

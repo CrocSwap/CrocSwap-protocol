@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 import "../CrocSwapDex.sol";
 import "../lens/CrocImpact.sol";
 import "../libraries/SwapHelpers.sol";
+import "../libraries/TickMath.sol";
 import "../interfaces/IERC20Minimal.sol";
 
 contract BeraCrocMultiSwap {
@@ -11,10 +12,12 @@ contract BeraCrocMultiSwap {
     address private immutable _deployer;
 
     constructor(address _crocSwapDex, address _crocImpact) {
-        crocSwapDex = CrocSwapDex(_crocSwapDex);
+        crocSwapDex = CrocSwapDex(payable(_crocSwapDex));
         crocImpact = CrocImpact(_crocImpact);
         _deployer = msg.sender;
     }
+
+    receive() external payable {}
 
     /* @notice Preview a series of swaps between multiple pools.
      *
@@ -41,14 +44,14 @@ contract BeraCrocMultiSwap {
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, true, quantity, 0, type(uint128).max);
+                step.isBuy, true, quantity, 0, TickMath.MAX_SQRT_RATIO-1);
                 // Received amount is always negative
                 quantity = uint128(-quoteFlow);
                 nextAsset = step.quote;
             } else {
                 // Limit price is 0 here for the inverse reason above
                 (int128 baseFlow,,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, false, quantity, 0, 0);
+                step.isBuy, false, quantity, 0, TickMath.MIN_SQRT_RATIO);
                 // Received amount is always negative
                 quantity = uint128(-baseFlow);
                 nextAsset = step.base;
@@ -120,7 +123,7 @@ contract BeraCrocMultiSwap {
         // Given that we have full range liquidity, there is no min limit price
         // Slippage can be controlled by the minOut parameter
         (, int128 quoteFlow) = crocSwapDex.swap{value: beraQuantity}(_step.base, _step.quote,
-                            _step.poolIdx, true, true, _amount, 0, type(uint128).max, _minOut, 2);
+                            _step.poolIdx, true, true, _amount, 0, TickMath.MAX_SQRT_RATIO-1, _minOut, 0x1);
         return (uint128(-quoteFlow), _step.quote);
     }
 
@@ -129,9 +132,15 @@ contract BeraCrocMultiSwap {
         uint128 _amount,
         uint128 _minOut
     ) internal returns (uint128 out, address nextAsset) {
+        uint256 beraQuantity = 0;
+        if (_step.quote != address(0)) {
+            IERC20Minimal(_step.quote).approve(address(crocSwapDex), uint256(_amount));
+        } else {
+            beraQuantity = uint256(_amount);
+        }
         // Limit price is 0 here for the inverse reason above
-        (int128 baseFlow,) = crocSwapDex.swap(_step.base, _step.quote,
-                        _step.poolIdx, false, false, _amount, 0, 0, _minOut, 2);
+        (int128 baseFlow,) = crocSwapDex.swap{value: beraQuantity}(_step.base, _step.quote,
+                        _step.poolIdx, false, false, _amount, 0, TickMath.MIN_SQRT_RATIO, _minOut, 0x2);
         return (uint128(-baseFlow), _step.base);
     }
 
