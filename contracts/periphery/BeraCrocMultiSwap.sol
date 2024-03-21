@@ -2,18 +2,24 @@ pragma solidity 0.8.19;
 
 import "../CrocSwapDex.sol";
 import "../lens/CrocImpact.sol";
+import "../lens/CrocQuery.sol";
+import "../libraries/FixedPoint.sol";
 import "../libraries/SwapHelpers.sol";
 import "../libraries/TickMath.sol";
 import "../interfaces/IERC20Minimal.sol";
 
 contract BeraCrocMultiSwap {
+    using FixedPointMathLib for uint256;
+
     CrocSwapDex public immutable crocSwapDex;
     CrocImpact private immutable crocImpact;
+    CrocQuery private immutable crocQuery;
     address private immutable _deployer;
 
-    constructor(address _crocSwapDex, address _crocImpact) {
+    constructor(address _crocSwapDex, address _crocImpact, address _crocQuery) {
         crocSwapDex = CrocSwapDex(payable(_crocSwapDex));
         crocImpact = CrocImpact(_crocImpact);
+        crocQuery = CrocQuery(_crocQuery);
         _deployer = msg.sender;
     }
 
@@ -27,38 +33,46 @@ contract BeraCrocMultiSwap {
      *      perform.
      *  
      * @param steps The series of swap steps to be performed in sequence.
-     * @return out The amount to be received from the multiswap. */
+     * @return out The amount to be received from the multiswap.
+     * @return predictedQty The predicted amount to be received from the multiswap if
+     *         there is no price impact.
+      */
     function previewMultiSwap(
-        SwapHelpers.SwapStep[] memory _steps,
-            uint128 _amount
-    ) external view returns (uint128 out) {
+        SwapHelpers.SwapStep[] calldata _steps,
+        uint128 _amount
+    ) external view returns (uint128 out, uint256 predictedQty) {
         require(_steps.length != 0, "No steps provided");
-        SwapHelpers.SwapStep memory initStep = _steps[0]; 
+        SwapHelpers.SwapStep calldata initStep = _steps[0];
         uint128 quantity = _amount;
         address nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
-        for (uint256 i=0; i < _steps.length; ) {
-            SwapHelpers.SwapStep memory step = _steps[i];
-            require(nextAsset == (step.isBuy ? step.base : step.quote), "Invalid swap sequence");
+        predictedQty = _amount;
+        for (uint256 i; i < _steps.length; ) {
+            SwapHelpers.SwapStep calldata step = _steps[i];
+            uint128 price = crocQuery.queryPrice(step.base, step.quote, step.poolIdx);
             if (step.isBuy) {
+                require(nextAsset == step.base, "Invalid swap sequence");
                 // We use the max uint128 as the limit price to ensure the swap executes
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, true, quantity, 0, TickMath.MAX_SQRT_RATIO-1);
+                    step.isBuy, true, quantity, 0, TickMath.MAX_SQRT_RATIO - 1);
                 // Received amount is always negative
                 quantity = uint128(-quoteFlow);
+                predictedQty = predictedQty.mulDiv(price * price, FixedPoint.Q128);
                 nextAsset = step.quote;
             } else {
+                require(nextAsset == step.quote, "Invalid swap sequence");
                 // Limit price is 0 here for the inverse reason above
                 (int128 baseFlow,,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                step.isBuy, false, quantity, 0, TickMath.MIN_SQRT_RATIO);
+                    step.isBuy, false, quantity, 0, TickMath.MIN_SQRT_RATIO);
                 // Received amount is always negative
                 quantity = uint128(-baseFlow);
+                predictedQty = predictedQty.mulDiv(FixedPoint.Q128, price * price);
                 nextAsset = step.base;
             }
             unchecked { i++; }
         }
-        return quantity;
+        return (quantity, predictedQty);
     }
 
     /* @notice Performs a series of swaps between multiple pools.
@@ -73,39 +87,39 @@ contract BeraCrocMultiSwap {
      *         (Negative indicates a credit paid to the user, positive a debit collected
      *         from the user) */
     function multiSwap (
-            SwapHelpers.SwapStep[] memory _steps,
-            uint128 _amount,
-            uint128 _minOut
-        ) public payable returns (uint128 out) {
-            require(_steps.length != 0, "No steps provided");
+        SwapHelpers.SwapStep[] memory _steps,
+        uint128 _amount,
+        uint128 _minOut
+    ) public payable returns (uint128 out) {
+        require(_steps.length != 0, "No steps provided");
 
-            // Variables for the series of steps
-            SwapHelpers.SwapStep memory initStep = _steps[0];
-            uint128 quantity = _amount;
-            address nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
+        // Variables for the series of steps
+        SwapHelpers.SwapStep memory initStep = _steps[0];
+        uint128 quantity = _amount;
+        address nextAsset = initStep.isBuy ? initStep.base : initStep.quote;
 
-            // Take the input asset if it is an ERC20
-            if (nextAsset != address(0)) {
-                IERC20Minimal(nextAsset).transferFrom(msg.sender, address(this), uint256(quantity));
-            }
-            for (uint256 i=0; i < _steps.length; ) {
-                SwapHelpers.SwapStep memory step = _steps[i];
-                require(nextAsset == (step.isBuy ? step.base : step.quote), "Invalid swap sequence");
-                // Perform the swap step
-                if (step.isBuy) {
-                    (quantity, nextAsset) = _performBuy(step, quantity, (i == _steps.length-1) ? _minOut : 0);
-                } else {
-                    (quantity, nextAsset) = _performSell(step, quantity, (i == _steps.length-1) ? _minOut : 0);
-                }
-                unchecked { i++; }
-            }
-            if (nextAsset != address(0)) {
-                IERC20Minimal(nextAsset).transfer(msg.sender, uint256(quantity));
+        // Take the input asset if it is an ERC20
+        if (nextAsset != address(0)) {
+            IERC20Minimal(nextAsset).transferFrom(msg.sender, address(this), uint256(quantity));
+        }
+        for (uint256 i=0; i < _steps.length; ) {
+            SwapHelpers.SwapStep memory step = _steps[i];
+            require(nextAsset == (step.isBuy ? step.base : step.quote), "Invalid swap sequence");
+            // Perform the swap step
+            if (step.isBuy) {
+                (quantity, nextAsset) = _performBuy(step, quantity, (i == _steps.length-1) ? _minOut : 0);
             } else {
-                payable(msg.sender).transfer(uint256(quantity));
+                (quantity, nextAsset) = _performSell(step, quantity, (i == _steps.length-1) ? _minOut : 0);
             }
-            
-            return quantity;
+            unchecked { i++; }
+        }
+        if (nextAsset != address(0)) {
+            IERC20Minimal(nextAsset).transfer(msg.sender, uint256(quantity));
+        } else {
+            payable(msg.sender).transfer(uint256(quantity));
+        }
+
+        return quantity;
     }
 
     function _performBuy(
