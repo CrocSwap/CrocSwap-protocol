@@ -48,7 +48,7 @@ contract BeraCrocMultiSwap {
         predictedQty = _amount;
         for (uint256 i; i < _steps.length; ) {
             SwapHelpers.SwapStep calldata step = _steps[i];
-            uint128 price = crocQuery.queryPrice(step.base, step.quote, step.poolIdx);
+            uint256 price = crocQuery.queryPrice(step.base, step.quote, step.poolIdx);
             if (step.isBuy) {
                 require(nextAsset == step.base, "Invalid swap sequence");
                 // We use the max uint128 as the limit price to ensure the swap executes

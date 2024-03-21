@@ -96,10 +96,10 @@ module.exports = {
       accounts: ["0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"],
     },
     artio3: {
-      url: "https://eth-val-1-v2.berachain-devnet.com",
-      chainId: 7,
+      url: "https://eth-rpc-1.berachain-devnet.com",
+      chainId: 80088,
       gasPrice: 10000000000,
-      accounts: ["0x462a90ad94be96c5a1d373b6560434cb70bb72a135675e79d7f151efede0028c"],
+      accounts: ["0x856c08a930a757bad8329087ff401fea4d824c1716b793529308e6f3b092fdcb"],
     },
   },
 };
