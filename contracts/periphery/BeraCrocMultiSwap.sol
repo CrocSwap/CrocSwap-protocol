@@ -48,26 +48,27 @@ contract BeraCrocMultiSwap {
         predictedQty = _amount;
         for (uint256 i; i < _steps.length; ) {
             SwapHelpers.SwapStep calldata step = _steps[i];
-            uint256 price = crocQuery.queryPrice(step.base, step.quote, step.poolIdx);
+            // the square root price of quote in terms of base
+            uint256 sqrtPriceX64 = crocQuery.queryPrice(step.base, step.quote, step.poolIdx);
             if (step.isBuy) {
                 require(nextAsset == step.base, "Invalid swap sequence");
                 // We use the max uint128 as the limit price to ensure the swap executes
                 // Given that we have full range liquidity, there is no min limit price
                 // Slippage can be controlled by the minOut parameter
                 (, int128 quoteFlow,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                    step.isBuy, true, quantity, 0, TickMath.MAX_SQRT_RATIO - 1);
+                    true, true, quantity, 0, TickMath.MAX_SQRT_RATIO - 1);
                 // Received amount is always negative
                 quantity = uint128(-quoteFlow);
-                predictedQty = predictedQty.mulDiv(price * price, FixedPoint.Q128);
+                predictedQty = predictedQty.mulDiv(FixedPoint.Q128, sqrtPriceX64 * sqrtPriceX64);
                 nextAsset = step.quote;
             } else {
                 require(nextAsset == step.quote, "Invalid swap sequence");
                 // Limit price is 0 here for the inverse reason above
                 (int128 baseFlow,,) = crocImpact.calcImpact(step.base, step.quote, step.poolIdx,
-                    step.isBuy, false, quantity, 0, TickMath.MIN_SQRT_RATIO);
+                    false, false, quantity, 0, TickMath.MIN_SQRT_RATIO);
                 // Received amount is always negative
                 quantity = uint128(-baseFlow);
-                predictedQty = predictedQty.mulDiv(FixedPoint.Q128, price * price);
+                predictedQty = predictedQty.mulDiv(sqrtPriceX64 * sqrtPriceX64, FixedPoint.Q128);
                 nextAsset = step.base;
             }
             unchecked { i++; }

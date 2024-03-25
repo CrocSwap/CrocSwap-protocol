@@ -162,7 +162,7 @@ let addrs: CrocAddrs = {
     query: '0xd55d1f1802b08cB0130C61E2897938b547E496BD',
     impact: '0x334C33C1896672b760A4AfCAD17ef75BB345FCe1',
     shell: '0x4b7a7c766B50F2f082Ef629c0239b9FC3bcbe933',
-    multiswap: undefined,
+    multiswap: '0x61DD7579f4A01402e8d3e40160a75E86b53dc0d3',
     wbera: '0xC1707a37BDa254D5B54eDeE18b0a5eb2354B3Aa0'
 };
 
