@@ -30,6 +30,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    constructor(address initialWbera) SettleLayer(initialWbera) {}
 
     /* @notice Executes a swap on an arbitrary pool. */
     function swapExecute (address base, address quote,
@@ -38,6 +39,25 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
                           uint8 reserveFlags) internal
         returns (int128 baseFlow, int128 quoteFlow) {
         
+        // Ensure reserve flags are valid
+        require(reserveFlags < 0x4, "RF");
+
+        if (base == address(0)) {
+            base = wbera;
+            // Determine the base value to add based on `isBuy`
+            uint8 baseValue = isBuy ? 0x4 : 0x6;
+            // Adjust the base value based on `reserveFlags & 0x1`
+            reserveFlags = (reserveFlags ^ 0x1) == 0 ? baseValue : baseValue + 1;
+        }
+
+        if (quote == address(0)) {
+            quote = wbera;
+            // Determine the base value to add based on `isBuy`
+            uint8 baseValue = isBuy ? 0x6 : 0x4;
+            // Adjust the base value based on `reserveFlags & 0x1`
+            reserveFlags = (reserveFlags ^ 0x1) == 0 ? baseValue : baseValue + 1;
+        }
+
         PoolSpecs.PoolCursor memory pool = preparePoolCntx
             (base, quote, poolIdx, poolTip, isBuy, inBaseQty, qty);
 
@@ -117,6 +137,8 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
  * @notice The version of the HotPath in a standalone sidecar proxy contract. If used
  *         this contract would be attached to hotProxy_ in the main dex contract. */
 contract HotProxy is HotPath {
+
+        constructor(address initialWbera) HotPath(initialWbera) { }
 
     function userCmd (bytes calldata input) public payable
         returns (int128 baseFlow, int128 quoteFlow) {

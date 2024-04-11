@@ -9,7 +9,7 @@ contract MockERC20 is IERC20Permit {
     mapping(address => uint256) public override balanceOf;
     mapping(address => mapping(address => uint256)) public override allowance;
     
-    uint8 public decimals;
+    uint8 public decimals = 18;
     string public symbol;
 
     address public owner712;

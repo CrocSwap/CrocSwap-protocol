@@ -1,16 +1,15 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } from './FixedPoint';
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
-import { MockERC20 } from '../typechain/MockERC20';
-import { HotProxy } from '../typechain/HotProxy';
+// import { MockERC20 } from '../typechain/MockERC20';
+// import { HotProxy } from '../typechain/HotProxy';
 import { ContractFactory } from 'ethers';
 import { MockHotProxy } from '../typechain/MockHotProxy';
-import { ColdPath } from '../typechain';
-import { MockProxySidecar } from '../contracts/typechain';
+import { HotProxy, MockProxySidecar, WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -21,9 +20,13 @@ describe('Pool Proxy Paths', () => {
     let hotProxy: HotProxy
     let mockProxy: MockHotProxy
     const feeRate = 225 * 100
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 

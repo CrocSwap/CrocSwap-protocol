@@ -9,6 +9,7 @@ import "@nomicfoundation/hardhat-verify";
 import "hardhat-storage-layout";
 import "solidity-coverage";
 import { config } from "dotenv";
+require("hardhat-tracer");
 
 config();
 
@@ -20,7 +21,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000000,
+            runs: 200,
           },
           outputSelection: {
             "*": {
@@ -74,6 +75,11 @@ module.exports = {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
       chainId: 43113,
     },
+    op: {
+      url: "https://sepolia.optimism.io",
+      chainId: 11155420,
+      accounts: ["0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"],
+    },
     artio: {
       url: "https://artio.rpc.berachain.com/",
       chainId: 80085,
@@ -82,6 +88,18 @@ module.exports = {
         (process.env.WALLET_KEY as string) ??
           "0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a",
       ],
+    },
+    artio2: {
+      url: "http://localhost:8545",
+      chainId: 7,
+      gasPrice: 10000000000,
+      accounts: ["0xfffdbb37105441e14b0ee6330d855d8504ff39e705c3afa8f859ac9865f99306"],
+    },
+    artio3: {
+      url: "https://eth-rpc-1.berachain-devnet.com",
+      chainId: 80088,
+      gasPrice: 10000000000,
+      accounts: ["0x856c08a930a757bad8329087ff401fea4d824c1716b793529308e6f3b092fdcb"],
     },
   },
 };

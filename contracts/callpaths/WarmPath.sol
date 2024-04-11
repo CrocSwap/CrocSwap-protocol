@@ -38,6 +38,9 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+    constructor(address initialWbera) SettleLayer(initialWbera) {
+    }
+    
     /* @notice Consolidated method for all atomic liquidity provider actions.
      * @dev    We consolidate multiple call types into a single method to reduce the 
      *         contract size in the main contract by paring down methods.
@@ -52,6 +55,22 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
          uint8 reserveFlags, address lpConduit) =
             abi.decode(input, (uint8,address,address,uint256,int24,int24,
                                uint128,uint128,uint128,uint8,address));
+
+        // Ensure reserve flags are valid
+        require(reserveFlags < 0x4, "RF");
+
+        if (base == address(0)) {
+            base = wbera;
+            reserveFlags = 0x4;
+        }
+
+        if (quote == address(0)) {
+            quote = wbera;
+            reserveFlags = 0x5;
+        }
+        
+        // if (base == address(0)) { base = wbera; }
+        // else if ( quote == address(0)) { quote = wbera; }
 
         if (lpConduit == address(0)) { lpConduit = lockHolder_; }
         
@@ -86,7 +105,6 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         } else if (code == UserCmd.BURN_AMBIENT_QUOTE_LP) {
             return burnAmbientQty(base, quote, poolIdx, false, liq, lpConduit,
                            limitLower, limitHigher);
-            
         } else if (code == UserCmd.HARVEST_LP) {
             return harvest(base, quote, poolIdx, bidTick, askTick, lpConduit,
                            limitLower, limitHigher);
@@ -149,9 +167,12 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
                       uint128 limitHigher) internal
         returns (int128, int128) {
         bytes32 poolKey = PoolSpecs.encodeKey(base, quote, poolIdx);
+        // bytes memory reee = abi.encodePacked(poolKey);
+
+        // bytes32 littleEndianPoolKey = bytes32(abi.encodePacked(poolIdx));
+        
         CurveMath.CurveState memory curve = snapCurve(poolKey);
         uint128 liq = Chaining.sizeAmbientLiq(qty, true, curve.priceRoot_, inBase);
-        
         (int128 baseFlow, int128 quoteFlow) =
             mintAmbientLiq(base, quote, poolIdx, liq, lpConduit, limitLower, limitHigher);
         return Chaining.pinFlow(baseFlow, quoteFlow, qty, inBase);

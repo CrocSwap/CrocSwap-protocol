@@ -34,6 +34,9 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     using Chaining for Chaining.PairFlow;
     using ProtocolCmd for bytes;
 
+
+    constructor(address initialWbera) DepositDesk(initialWbera) {
+    }
     /* @notice Consolidated method for protocol control related commands. */
     function protocolCmd (bytes calldata cmd) virtual public {
         uint8 code = uint8(cmd[31]);
@@ -80,7 +83,6 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
         } else {
             revert("Invalid command");
         }
-
     }
     
     function userCmd (bytes calldata cmd) virtual public payable {
@@ -122,14 +124,28 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
     function initPool (bytes calldata cmd) private {
         (, address base, address quote, uint256 poolIdx, uint128 price) =
             abi.decode(cmd, (uint8, address,address,uint256,uint128));
-        require(poolIdx == 420, "PT");
-        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) =
-            registerPool(base, quote, poolIdx);
-                                                   
+        bool nativeBera = false;
+        if (base == address(0)) {
+            base = wbera;
+            nativeBera = true;
+        } else if (quote == address(0)) {
+            quote = wbera;
+            nativeBera = true;
+        }
+        (PoolSpecs.PoolCursor memory pool, uint128 initLiq) = registerPool(base, quote, poolIdx);
         verifyPermitInit(pool, base, quote, poolIdx);
         
         (int128 baseFlow, int128 quoteFlow) = initCurve(pool, price, initLiq);
-        settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+
+        if (nativeBera) {
+            if (base == wbera) {
+                settleInitFlowBera(lockHolder_, base, baseFlow, quote, quoteFlow);
+            } else {
+                settleInitFlowBera(lockHolder_, quote, quoteFlow, base, baseFlow);
+            }
+        } else {
+            settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
+        }
 
         bytes memory bytecode = type(BeraCrocLpErc20).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(base, quote)); // don't need poolIdx because it is enforced above
@@ -138,7 +154,7 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         BeraCrocLpErc20(pair).initialize(base, quote, poolIdx);
-        emit CrocEvents.BeraCrocLPCreated(pair);
+        emit CrocEvents.BeraCrocLPCreated(base, quote, poolIdx, pair);
     }
 
     /* @notice Disables an existing pool template. Any previously instantiated pools on

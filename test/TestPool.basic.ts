@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token } from './FacadePool'
+import { TestPool, makeTokenPool, Token, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -6,6 +6,7 @@ import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice, ZERO_ADDR } fro
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -15,8 +16,14 @@ describe('Pool', () => {
     let quoteToken: Token
     const feeRate = 225 * 100
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
@@ -335,7 +342,7 @@ describe('Pool', () => {
     // Repeat the above protocol fee swap test, but create a new pool object so we can test that
     // protocol fee is correctly set at initialization time.
     it("init protocol fee", async() => {
-        test = await makeTokenPool()
+        test = await makeTokenPool(wbera)
         baseToken = await test.base
         quoteToken = await test.quote
  

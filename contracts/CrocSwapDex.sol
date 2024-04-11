@@ -6,7 +6,6 @@ import './libraries/Directives.sol';
 import './libraries/Encoding.sol';
 import './libraries/TokenFlow.sol';
 import './libraries/PriceGrid.sol';
-import './libraries/SwapHelpers.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
@@ -35,12 +34,19 @@ contract CrocSwapDex is HotPath, ICrocMinion {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
-    constructor() {
+    address private immutable _wbera;
+
+    constructor(address initialWbera) HotPath(initialWbera){
         // Authority is originally set to deployer address, which can then transfer to
         // proper governance contract (if deployer already isn't)
         authority_ = msg.sender;
         hotPathOpen_ = true;
         proxyPaths_[CrocSlots.BOOT_PROXY_IDX] = address(new BootPath());
+        _wbera = initialWbera;
+    }
+
+    receive() external payable {
+        require(msg.sender == _wbera, "Not WBERA");
     }
 
     /* @notice Swaps between two tokens within a single liquidity pool.
@@ -91,39 +97,6 @@ contract CrocSwapDex is HotPath, ICrocMinion {
                                 limitPrice, minOut, reserveFlags);
         emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, tip, limitPrice, 
             minOut, reserveFlags, baseQuote, quoteFlow);
-    }
-
-    /* @notice Performs a series of swaps between multiple pools.
-     *
-     * @dev A convenience method for performing a series of swaps in sequence. This is
-     *      to be used in conjunction with some form of an off-chain router as the input
-     *      arguments assume the user already knows the exact sequence of swaps to
-     *      perform.
-     *  
-     * @param steps The series of swap steps to be performed in sequence.
-     * @return The token base and quote token flows associated with this swap action. 
-     *         (Negative indicates a credit paid to the user, positive a debit collected
-     *         from the user) */
-    function multiSwap (SwapHelpers.SwapStep[] memory steps) reEntrantLock public payable 
-        returns (uint128 out) {
-            require(steps.length != 0, "No steps provided");
-            require(steps[0].amount != 0, "No amount provided");
-            uint128 amountIn = steps[0].amount;
-            address baseAsset = steps[0].base;
-            for (uint256 i; i < steps.length; ) {
-                SwapHelpers.SwapStep memory step = steps[i];
-                unchecked { ++i; }
-                require(step.base == baseAsset, "Base asset mismatch");
-                // We use the max uint128 as the limit price to ensure the swap executes
-                // Given that we have full range liquidity, there is no min limit price
-                // Slippage can be controlled by the minOut parameter
-                (, int128 quoteFlow) = swap(step.base, step.quote, step.poolIdx, true, 
-                    true, amountIn, 0, type(uint128).max, step.minAmountOut, 2);
-                amountIn = uint128(quoteFlow);
-                baseAsset = step.quote;
-                
-            }
-            return amountIn;
     }
 
     /* @notice Consolidated method for protocol control related commands.
@@ -213,16 +186,16 @@ contract CrocSwapDex is HotPath, ICrocMinion {
 /* @notice Alternative constructor to CrocSwapDex that's more convenient. However
  *     the deploy transaction is several hundred kilobytes and will get droppped by 
  *     geth. Useful for testing environments though. */
-contract CrocSwapDexSeed  is CrocSwapDex {
+contract CrocSwapDexSeed is CrocSwapDex {
     
-    constructor() {
-        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath());
-        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath());
-        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath());
+constructor(address initialWbera) CrocSwapDex(initialWbera) {
+        proxyPaths_[CrocSlots.LP_PROXY_IDX] = address(new WarmPath(initialWbera));
+        proxyPaths_[CrocSlots.COLD_PROXY_IDX] = address(new ColdPath(initialWbera));
+        proxyPaths_[CrocSlots.LONG_PROXY_IDX] = address(new LongPath(initialWbera));
         proxyPaths_[CrocSlots.MICRO_PROXY_IDX] = address(new MicroPaths());
         proxyPaths_[CrocSlots.FLAG_CROSS_PROXY_IDX] = address(new KnockoutFlagPath());
-        proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath());
-        proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath());
+        proxyPaths_[CrocSlots.KNOCKOUT_LP_PROXY_IDX] = address(new KnockoutLiqPath(initialWbera));
+        proxyPaths_[CrocSlots.SAFE_MODE_PROXY_PATH] = address(new SafeModePath(initialWbera));
     }
 }
 

@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
+import { WBERA } from '../typechain';
 
 const hre = require("hardhat");
 
@@ -17,9 +18,13 @@ describe('Pool Knockout Liq', () => {
     let baseToken: Token
     let quoteToken: Token
     const feeRate = 225 * 100
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
@@ -359,9 +364,13 @@ describe('Pool Knockout Liq Native Eth', () => {
     let test: TestPool
     let quoteToken: Token
     const feeRate = 225 * 100
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeEtherPool()
+       test = await makeEtherPool(wbera)
        quoteToken = await test.quote
 
        await test.initPool(feeRate, 0, 1, 1.5)

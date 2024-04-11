@@ -18,7 +18,7 @@ library TransferHelper {
     ) internal {
         (bool success, bytes memory data) =
             token.call(abi.encodeWithSelector(IERC20Minimal.transfer.selector, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF1");
     }
 
     /// @notice Transfers tokens from msg.sender to a recipient
@@ -35,7 +35,7 @@ library TransferHelper {
     ) internal {
         (bool success, bytes memory data) =
             token.call(abi.encodeWithSelector(IERC20Minimal.transferFrom.selector, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF");
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "TF2");
     }
 
     // @notice Transfers native Ether to a recipient.
@@ -45,7 +45,7 @@ library TransferHelper {
         uint256 value
     ) internal {
         (bool success, ) = to.call{value: value}("");
-        require(success, "TF");
+        require(success, "TF3");
     }
 
 }

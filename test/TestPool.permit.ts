@@ -1,10 +1,11 @@
-import { TestPool, makeTokenPool } from './FacadePool'
+import { TestPool, createWbera, makeTokenPool } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { toSqrtPrice, ZERO_ADDR } from './FixedPoint';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -18,9 +19,13 @@ describe('permissioned pool', () => {
     const MINT_ACT_CODE = 3;
     const BURN_ACT_CODE = 4;
     const COMP_ACT_CODE = 1;
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
+       test = await makeTokenPool(wbera)
        await test.fundTokens();
 
        await (await test.permit).setPassThru(true)

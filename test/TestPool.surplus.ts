@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -21,10 +22,14 @@ describe('Pool Surplus', () => {
     const SURPPLUS_FLAGS = 0x3
     const BASE_FLAGS = 0x1
     const QUOTE_FLAGS = 0x2
+    let wbera: WBERA
 
+    before(async () => {
+        wbera = await createWbera()
+    })
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
-       testEth = await makeEtherPool()
+       test = await makeTokenPool(wbera)
+       testEth = await makeEtherPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
        sender = await (await test.trader).getAddress() 
@@ -293,9 +298,13 @@ describe('Pool Surplus Ether', () => {
    let quoteToken: Token
    let sender: string
    const feeRate = 225 * 100
+   let wbera: WBERA
 
+   before(async () => {
+       wbera = await createWbera()
+   })
    beforeEach("deploy",  async () => {
-      test = await makeEtherPool()
+      test = await makeEtherPool(wbera)
       baseToken = await test.base
       quoteToken = await test.quote
       sender = await (await test.trader).getAddress() 

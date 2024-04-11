@@ -25,7 +25,7 @@ contract CrocImpact {
     
     /* @param dex The address of the CrocSwapDex contract. */    
     constructor (address dex) {
-        require(dex != address(0) && CrocSwapDex(dex).acceptCrocDex(), "Invalid CrocSwapDex");
+        require(dex != address(0) && CrocSwapDex(payable(dex)).acceptCrocDex(), "Invalid CrocSwapDex");
         dex_ = dex;
     }
 
@@ -74,7 +74,7 @@ contract CrocImpact {
 
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encodePacked(poolHash, POOL_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         cursor.hash_ = poolHash;
         cursor.head_.feeRate_ = uint16((val & uint256(0xFFFF00)) >> 8);
@@ -90,8 +90,8 @@ contract CrocImpact {
         returns (CurveMath.CurveState memory curve) {
         bytes32 key = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.CURVE_MAP_SLOT));
-        uint256 valOne = CrocSwapDex(dex_).readSlot(uint256(slot));
-        uint256 valTwo = CrocSwapDex(dex_).readSlot(uint256(slot)+1);
+        uint256 valOne = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
+        uint256 valTwo = CrocSwapDex(payable(dex_)).readSlot(uint256(slot)+1);
         
         curve.priceRoot_ = uint128((valOne << 128) >> 128);
         curve.ambientSeeds_ = uint128(valOne >> 128);
@@ -105,7 +105,7 @@ contract CrocImpact {
         returns (uint96 bidLots, uint96 askLots) {   
         bytes32 key = keccak256(abi.encodePacked(poolHash, tick));
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.LVL_MAP_SLOT));
-        uint256 val = CrocSwapDex(dex_).readSlot(uint256(slot));
+        uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         askLots = uint96((val << 64) >> 160);
         bidLots = uint96((val << 160) >> 160);
@@ -115,14 +115,14 @@ contract CrocImpact {
     function queryTerminus (bytes32 key) private view returns (uint256) {
         uint256 TERMINUS_SLOT = 65543;
         bytes32 slot = keccak256(abi.encode(key, TERMINUS_SLOT));
-        return CrocSwapDex(dex_).readSlot(uint256(slot));
+        return CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
     }
 
     /* @notice Retrieves the mezzanine level bitmap at the location. */
     function queryMezz (bytes32 key) private view returns (uint256) {
         uint256 MEZZ_SLOT = 65542;
         bytes32 slot = keccak256(abi.encode(key, MEZZ_SLOT));
-        return CrocSwapDex(dex_).readSlot(uint256(slot));
+        return CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
         
     }
 

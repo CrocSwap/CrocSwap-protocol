@@ -28,6 +28,8 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
     using CurveMath for CurveMath.CurveState;
     using Chaining for Chaining.PairFlow;
 
+        constructor(address initialWbera) SettleLayer(initialWbera) { }
+
     /* @notice Executes the user-defined compound order, constitutiin an arbitrary
      *         combination of mints, burns and swaps across an arbitrary set of pools
      *         across an arbitrary set of pairs.

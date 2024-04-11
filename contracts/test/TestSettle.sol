@@ -10,7 +10,7 @@ contract TestSettleLayer is DepositDesk {
     int128 public ethFlow;
     bool public isFinal_;
     
-    constructor (address recv) {
+    constructor (address recv, address initialWbera) DepositDesk(initialWbera){
         recv_ = recv;
         send_ = recv;
     }

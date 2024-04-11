@@ -66,6 +66,7 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
     using Chaining for Chaining.PairFlow;
     using KnockoutLiq for KnockoutLiq.KnockoutPosLoc;
 
+    constructor(address initialWbera) SettleLayer(initialWbera) {}
     function userCmd (bytes calldata cmd) public payable returns
         (int128 baseFlow, int128 quoteFlow) {
         (baseFlow, quoteFlow) = innerCmd(cmd);

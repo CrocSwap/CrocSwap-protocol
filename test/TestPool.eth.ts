@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber, ContractTransaction } from 'ethers';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -23,8 +24,14 @@ describe('Pool Ethereum', () => {
     let initQuoteBal: BigNumber
     const feeRate = 225 * 100
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+    
     beforeEach("deploy",  async () => {
-       test = await makeEtherPool()
+       test = await makeEtherPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
@@ -112,8 +119,14 @@ describe('Pool Ethereum Hotpath', () => {
     let initQuoteBal: BigNumber
     const feeRate = 225 * 100
 
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
+
     beforeEach("deploy",  async () => {
-       test = await makeEtherPool()
+       test = await makeEtherPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 

@@ -9,6 +9,8 @@ import '../interfaces/IERC20Minimal.sol';
 contract DepositDesk is SettleLayer {
     using SafeCast for uint256;
 
+    constructor(address initialWbera) SettleLayer(initialWbera) {
+    }
     /* @notice Directly deposits a certain amount of surplus collateral to a user's
      *         account.
      *

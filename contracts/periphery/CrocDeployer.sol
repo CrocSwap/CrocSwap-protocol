@@ -18,7 +18,7 @@ contract CrocDeployer {
     function protocolCmd (address dex, uint16 proxyPath,
                           bytes calldata cmd, bool sudo) public {
         require(msg.sender == owner_, "Does not own deployer");
-        CrocSwapDex(dex).protocolCmd(proxyPath, cmd, sudo);
+        CrocSwapDex(payable(dex)).protocolCmd(proxyPath, cmd, sudo);
     }
 
     function getAddress(

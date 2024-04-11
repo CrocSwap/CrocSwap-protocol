@@ -13,6 +13,7 @@ tenderly.yaml
 coverage.json
 coverage/
 .env
+out/
 
 # IDE
 .idea

@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, POOL_IDX } from './FacadePool'
+import { TestPool, makeTokenPool, Token, POOL_IDX, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -11,6 +11,7 @@ import { ContractFactory } from 'ethers';
 import { CrocLpErc20 } from '../typechain/CrocLpErc20';
 import { CrocQuery } from '../typechain/CrocQuery';
 import { AddressZero } from '@ethersproject/constants';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -24,9 +25,14 @@ describe('Pool Conduit', () => {
     let other: string
     const feeRate = 225 * 100
 
-    beforeEach("deploy",  async () => {
+    let wbera: WBERA
 
-       test = await makeTokenPool()
+    before(async () => {
+        wbera = await createWbera()
+    })
+
+    beforeEach("deploy",  async () => {
+       test = await makeTokenPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
@@ -75,7 +81,7 @@ describe('Pool Conduit', () => {
     })
 
     it("wrong pool token", async() => {
-        let testAlt = await makeTokenPool()
+        let testAlt = await makeTokenPool(wbera)
         let baseTokenAlt = await testAlt.base
         let quoteTokenAlt = await testAlt.quote
         await testAlt.initPool(feeRate, 0, 1, 1.5)

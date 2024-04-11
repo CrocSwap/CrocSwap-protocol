@@ -1,4 +1,4 @@
-import { TestPool, makeTokenPool, Token, makeEtherPool } from './FacadePool'
+import { TestPool, makeTokenPool, Token, makeEtherPool, createWbera } from './FacadePool'
 import { expect } from "chai";
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
@@ -7,6 +7,7 @@ import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
 import { BigNumber } from 'ethers';
+import { WBERA } from '../typechain';
 
 chai.use(solidity);
 
@@ -16,10 +17,15 @@ describe('Initialize Pool', () => {
     let baseToken: Token
     let quoteToken: Token
     const feeRate = 225 * 100
+    let wbera: WBERA
+
+    before(async () => {
+        wbera = await createWbera()
+    })
 
     beforeEach("deploy",  async () => {
-       test = await makeTokenPool()
-       testEther = await makeEtherPool()
+       test = await makeTokenPool(wbera)
+       testEther = await makeEtherPool(wbera)
        baseToken = await test.base
        quoteToken = await test.quote
 
