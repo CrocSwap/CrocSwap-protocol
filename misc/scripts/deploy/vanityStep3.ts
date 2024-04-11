@@ -29,11 +29,11 @@ async function vanityDeploy() {
 
     // Install cold path proxy, so we can transfer ownership
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.cold, COLD_PROXY_IDX])
-    await traceContractTx(crocDeployer.protocolCmd(addrs.dex, BOOT_PROXY_IDX, cmd, true), 
+    await traceContractTx(crocDeployer.protocolCmd(addrs.dex, BOOT_PROXY_IDX, cmd, true, {"gasLimit": 1000000}), 
         "Cold Path Install")
 
     cmd = abi.encode(["uint8", "address"], [20, policy.address])
-    await traceContractTx(crocDeployer.protocolCmd(addrs.dex, COLD_PROXY_IDX, cmd, true), 
+    await traceContractTx(crocDeployer.protocolCmd(addrs.dex, COLD_PROXY_IDX, cmd, true, {"gasLimit": 1000000}), 
         "Transfer to Policy Contract")
 
     console.log(`Updated addresses for ${chainId}`, addrs)

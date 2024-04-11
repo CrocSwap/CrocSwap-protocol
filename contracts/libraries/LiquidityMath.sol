@@ -164,6 +164,23 @@ library LiquidityMath {
         // mileage means overpaying rewards. So, round up the fractional weights.
         return (termX + 1) + (termY + 1);
     }
+
+    /* @notice Blends the weighted average of two 72-bit fee reward accumulators based on the
+     *         relative size of two liquidity position.
+     * 
+     * @dev See dev notes from blendMileage() method. Same logic applies. */
+    function blendMileage72 (uint72 mileageX, uint128 liqX, uint72 mileageY, uint128 liqY)
+        internal pure returns (uint72) {
+        if (liqY == 0) { return mileageX; }
+        if (liqX == 0) { return mileageY; }
+        if (mileageX == mileageY) { return mileageX; }
+        uint72 termX = calcBlend72(mileageX, liqX, liqX + liqY);
+        uint72 termY = calcBlend72(mileageY, liqY, liqX + liqY);
+
+        // With mileage we want to be conservative on the upside. Under-estimating
+        // mileage means overpaying rewards. So, round up the fractional weights.
+        return (termX + 1) + (termY + 1);
+    }
     
     /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
     function calcBlend (uint64 mileage, uint128 weight, uint128 total)
@@ -175,6 +192,17 @@ library LiquidityMath {
         }
     }
 
+    /* @notice Calculates a weighted blend of adding incremental rewards mileage. */
+    function calcBlend72 (uint72 mileage, uint128 weight, uint128 total)
+        private pure returns (uint72) {
+        unchecked { // Intermediate results will always fit in 256-bits
+        // Can safely cast, because result will always be smaller than original since
+        // weight is less than total.
+        return uint72(uint256(mileage) * uint256(weight) / uint256(total));
+        }
+    }
+
+
     /* @dev Computes a rounding safe calculation of the accumulated rewards rate based on
      *      a beginning and end mileage counter. */
     function deltaRewardsRate (uint64 feeMileage, uint64 oldMileage) internal pure
@@ -182,6 +210,26 @@ library LiquidityMath {
         uint64 REWARD_ROUND_DOWN = 2;
         if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {
             return feeMileage - oldMileage - REWARD_ROUND_DOWN;
+        } else {
+            return 0;
+        }
+    }
+
+    /* @dev Computes a rounding safe calculation of the accumulated rewards for 72 bit mileage
+     *      delta snapshots. */
+    function deltaRewardsRate72 (uint72 feeMileage, uint72 oldMileage) internal pure
+        returns (uint64) {
+        uint72 REWARD_ROUND_DOWN = 2;
+        if (feeMileage > oldMileage + REWARD_ROUND_DOWN) {    
+            uint72 mileageDelta = feeMileage - oldMileage - REWARD_ROUND_DOWN;
+
+            // In practice a the cumulative growth in a curve, and therefore in any range,
+            // in the curve can never exceed 2^64. So in practice this mileage delta should
+            // never exceed 2^64. However, to be on the safe side we cap it to prevent
+            // overflow.
+            return mileageDelta > type(uint64).max ?
+                type(uint64).max : uint64(mileageDelta);
+
         } else {
             return 0;
         }

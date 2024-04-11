@@ -472,4 +472,253 @@ describe('Swap Curve', () => {
       expect(accum.paidBase_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
       expect(accum.paidQuote_.toNumber()).to.equal(0 + COLLATERAL_ROUND);
    })
+
+   it("swap zero qty", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(2.25)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.equal(0 + COLLATERAL_ROUND);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(fromSqrtPrice(state.priceRoot_)).to.eq(2.25)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell qty", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(2.25)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.div(2), price.div(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.gte(0 + COLLATERAL_ROUND)
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.lte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero quote qty", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(2.25)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.gte(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_).to.equal(0);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.gte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell quote qty", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(2.25)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await expect(curve.testSwap(0, swap, price.div(2), price.div(2))).to.be.reverted
+   })
+
+   it("swap zero qty high price", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e12)
+      
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.gte(0 + COLLATERAL_ROUND);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.lte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell qty high price", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.div(2), price.div(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.gte(0 + COLLATERAL_ROUND)
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.lte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero quote qty high price", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.gte(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_).to.equal(0);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.gte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell quote qty high price", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await expect(curve.testSwap(0, swap, price.div(2), price.div(2))).to.be.reverted
+   })
+
+   it("swap zero qty low price", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e-12)
+      
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.gte(0 + COLLATERAL_ROUND);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.eq(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell qty low price", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: true, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e-12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.div(2), price.div(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.equal(0);
+      expect(accum.paidQuote_).to.gte(0 + COLLATERAL_ROUND)
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.lte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero quote qty low price", async() => {
+      let swapCntx = { isBuy_: true, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e-12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await curve.testSwap(0, swap, price.mul(2), price.mul(2))
+
+      let accum = await curve.lastSwap();
+      expect(accum.qtyLeft_).to.equal(0);
+      expect(accum.paidBase_).to.gte(0 + COLLATERAL_ROUND);
+      expect(accum.paidQuote_).to.equal(0);
+      expect(accum.paidProto_).to.equal(0);
+
+      let state = await curve.pullCurve(0);
+      expect(state.priceRoot_).to.gte(price)
+      expect(state.ambientSeeds_).to.equal(bigLiq)
+      expect(state.concLiq_.toNumber()).to.equal(10000000);
+      expect(fromFixedGrowth(state.seedDeflator_)).to.equal(0.75);
+      expect(fromFixedGrowth(state.concGrowth_)).to.equal(2.5);
+   })
+
+   it("swap zero sell quote qty low price", async() => {
+      let swapCntx = { isBuy_: false, inBaseQty_: false, feeRate_: 0, protoCut_: 0}
+      let swap = { qtyLeft_: 0, paidQuote_: 0, paidBase_: 0, paidProto_: 0, cntx_: swapCntx}
+      const bigLiq = BigNumber.from(10).pow(24)
+      const price = toSqrtPrice(1e-12)
+
+      await curve.fixCurve(0, price, bigLiq, 10000000);
+      await curve.fixAccum(0, toFixedGrowth(0.75), toFixedGrowth(2.5));
+      await expect(curve.testSwap(0, swap, price.div(2), price.div(2))).to.be.reverted
+   })
 })

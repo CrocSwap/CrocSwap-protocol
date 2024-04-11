@@ -128,8 +128,22 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
             abi.decode(input, (address, address, uint256, bool, bool,
                                uint128, uint16, uint128, uint128, uint8));
         
-        return swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip,
-                           limitPrice, minOutput, reserveFlags);
+        return swapExecuteLogged(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip,
+            limitPrice, minOutput, reserveFlags);
+    }
+
+    /* @notice Wraps a swap call with a log event. */
+    function swapExecuteLogged (address base, address quote,
+                          uint256 poolIdx, bool isBuy, bool inBaseQty, uint128 qty,
+                          uint16 poolTip, uint128 limitPrice, uint128 minOutput,
+                          uint8 reserveFlags) internal
+        returns (int128 baseFlow, int128 quoteFlow) {
+
+        (baseFlow, quoteFlow) = swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip, 
+            limitPrice, minOutput, reserveFlags);
+
+        emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip, limitPrice, 
+            minOutput, reserveFlags, baseFlow, quoteFlow);
     }
 }
 
@@ -142,9 +156,7 @@ contract HotProxy is HotPath {
 
     function userCmd (bytes calldata input) public payable
         returns (int128 baseFlow, int128 quoteFlow) {
-        require(!hotPathOpen_, "Hot path enabled");
-        (baseFlow, quoteFlow) = swapEncoded(input);
-        emit CrocEvents.CrocHotCmd(input, baseFlow, quoteFlow);
+        return swapEncoded(input);
     }
 
     /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used

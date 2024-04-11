@@ -309,7 +309,7 @@ contract CrocQuery {
                              uint32 timestamp, bool atomic) {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
         bytes32 posKey = keccak256(abi.encodePacked(owner, poolHash, lowerTick, upperTick));
-        bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.POS_MAP_SLOT));
+        bytes32 slot = keccak256(abi.encodePacked(posKey, CrocSlots.POS_MAP_SLOT_72));
         uint256 val = CrocSwapDex(payable(dex_)).readSlot(uint256(slot));
 
         liq = uint128((val << 128) >> 128);
@@ -367,13 +367,13 @@ contract CrocQuery {
         uint64 feeUpper = upperTick <= curveTick ? askFee : curveFee - askFee;
             
         unchecked {
-            uint64 odometer = feeUpper - feeLower;
+            uint72 odometer = uint72(type(uint64).max) + uint72(feeUpper) - uint72(feeLower);
 
             if (odometer < feeStart) {
                 return (0, 0, 0);
             }
 
-            uint64 accumFees = odometer - feeStart;
+            uint64 accumFees = uint64(odometer - feeStart);
             uint128 seeds = FixedPoint.mulQ48(liq, accumFees).toUint128By144();
             return convertSeedsToLiq(curve, seeds);
         }

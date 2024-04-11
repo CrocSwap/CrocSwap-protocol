@@ -18,3 +18,4 @@ out/
 # IDE
 .idea
 .vscode
+layout.*.json
