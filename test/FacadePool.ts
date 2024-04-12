@@ -585,29 +585,7 @@ export class TestPool {
     readonly LONG_PROXY: number = LONG_PROXY_IDX
     readonly KNOCKOUT_PROXY: number = KNOCKOUT_LP_PROXY_IDX
     readonly EMERGENCY_PROXY: number = SAFE_MODE_PROXY_PATH
-
-    // TODO: Look here @walrus
-//     async testMintFrom (from: Signer, lower: number, upper: number, liq: BigNumberish, useSurplus: number = 0): Promise<ContractTransaction> {
-//         await this.snapStart()
-//         const lots = BigNumber.from(liq).mul(1024)
-//         if (this.useHotPath) {
-// <<<<<<< HEAD
-//             let inputBytes = this.encodeMintPath(lower, upper, liq * 1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-//             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
-//         } else {
-//             let directive = singleHop((await this.base).address,
-//                 (await this.quote).address, simpleMint(this.poolIdx, lower, upper, liq * 1024))
-// =======
-//             let inputBytes = this.encodeMintPath(lower, upper, lots, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
-//             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
-//         } else {
-//             let directive = singleHop((await this.base).address,
-//             (await this.quote).address, simpleMint(this.poolIdx, lower, upper, lots))
-// >>>>>>> CrocSwap-mainL2
-//             let inputBytes = encodeOrderDirective(directive);
-//             return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
-//         }
-//     }
+    readonly MULTI_PROXY: number = 6;
 
     async testBurnFrom(from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
