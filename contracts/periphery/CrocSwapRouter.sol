@@ -78,7 +78,7 @@ contract CrocSwapRouter {
 
         bytes memory swapCall = abi.encode(base, quote, poolIdx, isBuy, inBaseQty, 
             qty, tip, limitPrice, minOut, 0x0);
-        bytes memory result = CrocSwapDex(dex_).userCmd
+        bytes memory result = CrocSwapDex(payable(dex_)).userCmd
             {value: msg.value}(CrocSlots.SWAP_PROXY_IDX, swapCall);
 
         (baseFlow, quoteFlow) = abi.decode(result, (int128, int128));
@@ -135,7 +135,7 @@ contract CrocSwapRouterBypass {
         returns (int128 baseFlow, int128 quoteFlow) {
         bytes memory swapCall = abi.encode(base, quote, poolIdx, isBuy, inBaseQty, 
             qty, tip, limitPrice, minOut, reserveFlags);
-        bytes memory result = CrocSwapDex(dex_).userCmdRouter
+        bytes memory result = CrocSwapDex(payable(dex_)).userCmdRouter
             {value: msg.value}(CrocSlots.SWAP_PROXY_IDX, swapCall, msg.sender);
 
         (baseFlow, quoteFlow) = abi.decode(result, (int128, int128));

@@ -9,7 +9,7 @@ import "../interfaces/ICrocLpConduit.sol";
 contract BeraCrocLpErc20 is ICrocLpConduit, BGTEligibleERC20 {
 
     address public immutable factory;
-    bytes32 public poolHash;
+    bytes32 public pool;
     address public baseToken;
     address public quoteToken;
     uint256 public poolType;
@@ -18,22 +18,22 @@ contract BeraCrocLpErc20 is ICrocLpConduit, BGTEligibleERC20 {
         factory = msg.sender;
     }
     
-    function depositCrocLiq (address sender, bytes32 pool,
-                             int24 lowerTick, int24 upperTick, uint128 seeds,
-                             uint64) public override returns (bool) {
+    function depositCrocLiq (address sender, bytes32 poolHash,
+                             int24 lowerTick, int24 upperTick,
+                             uint128 liq, uint72 mileage) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-BeraCroc LP Deposit");
-        _mint(sender, seeds);
+        _mint(sender, liq);
         return true;
     }
 
-    function withdrawCrocLiq (address sender, bytes32 pool,
-                              int24 lowerTick, int24 upperTick, uint128 seeds,
-                              uint64) public override returns (bool) {
+    function withdrawCrocLiq (address sender, bytes32 poolHash,
+                              int24 lowerTick, int24 upperTick,
+                              uint128 liq, uint72 mileage) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-BeraCroc LP Deposit");
-        _burn(sender, seeds);
-        return true;
+        _burn(sender, liq);
+        return true; 
     }
 
         // called once by the factory at time of deployment
@@ -47,6 +47,6 @@ contract BeraCrocLpErc20 is ICrocLpConduit, BGTEligibleERC20 {
         baseToken = _base;
         quoteToken = _quote;
         poolType = _idx;
-        poolHash = PoolSpecs.encodeKey(_base, _quote, _idx);
+        pool = PoolSpecs.encodeKey(_base, _quote, _idx);
     }
 }
