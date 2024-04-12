@@ -120,8 +120,18 @@ export async function makeMultiswap(dex: string): Promise<BeraCrocMultiSwap> {
     let factory = await ethers.getContractFactory("CrocImpact");
     let impact = await factory.deploy(dex);
 
+    factory = await ethers.getContractFactory("CrocQuery");
+    let query = await factory.deploy(dex);
+
     factory = await ethers.getContractFactory("BeraCrocMultiSwap");
-    const multiSwap = await factory.deploy(dex, impact.address) as BeraCrocMultiSwap;
+
+    console.log({
+        dex: dex,
+        impact: impact.address,
+        query: query.address
+    
+    })
+    const multiSwap = await factory.deploy(dex, impact.address, query.address) as BeraCrocMultiSwap;
 
     return multiSwap;
 }
@@ -263,13 +273,13 @@ export class TestPool {
         this.query = factory.then(f => this.dex.then(
             d => f.deploy(d.address))) as Promise<CrocQuery>
 
-        factory = ethers.getContractFactory("CrocSwapRouter")
-        this.router = factory.then(f => this.dex.then(
-            d => f.deploy(d.address))) as Promise<CrocSwapRouter>
+        // factory = ethers.getContractFactory("CrocSwapRouter")
+        // this.router = factory.then(f => this.dex.then(
+        //     d => f.deploy(d.address))) as Promise<CrocSwapRouter>
 
-        factory = ethers.getContractFactory("CrocSwapRouterBypass")
-        this.routerBypass = factory.then(f => this.dex.then(
-            d => f.deploy(d.address))) as Promise<CrocSwapRouterBypass>
+        // factory = ethers.getContractFactory("CrocSwapRouterBypass")
+        // this.routerBypass = factory.then(f => this.dex.then(
+        //     d => f.deploy(d.address))) as Promise<CrocSwapRouterBypass>
     
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
