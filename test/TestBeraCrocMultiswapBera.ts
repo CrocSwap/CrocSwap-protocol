@@ -31,7 +31,7 @@ describe('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     multiswap = await makeMultiswap((await test.dex).address)
   })
 
-  it.only("deploy & add liquidity & multiswap with native bera WITH SLIPPAGE", async () => {
+  it("deploy & add liquidity & multiswap with native bera WITH SLIPPAGE", async () => {
     baseToken = await test.base
     quoteToken = await test.quote
 
@@ -111,7 +111,9 @@ describe('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     // ======= swap 1 ==========
     console.log('SWAP 1')
     const amount = parseEther('0.1')
-    let previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], amount)
+    let previewAmount = (await multiswapWithSigner.previewMultiSwap([...previewArgs], amount))
+    previewAmount = (previewAmount as any)[0]
+    console.log('prev amnt', previewAmount)
     let minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
     await multiswapWithSigner.multiSwap([...args], amount, minAmountOut, {
       value: amount
@@ -121,6 +123,8 @@ describe('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     console.log('SWAP 2', minAmountOut.toString())
     const newswapamount2 = parseEther('0.001')
     previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs2], newswapamount2)
+    previewAmount = (previewAmount as any)[0]
+
     minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
     await multiswapWithSigner.multiSwap([...args2], newswapamount2, minAmountOut, {
       value: newswapamount2
@@ -130,6 +134,8 @@ describe('Test Multiswap with BERA / NATIVE BERA MinAmountOut = 0', () => {
     console.log('SWAP 3', minAmountOut.toString())
     const newswapamount = parseEther('0.1')
     previewAmount = await multiswapWithSigner.previewMultiSwap([...previewArgs], newswapamount)
+    previewAmount = (previewAmount as any)[0]
+
     minAmountOut = (previewAmount.sub(previewAmount.mul(s).div(BigNumber.from(10).pow(18))))
 
     await multiswapWithSigner.multiSwap([...args], newswapamount, minAmountOut, {
