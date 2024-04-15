@@ -21,7 +21,7 @@ contract TestPositionRegistrar is PositionRegistrar {
 
     function getPos (address owner, uint256 poolIdx, int24 lower, int24 upper)
         public view returns (uint128, uint256) {
-        RangePosition storage pos = lookupPosition(owner, bytes32(poolIdx),
+        RangePosition72 storage pos = lookupPosition(owner, bytes32(poolIdx),
                                                    lower, upper);
         return (pos.liquidity_, pos.feeMileage_);
     }

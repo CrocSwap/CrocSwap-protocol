@@ -14,7 +14,7 @@ contract MockLpConduit is ICrocLpConduit {
     int24 public lowerSnap_;
     int24 public upperSnap_;
     uint128 public liqSnap_;
-    uint64 public mileageSnap_;
+    uint72 public mileageSnap_;
     bool public isDeposit_;
     
     constructor (bool accept) {
@@ -32,7 +32,7 @@ contract MockLpConduit is ICrocLpConduit {
 
     function depositCrocLiq (address sender, bytes32 poolHash,
                              int24 lowerTick, int24 upperTick, uint128 liq,
-                             uint64 mileage) public override returns (bool) {
+                             uint72 mileage) public override returns (bool) {
         isDeposit_ = true;
         senderSnap_ = sender;
         poolSnap_ = poolHash;
@@ -45,7 +45,7 @@ contract MockLpConduit is ICrocLpConduit {
 
     function withdrawCrocLiq (address sender, bytes32 poolHash,
                               int24 lowerTick, int24 upperTick, uint128 liq,
-                              uint64 mileage) public override returns (bool) {
+                              uint72 mileage) public override returns (bool) {
         isDeposit_ = false;
         senderSnap_ = sender;
         poolSnap_ = poolHash;

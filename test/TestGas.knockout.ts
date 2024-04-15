@@ -58,14 +58,14 @@ describe('Gas Benchmarks Knockout', () => {
         await test.testMint(-10000, 10000, 10000)
         await test.testMint(-100, 100, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
-        await expectGas(test.testKnockoutMint(5000*1024, false, 32, 64, true), 106000)
+        await expectGas(test.testKnockoutMint(5000*1024, false, 32, 64, true), 111000)
     })
 
     it("swap cross full knockout [@gas-test]", async() => {
         await test.testMint(-10000, 10000, 10000)
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum
-        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 164000)
+        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 178000)
     })
 
     it("swap cross end of knockout [@gas-test]", async() => {
@@ -73,7 +73,7 @@ describe('Gas Benchmarks Knockout', () => {
         await test.testKnockoutMint(5000*1024, false, 32, 64, true)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.1)) // Warm up swap accum
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.004)) // Move into range of knockout range
-        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 146000)
+        await expectGas(test.testSwapOther(true, true, 100000000, toSqrtPrice(1.008)), 160000)
     })
 
 })

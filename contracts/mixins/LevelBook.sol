@@ -115,6 +115,22 @@ contract LevelBook is TickCensus {
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
     }
 
+    /* @dev Near identical to addBookLiq() above but uses higher precision 72-bit 
+     *      range positions and fee odometer values. */
+    function addBookLiq72 (bytes32 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                           uint96 lots, uint64 feeGlobal)
+        internal returns (uint72 feeOdometer) {
+
+        // Make sure to init before add, because init logic relies on pre-add liquidity
+        initLevel(poolIdx, midTick, bidTick, feeGlobal);
+        initLevel(poolIdx, midTick, askTick, feeGlobal);
+
+        addBid(poolIdx, bidTick, lots);
+        addAsk(poolIdx, askTick, lots);
+        feeOdometer = clockFeeOdometer72(poolIdx, midTick, bidTick, askTick, feeGlobal);
+    }
+
+
     /* @notice Call when removing liquidity associated with a specific range order.
      *         Decrements the associated tick levels as necessary.
      *
@@ -138,6 +154,19 @@ contract LevelBook is TickCensus {
         bool deleteBid = removeBid(poolIdx, bidTick, lots);
         bool deleteAsk = removeAsk(poolIdx, askTick, lots);
         feeOdometer = clockFeeOdometer(poolIdx, midTick, bidTick, askTick, feeGlobal);
+
+        if (deleteBid) { deleteLevel(poolIdx, bidTick); }
+        if (deleteAsk) { deleteLevel(poolIdx, askTick); }
+    }
+
+    /* @dev Near identical to removeBookLiq() above but uses higher precision 72-bit 
+     *      range positions and fee odometer values. */
+    function removeBookLiq72 (bytes32 poolIdx, int24 midTick, int24 bidTick, int24 askTick,
+                              uint96 lots, uint64 feeGlobal)
+        internal returns (uint72 feeOdometer) {
+        bool deleteBid = removeBid(poolIdx, bidTick, lots);
+        bool deleteAsk = removeAsk(poolIdx, askTick, lots);
+        feeOdometer = clockFeeOdometer72(poolIdx, midTick, bidTick, askTick, feeGlobal);
 
         if (deleteBid) { deleteLevel(poolIdx, bidTick); }
         if (deleteAsk) { deleteLevel(poolIdx, askTick); }
@@ -243,6 +272,26 @@ contract LevelBook is TickCensus {
         unchecked {
             return feeUpper - feeLower;
         }
+    }
+
+    /* @notice Snapshots a value cumulative fee accumulation in a tick range to be
+     *         used when calculating the growth of a position over time. See description
+     *         in clockFeeOdomter() for more details.
+     *
+     * @dev  Unlike clockFeeOdomter() the returned snapshot is a 72-bit representation.
+     *       Each snapshot adds a uint64 max offset to avoid the possibility of underflow. 
+     *       Because the offset is included on every calculation, it will always cancel out
+     *       in the rewards delta calculation. */
+    function clockFeeOdometer72 (bytes32 poolIdx, int24 currentTick,
+                                 int24 lowerTick, int24 upperTick, uint64 feeGlobal)
+        internal view returns (uint72) {
+        uint72 feeLower = pivotFeeBelow(poolIdx, lowerTick, currentTick, feeGlobal);
+        uint72 feeUpper = pivotFeeBelow(poolIdx, upperTick, currentTick, feeGlobal);
+        
+        // Set to be large enough, so the delta between the uint64 values from pivotFeeBelow()
+        // will never underflow the snapshot.
+        uint72 fixedOffset = type(uint64).max;
+        return (fixedOffset + feeUpper) - feeLower;
     }
 
     /* @dev Internally we checkpoint the last global accumulator value from the last

@@ -41,12 +41,6 @@ describe('Pool Proxy Paths', () => {
        mockProxy = await factory.deploy() as MockHotProxy
     })
 
-    it("swap no proxy", async() => {
-        await test.testMint(-5000, 8000, 1000000);         
-        // Will fail because proxy hasn't been set.
-        await expect(test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))).to.be.reverted
-    })
-
     it("swap proxy", async() => {
         await test.testUpgradeHotProxy(hotProxy.address)
 
@@ -88,11 +82,19 @@ describe('Pool Proxy Paths', () => {
         expect(await test.snapQuoteFlow()).to.equal(counterFlow)
     })
 
+    // swap() call gracefully re-routes closed hot path
     it("swap force proxy", async() => {
         await test.testUpgradeHotProxy(hotProxy.address, true)
         await test.testMint(-5000, 8000, 1000000); 
         test.useSwapProxy.base = false
-        await expect(test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))).to.be.reverted
+
+        const counterFlow = -6620437
+
+        await test.snapStart()
+        await test.testSwap(true, true, 10000*1024, toSqrtPrice(2.0))
+
+        expect(await test.snapBaseFlow()).to.equal(10240000)
+        expect(await test.snapQuoteFlow()).to.equal(counterFlow)
     })
 
     it("swap long path okay", async() => {

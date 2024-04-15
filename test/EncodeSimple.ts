@@ -37,7 +37,7 @@ export function simpleSettle (token: string): SettlementDirective {
         dustThresh: BigNumber.from(0), useSurplus: false }
 }
 
-export function simpleMint (poolIdx: BigNumberish, lowerTick: number, upperTick: number, liq: number): PoolDirective  {
+export function simpleMint (poolIdx: BigNumberish, lowerTick: number, upperTick: number, liq: BigNumberish): PoolDirective  {
      return { 
         poolIdx: poolIdx,
         passive: {
@@ -75,7 +75,7 @@ export function simpleMintAmbient (poolIdx: BigNumberish, liq: number): PoolDire
 }
 
 export function simpleSwap (poolIdx: BigNumberish, isBuy: boolean, inBaseQty: boolean, 
-    qty: number, limitPrice: BigNumber): PoolDirective  {
+    qty: BigNumberish, limitPrice: BigNumber): PoolDirective  {
     return { 
        poolIdx: poolIdx,
        passive: {

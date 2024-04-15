@@ -30,7 +30,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
     
     function depositCrocLiq (address sender, bytes32 pool,
                              int24 lowerTick, int24 upperTick, uint128 seeds,
-                             uint64) public override returns (bool) {
+                             uint72) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-Ambient LP Deposit");
         _mint(sender, seeds);
@@ -39,7 +39,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
 
     function withdrawCrocLiq (address sender, bytes32 pool,
                               int24 lowerTick, int24 upperTick, uint128 seeds,
-                              uint64) public override returns (bool) {
+                              uint72) public override returns (bool) {
         require(pool == poolHash, "Wrong pool");
         require(lowerTick == 0 && upperTick == 0, "Non-Ambient LP Deposit");
         _burn(sender, seeds);

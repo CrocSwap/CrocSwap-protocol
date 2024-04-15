@@ -17,4 +17,22 @@ contract TestLiquidityMath {
     function testMinus (uint128 x, uint128 y) public pure returns (uint128) {
         return x.minusDelta(y);
     }
+
+    function testDeltaRewards (uint64 x, uint64 y) public pure returns (uint64) {
+        return LiquidityMath.deltaRewardsRate(x, y);
+    }
+
+    function testDeltaRewards72 (uint72 x, uint72 y) public pure returns (uint64) {
+        return LiquidityMath.deltaRewardsRate72(x, y);
+    }
+
+    function testBlendMileage (uint64 mileageX, uint128 liqX, 
+        uint64 mileageY, uint128 liqY) public pure returns (uint64) {
+        return LiquidityMath.blendMileage(mileageX, liqX, mileageY, liqY);
+    }
+
+    function testBlendMileage72 (uint72 mileageX, uint128 liqX, 
+        uint72 mileageY, uint128 liqY) public pure returns (uint72) {
+        return LiquidityMath.blendMileage72(mileageX, liqX, mileageY, liqY);
+    }
 }

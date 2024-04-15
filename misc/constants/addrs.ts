@@ -14,9 +14,11 @@ export interface CrocAddrs {
     query: string,
     impact: string,
     shell: string,
+    swapRouter?: string,
+    swapBypass?: string,
     policyShell: string,
     deployer: string,
-    govern: CrocGovAddrs
+    govern: CrocGovAddrs,
 }
 
 export interface CrocGovAddrs {
@@ -173,11 +175,91 @@ const goerliAddrsDryRun: CrocAddrs = {
 }
 
     
+// Scroll Testnet Sepolia
+const scrollSepolia: CrocAddrs = {
+    dex: '0xaaAAAaa6612bd88cD409cb0D70C99556C87A0E8c',
+    cold: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+    warm: '0xa89820D83E1871D8f271939a129Fa7993dB35b75',
+    long: '0x3d7baE85731D056889383b5765C37530deAA98A2',
+    micro: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483',
+    hot: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+    knockout: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+    koCross: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+    policy: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+    query: '0x43eC1302FE3587862e15B2D52AD9653575FD79e9',
+    impact: '0x9B28970D51A231741416D8D3e5281d9c51a50892',
+    shell: '',
+    policyShell: '',
+    deployer: '0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005',
+    govern: {
+      multisigTreasury: '',
+      multisigOps: '',
+      multisigEmergency: '',
+      timelockTreasury: '',
+      timelockOps: '',
+      timelockEmergency: ''
+    }
+}
+
+const scrollMainnet: CrocAddrs = {
+  dex: '0xaaaaAAAACB71BF2C8CaE522EA5fa455571A74106',
+  cold: '0xa01C4E40FE62c3FFd7152569E20a5BDAd23F171D',
+  warm: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  long: '0xe3150C65446Dc05505ac33B51D742E9458fE0BfE',
+  micro: '0x418C68Ce5B73783abe178dB12dfEe9375D965dbb',
+  hot: '0xe1eC23F5069586cd4CDe4E693A354e7a45E12608',
+  knockout: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  koCross: '0x67231C7Db63e5D7378596AaDD6BA69345E6a53aA',
+  policy: '0x70b161F2f0A18Bd1865021F25f9e895021E9DC4f',
+  query: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  impact: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '0x81956099675d25363d17B983125dD99269A9f26F',
+    multisigOps: '0x1E0cc2fbEb09e320223A380357978d651ed652bC',
+    multisigEmergency: '0x81956099675d25363d17B983125dD99269A9f26F',
+    timelockTreasury: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916',
+    timelockOps: '0xDb0eE1193C4D05eb644efb2a1db13275b8F5994f',
+    timelockEmergency: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916'
+  },
+  swapRouter: '0xfB5f26851E03449A0403Ca945eBB4201415fd1fc',
+  swapBypass: '0xED5535C6237f72BD9b4fDEAa3b6D8d9998b4C4e4'
+}
+
+const beraTestnet: CrocAddrs = {
+  dex: '0xaaAAAaa6612bd88cD409cb0D70C99556C87A0E8c',
+  cold: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
+  warm: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+  long: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  micro: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+  hot: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+  knockout: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+  koCross: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  policy: '0xE5B0b009e3aF251933A66E0B3BA9a25FeA0a4f89',
+  query: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+  impact: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+  shell: '',
+  policyShell: '',
+  deployer: '0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  }
+}
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
     '0x1389': mantleTestAddrs,
+    '0x8274f': scrollSepolia,
+    '0x82750': scrollMainnet,
+    '0x80D': beraTestnet,
     'mock': mockAddrs,
 }
 
@@ -194,14 +276,17 @@ export let POOL_IDXS = {
     '0x5': 36000,
     '0x1': 420,
     '0x1389': 36000,
+    '0x8274f': 36000,
+    '0x82750': 420,
+    '0x80D': 36000
 }
 
 export const BOOT_PROXY_IDX = 0;
 export const SWAP_PROXY_IDX = 1;
-export const LP_PROXY_IDX = 2;
+export const LP_PROXY_IDX = 128;
 export const COLD_PROXY_IDX = 3;
-export const LONG_PROXY_IDX = 4;
-export const MICRO_PROXY_IDX = 5;
+export const LONG_PROXY_IDX = 130;
+export const MICRO_PROXY_IDX = 131;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;

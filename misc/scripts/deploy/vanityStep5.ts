@@ -9,6 +9,8 @@ import { AbiCoder } from '@ethersproject/abi';
 const abi = new AbiCoder()
 let cmd
 
+const txArgs = { gasLimit: 1000000}
+
 async function install() {
     let { addrs, chainId, wallet: authority } = initChain()
 
@@ -16,27 +18,27 @@ async function install() {
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.long, LONG_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install long path")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install long path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.warm, LP_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install warm path")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install warm path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.hot, SWAP_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install hot proxy path")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install hot proxy path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.micro, MICRO_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install micro paths")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install micro paths")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.knockout, KNOCKOUT_LP_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install knockout liquidity proxy path")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install knockout liquidity proxy path")
 
     cmd = abi.encode(["uint8", "address", "uint16"], [21, addrs.koCross, FLAG_CROSS_PROXY_IDX])
     await traceContractTx(policy.treasuryResolution(
-        addrs.dex, BOOT_PROXY_IDX, cmd, true), "Install knockout cross proxy path")
+        addrs.dex, BOOT_PROXY_IDX, cmd, true, txArgs), "Install knockout cross proxy path")
 }
 
 install()
