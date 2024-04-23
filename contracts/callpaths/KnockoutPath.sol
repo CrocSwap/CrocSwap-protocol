@@ -79,6 +79,9 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
          bytes memory args) = abi.decode
             (cmd, (uint8, address, address, uint256, int24, int24, bool, uint8, bytes));
 
+        // Ensure reserve flags are valid
+        require(reserveFlags < 0x4, "RF");
+
         PoolSpecs.PoolCursor memory pool = queryPool(base, quote, poolIdx);
         CurveMath.CurveState memory curve = snapCurve(pool.hash_);
 
