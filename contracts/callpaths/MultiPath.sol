@@ -24,6 +24,7 @@ contract MultiPath is ProxyCaller {
     
     function userCmd (bytes calldata cmd) public payable {
         uint8 cmdCode = uint8(cmd[31]);
+        require(cmdCode >= 2 && cmdCode <= 5, "Invalid number of commands");
 
         if (cmdCode == 2) {
             (, uint8 code1, bytes memory cmd1, uint8 code2, bytes memory cmd2) =
