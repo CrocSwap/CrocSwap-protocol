@@ -5,6 +5,9 @@ import './LiquidityAmountsNative.sol';
 
 /// @title Liquidity amount functions
 /// @notice Provides functions for computing liquidity amounts from token amounts and prices
+/// @dev Note For exact bytecode compatibiility this library uses Uniswap V3 X64.96 price
+///           format even though CrocSwap uses X64.64 prices. To use X64.64 prices use the
+///           LiquidityAmountsNative library instead.
 library LiquidityAmounts {
     /// @notice Downcasts uint256 to uint128
     /// @param x The uint258 to be downcasted

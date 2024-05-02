@@ -5,7 +5,8 @@ import '../../../libraries/FixedPoint.sol';
 import '../../../libraries/CurveMath.sol';
 
 /// @title Liquidity amount functions
-/// @notice Provides functions for computing liquidity amounts from token amounts and prices
+/// @notice Same as LiquidityAmounts.sol library but uses CrocSwap native X64.64 prices instead
+///         of Uniswap X64.96 price format
 library LiquidityAmountsNative {
     /// @notice Downcasts uint256 to uint128
     /// @param x The uint258 to be downcasted
