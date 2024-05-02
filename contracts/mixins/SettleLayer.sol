@@ -511,14 +511,20 @@ contract SettleLayer is AgentMask {
     }
 
     function unwrapWberaAndSend (address recv, int128 value) internal {
-        wbera.call(abi.encodeWithSignature("withdraw(uint256)", uint256(abs(value))));
+        (bool status,) = wbera.call(
+            abi.encodeWithSignature("withdraw(uint256)", uint256(abs(value)))
+        );
+        require(status, "unwrap call failed");
         TransferHelper.safeEtherSend(recv, abs(value));
     }
 
     function wrapBeraAndDeposit (int128 value) internal {
         uint128 msgValue = popMsgVal();
         require(msgValue >= abs(value), "TF4");
-        wbera.call{value: uint256(msgValue)}(abi.encodeWithSignature("deposit()"));
+        (bool status,) = wbera.call{value: uint256(msgValue)}(
+            abi.encodeWithSignature("deposit()")
+        );
+        require(status, "wrap call failed");
     }
 
     function abs(int128 x) internal pure returns (uint128) {
