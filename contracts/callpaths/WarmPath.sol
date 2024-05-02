@@ -60,17 +60,16 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
         require(reserveFlags < 0x4, "RF");
 
         if (base == address(0)) {
+            require(!isBurnOrHarvest(code), "WB");
             base = wbera;
             reserveFlags = 0x4;
         }
 
         if (quote == address(0)) {
+            require(!isBurnOrHarvest(code), "WB");
             quote = wbera;
             reserveFlags = 0x5;
         }
-        
-        // if (base == address(0)) { base = wbera; }
-        // else if ( quote == address(0)) { quote = wbera; }
 
         if (lpConduit == address(0)) { lpConduit = lockHolder_; }
         
@@ -221,5 +220,12 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
      *         in the correct slot. */
     function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
         return slot == CrocSlots.LP_PROXY_IDX;
+    }
+
+    function isBurnOrHarvest (uint8 code) internal pure returns (bool) {
+        return code == UserCmd.BURN_AMBIENT_LIQ_LP ||
+               code == UserCmd.BURN_AMBIENT_BASE_LP ||
+               code == UserCmd.BURN_AMBIENT_QUOTE_LP ||
+               code == UserCmd.HARVEST_LP;
     }
 }
