@@ -46,6 +46,14 @@ contract LongPath is MarketSequencer, SettleLayer, ProtocolAccount {
         Chaining.ExecCntx memory cntx;
         int128[] memory flows = new int128[](order.hops_.length+1); 
 
+        
+        if (pairs.baseToken_ == address(0)) {
+            pairs.baseToken_ = wbera;
+        }
+        if (pairs.quoteToken_ == address(0)) {
+            pairs.quoteToken_ = wbera;
+        }
+
         for (uint i = 0; i < order.hops_.length; ++i) {
             pairs.nextHop(settleChannel.token_, order.hops_[i].settle_.token_);
             cntx.improve_ = queryPriceImprove(order.hops_[i].improve_,
