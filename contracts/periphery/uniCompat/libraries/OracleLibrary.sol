@@ -22,8 +22,8 @@ library OracleLibrary {
 
         uint256 ratioX128 = uint256(sqrtRatioX64) * uint256(sqrtRatioX64);
         quoteAmount = baseToken < quoteToken ?
-            (ratioX128 * baseAmount) >> 128 :
-            (baseAmount << 128) / ratioX128;
+            (ratioX128 * uint256(baseAmount)) >> 128 :
+            (uint256(baseAmount) << 128) / ratioX128;
     }
 
     /// @notice Returns the "synthetic" tick which represents the price of the first entry in `tokens` in terms of the last
