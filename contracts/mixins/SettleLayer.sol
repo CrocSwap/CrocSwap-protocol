@@ -527,7 +527,10 @@ contract SettleLayer is AgentMask {
         require(status, "wrap call failed");
     }
 
-    function abs(int128 x) internal pure returns (uint128) {
-        return x >= 0 ? uint128(x) : uint128(-x);
+    function abs(int256 x) internal pure returns (uint256 z) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            z := xor(sar(255, x), add(sar(255, x), x))
+        }
     }
 }
