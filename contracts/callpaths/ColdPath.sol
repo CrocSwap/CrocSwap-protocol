@@ -13,7 +13,7 @@ import '../mixins/MarketSequencer.sol';
 import '../mixins/StorageLayout.sol';
 import '../mixins/ProtocolAccount.sol';
 import '../mixins/DepositDesk.sol';
-import '../periphery/BeraCrocLpErc20.sol';
+import '../periphery/CrocLpErc20.sol';
 import '../interfaces/ICrocMinion.sol';
 import '../CrocEvents.sol';
 
@@ -147,13 +147,13 @@ contract ColdPath is MarketSequencer, DepositDesk, ProtocolAccount {
             settleInitFlow(lockHolder_, base, baseFlow, quote, quoteFlow);
         }
 
-        bytes memory bytecode = type(BeraCrocLpErc20).creationCode;
+        bytes memory bytecode = type(CrocLpErc20).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(base, quote)); // don't need poolIdx because it is enforced above
         address pair;
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        BeraCrocLpErc20(pair).initialize(base, quote, poolIdx);
+        CrocLpErc20(pair).initialize(base, quote, poolIdx);
         emit CrocEvents.BeraCrocLPCreated(base, quote, poolIdx, pair);
     }
 
