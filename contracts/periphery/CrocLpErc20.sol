@@ -2,9 +2,9 @@
 
 pragma solidity 0.8.19;
 
+import "../libraries/BaseERC20.sol";
 import "../libraries/PoolSpecs.sol";
 import "../interfaces/ICrocLpConduit.sol";
-import "@rari-capital/solmate/src/tokens/ERC20.sol";
 
 contract CrocLpErc20 is ERC20, ICrocLpConduit {
 
@@ -14,7 +14,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
     address public quoteToken;
     uint256 public poolType;
     
-    constructor () ERC20 ("Croc Ambient LP ERC20 Token", "LP-CrocAmb", 18) {
+    constructor () ERC20 ("LP-CrocAmb", 18) {
         factory = msg.sender;
     }
     
@@ -46,6 +46,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
         // the pair.
         require(_quote > _base, "Invalid Token Pair");
         require(msg.sender == factory, 'A'); // sufficient check
+        setup(string(abi.encodePacked(_base, "-", _quote, "-LP")));
         baseToken = _base;
         quoteToken = _quote;
         poolType = _idx;
