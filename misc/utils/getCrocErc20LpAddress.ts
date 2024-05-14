@@ -5,7 +5,7 @@ export const getCrocErc20LpAddress = async (base: string, quote: string, dexAddr
   const salt = ethers.utils.keccak256(
     ethers.utils.solidityPack(["address", "address"], [base, quote]),
   );
-  const factory = await ethers.getContractFactory("BeraCrocLpErc20")
+  const factory = await ethers.getContractFactory("CrocLpErc20")
   const creationCode = factory.bytecode;
   const initCodeHash = keccak256(creationCode);
   const create2Address = ethers.utils.getCreate2Address(
