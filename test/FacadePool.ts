@@ -166,6 +166,7 @@ export class TestPool {
     poolIdx: BigNumberish
     liqQty: boolean
     liqBase: boolean
+    liqLots: boolean
     initTemplBefore: boolean
     slippage?: BigNumber
     gasSpent: BigNumber
@@ -185,6 +186,7 @@ export class TestPool {
         this.third = accts.then(a => a[3])        
         this.liqQty = false
         this.liqBase = true
+        this.liqLots = true
         this.initTemplBefore = true
         this.gasSpent = BigNumber.from(0)
 
@@ -470,7 +472,7 @@ export class TestPool {
 
     async testMintFrom (from: Signer, lower: number, upper: number, liq: BigNumberish, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
-        const lots = BigNumber.from(liq).mul(1024)
+        const lots = BigNumber.from(liq).mul(this.liqLots ? 1024 : 1)
         if (this.useHotPath) {
             let inputBytes = this.encodeMintPath(lower, upper, lots, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
@@ -484,12 +486,14 @@ export class TestPool {
 
     async testBurnFrom (from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
+        const lots = this.liqLots ? liq*1024 : liq
         if (this.useHotPath) {
-            let inputBytes = this.encodeBurnPath(lower, upper, liq*1024, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+            let inputBytes = this.encodeBurnPath(lower, upper, lots, 
+                toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
             return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
-            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, -liq*1024))
+            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, lots))
             let inputBytes = encodeOrderDirective(directive);
             return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
         }

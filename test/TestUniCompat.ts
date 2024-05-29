@@ -54,12 +54,12 @@ describe('Uni Compatibility Libraries', () => {
             toSqrtPrice(poolPrice), lowerPrice, upperPrice,
             quoteQty, baseQty)
 
-        console.log(liquidity)
         expect(liquidity.mod(2048)).eq(0)
 
         // Mint with the derived liquidity amount
         test.liqQty = false
-        await test.testMint(lowerTick, upperTick, liquidity.div(1024))
+        test.liqLots = false
+        await test.testMint(lowerTick, upperTick, liquidity)
 
         let quote = await test.snapQuoteOwed()
         let base = await test.snapBaseOwed()
