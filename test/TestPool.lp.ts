@@ -6,6 +6,8 @@ import { toSqrtPrice, fromSqrtPrice, maxSqrtPrice, minSqrtPrice } from './FixedP
 import { solidity } from "ethereum-waffle";
 import chai from "chai";
 import { MockERC20 } from '../typechain/MockERC20';
+import { BigNumber } from 'ethers';
+import { TestUniCompat } from '../typechain';
 
 chai.use(solidity);
 
@@ -124,5 +126,47 @@ describe('Pool Warm LP Path', () => {
         // Can't mint a base collateral target when range order is out of
         // range on the quote side.
         expect(test.testMint(2000, 3000, 10000)).to.be.reverted
+    })
+
+    
+
+})
+
+describe('Pool Warm Custom', () => {
+    let test: TestPool
+    let baseToken: Token
+    let quoteToken: Token
+    const feeRate = 225 * 100
+
+    beforeEach("deploy",  async () => {
+       test = await makeTokenPool()
+       baseToken = await test.base
+       quoteToken = await test.quote
+
+       await test.initPool(feeRate, 0, 1, 325743212)
+       test.useHotPath = true
+       test.liqQty = true
+
+       await test.fundTokens(BigNumber.from(10).pow(24))
+    })
+
+    it("mint test", async() => {
+        let uniLibFactory = await ethers.getContractFactory("TestUniCompat")
+        let uniLib = await uniLibFactory.deploy() as TestUniCompat
+
+        let results = uniLib.getLiquidityForAmountsNative(
+            toSqrtPrice(325743212), toSqrtPrice(295631642), toSqrtPrice(358204706),
+            4546806, 1446711801938050)
+        console.log(await results)
+
+        test.liqQty = false
+        await test.testMint(195056, 196976, Math.floor(1693217948365/1024))
+
+        let quote = await test.snapQuoteOwed()
+        let base = await test.snapBaseOwed()
+        console.log(quote.toString())
+        console.log(base.toString())
+        /*expect(base).to.eq(0)
+        expect(quote).to.eq(0)*/
     })
 })

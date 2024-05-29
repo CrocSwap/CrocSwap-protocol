@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 
 import '../../../libraries/FixedPoint.sol';
 import '../../../libraries/CurveMath.sol';
+import '../../../libraries/LiquidityMath.sol';
 
 /// @title Liquidity amount functions
 /// @notice Same as LiquidityAmounts.sol library but uses CrocSwap native X64.64 prices instead
@@ -26,7 +27,8 @@ library LiquidityAmountsNative {
         uint128 sqrtRatioBX64,
         uint256 amount0
     ) internal pure returns (uint128 liquidity) {
-        return CurveMath.liquiditySupported(toUint128(amount0), false, sqrtRatioAX64, sqrtRatioBX64);
+        return LiquidityMath.shaveRoundLots(
+            CurveMath.liquiditySupported(toUint128(amount0), false, sqrtRatioAX64, sqrtRatioBX64));
     }
 
     /// @notice Computes the amount of liquidity received for a given amount of token1 and price range
@@ -40,7 +42,8 @@ library LiquidityAmountsNative {
         uint128 sqrtRatioBX64,
         uint256 amount1
     ) internal pure returns (uint128 liquidity) {
-        return CurveMath.liquiditySupported(toUint128(amount1), true, sqrtRatioAX64, sqrtRatioBX64);
+        return LiquidityMath.shaveRoundLots(
+            CurveMath.liquiditySupported(toUint128(amount1), true, sqrtRatioAX64, sqrtRatioBX64));
     }
 
     /// @notice Computes the maximum amount of liquidity received for a given amount of token0, token1, the current
