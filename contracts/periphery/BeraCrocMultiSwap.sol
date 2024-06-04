@@ -7,6 +7,7 @@ import "../libraries/FixedPoint.sol";
 import "../libraries/SwapHelpers.sol";
 import "../libraries/TickMath.sol";
 import "../interfaces/IERC20Minimal.sol";
+import "../libraries/FixedPointMathLib.sol";
 
 contract BeraCrocMultiSwap {
     using FixedPointMathLib for uint256;

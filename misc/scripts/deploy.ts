@@ -1,5 +1,4 @@
 import { ethers } from "hardhat";
-import { ZERO_ADDR } from "../../test/FixedPoint";
 import {
     CrocSwapDex,
     ColdPath,
@@ -14,7 +13,6 @@ import {
     KnockoutFlagPath,
     KnockoutLiqPath,
     MultiPath,
-    BeraCrocMultiSwap,
     WBERA
 } from "../../typechain";
 
@@ -36,163 +34,30 @@ interface CrocAddrs {
     wbera: string | undefined;
 }
 
-/* Ropsten */
-/*let addrs = {
-    dex: "0x129bcaa67e211bfaf5f2d070405f3437282b5661",
-    cold: "0x965a77f99d6aab400d5d13bccf47c63d192b3fa8",
-    warm: "0x40ec968eEB324963127D86A5821FDa3379578301",
-    long: "0x15ccfd33faba9651adc3ca779ab2fd6debda76a0",
-    micro: "0xf9d00826c2692f379862ab8dfb06e14a6fd1f8ee",
-    hot: "0x2975F2849B37a401f526a363e410B930c82A4f3d",
-    policy: "0x8dce7b4583d1777671b3db2c80370e8053d4a90a",
-    query: "0xc6768b1fb34035af90c0c994baced9ad86671a8c",
-    shell: "0x2ee92b38056c28360467880bfa33c78cdbd1cab6"
-}*/
-
-// Kovan
-/*let addrs = {
-    dex: "0x5d42d6046927dee12b9b4a235be0cecd55d0e0fb",
-    cold: "0x141e224f461a85006b2ef051a7c1c290e449202a",
-    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
-    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
-    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
-    hot: "0x6291aa5812ff75412cf3f3258447139653a9a209",
-    policy: "0xdcb3b5ec9170bef68e9fff21f0edd622f72f1899",
-    query: "0x3a6e9cff691a473d4d0742e1dfc8ea263a99f6d0",
-    shell: "0xf19D3dcdF82af0d40Cb3b4AaE4D266c638A3E454"
-}*/
-
-// Goerli
-/*let addrs = {
-    dex: "0xfafcd1f5530827e7398b6d3c509f450b1b24a209",
-    cold: "0xb2ae163293c82dcf36b0ce704591edc2f9e2608d",
-    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
-    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
-    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
-    hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
-    knockout: "0x806859d4C974F9dCBB5f77e027062a02fC965987",
-    koCross: "0xa7b87362b5b86f696a8027b409c20dba094744e2",
-    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
-    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518", 
-    impact: "0x142BE02F2A3A27ecD6e2f18a43c2C234F372C831",
-    shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861"
-}*/
-
-// Arbitrum Goerli
-/*let addrs = {
-    dex: '0x9EA4B2f9b1572eD3aC46b402d9Ba9153821033C6',
-    cold: '0xb2aE163293C82DCF36b0cE704591eDC2f9E2608D',
-    warm: '0x01B180D35125D31B4057d9ac7F46687dA1cAEFab',
-    long: '0x66D34E1486d0bAd1A8ceD5a8505a73d0CFD41a0A',
-    micro: '0x323172539B1B0D9eDDFFBd0318C4d6Ab45292843',
-    hot: '0x141E224f461a85006b2EF051a7C1c290E449202A',
-    knockout: '0xfAfcD1f5530827e7398B6D3C509f450b1b24a209',
-    koCross: '0xAA391eE82F0C6b406E98cCd76d637CaC2f712228',
-    policy: '0xDf2a97aE85e8Ce33ad20Ad2D3960fD92E8079861',
-    query: '0x6291Aa5812FF75412Cf3F3258447139653A9a209',
-    impact: '0x5afc7599A4b659C5c628fBC212012B68F3b5D41C',
-    shell: '0x157EcDcCE75f24635cEB7FF9F2ac9BFf3ebF9733'
-  }*/
-
-// Mumbai
-/*let addrs: CrocAddrs = {
-    dex: '0x0bE8385D8CDDE8FACb54cF52FEd856D6C37Bb8e3',
-    cold: '0x8e5a7ca8D9Ef7f9F6bedabCf9c21c539D6074bD4',
-    warm: '0xbCb14ced50469E9F6B5E23527E7cdE0d96f2f0cf',
-    long: '0x8D8Fd9A5CDF3b7238223E17e4e4c66D4500a13C6',
-    micro: '0xd40CBB866A7f0b1e36132a86DDfe1a8bA8492286',
-    hot: '0x6c53969F9273560F393a8BcbFA40906E7B51b1B2',
-    knockout: '0x66B5b7f1F5604FC33aF247D59a7938369B37358F',
-    koCross: '0x0C4BA0D85b6a93ae8746dBE4Bd1E9499D8e61999',
-    policy: '0xCb0403d581C2BB794F5734D9c63bE31Bf18892c3',
-    query: '0x6E6e2526cE1951576F452053Df1C5D11336738de',
-    impact: '0x4d054Cb42B2AC113FFe542da7CE4A64Cf570898D',
-    shell: '0x57f8908f340D522ca8B6E2E89d31b4eEF9B1779B'
-  }*/
-
-// Fuji
-// const addrs: CrocAddrs = {
-//   dex: undefined,
-//   cold: undefined,
-//   warm: undefined,
-//   long: undefined,
-//   micro: undefined,
-//   multi: undefined,
-//   hot: undefined,
-//   knockout: undefined,
-//   koCross: undefined,
-//   policy: undefined,
-//   query: undefined,
-//   impact: undefined,
-//   shell: undefined,
-//   multiswap: undefined,
-//   wbera: '0x459C653FaAE6E13b59cf8E005F5f709C7b2c2EB4',
-// };
-
-// const addrs: CrocAddrs = {
-//     dex: undefined,
-//     cold: undefined,
-//     warm: undefined,
-//     long: undefined,
-//     micro: undefined,
-//     multi: undefined,
-//     hot: undefined,
-//     knockout: undefined,
-//     koCross: undefined,
-//     policy: undefined,
-//     query: undefined,
-//     impact: undefined,
-//     shell: undefined,
-//     multiswap: undefined,
-//     wbera: undefined,
-// };
-
-// // Berachain-Artio
-let addrs: CrocAddrs = {
-    dex: '0x6f8299db62DE1B16a317B34e58357907eDA89957',
-    cold: '0xFFAf30CB28f12278E7b4674AeCf1Af38b15467a6',
-    warm: '0x33920AB6F04D3f0173726CffA247e711642c990E',
-    long: '0x6A43aD3E067932C72f62b79EcFEc950C449424Ee',
-    micro: '0x290240A565Bd5a8Ebb35b5BBb0D777bD9E1Fa13F',
-    multi: '0xD60f188bb2Bd6f0E445e0BdB9e3586AeBB5324e4',
-    hot: '0x2A7E08B198018070cb9602511b876af417DF44Ed',
-    knockout: '0xD23bA032fed67831256cB60f80478CA45A359f12',
-    koCross: '0x95339133668E561eDc575040f7396bDae0591166',
-    policy: '0xC36CdbdA1185CcfB574f82F7eC3E4cE2ac6BdBd0',
-    query: '0xd55d1f1802b08cB0130C61E2897938b547E496BD',
-    impact: '0x334C33C1896672b760A4AfCAD17ef75BB345FCe1',
-    shell: '0x4b7a7c766B50F2f082Ef629c0239b9FC3bcbe933',
-    multiswap: '0x61DD7579f4A01402e8d3e40160a75E86b53dc0d3',
-    wbera: '0xC1707a37BDa254D5B54eDeE18b0a5eb2354B3Aa0'
-};
-
-// Ropsten
-/*let tokens = {
-    eth: ZERO_ADDR,
-    dai: "0xaD6D458402F60fD3Bd25163575031ACDce07538D",
-    usdc: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F"
-}*/
-
-// Kovan
-/*let tokens = {
-    eth: ZERO_ADDR,
-    dai: "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa",
-    usdc: "0xb7a4F3E9097C08dA09517b5aB877F7a917224ede"
-}*/
-
-// Goerli
-const tokens = {
-    eth: ZERO_ADDR,
-    dai: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
-    usdc: "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C",
+const addrs: CrocAddrs = {
+    dex: undefined,
+    cold: undefined,
+    warm: undefined,
+    long: undefined,
+    micro: undefined,
+    multi: undefined,
+    hot: undefined,
+    knockout: undefined,
+    koCross: undefined,
+    policy: undefined,
+    query: undefined,
+    impact: undefined,
+    shell: undefined,
+    multiswap: undefined,
+    wbera: undefined,
 };
 
 const BOOT_PROXY_IDX = 0;
 const SWAP_PROXY_IDX = 1;
-const LP_PROXY_IDX = 2;
+const LP_PROXY_IDX = 128;
 const COLD_PROXY_IDX = 3;
-const LONG_PROXY_IDX = 4;
-const MICRO_PROXY_IDX = 5;
+const LONG_PROXY_IDX = 130;
+const MICRO_PROXY_IDX = 131;
 const MULTICALL_PROXY_IDX = 6;
 const KNOCKOUT_LP_PROXY_IDX = 7;
 const FLAG_CROSS_PROXY_IDX = 3500;
@@ -412,96 +277,6 @@ async function deploy() {
     await initPoolTemplate(policy);
 
     return
-
-    // let factory = await ethers.getContractFactory("MockERC20");
-    // let dai = (await factory.deploy()) as MockERC20;
-    // console.log("Dai: ", dai.address);
-    // tokens.dai = dai.address;
-    // await dai.deposit(authority.address, BigNumber.from(10).pow(36));
-    //
-    // let usdc = (await factory.deploy()) as MockERC20;
-    // console.log("Usdc: ", usdc.address);
-    // tokens.usdc = usdc.address;
-    // await usdc.deposit(authority.address, BigNumber.from(10).pow(36));
-    //
-    // let tx = await dai.approve(dex.address, BigNumber.from(10).pow(36));
-    // await tx.wait();
-    //
-    // tx = await usdc.approve(dex.address, BigNumber.from(10).pow(36));
-    // await tx.wait();
-    //
-    // console.log("Q");
-    // let initPoolCmd = abi.encode(
-    //   ["uint8", "address", "address", "uint256", "uint128"],
-    //   [71, tokens.eth, tokens.dai, 36000, toSqrtPrice(1 / 3000)],
-    // );
-    // tx = await dex.userCmd(COLD_PROXY_IDX, initPoolCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000 });
-    // console.log("init pool", tx);
-    // await tx.wait();
-    //
-    // let initUsdcCmd = abi.encode(
-    //   ["uint8", "address", "address", "uint256", "uint128"],
-    //   [71, tokens.usdc, tokens.dai, 36000, toSqrtPrice(1)],
-    // );
-    // tx = await dex.userCmd(COLD_PROXY_IDX, initUsdcCmd, { gasLimit: 6000000 });
-    // console.log("init usdc", tx);
-    // await tx.wait();
-    //
-    // let mintCmd = abi.encode(
-    //   ["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-    //   [31, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR],
-    // );
-    // tx = await dex.userCmd(2, mintCmd, { value: BigNumber.from(10).pow(15), gasLimit: 6000000 });
-    // console.log("mint", tx);
-    // await tx.wait();
-    //
-    // let cmd = abi.encode(
-    //   ["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-    //   [31, tokens.usdc, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(3), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR],
-    // );
-    // tx = await dex.userCmd(2, cmd, { gasLimit: 6000000 });
-    // console.log("mint usdc", tx);
-    // await tx.wait();
-    //
-    // tx = await dex.swap(tokens.eth, tokens.dai, 36000, true, true, BigNumber.from(10).pow(12), 0, MAX_PRICE, 0, 0, {
-    //   value: BigNumber.from(10).pow(12),
-    // });
-    // console.log("swap eth", tx);
-    // await tx.wait();
-    //
-    // tx = await dex.swap(tokens.eth, tokens.dai, 36000, false, true, BigNumber.from(10).pow(12), 0, MIN_PRICE, 0, 0);
-    // console.log("swap eth", tx);
-    // await tx.wait();
-    //
-    // tx = await dex.swap(tokens.usdc, tokens.dai, 36000, true, false, BigNumber.from(10).pow(2), 0, MAX_PRICE, 0, 0);
-    // console.log("swap usdc", tx);
-    // await tx.wait();
-
-    // Burn ambient
-    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-        [41, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
-    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000})
-    await tx.wait()*/
-
-    // Remint
-    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-        [31, tokens.eth, tokens.dai, 36000, 0, 0, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
-    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(15) })
-    console.log(tx)
-    await tx.wait()*/
-
-    // Mint concentrated liquidity
-    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-        [11, tokens.eth, tokens.dai, 36000, -128000+256, 128000-256, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
-    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(15) })
-    console.log(tx)
-    await tx.wait()*/
-
-    /*cmd = abi.encode(["uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
-        [21, tokens.eth, tokens.dai, 36000, -128000+64, 128000-64, BigNumber.from(10).pow(15), MIN_PRICE, MAX_PRICE, 0, ZERO_ADDR ])
-    tx = await dex.userCmd(2, cmd, {gasLimit: 6000000, value: BigNumber.from(10).pow(16) })
-    console.log(tx)
-    await tx.wait()*/
 }
 
 deploy();

@@ -2,6 +2,9 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
+require("hardhat-tracer");
+
+
 import "hardhat-typechain";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
@@ -38,6 +41,7 @@ module.exports = {
     local: {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
+      accounts: ["0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"]
     },
     ropsten: {
       url: "https://ropsten.infura.io/v3/cf3bc905d88d4f248c6be347adc8a1d8",
@@ -89,5 +93,11 @@ module.exports = {
           "0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a",
       ],
     },
+    devnet: {
+      url: "https://devnet-eth-rpc.berachain-devnet.com/",
+      chainId: 80086,
+      gasPrice: 10000000000,
+      accounts: [process.env.WALLET_KEY],
+    }
   },
 };
