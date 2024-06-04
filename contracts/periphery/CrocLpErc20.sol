@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
 import "../libraries/BaseERC20.sol";
 import "../libraries/PoolSpecs.sol";
 import "../interfaces/ICrocLpConduit.sol";
+import "../interfaces/IContractWithName.sol";
 
 contract CrocLpErc20 is ERC20, ICrocLpConduit {
 
@@ -14,7 +15,7 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
     address public quoteToken;
     uint256 public poolType;
     
-    constructor () ERC20 ("LP-CrocAmb", 18) {
+    constructor () ERC20 ("LP-Bex", 18) {
         factory = msg.sender;
     }
     
@@ -46,7 +47,19 @@ contract CrocLpErc20 is ERC20, ICrocLpConduit {
         // the pair.
         require(_quote > _base, "Invalid Token Pair");
         require(msg.sender == factory, 'A'); // sufficient check
-        setup(string(abi.encodePacked(_base, "-", _quote, "-LP")));
+        string memory tokenName = name;
+
+        try IContractWithName(_base).symbol() returns (string memory baseName) {
+            try IContractWithName(_quote).symbol() returns (string memory quoteName) {
+                tokenName = string(abi.encodePacked(baseName, "-", quoteName, "-LP"));
+            } catch {
+                // Empty catch block
+            }
+        } catch {
+            // Empty catch block
+        }
+
+        setup(string(abi.encodePacked(_base, "-", _quote, "-LP")), tokenName);
         baseToken = _base;
         quoteToken = _quote;
         poolType = _idx;
