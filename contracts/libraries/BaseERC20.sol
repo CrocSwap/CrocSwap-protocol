@@ -59,8 +59,9 @@ abstract contract ERC20 {
         INITIAL_DOMAIN_SEPARATOR = computeDomainSeparator();
     }
 
-    function setup(string memory _name) internal {
+    function setup(string memory _name, string memory _symbol) internal {
         name = _name;
+        symbol = _symbol;
     }
 
     /*//////////////////////////////////////////////////////////////
