@@ -18,7 +18,7 @@ describe('Uni Compatibility Libraries', () => {
     let math: TestTickMath
 
     const feeRate = 225 * 100
-    const poolPrice = 325743212
+    const poolPrice = BigNumber.from("332933433510518654159192")
 
     beforeEach("deploy",  async () => {
        const libFactory = await ethers.getContractFactory("TestTickMath");
@@ -43,16 +43,21 @@ describe('Uni Compatibility Libraries', () => {
         const lowerTick = 195056
         const upperTick = 196976
 
-        const lowerPrice = await math.testRatio(lowerTick)
-        const upperPrice = await math.testRatio(upperTick)
+        /*const lowerPrice = await math.testRatio(lowerTick)
+        const upperPrice = await math.testRatio(upperTick)*/
+
+        const lowerPrice = BigNumber.from("317172248024583459025369")
+        const upperPrice = BigNumber.from("349128551151052417083001")
 
         const quoteQty = 4546806
         const baseQty = 1446711801938050
 
         // Use getLiquityForAmounts to find a liquidity floor for above quantities
         let liquidity = await uniLib.getLiquidityForAmountsNative(
-            toSqrtPrice(poolPrice), lowerPrice, upperPrice,
+            poolPrice, lowerPrice, upperPrice,
             quoteQty, baseQty)
+
+        console.log(liquidity)
 
         expect(liquidity.mod(2048)).eq(0)
 
