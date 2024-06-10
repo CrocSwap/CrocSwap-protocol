@@ -49,7 +49,7 @@ const addrs: CrocAddrs = {
     impact: undefined,
     shell: undefined,
     multiswap: undefined,
-    wbera: undefined,
+    wbera: "0x7507c1dc16935B82698e4C63f2746A2fCf994dF8",
 };
 
 const BOOT_PROXY_IDX = 0;
