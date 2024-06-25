@@ -7,5 +7,6 @@ export const RPC_URLS = {
     '0x1389': 'https://rpc.testnet.mantle.xyz',
     '0x8274f': 'https://sepolia-rpc.scroll.io',
     '0x82750': 'https://rpc.scroll.io',
-    '0x80D': 'https://rpc.berachain-internal.com/'
+    '0x80D': 'https://rpc.berachain-internal.com/',
+    "0x99C0A0F": "https://testnet-rpc.plumenetwork.xyz/http"
 }
