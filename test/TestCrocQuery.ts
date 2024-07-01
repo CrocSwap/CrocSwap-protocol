@@ -149,6 +149,23 @@ describe('CrocQuery', () => {
         expect(result.knockedOut).to.eq(false)
     })
 
+    it("post-knockout pos tokens", async() => {
+        await test.testMintAmbient(10*1024)
+        await test.testKnockoutMint(1000, true, 3200, 3200+32, false)
+        let pivot = (await hre.ethers.provider.getBlock("latest")).timestamp
+
+        await test.testSwap(false, true, 10000000, toSqrtPrice(1.0))
+        await test.testSwap(true, true, 10000000, toSqrtPrice(1.5))
+
+        let result = await query.queryKnockoutTokens(trader, 
+            baseToken.address, quoteToken.address, POOL_IDX,  pivot, true, 3200, 3200+32)
+
+        expect(result.liq).to.eq(516 * 1024)
+        expect(result.baseQty).to.eq(0)
+        expect(result.quoteQty).to.eq(720)
+        expect(result.knockedOut).to.eq(true)
+    })
+
     it("full range liquidity", async() => {
         await test.testMintAmbient(10000)
     
