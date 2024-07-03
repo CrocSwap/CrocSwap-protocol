@@ -468,6 +468,23 @@ contract CrocQuery {
         }
     }
 
+    /* @notice Calculates the full range liquidity (base and quote reserves) for a given pool
+     * @param base The base token address
+     * @param quote The quote token address
+     * @param poolIdx The pool index
+     * @return liq The total amount of ambient sqrt(X*Y) liquidity 
+     * @return baseReserves The amount of base token reserves
+     * @return quoteReserves The amount of quote token reserves */
+    function queryPoolAmbientTokens(address base, address quote, uint256 poolIdx) 
+        external view returns (uint128 liq, uint128 baseQty, uint128 quoteQty) 
+    {
+        CurveMath.CurveState memory curve = queryCurve(base, quote, poolIdx);
+        liq = curve.activeLiquidity();
+        uint128 priceRoot = curve.priceRoot_;
+
+        (baseQty, quoteQty) = liquidityToTokens(priceRoot, liq);
+    }
+
     /* @notice Connverts an arbitrary liquidity seeds value to XYK liquidity and equivalent
      *         full-range tokens for that liquidity. */ 
     function convertSeedsToLiq (CurveMath.CurveState memory curve, uint128 seeds) 

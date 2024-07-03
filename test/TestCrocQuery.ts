@@ -49,7 +49,7 @@ describe('CrocQuery', () => {
 
         let result = await query.queryAmbientTokens(trader, 
             baseToken.address, quoteToken.address, POOL_IDX)
-        
+ 
         expect(result.liq).to.eq(10000*1024)
         expect(result.baseQty).to.eq(base)
         expect(result.quoteQty).to.eq(quote)        
@@ -164,6 +164,20 @@ describe('CrocQuery', () => {
         expect(result.baseQty).to.eq(0)
         expect(result.quoteQty).to.eq(720)
         expect(result.knockedOut).to.eq(true)
+    })
+
+    it("full range liquidity", async() => {
+        await test.testMintAmbient(10000)
+    
+        let baseExpected = await (await test.snapBaseOwed()).sub(MINT_BUFFER)
+        let quoteExpected = await (await test.snapQuoteOwed()).sub(MINT_BUFFER)
+    
+        let result = await query.queryPoolAmbientTokens(
+            baseToken.address, quoteToken.address, POOL_IDX
+        )
+    
+        expect(Number(result.baseQty)).to.be.closeTo(Number(baseExpected), 5)
+        expect(Number(result.quoteQty)).to.be.closeTo(Number(quoteExpected), 5)
     })
 
 })

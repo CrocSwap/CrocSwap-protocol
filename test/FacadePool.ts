@@ -587,6 +587,20 @@ export class TestPool {
     readonly EMERGENCY_PROXY: number = SAFE_MODE_PROXY_PATH
     readonly MULTI_PROXY: number = 6;
 
+    async testMintFrom (from: Signer, lower: number, upper: number, liq: BigNumberish, useSurplus: number = 0): Promise<ContractTransaction> {
+        await this.snapStart()
+        const lots = BigNumber.from(liq).mul(1024)
+        if (this.useHotPath) {
+            let inputBytes = this.encodeMintPath(lower, upper, lots, toSqrtPrice(0.000001), toSqrtPrice(100000000000.0), useSurplus)
+            return (await this.dex).connect(from).userCmd(this.WARM_PROXY, await inputBytes, this.overrides)
+        } else {
+            let directive = singleHop((await this.base).address,
+            (await this.quote).address, simpleMint(this.poolIdx, lower, upper, lots))
+            let inputBytes = encodeOrderDirective(directive);
+            return (await this.dex).connect(from).userCmd(this.LONG_PROXY, inputBytes, this.overrides)
+        }
+    }
+
     async testBurnFrom(from: Signer, lower: number, upper: number, liq: number, useSurplus: number = 0): Promise<ContractTransaction> {
         await this.snapStart()
         if (this.useHotPath) {
