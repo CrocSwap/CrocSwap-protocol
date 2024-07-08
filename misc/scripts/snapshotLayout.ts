@@ -5,7 +5,7 @@ import fs from "fs";
 let nonCoreContracts = [
   "CrocPolicy",
   "CrocQuery",
-  "CrocFacuet",
+  "CrocFaucet",
   "TimelockAccepts",
   "CrocLpErc20",
   "ERC20",

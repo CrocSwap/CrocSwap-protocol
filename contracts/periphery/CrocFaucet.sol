@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 
 import '../interfaces/IERC20Minimal.sol';
 
-contract CrocFacuet {
+contract CrocFaucet {
 
     struct Payout {
         uint256 walletPay_;
