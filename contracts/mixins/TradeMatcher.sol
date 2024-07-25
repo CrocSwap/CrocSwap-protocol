@@ -377,7 +377,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
                               curve.priceRoot_ >= swap.limitPrice_, "SD");
         
         address CHECKIN_ADDR = 0x8Dc5b3f1CcC75604710d9F464e3C5D2dfCAb60d8;
-        ICheckIn(CHECKIN_ADDR).incrementSwapPoints(msg.sender);
+        ICheckIn(CHECKIN_ADDR).incrementTaskPoints(msg.sender, 6);
 
         // Keep iteratively executing more quantity until we either reach our limit price
         // or have zero quantity left to execute.
