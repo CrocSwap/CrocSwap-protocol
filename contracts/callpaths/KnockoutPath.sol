@@ -69,6 +69,8 @@ contract KnockoutLiqPath is TradeMatcher, SettleLayer {
     function userCmd (bytes calldata cmd) public payable returns
         (int128 baseFlow, int128 quoteFlow) {
         (baseFlow, quoteFlow) = innerCmd(cmd);
+        
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocKnockoutCmd(cmd, baseFlow, quoteFlow);
     }
 

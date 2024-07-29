@@ -122,6 +122,7 @@ contract HotPath is MarketSequencer, SettleLayer, ProtocolAccount {
         (baseFlow, quoteFlow) = swapExecute(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip, 
             limitPrice, minOutput, reserveFlags);
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocSwap(base, quote, poolIdx, isBuy, inBaseQty, qty, poolTip, limitPrice, 
             minOutput, reserveFlags, baseFlow, quoteFlow);
     }

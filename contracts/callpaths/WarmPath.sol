@@ -60,6 +60,7 @@ contract WarmPath is MarketSequencer, SettleLayer, ProtocolAccount {
                      liq, limitLower, limitHigher, lpConduit);
         settleFlows(base, quote, baseFlow, quoteFlow, reserveFlags);
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocWarmCmd(input, baseFlow, quoteFlow);
     }
 

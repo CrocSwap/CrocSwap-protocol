@@ -88,6 +88,7 @@ library CrocEvents {
     event CrocColdProtocolCmd (bytes input);
     event CrocWarmCmd (bytes input, int128 baseFlow, int128 quoteFlow);
     event CrocKnockoutCmd (bytes input, int128 baseFlow, int128 quoteFlow);
+    event CrocCmdLockHolder (address indexed user, address indexed caller);
 
     event CrocMicroMintAmbient(bytes input, bytes output);
     event CrocMicroMintRange(bytes input, bytes output);

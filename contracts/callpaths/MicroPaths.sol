@@ -64,6 +64,7 @@ contract MicroPaths is MarketSequencer {
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocMicroBurnRange
             (abi.encode(price, priceTick, seed, conc, seedGrowth, concGrowth,
                         lowTick, highTick, liq, poolHash), 
@@ -109,6 +110,7 @@ contract MicroPaths is MarketSequencer {
         concOut = curve.concLiq_;
         seedOut = curve.ambientSeeds_;
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocMicroMintRange
             (abi.encode(price, priceTick, seed, conc, seedGrowth, concGrowth,
                         lowTick, highTick, liq, poolHash), 
@@ -147,6 +149,7 @@ contract MicroPaths is MarketSequencer {
         
         seedOut = curve.ambientSeeds_;
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocMicroBurnAmbient
             (abi.encode(price, seed, conc, seedGrowth, concGrowth,
                         liq, poolHash), 
@@ -185,6 +188,7 @@ contract MicroPaths is MarketSequencer {
 
         seedOut = curve.ambientSeeds_;
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocMicroMintAmbient
             (abi.encode(price, seed, conc, seedGrowth, concGrowth,
                         liq, poolHash), 
@@ -221,6 +225,7 @@ contract MicroPaths is MarketSequencer {
         ambientOut = curve.seedDeflator_;
         concGrowthOut = curve.concGrowth_;
 
+        emit CrocEvents.CrocCmdLockHolder(lockHolder_, msg.sender);
         emit CrocEvents.CrocMicroSwap(
             abi.encode(curve, midTick, swap, pool),
             abi.encode(accum, priceOut, seedOut, concOut, ambientOut, concGrowthOut));
