@@ -253,6 +253,33 @@ const beraTestnet: CrocAddrs = {
   }
 }
 
+const zircuitMainnet: CrocAddrs = {
+  dex: '0xaaaAaAaAA42fAe34A25201e0E8077037091Ce9Fb',
+  cold: '0xa01C4E40FE62c3FFd7152569E20a5BDAd23F171D',
+  warm: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  long: '0xe3150C65446Dc05505ac33B51D742E9458fE0BfE',
+  micro: '0x646929453E753565467f330110850885eAd93fA9',
+  hot: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  knockout: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  koCross: '0x67231C7Db63e5D7378596AaDD6BA69345E6a53aA',
+  policy: '0x70b161F2f0A18Bd1865021F25f9e895021E9DC4f',
+  query: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  impact: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0xA3BD3bE19012De72190c885FB270beb93e36a8A7',
+  swapBypass: '0x6A699AB45ADce02891E6115b81Dfb46CAa5efDb9'
+}
+
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
@@ -260,6 +287,7 @@ export let CROC_ADDRS = {
     '0x8274f': scrollSepolia,
     '0x82750': scrollMainnet,
     '0x80D': beraTestnet,
+    '0xbf04': zircuitMainnet,
     'mock': mockAddrs,
 }
 
@@ -278,7 +306,8 @@ export let POOL_IDXS = {
     '0x1389': 36000,
     '0x8274f': 36000,
     '0x82750': 420,
-    '0x80D': 36000
+    '0x80D': 36000,
+    '0xbf04': 420,
 }
 
 export const BOOT_PROXY_IDX = 0;
