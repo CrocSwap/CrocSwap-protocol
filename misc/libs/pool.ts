@@ -3,6 +3,7 @@ import { COLD_PROXY_IDX } from "../constants/addrs";
 import { CrocPoolParams } from "../constants/poolParams";
 import { CrocProtocolCmd } from "./governance";
 import { BLAST_PROXY_PATH } from "../../test/SetupDex";
+import { BigNumber } from "ethers";
 
 export function initLiqCmd (params: CrocPoolParams): CrocProtocolCmd {
     const abi = new AbiCoder()
@@ -99,5 +100,15 @@ export function blastConfigPointsTestnet (pointsOperator: string) {
     return {
         callpath: BLAST_PROXY_PATH,
         protocolCmd: abiCoder.encode(["uint256", "address"], [182351, pointsOperator])
+    }
+}
+
+export function blastClaimUSDBMainnet (recv: string, qty: number): CrocProtocolCmd {
+    let wei = BigNumber.from(qty).mul(BigNumber.from(10).pow(18))
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256"], 
+        [177, recv, BLAST_USDB_MAINNET, wei])
     }
 }
