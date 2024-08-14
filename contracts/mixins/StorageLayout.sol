@@ -165,7 +165,7 @@ library CrocSlots {
     uint constant public KO_MERKLE_SLOT = 65540;
     uint constant public KO_POS_SLOT = 65541;
     uint constant public MEZZ_TICK_SLOT = 65542;
-    uint constant public TERMINUS_TICK_SLOT = 65542;
+    uint constant public TERMINUS_TICK_SLOT = 65543;
     uint constant public POOL_TEMPL_SLOT = 65544;
     uint constant public POOL_PARAM_SLOT = 65545;
     uint constant public FEE_MAP_SLOT = 65548;
