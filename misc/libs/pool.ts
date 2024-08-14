@@ -69,6 +69,7 @@ export function blastConfigYieldMainnetCmd() {
 
 const BLAST_USDB_TESTNET = '0x4200000000000000000000000000000000000022'
 const BLAST_USDB_MAINNET = '0x4300000000000000000000000000000000000003'
+const BLAST_YIELD_MAINNET = '0x4300000000000000000000000000000000000002'
 
 export function blastConfigUsdbTestnet() {
     let abiCoder = new AbiCoder()
@@ -110,5 +111,22 @@ export function blastClaimUSDBMainnet (recv: string, qty: number): CrocProtocolC
         callpath: BLAST_PROXY_PATH,
         protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256"], 
         [177, recv, BLAST_USDB_MAINNET, wei])
+    }
+}
+
+export function blastClaimGasMainnet (recv: string, qtyEth: number): CrocProtocolCmd {
+    let weiToClaim = BigNumber.from(qtyEth).mul(BigNumber.from(10).pow(18))
+    let abiCoder = new AbiCoder()
+
+    const CEIL_GAS_SECS = BigNumber.from(2592000 * 1.5)
+    let gasSeconds = weiToClaim.mul(CEIL_GAS_SECS)
+
+    console.log(weiToClaim.toString())
+    console.log(gasSeconds.toString())
+
+    return {
+        callpath: BLAST_PROXY_PATH,
+        protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256", "uint256", "uint256"], 
+        [179, BLAST_YIELD_MAINNET, recv, 0, weiToClaim, gasSeconds])
     }
 }
