@@ -6,7 +6,6 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 import './StorageLayout.sol';
-import 'hardhat/console.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward

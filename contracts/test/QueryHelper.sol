@@ -3,8 +3,6 @@
 pragma solidity 0.8.19;
 import "../CrocSwapDex.sol";
 
-import "hardhat/console.sol";
-
 contract QueryHelper {
     using CurveMath for CurveMath.CurveState;
     

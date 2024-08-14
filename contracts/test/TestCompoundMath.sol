@@ -3,8 +3,6 @@ pragma solidity 0.8.19;
     
 import "../libraries/CompoundMath.sol";
 
-import "hardhat/console.sol";
-
 contract TestCompoundMath {
     using CompoundMath for uint256;
     using CompoundMath for uint160;

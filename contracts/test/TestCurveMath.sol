@@ -6,8 +6,6 @@ import "../libraries/CurveAssimilate.sol";
 import "../libraries/CurveRoll.sol";
 import "../libraries/SwapCurve.sol";
 
-import "hardhat/console.sol";
-
 contract TestCurveMath {
     function testActiveLiq (uint128 seed, uint64 growth, uint128 concentrated)
         public pure returns (uint128) {
