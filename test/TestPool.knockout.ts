@@ -85,6 +85,50 @@ describe('Pool Knockout Liq', () => {
         await expect(test.testKnockoutMint(5000*1024, false, 4032, 4064, false)).to.be.reverted
     })
 
+    it("mint bid barrier", async() => {
+        await test.testMintAmbient(10000)
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.00005))
+        await expect(test.testKnockoutMint(5000*1024, true, 0, 32, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, 0, 32, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -32, 0, false)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -32, 0, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, 32, 64, true)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, 32, 64, false)).to.be.reverted
+    })
+
+    it("mint bid barrier below", async() => {
+        await test.testMintAmbient(10000)
+        await test.testSwap(false, true, 100000000, toSqrtPrice(0.99995))
+        await expect(test.testKnockoutMint(5000*1024, true, 0, 32, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, 0, 32, true)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -32, 0, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -32, 0, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -64, -32, false)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, true, -64, -32, true)).to.be.not.reverted
+    })
+
+    it("mint ask barrier", async() => {
+        await test.testMintAmbient(10000)
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.00005))
+        await expect(test.testKnockoutMint(5000*1024, false, 0, 32, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, 0, 32, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -32, 0, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -32, 0, true)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, 32, 64, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, 32, 64, false)).to.be.not.reverted
+    })
+
+    it("mint ask barrier below", async() => {
+        await test.testMintAmbient(10000)
+        await test.testSwap(false, true, 100000000, toSqrtPrice(0.99995))
+        await expect(test.testKnockoutMint(5000*1024, false, 0, 32, false)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, 0, 32, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -32, 0, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -32, 0, true)).to.be.not.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -64, -32, false)).to.be.reverted
+        await expect(test.testKnockoutMint(5000*1024, false, -64, -32, true)).to.be.reverted
+    })
+
     it("burn partial", async() => {
         await test.testMintAmbient(10000)
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, false)
