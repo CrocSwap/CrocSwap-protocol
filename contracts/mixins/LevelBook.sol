@@ -6,7 +6,6 @@ import '../libraries/LiquidityMath.sol';
 import '../libraries/TickMath.sol';
 import './TickCensus.sol';
 import './StorageLayout.sol';
-import 'hardhat/console.sol';
 
 /* @title Level Book Mixin
  * @notice Mixin contract that tracks the aggregate liquidity bumps and in-range reward
@@ -63,9 +62,7 @@ contract LevelBook is TickCensus {
         
         liqDelta = isBuy ? crossDelta : -crossDelta;
 
-        if (feeGlobal != lvl.feeOdometer_) {
-            lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
-        }                
+        lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
 
         knockoutFlag = isBuy ?
             lvl.askLots_.hasKnockoutLiq() :
