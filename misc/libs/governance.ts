@@ -37,12 +37,50 @@ export interface CrocProtocolCmd {
 }
 
 export interface GovernanceResolution {
-    resolutionType: "ops" | "treasury"
-    protocolCmd: CrocProtocolCmd,
+    resolutionType: "ops" | "treasury" | "setPolicy"
+    protocolCmd?: CrocProtocolCmd,
     multisigOrigin: string,
     policyContract: string,
     dexContract: string,
     timelockCall: TimelockCalls
+}
+
+export interface PolicyConduitParams {
+    conduit: string,
+    proxyPath: number,
+    flagPosition: number,
+    expireTtl: number,
+    mandateTtl: number,
+}
+
+export async function setConduit (addrs: CrocAddrs, params: PolicyConduitParams, delay: number, tag: string) {
+    const timelock = await refContract("TimelockAccepts", addrs.govern.timelockOps) as TimelockAccepts
+    const policy = await refContract("CrocPolicy", addrs.policy) as CrocPolicy
+
+    const flag = BigNumber.from(1).shl(params.flagPosition); // Set the bit at the specified position
+    // Convert flag BigNumber to BytesLike
+    const flagBytes = ethers.utils.hexZeroPad(flag.toHexString(), 32)
+
+    const currentTime = Math.floor(Date.now() / 1000); // Get current Unix timestamp
+    const mandateTime = currentTime + params.mandateTtl;
+    const expireTime = currentTime + params.expireTtl;
+
+    let policyArg = {
+        cmdFlags_: flagBytes,
+        mandateTime_: mandateTime,
+        expiryOffset_: expireTime
+    }
+    let policyCall = await policy.populateTransaction.setPolicy(params.conduit, params.proxyPath, policyArg)
+    let timelockCalls = await populateTimelockCalls(timelock, addrs.policy,
+        policyCall.data as string, delay)
+
+    return printResolution({
+        resolutionType: "setPolicy",
+        policyContract: addrs.policy,
+        dexContract: addrs.dex,
+        multisigOrigin: addrs.govern.multisigOps,
+        timelockCall: await timelockCalls,
+    }, tag)
 }
 
 export async function opsResolution (addrs: CrocAddrs, cmd: CrocProtocolCmd, 

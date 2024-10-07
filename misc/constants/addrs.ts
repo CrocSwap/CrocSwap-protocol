@@ -19,6 +19,7 @@ export interface CrocAddrs {
     policyShell: string,
     deployer: string,
     govern: CrocGovAddrs,
+    conduits: CrocConduits
 }
 
 export interface CrocGovAddrs {
@@ -30,6 +31,10 @@ export interface CrocGovAddrs {
     timelockEmergency: string,
 }
 
+export interface CrocConduits {
+    feeMod: string
+}
+
 const emptryGovAddrs: CrocGovAddrs = {
     multisigTreasury: "",
     multisigOps: "",
@@ -37,6 +42,10 @@ const emptryGovAddrs: CrocGovAddrs = {
     timelockTreasury: "",
     timelockOps: "",
     timelockEmergency: "",
+}
+
+const emptyFeeModConduits: CrocConduits = {
+    feeMod: ""
 }
 
 const emptyAddrs: CrocAddrs = {
@@ -54,8 +63,10 @@ const emptyAddrs: CrocAddrs = {
     shell: "",
     policyShell: "",
     deployer: "",
-    govern: emptryGovAddrs
+    govern: emptryGovAddrs,
+    conduits: emptyFeeModConduits
 }
+
 
 // Mock used in local forks
 const mockAddrs: CrocAddrs = {
@@ -73,7 +84,8 @@ const mockAddrs: CrocAddrs = {
     shell: '',
     policyShell: '',
     deployer: '0x73511669fd4de447fed18bb79bafeac93ab7f31f',
-    govern: emptryGovAddrs
+    govern: emptryGovAddrs,
+    conduits: emptyFeeModConduits
 }
 
 // Mainnet
@@ -99,6 +111,9 @@ const mainnetAddrs: CrocAddrs = {
     timelockTreasury: '0x7237C120FCA2081f1A36AB933B065389174962B7',
     timelockOps: '0x41114A13230625A2735FaA7183e528Ed2538cB7b',
     timelockEmergency: '0x7237C120FCA2081f1A36AB933B065389174962B7'
+  },
+  conduits: {
+    feeMod: '0xa8F881a98E78CdA7A0B3a613121a529b234eB56F'
   }
 }
 
@@ -124,9 +139,9 @@ const mantleTestAddrs: CrocAddrs = {
       timelockTreasury: '',
       timelockOps: '',
       timelockEmergency: ''
-    }
+    },
+    conduits: emptyFeeModConduits
   }
-  
   
 
 
@@ -171,7 +186,8 @@ const goerliAddrsDryRun: CrocAddrs = {
         timelockTreasury: '0xfd66C5FFF528e1855e498CD324520107885A5288',
         timelockOps: '0xeF7D040C5540feedD74BA8E5a5167b19c24C940d',
         timelockEmergency: '0xfd66C5FFF528e1855e498CD324520107885A5288'
-    }
+    },
+    conduits: emptyFeeModConduits
 }
 
     
@@ -198,7 +214,8 @@ const scrollSepolia: CrocAddrs = {
       timelockTreasury: '',
       timelockOps: '',
       timelockEmergency: ''
-    }
+    },
+    conduits: emptyFeeModConduits
 }
 
 const scrollMainnet: CrocAddrs = {
@@ -225,7 +242,10 @@ const scrollMainnet: CrocAddrs = {
     timelockEmergency: '0x51D3BA9CA9a120dA0BCf8b487Bd42878758f7916'
   },
   swapRouter: '0xfB5f26851E03449A0403Ca945eBB4201415fd1fc',
-  swapBypass: '0xED5535C6237f72BD9b4fDEAa3b6D8d9998b4C4e4'
+  swapBypass: '0xED5535C6237f72BD9b4fDEAa3b6D8d9998b4C4e4',
+  conduits: {
+    feeMod: "0x361AA32D53F5f56Eec34b5A0F502a0b2A1904468"
+  }
 }
 
 const beraTestnet: CrocAddrs = {
@@ -250,7 +270,8 @@ const beraTestnet: CrocAddrs = {
     timelockTreasury: '',
     timelockOps: '',
     timelockEmergency: ''
-  }
+  },
+  conduits: emptyFeeModConduits
 }
 
 export let CROC_ADDRS = {
