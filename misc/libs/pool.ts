@@ -114,6 +114,17 @@ export function blastClaimUSDBMainnet (recv: string, qty: number): CrocProtocolC
     }
 }
 
+export function blastClaimEthMainnet (recv: string, qty: number): CrocProtocolCmd {
+    let wei = BigNumber.from(qty).mul(BigNumber.from(10).pow(18))
+    let abiCoder = new AbiCoder()
+    return {
+        callpath: BLAST_PROXY_PATH,
+        protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256"], 
+        [178, recv, BLAST_YIELD_MAINNET, wei])
+    }
+}
+
+
 export function blastClaimGasMainnet (recv: string, qtyEth: number): CrocProtocolCmd {
     let weiToClaim = BigNumber.from(qtyEth).mul(BigNumber.from(10).pow(18))
     let abiCoder = new AbiCoder()
