@@ -6,6 +6,8 @@ import { BOOT_PROXY_IDX, COLD_PROXY_IDX } from '../../../constants/addrs';
 import { inflateAddr, initChain, refContract, traceContractTx, traceTxResp } from '../../../libs/chain';
 import { AbiCoder } from '@ethersproject/abi';
 import { setConduit } from '../../../libs/governance';
+import { ethers } from 'ethers';
+import { ZERO_ADDR } from '../../inflate';
 
 const abi = new AbiCoder()
 
@@ -34,4 +36,29 @@ async function vanityDeploy() {
     }, 3600*48, "Set FeeModulatorConduit")
 }
 
-vanityDeploy()
+async function addUniversalModulator() {
+    let { addrs, chainId, wallet: authority } = initChain()
+
+    console.log(authority.address)
+    const feeMod = await inflateAddr("FeeModulatorConduit", addrs.conduits.feeMod, 
+        authority, addrs.policy, addrs.query) as FeeModulatorConduit
+
+    traceTxResp(await feeMod.addUniversalModulator("0x051668b832d6F9437CFF4955Ae5A2bd68eBe5422", 
+        { gasLimit: 100000 }), "Add Universal Modulator")
+}
+
+async function changeFee() {
+    let { addrs, chainId, wallet: authority } = initChain()
+
+    console.log(authority.address)
+    const feeMod = await inflateAddr("FeeModulatorConduit", addrs.conduits.feeMod, 
+        authority, addrs.policy, addrs.query) as FeeModulatorConduit
+
+    traceTxResp(await feeMod.changeFeeUnivMod("0x0000000000000000000000000000000000000000", 
+        "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df",
+        420,  2100,
+        { gasLimit: 200000 }), "Add Universal Modulator")
+}
+
+//addUniversalModulator()
+changeFee()
