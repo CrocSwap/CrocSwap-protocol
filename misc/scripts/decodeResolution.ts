@@ -1,5 +1,5 @@
 import { initProvider, refContract } from '../libs/chain';
-import { decodePolicySched, treasuryResolution, CrocProtocolCmd } from '../libs/governance';
+import { decodePolicyCall } from '../libs/governance';
 import { CrocSwapDex, TimelockAccepts } from '../../typechain';
 import { CrocPolicy } from '../../typechain';
 import { AbiCoder } from '@ethersproject/abi';
@@ -12,7 +12,7 @@ async function decode (calldata: string) {
     let policy = refContract("CrocPolicy", addrs.policy) as Promise<CrocPolicy>
     let dex = refContract("CrocSwapDex", addrs.dex) as Promise<CrocSwapDex>
 
-    decodePolicySched(await timelock, await policy, await dex, calldata)
+    decodePolicyCall(await policy, await dex, await timelock, calldata)
 }
 
 const calldata = process.env.CMD_CALLDATA

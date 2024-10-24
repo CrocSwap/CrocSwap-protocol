@@ -3,6 +3,7 @@ import { TimelockAccepts, CrocPolicy, CrocSwapDex } from "../../typechain"
 import { BOOT_PROXY_IDX, COLD_PROXY_IDX, CrocAddrs, CrocGovAddrs, FLAG_CROSS_PROXY_IDX, KNOCKOUT_LP_PROXY_IDX, LONG_PROXY_IDX, LP_PROXY_IDX, MICRO_PROXY_IDX, SAFE_MODE_PROXY_PATH, SWAP_PROXY_IDX } from "../constants/addrs"
 import { refContract } from "./chain"
 import { ethers as hreEthers } from 'hardhat';
+import { BLAST_PROXY_PATH } from "../../test/SetupDex";
 
 interface TimelockCalls {
     timelockAddr: string
@@ -157,12 +158,27 @@ export function printResolution (res: GovernanceResolution, tag: string): Govern
 
 export const INIT_TIMELOCK_DELAY = 30
 
+export async function decodePolicyCall (policy: CrocPolicy,
+    dex: CrocSwapDex, timelock: TimelockAccepts, payload: string) {
 
-export async function decodePolicySched (timelock: TimelockAccepts, policy: CrocPolicy,
-    dex: CrocSwapDex, schedData: string) {
+    let policyFn
+    let sigHash = payload.slice(0, 10)
+    if (sigHash === policy.interface.getSighash("opsResolution")) {
+        decodePolicyCalldata("opsResolution", policy, dex, payload)
+    } else if (sigHash === policy.interface.getSighash("treasuryResolution")) {
+        decodePolicyCalldata("treasuryResolution", policy, dex, payload)
+    } else if (sigHash === timelock.interface.getSighash("schedule")) {
+        decodeScheduleCalldata("schedule", policy, dex, timelock, payload)
+    } else if (sigHash === timelock.interface.getSighash("execute")) {
+        decodeScheduleCalldata("execute", policy, dex, timelock, payload)
+    } else {
+        throw new Error("Unknown function signature")
+    }
+}
 
-    let decodeFn = schedData.slice(0, 10) == timelock.interface.getSighash("schedule") ?
-        "schedule" : "execute"
+async function decodeScheduleCalldata (decodeFn: string, policy: CrocPolicy,
+    dex: CrocSwapDex, timelock: TimelockAccepts, schedData: string) {
+
     let schedCall = timelock.interface.decodeFunctionData(decodeFn, schedData)
     console.log()
     console.log(`Decoded ${decodeFn} call: `, schedCall)
@@ -170,20 +186,17 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
         throw new Error("Target of schedule call is not CrocPolicy contract")
     }
 
-    let policyFn
     let payload = schedCall.data || schedCall.payload
-    let sigHash = payload.slice(0, 10)
-    if (sigHash === policy.interface.getSighash("opsResolution")) {
-        policyFn = "opsResolution"
-    } else if (sigHash === policy.interface.getSighash("treasuryResolution")) {
-        policyFn = "treasuryResolution"
-    } else {
-        throw new Error("Schedule call is not to a known policy function")
-    }
+    decodePolicyCall(policy, dex, timelock, payload)
+}
+
+async function decodePolicyCalldata (policyFn: string, policy: CrocPolicy,
+    dex: CrocSwapDex, payload: string) {
     let policyCall = policy.interface.decodeFunctionData(policyFn, payload)
 
     console.log()
     console.log(`Decoded ${policyFn} call: `, policyCall)
+
     if (policyCall.minion.toLowerCase() !== dex.address.toLowerCase()) {
         throw new Error("Target of CrocPolicy call is not CrocSwapDex contract")
     }
@@ -193,6 +206,8 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
         proxyName = "ColdPath"
     } else if (policyCall.proxyPath === BOOT_PROXY_IDX) {
         proxyName = "BootPath"
+    } else if (policyCall.proxyPath === BLAST_PROXY_PATH) {
+        proxyName = "BlastPath"
     } else {
         throw new Error("Unknown proxyPath")
     }
@@ -201,7 +216,7 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
     let callCode = BigNumber.from("0x" + chunks[0]).toNumber()
     
     console.log()
-    console.log(`ProxyPath: ${proxyName}`)
+    console.log(`ProxyPath: ${proxyName} (${policyCall.proxyPath})`)
     console.log(`cmdCode: ` + callCode)
     console.log("-------")
 
@@ -241,6 +256,8 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
             proxyLabel = "KnockoutCrossPath"
         } else if (proxySlot == SAFE_MODE_PROXY_PATH) {
             proxyLabel = "SafeModePath"
+        } else if (proxySlot == BLAST_PROXY_PATH) {
+            proxyLabel = "BlastPath"
         }
 
         console.log(`Decoded protocolCmd as Proxy Contract Upgrade`)
@@ -250,6 +267,9 @@ export async function decodePolicySched (timelock: TimelockAccepts, policy: Croc
     } else if (callCode === PROTOCOL_HOT_OPEN_CMD && policyCall.proxyPath === COLD_PROXY_IDX) {
         let isOpen = BigNumber.from("0x" + chunks[1]).toNumber() > 0
         console.log(`Decoded protocolCmd as HotPath ${isOpen ? "Open" : "Close"}`)
+
+    } else if (callCode === PROTOCOL_BLAST_CLAIM_CMD || callCode === PROTOCOL_BLAST_ERC20_CLAIM_CMD) {
+        console.log(`Decoded protocolCmd as Blast yield claim`)
 
     } else {
         console.log(`Unknown protocolCmd code: ` + callCode)
@@ -280,3 +300,5 @@ function splitAbiHex(hexString: string): string[] {
 const PROTOCOL_AUTH_TRANSFER_CMD = 20
 const PROTOCOL_UPGRADE_CMD = 21
 const PROTOCOL_HOT_OPEN_CMD = 22
+const PROTOCOL_BLAST_CLAIM_CMD = 178
+const PROTOCOL_BLAST_ERC20_CLAIM_CMD = 179
