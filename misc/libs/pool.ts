@@ -119,8 +119,8 @@ export function blastClaimEthMainnet (recv: string, qty: number): CrocProtocolCm
     let abiCoder = new AbiCoder()
     return {
         callpath: BLAST_PROXY_PATH,
-        protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256"], 
-        [178, recv, BLAST_YIELD_MAINNET, wei])
+        protocolCmd: abiCoder.encode(["uint256", "address", "address", "uint256", "uint256", "uint256"],  
+        [179, BLAST_YIELD_MAINNET, recv, wei, 0, 0])
     }
 }
 

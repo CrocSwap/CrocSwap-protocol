@@ -15,7 +15,7 @@ async function decode (calldata: string) {
     decodePolicyCall(await policy, await dex, await timelock, calldata)
 }
 
-const calldata = process.env.CMD_CALLDATA
+const calldata = process.env.CMD_CALLDATA?.toLowerCase()
 if (!calldata) {
     throw new Error("Set CMD_CALLDATA env var")
 }
