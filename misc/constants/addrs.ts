@@ -128,12 +128,12 @@ const mantleTestAddrs: CrocAddrs = {
   }
   
 const plumeSepolia = {
-  dex: '0x4c722A53Cf9EB5373c655E1dD2dA95AcC10152D1',
+  dex: '0x21B5E1aC7154A34d0ae38684A4c27CbE6b9c4f1E',
   cold: '0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C',
   warm: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
-  long: '0xA60FF2F7a4eafD5B7b70f1a98a10FeF6Bf1D4EE4',
-  micro: '0x110C949516e27510bF346bC750D4E724aD9BAe7E',
-  hot: '0xEb354597e33cC0Af60A60bCD20279dC8a5F1d8FA',
+  long: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  micro: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  hot: '0xFe14B967666D998Eb062166Ba8B1524Bb8D25AF6',
   knockout: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
   koCross: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
   policy: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
@@ -153,8 +153,6 @@ const plumeSepolia = {
   swapRouter: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
   swapBypass: '0x3d7baE85731D056889383b5765C37530deAA98A2'
 }
-
-  
 
 // Goerli
 /* const goerliAddrs: CrocAddrs = {
@@ -286,7 +284,7 @@ export let CROC_ADDRS = {
     '0x8274f': scrollSepolia,
     '0x82750': scrollMainnet,
     '0x80D': beraTestnet,
-    "0x99C0A0F": plumeSepolia,
+    "0x18230": plumeSepolia,
     'mock': mockAddrs,
 }
 
@@ -306,7 +304,7 @@ export let POOL_IDXS = {
     '0x8274f': 36000,
     '0x82750': 420,
     '0x80D': 36000,
-    "0x99C0A0F": 36000
+    "0x18230": 36000
 }
 
 export const BOOT_PROXY_IDX = 0;
