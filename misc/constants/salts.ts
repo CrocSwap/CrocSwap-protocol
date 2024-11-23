@@ -20,6 +20,11 @@ CREATE2_SALTS.set('0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005'.toLowerCase(),
 CREATE2_SALTS.set('0x754EEF5862082607184e7A3aB08CEA76EF928285'.toLowerCase(), 
     '0x7bdf2029500c02474d9b3c61fb3ab3fbce5329b7dc7445234bb7251c8036d386')
 
+// Swell testnet salt
+CREATE2_SALTS.set('0x44d74f8808F2BD4DB026b13125e69e12a356bc59'.toLowerCase(), 
+    '0x7bdf2029500c02474d9b3c61fb3ab3fbce5329b7dc7445234bb7251c8036d386')
+
+
 export function mapSalt (deployerAddr: string): BigNumber {
     const lookup = CREATE2_SALTS.get(deployerAddr.toLowerCase())
     if (!lookup) {
