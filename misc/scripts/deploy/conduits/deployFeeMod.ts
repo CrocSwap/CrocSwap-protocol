@@ -55,9 +55,9 @@ async function changeFee() {
         authority, addrs.policy, addrs.query) as FeeModulatorConduit
 
     traceTxResp(await feeMod.changeFeeUnivMod("0x0000000000000000000000000000000000000000", 
-        "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df",
-        420,  2100,
-        { gasLimit: 200000 }), "Add Universal Modulator")
+        "0xfae103dc9cf190ed75350761e95403b7b8afa6c0",
+        420,  50,
+        { gasLimit: 200000 }), "Change fee")
 }
 
 //addUniversalModulator()
