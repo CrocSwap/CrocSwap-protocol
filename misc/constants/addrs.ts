@@ -126,28 +126,6 @@ const mantleTestAddrs: CrocAddrs = {
       timelockEmergency: ''
     }
   }
-  
-  
-
-
-// Goerli
-/* const goerliAddrs: CrocAddrs = {
-    dex: "0xfafcd1f5530827e7398b6d3c509f450b1b24a209",
-    cold: "0xb2ae163293c82dcf36b0ce704591edc2f9e2608d",
-    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
-    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
-    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
-    hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
-    knockout: "0x806859d4C974F9dCBB5f77e027062a02fC965987",
-    koCross: "0xa7b87362b5b86f696a8027b409c20dba094744e2",
-    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
-    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518", 
-    impact: "0x142BE02F2A3A27ecD6e2f18a43c2C234F372C831",
-    shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861",
-    policyShell: "",
-    deployer: "",
-    govern: emptryGovAddrs
-}*/ 
 
 const goerliAddrsDryRun: CrocAddrs = {
     dex: '0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688',
@@ -280,6 +258,34 @@ const swellTestnet: CrocAddrs = {
   swapBypass: '0x3d7baE85731D056889383b5765C37530deAA98A2'
 }
 
+const baseSepolia: CrocAddrs = {
+  dex: '0xD553d97EfD5faAB29Dc92CC87d5259ff59278176',
+  cold: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
+  warm: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+  long: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  micro: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+  hot: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+  knockout: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+  koCross: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  policy: '0xE5B0b009e3aF251933A66E0B3BA9a25FeA0a4f89',
+  query: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+  impact: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+  shell: '',
+  policyShell: '',
+  deployer: '0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x3d7baE85731D056889383b5765C37530deAA98A2',
+  swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483'
+}
+
+
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
     '0x5': goerliAddrsDryRun,
@@ -288,6 +294,7 @@ export let CROC_ADDRS = {
     '0x82750': scrollMainnet,
     '0x80D': beraTestnet,
     '0x784': swellTestnet,
+    '0x14a34': baseSepolia,
     'mock': mockAddrs,
 }
 
@@ -307,7 +314,8 @@ export let POOL_IDXS = {
     '0x8274f': 36000,
     '0x82750': 420,
     '0x80D': 36000,
-    '0x784': 36000
+    '0x784': 36000,
+    '0x14a34': 36000,
 }
 
 export const BOOT_PROXY_IDX = 0;
