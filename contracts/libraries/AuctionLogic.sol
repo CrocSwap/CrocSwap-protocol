@@ -11,12 +11,10 @@ library AuctionLogic {
     /* @notice Stores the immutable parameters that define an auction
      * @param auctionEndTime_ The timestamp when the auction ends and bids can be claimed
      * @param startLevel_ The initial price level where the auction begins
-     * @param maxLevel_ The maximum price level that bids can be placed at
      * @param auctionSupply_ The total amount of supply tokens being auctioned */
     struct PricedAuctionContext {
         uint32 auctionEndTime_;
         uint16 startLevel_;
-        uint16 maxLevel_;
         uint128 auctionSupply_;
     }
 
@@ -39,13 +37,11 @@ library AuctionLogic {
     /* @notice Represents a single bid in the auction
      * @param bidSize_ The size of the bid in demand tokens
      * @param limitLevel_ The maximum price level the bid is willing to pay
-     * @param bidTime_ The timestamp when the bid was placed
-     * @param hasClaimed_ Whether the bid has been claimed after auction end */
+     * @param bidTime_ The timestamp when the bid was placed */
     struct PricedAuctionBid {
         uint128 bidSize_;
         uint16 limitLevel_;
         uint32 bidTime_;
-        bool hasClaimed_;
     }
 
     /* @notice Calculates a unique hash key for an auction pool's storage data
@@ -140,5 +136,24 @@ library AuctionLogic {
         uint256 levelCap = totalSupply - cumBids;
         if (levelBids == 0) { return 0; }
         return (levelCap << 64) / levelBids;
+    }
+
+    /* @notice Calculates the bid refund and shares for a bid at the clearing level
+     * @dev When the auction clears at a level with partial fill, bids at that level
+     *      need to be scaled down proportionally. This function calculates both the
+     *      shares received and demand tokens refunded.
+     * @param level The clearing level
+     * @param totalSupply The total supply tokens in the auction
+     * @param bidSize The size of the bid in demand tokens
+     * @param cumBids The cumulative size of all bids at levels above the clearing level
+     * @param levelBids The total size of all bids at the clearing level
+     * @return shares The amount of supply tokens received
+     * @return bidRefund The amount of demand tokens refunded */
+    function calcClearingLevelShares(uint16 level, uint256 totalSupply, uint128 bidSize, uint256 proRata)
+        public pure returns (uint128 shares, uint128 bidRefund) {
+        shares = calcAuctionProceeds(level, totalSupply, bidSize);
+        shares = (uint256(shares) * proRata >> 64).toUint128();
+        bidRefund = (uint256(bidSize) * ((1 << 64) - proRata) >> 64).toUint128();
+        return (shares, bidRefund);
     }
 }
