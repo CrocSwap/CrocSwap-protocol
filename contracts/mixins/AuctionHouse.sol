@@ -63,8 +63,17 @@ contract AuctionLedger is StorageLayout {
         returns (uint128 shares, uint128 bidRefund) {
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
-                
+
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidId);
+
+        // Auction failed to fill, return full bid
+        if (state.activeLevel_ <= context.startLevel_) {
+            bidRefund = auctionBids_[bidKey].bidSize_;
+            shares = 0;
+            delete auctionBids_[bidKey];
+            return (shares, bidRefund);
+        }
+
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
         require(bid.bidSize_ > 0, "AFCC");
         
@@ -83,6 +92,16 @@ contract AuctionLedger is StorageLayout {
             bidRefund = bid.bidSize_;
         }
     }
+
+
+    function refundFailedLedger (bytes32 auctionKey) internal view returns (uint128 supplyReturn) {
+        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
+        AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+
+        require(state.activeLevel_ <= context.startLevel_, "AFNF");
+        return context.auctionSupply_;
+    }
+
 
     function cancelBidLedger (bytes32 auctionKey, uint256 bidIndex) internal returns (uint128 bidSize) {
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);
@@ -141,6 +160,7 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         uint128 deltaSize);
     event AuctionBidLevelModify(bytes32 indexed auctionKey, address indexed bidder, uint256 indexed bidIndex,
         uint16 newLevel);
+    event AuctionRefund (bytes32 indexed auctionKey, address indexed auctioneer, uint128 supplyReturn);
 
 
     function initAuction (address supplyToken, address demandToken, uint256 auctionIndex, 
@@ -169,6 +189,13 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         payoutDemand(auctionKey, demandToken, demandPaid);
         payoutSupply(auctionKey, supplyToken, supplyPaid);
         emit AuctionClaim(auctionKey, lockHolder_, bidId, supplyPaid, demandPaid);
+    }
+
+    function refundFailedAuction (bytes32 auctionKey, address supplyToken, address auctioneer) internal {
+        requireAuctionClosed(auctionKey);
+        uint128 refunded = refundFailedLedger(auctionKey);
+        payoutSupply(auctionKey, supplyToken, refunded);
+        emit AuctionRefund(auctionKey, auctioneer, refunded);
     }
 
     function cancelBid (bytes32 auctionKey, address demandToken, uint256 bidIndex) internal {
