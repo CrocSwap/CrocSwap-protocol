@@ -6,6 +6,7 @@ import '../libraries/Directives.sol';
 import '../libraries/PoolSpecs.sol';
 import '../libraries/PriceGrid.sol';
 import '../libraries/KnockoutLiq.sol';
+import '../libraries/AuctionLogic.sol';
 
 /* @title Storage layout base layer
  * 
@@ -161,6 +162,16 @@ contract StorageLayout {
     uint8 MAX_TAKE_RATE = 128;
 
     mapping(bytes32 => RangePosition72) internal positions72_;
+
+    /**************************************************************/
+    // Priced Auction
+    /**************************************************************/
+    mapping(bytes32 => AuctionLogic.PricedAuctionContext) internal auctionContexts_;
+    mapping(bytes32 => AuctionLogic.PricedAuctionState) internal auctionStates_;
+    mapping(bytes32 => AuctionLogic.PricedAuctionBid) internal auctionBids_;
+    mapping(bytes32 => AuctionLogic.PricedAuctionReserves) internal auctionReserves_;
+    mapping(bytes32 => uint128[65536]) internal auctionLevelSizes_;
+    /**************************************************************/
 }
 
 /* @notice Contains the storage or storage hash offsets of the fields and sidecars
