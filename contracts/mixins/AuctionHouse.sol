@@ -12,7 +12,7 @@ contract AuctionLedger is StorageLayout {
 
     function initAuctionLedger (address supplyToken, address demandToken, uint256 auctionIndex, 
         AuctionLogic.PricedAuctionContext memory context) internal returns (bytes32 auctionKey) {
-        auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_,auctionIndex);
+        auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionIndex);
         auctionContexts_[auctionKey] = context;
         auctionStates_[auctionKey].activeLevel_ = context.startLevel_;
 
@@ -94,12 +94,14 @@ contract AuctionLedger is StorageLayout {
     }
 
 
-    function refundFailedLedger (bytes32 auctionKey) internal view returns (uint128 supplyReturn) {
+    function refundFailedLedger (address supplyToken, address demandToken, uint256 auctionSalt) 
+        internal view returns (bytes32 auctionKey, uint128 supplyReturn) {
+        auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionSalt);
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
         require(state.activeLevel_ <= context.startLevel_, "AFNF");
-        return context.auctionSupply_;
+        supplyReturn = context.auctionSupply_;
     }
 
 
@@ -191,11 +193,11 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         emit AuctionClaim(auctionKey, lockHolder_, bidId, supplyPaid, demandPaid);
     }
 
-    function refundFailedAuction (bytes32 auctionKey, address supplyToken, address auctioneer) internal {
+    function refundFailedAuction (address supplyToken, address demandToken, uint256 auctionIndex) internal {
+        (bytes32 auctionKey, uint128 refunded) = refundFailedLedger(supplyToken, demandToken, auctionIndex);
         requireAuctionClosed(auctionKey);
-        uint128 refunded = refundFailedLedger(auctionKey);
         payoutSupply(auctionKey, supplyToken, refunded);
-        emit AuctionRefund(auctionKey, auctioneer, refunded);
+        emit AuctionRefund(auctionKey, lockHolder_, refunded);
     }
 
     function cancelBid (bytes32 auctionKey, address demandToken, uint256 bidIndex) internal {
