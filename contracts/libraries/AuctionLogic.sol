@@ -23,7 +23,7 @@ library AuctionLogic {
      * @param activeLevel_ The current clearing price level of the auction
      * @param cumLiftingBids_ The total size of all active bids *above* the active level */
     struct PricedAuctionState {
-        uint16 activeLevel_;
+        uint16 clearingLevel_;
         uint128 cumLiftingBids_;
     }
 
@@ -95,7 +95,7 @@ library AuctionLogic {
      * @return The total market cap in X64.64 fixed point format */
     function getMcapForLevel(uint16 level, uint256 totalSupply) internal pure returns (uint128) {
         uint256 pricePerToken = getPriceForLevel(level);
-        return (pricePerToken * totalSupply).toUint128();
+        return (pricePerToken * totalSupply >> 64).toUint128();
     }
 
     /* @notice Calculates the amount of supply tokens received for a given bid size at a price level

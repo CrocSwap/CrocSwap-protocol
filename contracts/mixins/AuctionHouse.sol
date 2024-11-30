@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import './StorageLayout.sol';
 import './SettleLayer.sol';
 import '../libraries/AuctionLogic.sol';
+import "hardhat/console.sol";
 
 /* @title Fixed Price Auction Mixin
  * @notice Mixin contract that implements the fixed price auction mechanism. */
@@ -14,7 +15,7 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionContext memory context) internal returns (bytes32 auctionKey) {
         auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionIndex);
         auctionContexts_[auctionKey] = context;
-        auctionStates_[auctionKey].activeLevel_ = context.startLevel_;
+        auctionStates_[auctionKey].clearingLevel_ = context.startLevel_;
 
     }
 
@@ -28,7 +29,7 @@ contract AuctionLedger is StorageLayout {
     function recordBid(bytes32 auctionKey, bytes32 bidKey, uint128 bidSize, uint16 limitLevel) private {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
-        require(limitLevel > state.activeLevel_, "AFPL");
+        require(limitLevel > state.clearingLevel_, "AFPL");
         require(auctionBids_[bidKey].bidSize_ == 0, "AFBI");
         require(limitLevel % context.stepSize_ == 0, "AFSS");
 
@@ -46,18 +47,18 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        while (state.cumLiftingBids_ >= AuctionLogic.getMcapForLevel(state.activeLevel_ + 1, context.auctionSupply_)) {
-            state.cumLiftingBids_ -= auctionLevelSizes_[auctionKey][state.activeLevel_];
-            state.activeLevel_ += context.stepSize_;
+        while (state.cumLiftingBids_ >= AuctionLogic.getMcapForLevel(state.clearingLevel_ + context.stepSize_, context.auctionSupply_)) {
+            state.cumLiftingBids_ -= auctionLevelSizes_[auctionKey][state.clearingLevel_ + context.stepSize_];
+            state.clearingLevel_ += context.stepSize_;
         }
 
-        if (auctionStates_[auctionKey].activeLevel_ == bidLevel) {
+        if (auctionStates_[auctionKey].clearingLevel_ == bidLevel) {
             uint128 filledAt = state.cumLiftingBids_ - auctionLevelSizes_[auctionKey][bidLevel];
             require(filledAt <= context.auctionSupply_, "AFOS");
         }
 
-        require(bidLevel >= state.activeLevel_, "AFAL");
-        return state.activeLevel_;
+        require(bidLevel >= state.clearingLevel_, "AFAL");
+        return state.clearingLevel_;
     }
 
 
@@ -69,7 +70,7 @@ contract AuctionLedger is StorageLayout {
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidId);
 
         // Auction failed to fill, return full bid
-        if (state.activeLevel_ <= context.startLevel_) {
+        if (state.clearingLevel_ <= context.startLevel_) {
             bidRefund = auctionBids_[bidKey].bidSize_;
             shares = 0;
             delete auctionBids_[bidKey];
@@ -79,17 +80,17 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
         require(bid.bidSize_ > 0, "AFCC");
         
-        (shares, bidRefund) = deriveFillShare(state, bid, context.auctionSupply_, auctionLevelSizes_[auctionKey][state.activeLevel_]);
+        (shares, bidRefund) = deriveFillShare(state, bid, context.auctionSupply_, auctionLevelSizes_[auctionKey][state.clearingLevel_]);
         delete auctionBids_[bidKey];
     }
 
     function deriveFillShare(AuctionLogic.PricedAuctionState memory state, AuctionLogic.PricedAuctionBid memory bid, 
         uint128 totalSupply, uint128 levelBids) internal pure returns (uint128 shares, uint128 bidRefund) {
-        if (bid.limitLevel_ > state.activeLevel_) {
-            shares = AuctionLogic.calcAuctionProceeds(state.activeLevel_, bid.bidSize_);
-        } else if (bid.limitLevel_ == state.activeLevel_) {
+        if (bid.limitLevel_ > state.clearingLevel_) {
+            shares = AuctionLogic.calcAuctionProceeds(state.clearingLevel_, bid.bidSize_);
+        } else if (bid.limitLevel_ == state.clearingLevel_) {
             uint proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, totalSupply);
-            (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.activeLevel_, bid.bidSize_, proRata);
+            (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.clearingLevel_, bid.bidSize_, proRata);
         } else {
             bidRefund = bid.bidSize_;
         }
@@ -102,9 +103,9 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        bool auctionCleared = state.activeLevel_ > context.startLevel_;
+        bool auctionCleared = state.clearingLevel_ > context.startLevel_;
         if (auctionCleared) {
-            demandReturn = AuctionLogic.getMcapForLevel(state.activeLevel_, context.auctionSupply_);
+            demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_);
         } else {
             supplyReturn = context.auctionSupply_;
         }
@@ -115,7 +116,7 @@ contract AuctionLedger is StorageLayout {
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);
 
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
-        require(bid.limitLevel_ < auctionStates_[auctionKey].activeLevel_, "AFCA");
+        require(bid.limitLevel_ < auctionStates_[auctionKey].clearingLevel_, "AFCA");
 
         bidSize = bid.bidSize_;
         delete auctionBids_[bidKey];
@@ -127,7 +128,7 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        require(bid.limitLevel_ > state.activeLevel_, "AFCA");
+        require(bid.limitLevel_ > state.clearingLevel_, "AFCA");
 
         state.cumLiftingBids_ += deltaSize;
         auctionLevelSizes_[auctionKey][bid.limitLevel_] += deltaSize;
@@ -141,10 +142,10 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
 
-        require(newLimitLevel > state.activeLevel_, "AFCA");
+        require(newLimitLevel > state.clearingLevel_, "AFCA");
         require(newLimitLevel % context.stepSize_ == 0, "AFSS");
 
-        if (bid.limitLevel_ == state.activeLevel_) {
+        if (bid.limitLevel_ == state.clearingLevel_) {
             state.cumLiftingBids_ += bid.bidSize_;
         }
 
