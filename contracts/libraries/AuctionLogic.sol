@@ -74,7 +74,7 @@ library AuctionLogic {
      *      For levels that are multiples of 32, price is a power of 2 shift.
      *      For other levels within a 32-step window, price is linearly interpolated using (1 + N/32).
      * @param level The level index to get the price for
-     * @return The price per token in X64.64 fixed point format */
+     * @return The price per token in X192.64 fixed point format */
     function getPriceForLevel(uint16 level) internal pure returns (uint256) {
         uint16 baseShift = level >> 5;  // Divide by 32
         uint16 remainder = level & 0x1f;  // Mod 32
