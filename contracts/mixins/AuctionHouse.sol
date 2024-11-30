@@ -20,15 +20,17 @@ contract AuctionLedger is StorageLayout {
 
     function placeBidLedger (bytes32 auctionKey, uint128 bidSize, uint16 limitLevel, uint256 bidIndex) 
         internal returns (uint16 clearingLevel) {
-        bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);        
+        bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);
         recordBid(auctionKey, bidKey, bidSize, limitLevel);
         return updateAuctionLevel(auctionKey, limitLevel);
     }
 
     function recordBid(bytes32 auctionKey, bytes32 bidKey, uint128 bidSize, uint16 limitLevel) private {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         require(limitLevel > state.activeLevel_, "AFPL");
         require(auctionBids_[bidKey].bidSize_ == 0, "AFBI");
+        require(limitLevel % context.stepSize_ == 0, "AFSS");
 
         auctionBids_[bidKey] = AuctionLogic.PricedAuctionBid({
             bidSize_: bidSize,
@@ -46,7 +48,7 @@ contract AuctionLedger is StorageLayout {
 
         while (state.cumLiftingBids_ >= AuctionLogic.getLevelCapacity(context.auctionSupply_, state.activeLevel_ + 1)) {
             state.cumLiftingBids_ -= auctionLevelSizes_[auctionKey][state.activeLevel_];
-            state.activeLevel_++;
+            state.activeLevel_ += context.stepSize_;
         }
 
         if (auctionStates_[auctionKey].activeLevel_ == bidLevel) {
@@ -133,8 +135,11 @@ contract AuctionLedger is StorageLayout {
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
 
         require(newLimitLevel > state.activeLevel_, "AFCA");
+        require(newLimitLevel % context.stepSize_ == 0, "AFSS");
+
         if (bid.limitLevel_ == state.activeLevel_) {
             state.cumLiftingBids_ += bid.bidSize_;
         }

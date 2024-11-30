@@ -15,6 +15,7 @@ library AuctionLogic {
     struct PricedAuctionContext {
         uint32 auctionEndTime_;
         uint16 startLevel_;
+        uint16 stepSize_;
         uint128 auctionSupply_;
     }
 
@@ -72,36 +73,24 @@ library AuctionLogic {
     }
 
     /* @notice Converts a level index to its corresponding price in X64.64 fixed point format
-     * @dev Each level increases price by a factor of 1 + 2^(1/8), meaning prices double every 8 levels.
-     *      The base price at level 0 is 1.0 in X64.64 format (2^64).
-     *      For levels that are multiples of 8, price is a power of 2 shift.
-     *      For other levels, price is interpolated using precomputed constants.
+     * @dev Each level increases price by a factor of approximately 1 + 2^(1/32), meaning prices double every 32 levels.
+     *      The base price at level 0 is 2^-16 in X64.64 format (2^48).
+     *      For levels that are multiples of 32, price is a power of 2 shift.
+     *      For other levels within a 32-step window, price is linearly interpolated using (1 + N/32).
      * @param level The level index to get the price for
      * @return The market cap of the total fixed supply in X192.64 fixed point format */
     function getMcapForLevel(uint16 level) internal pure returns (uint256) {
-        uint256 levelFull = uint256(level);
+        uint16 baseShift = level >> 5;  // Divide by 32
+        uint16 remainder = level & 0x1f;  // Mod 32
 
-        uint256 baseShift = levelFull >> 3;  // Divide by 8
-        uint256 remainder = levelFull & 0x7;  // Mod 8
-        uint256 base = 1 << baseShift;
+        uint256 x64One = 1 << 64;
+        uint256 minMcap = x64One >> 16;
+        uint256 base = minMcap << baseShift;
 
-        if (remainder == 0) {
-            return base << 64;
-        } else if (remainder == 1) {
-            return base * (118508706     << 54);
-        } else if (remainder == 2) {
-            return base * (140391238     << 54);
-        } else if (remainder == 3) {
-            return base * (166351770     << 54);
-        } else if (remainder == 4) {
-            return base * (197192466     << 54);
-        } else if (remainder == 5) {
-            return base * (233666846     << 54);
-        } else if (remainder == 6) {
-            return base * (277146338     << 54);
-        } else {
-            return base * (328613022     << 54);
-        }
+        require(base > 0 && base < (1 << 191));
+
+        uint256 remainderStep = 44273780 * x64One / 1000000000;         
+        return base * (x64One + remainder * remainderStep) >> 64;
     }
 
     /* @notice Calculates the amount of supply tokens received for a given bid size at a price level

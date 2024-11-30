@@ -30,13 +30,14 @@ contract AuctionPath is AuctionHouse {
 
     function initAuctionCmd (bytes calldata cmd) private {
         (, address supplyToken, address demandToken, uint256 auctionIndex,
-            uint32 auctionEndTime, uint128 auctionSupply, uint16 startLevel) = 
-            abi.decode(cmd, (uint8, address, address, uint256, uint32, uint128, uint16));
+            uint32 auctionEndTime, uint128 auctionSupply, uint16 startLevel, uint16 stepSize) = 
+            abi.decode(cmd, (uint8, address, address, uint256, uint32, uint128, uint16, uint16));
 
         AuctionLogic.PricedAuctionContext memory context = AuctionLogic.PricedAuctionContext({
             auctionEndTime_: auctionEndTime,
             auctionSupply_: auctionSupply,
-            startLevel_: startLevel
+            startLevel_: startLevel,
+            stepSize_: stepSize
         });
 
         initAuction(supplyToken, demandToken, auctionIndex, context);
