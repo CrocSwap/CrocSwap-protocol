@@ -22,7 +22,7 @@ contract AuctionPath is AuctionHouse {
         } else if (code == 5) {
             modifyBidLevelCmd(cmd);
         } else if (code == 6) {
-            refundFailedAuctionCmd(cmd);
+            refundAuctionCmd(cmd);
         } else {
             revert("Invalid code");
         }
@@ -85,11 +85,11 @@ contract AuctionPath is AuctionHouse {
         emit AuctionBidLevelModify(auctionKey, lockHolder_, bidIndex, newLevel);
     }
 
-    function refundFailedAuctionCmd (bytes calldata cmd) private {
+    function refundAuctionCmd (bytes calldata cmd) private {
         (, address supplyToken, address demandToken, uint256 auctionIndex) = 
             abi.decode(cmd, (uint8, address, address, uint256));
 
-        refundFailedAuction(supplyToken, demandToken, auctionIndex);
+        refundAuction(supplyToken, demandToken, auctionIndex);
     }
 }
 

@@ -2,6 +2,11 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TestAuctionLogic } from "../typechain";
+import { BigNumber } from "ethers";
+import { solidity } from "ethereum-waffle";
+import chai from "chai";
+
+chai.use(solidity);
 
 describe("AuctionLogic", () => {
   let testAuctionLogic: TestAuctionLogic;
@@ -80,21 +85,32 @@ describe("AuctionLogic", () => {
   describe("Level to Market Cap Calculations", () => {
     it("should calculate correct mcap for level 0", async () => {
       const mcap = await testAuctionLogic.testGetMcapForLevel(0);
-      expect(mcap).to.equal(ethers.BigNumber.from(1).shl(64)); // 1.0 in X64.64 format
+      expect(mcap).to.equal(BigNumber.from(1).shl(48)); // 2^-16 in X64.64 format
     });
-    it("should calculate correct mcap for level 8 (price doubles)", async () => {
-      const mcap = await testAuctionLogic.testGetMcapForLevel(8);
-      expect(mcap).to.equal(ethers.BigNumber.from(2).shl(64)); // 2.0 in X64.64 format
+
+    it("should calculate correct mcap for level 32 (price doubles)", async () => {
+      const mcap = await testAuctionLogic.testGetMcapForLevel(32);
+      expect(mcap).to.equal(BigNumber.from(2).shl(48)); // 2.0 * 2^-16 in X64.64 format
+    });
+
+    it("should calculate correct mcap for X64.64", async () => {
+        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32);
+        expect(mcap).to.equal(BigNumber.from(1).shl(64)); // 1 in X64.64 format
+    });
+  
+    it("should calculate correct mcap for 8 * X64.64", async () => {
+        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3);
+        expect(mcap).to.equal(BigNumber.from(8).shl(64)); // 1 in X64.64 format
     });
 
     it("should calculate correct mcap for intermediate levels", async () => {
       // Level 4 should be approximately sqrt(2) = ~1.414
       const mcap = await testAuctionLogic.testGetMcapForLevel(4);
-      const expected = ethers.BigNumber.from(Math.floor(1.414 * 2**64));
+      const expected = BigNumber.from(Math.floor(1.414 * 2**64));
       
       // Allow small rounding difference
       const diff = mcap.sub(expected).abs();
-      expect(diff).to.be.lt(ethers.BigNumber.from(2).shl(60)); // ~0.1% tolerance
+      expect(diff).to.be.lt(BigNumber.from(2).shl(60)); // ~0.1% tolerance
     });
 
     it("should maintain geometric progression between levels", async () => {

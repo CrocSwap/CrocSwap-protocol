@@ -26,7 +26,8 @@ describe("AuctionLedger", function() {
         const context = {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
-            startLevel_: 100
+            startLevel_: 100,
+            stepSize_: 10
         };
 
         await auction.testInitAuctionLedger(

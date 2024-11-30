@@ -96,14 +96,18 @@ contract AuctionLedger is StorageLayout {
     }
 
 
-    function refundFailedLedger (address supplyToken, address demandToken, uint256 auctionSalt) 
-        internal view returns (bytes32 auctionKey, uint128 supplyReturn) {
+    function refundLedger (address supplyToken, address demandToken, uint256 auctionSalt) 
+        internal view returns (bytes32 auctionKey, uint128 supplyReturn, uint128 demandReturn) {
         auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionSalt);
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        require(state.activeLevel_ <= context.startLevel_, "AFNF");
-        supplyReturn = context.auctionSupply_;
+        bool auctionCleared = state.activeLevel_ > context.startLevel_;
+        if (auctionCleared) {
+            demandReturn = AuctionLogic.getMcapForLevel(state.activeLevel_).toUint128();
+        } else {
+            supplyReturn = context.auctionSupply_;
+        }
     }
 
 
@@ -167,7 +171,7 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         uint128 deltaSize);
     event AuctionBidLevelModify(bytes32 indexed auctionKey, address indexed bidder, uint256 indexed bidIndex,
         uint16 newLevel);
-    event AuctionRefund (bytes32 indexed auctionKey, address indexed auctioneer, uint128 supplyReturn);
+    event AuctionRefund (bytes32 indexed auctionKey, address indexed auctioneer, uint128 supplyReturn, uint128 demandReturn);
 
 
     function initAuction (address supplyToken, address demandToken, uint256 auctionIndex, 
@@ -198,11 +202,13 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         emit AuctionClaim(auctionKey, lockHolder_, bidId, supplyPaid, demandPaid);
     }
 
-    function refundFailedAuction (address supplyToken, address demandToken, uint256 auctionIndex) internal {
-        (bytes32 auctionKey, uint128 refunded) = refundFailedLedger(supplyToken, demandToken, auctionIndex);
+    function refundAuction (address supplyToken, address demandToken, uint256 auctionIndex) internal {
+        (bytes32 auctionKey, uint128 supplyRefund, uint128 demandRefund) = 
+            refundLedger(supplyToken, demandToken, auctionIndex);
         requireAuctionClosed(auctionKey);
-        payoutSupply(auctionKey, supplyToken, refunded);
-        emit AuctionRefund(auctionKey, lockHolder_, refunded);
+        payoutSupply(auctionKey, supplyToken, supplyRefund);
+        payoutDemand(auctionKey, demandToken, demandRefund);
+        emit AuctionRefund(auctionKey, lockHolder_, supplyRefund, demandRefund);
     }
 
     function cancelBid (bytes32 auctionKey, address demandToken, uint256 bidIndex) internal {
@@ -235,21 +241,29 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
 
     function collectSupply (bytes32 auctionKey, address supplyToken, uint128 amount) private {
         auctionReserves_[auctionKey].reserveSupply_ += amount;
-        debitTransfer(lockHolder_, amount, supplyToken, popMsgVal());
+        if (amount > 0) {
+            debitTransfer(lockHolder_, amount, supplyToken, popMsgVal());
+        }
     }
 
     function collectDemand (bytes32 auctionKey, address demandToken, uint128 amount) private {
         auctionReserves_[auctionKey].reserveDemand_ += amount;
-        creditTransfer(lockHolder_, amount, demandToken, 0);
+        if (amount > 0) {
+            debitTransfer(lockHolder_, amount, demandToken, popMsgVal());
+        }
     }
 
     function payoutSupply (bytes32 auctionKey, address supplyToken, uint128 amount) private {
         auctionReserves_[auctionKey].reserveSupply_ -= amount;
-        creditTransfer(lockHolder_, amount, supplyToken, 0);
+        if (amount > 0) {
+            creditTransfer(lockHolder_, amount, supplyToken, 0);
+        }
     }
 
     function payoutDemand (bytes32 auctionKey, address demandToken, uint128 amount) private {
         auctionReserves_[auctionKey].reserveDemand_ -= amount;
-        debitTransfer(lockHolder_, amount, demandToken, 0);
+        if (amount > 0) {
+            creditTransfer(lockHolder_, amount, demandToken, 0);
+        }
     }
 }
