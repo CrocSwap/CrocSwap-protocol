@@ -232,4 +232,58 @@ describe("AuctionLogic", () => {
         expect(proRata).to.equal(ONE.mul(3).div(10));
     });  
   });
+
+  describe("calcClearingLevelShares", async () => {
+    const ONE = BigNumber.from(1).shl(64);
+
+    it("full fill", async () => {
+      const level = 32;
+      const bidSize = BigNumber.from(1000);
+      const proRata = ONE;
+
+      const result = await testAuctionLogic.testCalcClearingLevelShares(level, bidSize, proRata);
+      const shares = result.shares;
+      const refund = result.bidRefund;
+      expect(refund).to.equal(0);
+      expect(shares).to.equal(await testAuctionLogic.testCalcAuctionProceeds(level, bidSize));
+    });
+
+    it("half fill", async () => {
+      const level = 32;
+      const bidSize = BigNumber.from(1000);
+      const proRata = ONE.div(2);
+
+      const result = await testAuctionLogic.testCalcClearingLevelShares(level, bidSize, proRata);
+      const shares = result.shares;
+      const refund = result.bidRefund;
+      const expectedShares = (await testAuctionLogic.testCalcAuctionProceeds(level, bidSize)).div(2);
+      expect(shares).to.equal(expectedShares);
+      expect(refund).to.equal(bidSize.div(2));
+    });
+
+    it("quarter fill", async () => {
+      const level = 32;
+      const bidSize = BigNumber.from(1000);
+      const proRata = ONE.div(4);
+
+      const result = await testAuctionLogic.testCalcClearingLevelShares(level, bidSize, proRata);
+      const shares = result.shares;
+      const refund = result.bidRefund;
+      const expectedShares = (await testAuctionLogic.testCalcAuctionProceeds(level, bidSize)).div(4);
+      expect(shares).to.equal(expectedShares);
+      expect(refund).to.equal(bidSize.mul(3).div(4));
+    });
+
+    it("zero fill", async () => {
+      const level = 32;
+      const bidSize = BigNumber.from(1000);
+      const proRata = BigNumber.from(0);
+
+      const result = await testAuctionLogic.testCalcClearingLevelShares(level, bidSize, proRata);
+      const shares = result.shares;
+      const refund = result.bidRefund;
+      expect(shares).to.equal(0);
+      expect(refund).to.equal(bidSize);
+    });
+  });
 });
