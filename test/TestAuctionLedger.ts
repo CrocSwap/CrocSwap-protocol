@@ -515,4 +515,165 @@ describe("AuctionLedger", function() {
         const state = await auction.getAuctionState(auctionKey);
         expect(state.clearingLevel_).to.equal(1690);
     });
+
+    it("should handle bid that pushes clearing level above previous bid level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place first bid at level 1690
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            100000,
+            1690,
+            0
+        );
+
+        // Place large bid at higher level that pushes clearing level up
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            500000,
+            3000,
+            1
+        );
+
+        // Verify clearing level moved above 1690
+        const state = await auction.getAuctionState(auctionKey);
+        expect(state.cumLiftingBids_).to.equal(500000);
+        expect(state.clearingLevel_).to.equal(1760);
+    });
+
+    it("should not allow canceling bid above clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place bid above clearing level
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            100000,
+            1690,
+            0
+        );
+
+        // Attempt to cancel bid should revert
+        await expect(
+            auction.connect(bidder).testCancelBidLedger(
+                auctionKey,
+                0
+            )
+        ).to.be.revertedWith("AFCA");
+    });
+
+    it("should not allow canceling bid at clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place first bid to move active level up
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            100000,
+            1690,
+            0
+        );
+
+        const marketCap = await auctionLib.testGetMcapForLevel(1690, context.auctionSupply_);
+        const exactFillAmount = marketCap.sub(100000).toNumber();
+
+        // Place bid that exactly fills the level
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            exactFillAmount,
+            1690,
+            1
+        );
+
+        // Attempt to cancel second bid should revert
+        await expect(
+            auction.connect(bidder).testCancelBidLedger(
+                auctionKey,
+                1
+            )
+        ).to.be.revertedWith("AFCA");
+    });
+
+    it("should allow canceling bid below clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place first bid at 1690
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            10000,
+            1690,
+            0
+        );
+
+        // Place second bid at higher level to move clearing level up
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            500000,
+            1760,
+            1
+        );
+
+        // Cancel first bid which is now below clearing
+        await auction.connect(bidder).testCancelBidLedger(
+            auctionKey,
+            0
+        );
+
+        // Get bid key for first bid
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
+        const bid = await auction.getAuctionBid(bidKey)
+        expect(bid.bidSize_).to.equal(0);
+        expect(bid.limitLevel_).to.equal(0);
+        expect(bid.bidTime_).to.equal(0);
+    });
 });
