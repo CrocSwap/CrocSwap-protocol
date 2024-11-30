@@ -89,7 +89,7 @@ library AuctionLogic {
 
         require(base > 0 && base < (1 << 191));
 
-        uint256 remainderStep = 44273780 * x64One / 1000000000;         
+        uint256 remainderStep = 3125 * x64One / 100000;         
         return base * (x64One + remainder * remainderStep) >> 64;
     }
 

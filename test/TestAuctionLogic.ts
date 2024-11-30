@@ -103,27 +103,26 @@ describe("AuctionLogic", () => {
         expect(mcap).to.equal(BigNumber.from(8).shl(64)); // 1 in X64.64 format
     });
 
-    it("should calculate correct mcap for intermediate levels", async () => {
-      // Level 4 should be approximately sqrt(2) = ~1.414
-      const mcap = await testAuctionLogic.testGetMcapForLevel(4);
-      const expected = BigNumber.from(Math.floor(1.414 * 2**64));
-      
-      // Allow small rounding difference
-      const diff = mcap.sub(expected).abs();
-      expect(diff).to.be.lt(BigNumber.from(2).shl(60)); // ~0.1% tolerance
+    it("calculates decimal step", async () => {
+        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 1);
+        const one = BigNumber.from(8).shl(64);
+        const fraction = one.div(32)
+        expect(mcap).to.equal(one.add(fraction)); // 1.03125 in X64.64 format
+    });
+    
+
+    it("calculates decimal steps", async () => {
+        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 21);
+        const one = BigNumber.from(8).shl(64);
+        const fraction = one.div(32).mul(21)
+        expect(mcap).to.equal(one.add(fraction));
     });
 
-    it("should maintain geometric progression between levels", async () => {
-      const mcap1 = await testAuctionLogic.testGetMcapForLevel(1);
-      const mcap2 = await testAuctionLogic.testGetMcapForLevel(2);
-      const mcap3 = await testAuctionLogic.testGetMcapForLevel(3);
-
-      // Each step should increase by same ratio (1 + 2^(1/8))
-      const ratio1 = mcap2.mul(ethers.constants.WeiPerEther).div(mcap1);
-      const ratio2 = mcap3.mul(ethers.constants.WeiPerEther).div(mcap2);
-      
-      const diff = ratio1.sub(ratio2).abs();
-      expect(diff).to.be.lt(ethers.utils.parseEther("0.0001"));
+    it("calculates decimal steps end", async () => {
+        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 31);
+        const one = BigNumber.from(8).shl(64);
+        const fraction = one.div(32)
+        expect(mcap).to.equal(one.mul(2).sub(fraction));
     });
   });
 
