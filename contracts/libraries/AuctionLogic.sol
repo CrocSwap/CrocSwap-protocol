@@ -67,7 +67,7 @@ library AuctionLogic {
         return keccak256(abi.encodePacked(auctionKey, bidder, bidSalt));
     }
 
-    function getLevelCapacity(uint256 totalSupply, uint16 level) public pure returns (uint256) {
+    function getLevelCapacity(uint256 totalSupply, uint16 level) internal pure returns (uint256) {
         return totalSupply * getMcapForLevel(level) >> 192;
     }
 
@@ -78,7 +78,7 @@ library AuctionLogic {
      *      For other levels, price is interpolated using precomputed constants.
      * @param level The level index to get the price for
      * @return The market cap of the total fixed supply in X192.64 fixed point format */
-    function getMcapForLevel(uint16 level) public pure returns (uint256) {
+    function getMcapForLevel(uint16 level) internal pure returns (uint256) {
         uint256 levelFull = uint256(level);
 
         uint256 baseShift = levelFull >> 3;  // Divide by 8
@@ -110,7 +110,8 @@ library AuctionLogic {
      * @param totalSupply The total supply tokens in the auction
      * @param bidSize The size of the bid in demand tokens
      * @return The amount of supply tokens received for the bid */
-    function calcAuctionProceeds(uint16 level, uint256 totalSupply, uint128 bidSize) public pure returns (uint128) {
+    function calcAuctionProceeds(uint16 level, uint256 totalSupply, uint128 bidSize) 
+        internal pure returns (uint128) {
         // Get the total market cap at this level
         uint256 mcap = getMcapForLevel(level);
         
@@ -132,7 +133,7 @@ library AuctionLogic {
      * @param totalSupply The total supply tokens in the auction
      * @return The pro-rata shrink factor in X64.64 fixed point format */
     function deriveProRataShrink(uint256 cumBids, uint256 levelBids, uint256 totalSupply) 
-        public pure returns (uint256) {
+        internal pure returns (uint256) {
         uint256 levelCap = totalSupply - cumBids;
         if (levelBids == 0) { return 0; }
         return (levelCap << 64) / levelBids;
@@ -150,7 +151,7 @@ library AuctionLogic {
      * @return shares The amount of supply tokens received
      * @return bidRefund The amount of demand tokens refunded */
     function calcClearingLevelShares(uint16 level, uint256 totalSupply, uint128 bidSize, uint256 proRata)
-        public pure returns (uint128 shares, uint128 bidRefund) {
+        internal pure returns (uint128 shares, uint128 bidRefund) {
         shares = calcAuctionProceeds(level, totalSupply, bidSize);
         shares = (uint256(shares) * proRata >> 64).toUint128();
         bidRefund = (uint256(bidSize) * ((1 << 64) - proRata) >> 64).toUint128();
