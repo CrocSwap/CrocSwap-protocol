@@ -6,22 +6,30 @@ import "../mixins/AuctionHouse.sol";
 contract TestAuctionLedger is AuctionLedger {
     using SafeCast for uint256;
 
+    // Storage variables to track latest return values
+    bytes32 public lastAuctionKey;
+    uint16 public lastClearingLevel;
+    uint128 public lastShares;
+    uint128 public lastBidRefund;
+    uint128 public lastSupplyReturn;
+    uint128 public lastDemandReturn;
+    uint128 public lastCancelledBidSize;
+
     function testInitAuctionLedger(address supplyToken, address demandToken, uint256 auctionIndex,
-        AuctionLogic.PricedAuctionContext memory context) public returns (bytes32) {
+        AuctionLogic.PricedAuctionContext memory context) public {
         lockHolder_ = msg.sender;
-        return initAuctionLedger(supplyToken, demandToken, auctionIndex, context);
+        lastAuctionKey = initAuctionLedger(supplyToken, demandToken, auctionIndex, context);
     }
 
     function testPlaceBidLedger(bytes32 auctionKey, uint128 bidSize, uint16 limitLevel, uint256 bidIndex) 
-        public returns (uint16) {
+        public {
         lockHolder_ = msg.sender;
-        return placeBidLedger(auctionKey, bidSize, limitLevel, bidIndex);
+        lastClearingLevel = placeBidLedger(auctionKey, bidSize, limitLevel, bidIndex);
     }
 
-    function testClaimBidLedger(bytes32 auctionKey, uint256 bidId) public 
-        returns (uint128 shares, uint128 bidRefund) {
+    function testClaimBidLedger(bytes32 auctionKey, uint256 bidId) public {
         lockHolder_ = msg.sender;
-        return claimBidLedger(auctionKey, bidId);
+        (lastShares, lastBidRefund) = claimBidLedger(auctionKey, bidId);
     }
 
     function testRefundFailedLedger(address supplyToken, address demandToken, uint256 auctionSalt)
@@ -29,10 +37,9 @@ contract TestAuctionLedger is AuctionLedger {
         return refundLedger(supplyToken, demandToken, auctionSalt);
     }
 
-    function testCancelBidLedger(bytes32 auctionKey, uint256 bidIndex) public 
-        returns (uint128) {
+    function testCancelBidLedger(bytes32 auctionKey, uint256 bidIndex) public {
         lockHolder_ = msg.sender;
-        return cancelBidLedger(auctionKey, bidIndex);
+        lastCancelledBidSize = cancelBidLedger(auctionKey, bidIndex);
     }
 
     function testIncreaseBidLedger(bytes32 auctionKey, uint256 bidIndex, uint128 deltaSize) public {

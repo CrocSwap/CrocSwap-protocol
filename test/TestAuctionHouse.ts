@@ -4,7 +4,11 @@ import { ethers } from "hardhat";
 import { Contract, BigNumber } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ZERO_ADDR } from "./FixedPoint";
-import { TestAuctionLedger, TestAuctionLogic } from "../typechain";
+import { ERC20, TestAuctionLedger, TestAuctionLogic } from "../typechain";
+import { solidity } from "ethereum-waffle";
+import chai from "chai";
+
+chai.use(solidity);
 
 describe("AuctionLedger", function() {
     let auction: TestAuctionLedger;
@@ -12,6 +16,8 @@ describe("AuctionLedger", function() {
     let owner: SignerWithAddress;
     let bidder: SignerWithAddress;
     let auctioneer: SignerWithAddress;
+
+    const ADDR_TWO = "0x4200000000000000000000000000000000000015";
 
     beforeEach(async function() {
         [owner, bidder, auctioneer] = await ethers.getSigners();
@@ -30,14 +36,16 @@ describe("AuctionLedger", function() {
             stepSize_: 10
         };
 
-        await auction.testInitAuctionLedger(
+        await auction.connect(auctioneer).testInitAuctionLedger(
             ZERO_ADDR,
-            ZERO_ADDR,
+            ADDR_TWO,
             0,
             context
         );
 
-        const auctionKey = await auctionLib.testHashAuctionPool(ZERO_ADDR, ZERO_ADDR, auctioneer.address, 0);
+        const lastAuctionKey = await auction.lastAuctionKey();
+        const auctionKey = await auctionLib.testHashAuctionPool(ZERO_ADDR, ADDR_TWO, auctioneer.address, 0);
+        expect(lastAuctionKey).to.equal(auctionKey);
 
         const storedContext = await auction.getAuctionContext(auctionKey);
         expect(storedContext.auctionEndTime_).to.equal(context.auctionEndTime_);
@@ -46,6 +54,45 @@ describe("AuctionLedger", function() {
 
         const state = await auction.getAuctionState(auctionKey);
         expect(state.activeLevel_).to.equal(context.startLevel_);
+    });
+
+    it("should place bid", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000,
+            startLevel_: 100,
+            stepSize_: 10
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        const bidSize = 500;
+        const limitLevel = 150;
+        const bidIndex = 0;
+
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            bidSize,
+            limitLevel,
+            bidIndex
+        );
+        const clearingLevel = await auction.lastClearingLevel();
+
+        expect(clearingLevel).to.equal(context.startLevel_);
+
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, bidIndex);
+        const bid = await auction.getAuctionBid(bidKey);
+        expect(bid.bidSize_).to.equal(bidSize);
+        expect(bid.limitLevel_).to.equal(limitLevel);
+
+        const levelSize = await auction.getLevelSize(auctionKey, limitLevel);
+        expect(levelSize).to.equal(bidSize);
     });
 
     /*it("should place and track bids", async function() {
