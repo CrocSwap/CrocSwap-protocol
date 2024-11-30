@@ -16,11 +16,6 @@ contract TestAuctionLogic {
         return AuctionLogic.hashAuctionBid(auctionKey, bidder, bidSalt);
     }
 
-    function testGetLevelCapacity(uint256 totalSupply, uint16 level) 
-        public pure returns (uint256) {
-        return AuctionLogic.getLevelCapacity(totalSupply, level);
-    }
-
     function testGetMcapForLevel(uint16 level)
         public pure returns (uint256) {
         return AuctionLogic.getMcapForLevel(level);

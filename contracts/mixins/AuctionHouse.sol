@@ -46,7 +46,7 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        while (state.cumLiftingBids_ >= AuctionLogic.getLevelCapacity(context.auctionSupply_, state.activeLevel_ + 1)) {
+        while (state.cumLiftingBids_ >= AuctionLogic.getMcapForLevel(state.activeLevel_ + 1)) {
             state.cumLiftingBids_ -= auctionLevelSizes_[auctionKey][state.activeLevel_];
             state.activeLevel_ += context.stepSize_;
         }

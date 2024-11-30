@@ -68,10 +68,6 @@ library AuctionLogic {
         return keccak256(abi.encodePacked(auctionKey, bidder, bidSalt));
     }
 
-    function getLevelCapacity(uint256 totalSupply, uint16 level) internal pure returns (uint256) {
-        return totalSupply * getMcapForLevel(level) >> 192;
-    }
-
     /* @notice Converts a level index to its corresponding price in X64.64 fixed point format
      * @dev Each level increases price by a factor of approximately 1 + 2^(1/32), meaning prices double every 32 levels.
      *      The base price at level 0 is 2^-16 in X64.64 format (2^48).

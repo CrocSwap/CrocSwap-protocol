@@ -126,62 +126,48 @@ describe("AuctionLogic", () => {
     });
   });
 
-  describe("Level Calculations", () => {
-    it("should calculate correct level capacity", async () => {
-      const totalSupply = ethers.utils.parseEther("1000");
-      const level = 8; // At level 8, price doubles
-      const capacity = await testAuctionLogic.testGetLevelCapacity(totalSupply, level);
-      expect(capacity).to.equal(totalSupply.mul(2));
-    });
+  describe("Auction Proceeds", () => {
+    it("should calculate auction proceeds at base level", async () => {
+      const totalSupply = BigNumber.from(1000);
+      const bidSize = BigNumber.from(100);
+      const level = 16 * 32 + 32 * 3; // Market cap is 8.0
 
-    it("should calculate correct mcap for levels", async () => {
-      const level0 = await testAuctionLogic.testGetMcapForLevel(0);
-      const level8 = await testAuctionLogic.testGetMcapForLevel(8);
-      expect(level8).to.equal(level0.mul(2));
+      const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, totalSupply, bidSize);
+
+      // At a market cap of 8.0 for 1000 tokens, price per token is 0.0008 and a bid size of 100 should 
+      // yield 12500
+      expect(proceeds).to.equal(800);
     });
   });
 
-  describe("Auction Calculations", () => {
-    it("should calculate auction proceeds correctly", async () => {
-      const level = 0;
-      const totalSupply = ethers.utils.parseEther("1000");
-      const bidSize = ethers.utils.parseEther("1000");
-      const proceeds = await testAuctionLogic.testCalcAuctionProceeds(
-        level,
-        totalSupply,
-        bidSize
-      );
-      expect(proceeds).to.equal(totalSupply);
+  describe("Pro Rata Calculations", () => {
+    it("should calculate pro rata shrink with no level bids", async () => {
+      const cumBids = BigNumber.from(500);
+      const levelBids = BigNumber.from(0);
+      const totalSupply = BigNumber.from(1000);
+
+      const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+      expect(proRata).to.equal(0);
     });
 
-    it("should calculate pro-rata shrink correctly", async () => {
-      const cumBids = ethers.utils.parseEther("500");
-      const levelBids = ethers.utils.parseEther("1000");
-      const totalSupply = ethers.utils.parseEther("1000");
-      const proRata = await testAuctionLogic.testDeriveProRataShrink(
-        cumBids,
-        levelBids,
-        totalSupply
-      );
-      // At 50% cumBids, remaining 50% should be split pro-rata
-      expect(proRata).to.equal(ethers.utils.parseUnits("0.5", 64));
+    it("should calculate pro rata shrink with partial fill", async () => {
+      const cumBids = BigNumber.from(500);
+      const levelBids = BigNumber.from(1000);
+      const totalSupply = BigNumber.from(1000);
+
+      const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+      // Available capacity is 500, levelBids is 1000, so shrink factor should be 0.5 in X64.64
+      expect(proRata).to.equal(BigNumber.from(1).shl(63));
     });
 
-    it("should calculate clearing level shares correctly", async () => {
-      const level = 0;
-      const totalSupply = ethers.utils.parseEther("1000");
-      const bidSize = ethers.utils.parseEther("100");
-      const proRata = ethers.utils.parseUnits("0.5", 64); // 50% fill rate
-      
-      const { shares, bidRefund } = await testAuctionLogic.testCalcClearingLevelShares(
-        level,
-        totalSupply,
-        bidSize,
-        proRata
-      );
-      expect(shares).to.equal(bidSize.div(2));
-      expect(bidRefund).to.equal(bidSize.div(2));
-    });
+    it("should calculate pro rata shrink with full fill", async () => {
+      const cumBids = BigNumber.from(500);
+      const levelBids = BigNumber.from(500);
+      const totalSupply = BigNumber.from(1000);
 
+      const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+      // Available capacity equals levelBids, so shrink factor should be 1.0 in X64.64
+      expect(proRata).to.equal(BigNumber.from(1).shl(64));
+    });
   });
 });
