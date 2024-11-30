@@ -46,7 +46,7 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        while (state.cumLiftingBids_ >= AuctionLogic.getMcapForLevel(state.activeLevel_ + 1)) {
+        while (state.cumLiftingBids_ >= AuctionLogic.getMcapForLevel(state.activeLevel_ + 1, context.auctionSupply_)) {
             state.cumLiftingBids_ -= auctionLevelSizes_[auctionKey][state.activeLevel_];
             state.activeLevel_ += context.stepSize_;
         }
@@ -86,10 +86,10 @@ contract AuctionLedger is StorageLayout {
     function deriveFillShare(AuctionLogic.PricedAuctionState memory state, AuctionLogic.PricedAuctionBid memory bid, 
         uint128 totalSupply, uint128 levelBids) internal pure returns (uint128 shares, uint128 bidRefund) {
         if (bid.limitLevel_ > state.activeLevel_) {
-            shares = AuctionLogic.calcAuctionProceeds(state.activeLevel_, totalSupply, bid.bidSize_);
+            shares = AuctionLogic.calcAuctionProceeds(state.activeLevel_, bid.bidSize_);
         } else if (bid.limitLevel_ == state.activeLevel_) {
             uint proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, totalSupply);
-            (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.activeLevel_, totalSupply, bid.bidSize_, proRata);
+            (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.activeLevel_, bid.bidSize_, proRata);
         } else {
             bidRefund = bid.bidSize_;
         }
@@ -104,7 +104,7 @@ contract AuctionLedger is StorageLayout {
 
         bool auctionCleared = state.activeLevel_ > context.startLevel_;
         if (auctionCleared) {
-            demandReturn = AuctionLogic.getMcapForLevel(state.activeLevel_).toUint128();
+            demandReturn = AuctionLogic.getMcapForLevel(state.activeLevel_, context.auctionSupply_);
         } else {
             supplyReturn = context.auctionSupply_;
         }

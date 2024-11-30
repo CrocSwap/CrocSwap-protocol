@@ -82,92 +82,154 @@ describe("AuctionLogic", () => {
     });
   });
 
-  describe("Level to Market Cap Calculations", () => {
+  describe("Level to Price Calculations", () => {
     it("should calculate correct mcap for level 0", async () => {
-      const mcap = await testAuctionLogic.testGetMcapForLevel(0);
-      expect(mcap).to.equal(BigNumber.from(1).shl(48)); // 2^-16 in X64.64 format
+      const mcap = await testAuctionLogic.testGetPriceForLevel(0);
+      expect(mcap).to.equal(BigNumber.from(1).shl(8)); // 2^-16 in X64.64 format
     });
 
-    it("should calculate correct mcap for level 32 (price doubles)", async () => {
-      const mcap = await testAuctionLogic.testGetMcapForLevel(32);
-      expect(mcap).to.equal(BigNumber.from(2).shl(48)); // 2.0 * 2^-16 in X64.64 format
+    it("should calculate correct price for level 32 (price doubles)", async () => {
+      const price = await testAuctionLogic.testGetPriceForLevel(32);
+      expect(price).to.equal(BigNumber.from(2).shl(8)); // 2.0 * 2^8 in X64.64 format
     });
 
-    it("should calculate correct mcap for X64.64", async () => {
-        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32);
-        expect(mcap).to.equal(BigNumber.from(1).shl(64)); // 1 in X64.64 format
+    it("should calculate correct price for X64.64", async () => {
+        const price = await testAuctionLogic.testGetPriceForLevel(16*32);
+        expect(price).to.equal(BigNumber.from(1).shl(24)); // 1 in X64.64 format
     });
   
-    it("should calculate correct mcap for 8 * X64.64", async () => {
-        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3);
-        expect(mcap).to.equal(BigNumber.from(8).shl(64)); // 1 in X64.64 format
+    it("should calculate correct price for 8 * X64.64", async () => {
+        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3);
+        expect(price).to.equal(BigNumber.from(8).shl(24)); // 8 in X64.64 format
     });
 
     it("calculates decimal step", async () => {
-        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 1);
-        const one = BigNumber.from(8).shl(64);
+        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 1);
+        const one = BigNumber.from(8).shl(24);
         const fraction = one.div(32)
-        expect(mcap).to.equal(one.add(fraction)); // 1.03125 in X64.64 format
+        expect(price).to.equal(one.add(fraction)); // 8.03125 in X64.64 format
     });
     
-
     it("calculates decimal steps", async () => {
-        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 21);
-        const one = BigNumber.from(8).shl(64);
+        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 21);
+        const one = BigNumber.from(8).shl(24);
         const fraction = one.div(32).mul(21)
-        expect(mcap).to.equal(one.add(fraction));
+        expect(price).to.equal(one.add(fraction));
     });
 
     it("calculates decimal steps end", async () => {
-        const mcap = await testAuctionLogic.testGetMcapForLevel(16*32 + 32 * 3 + 31);
-        const one = BigNumber.from(8).shl(64);
+        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 31);
+        const one = BigNumber.from(8).shl(24);
         const fraction = one.div(32)
-        expect(mcap).to.equal(one.mul(2).sub(fraction));
+        expect(price).to.equal(one.mul(2).sub(fraction));
+    });
+
+    it("should calculate correct mcap for level", async () => {
+      const level = 16*32 + 32*3;
+      const totalSupply = BigNumber.from(25000);
+      const mcap = await testAuctionLogic.testGetMcapForLevel(level, totalSupply);
+      
+      // At price 8.0, mcap should be totalSupply * 8.0 = 200,000
+      expect(mcap).to.equal(BigNumber.from(1).shl(24).mul(200000));
     });
   });
 
   describe("Auction Proceeds", () => {
     it("should calculate auction proceeds at base level", async () => {
-      const totalSupply = BigNumber.from(1000);
-      const bidSize = BigNumber.from(100);
-      const level = 16 * 32 + 32 * 3; // Market cap is 8.0
+      const bidSize = BigNumber.from(10000);
+      const level = 60 * 32; // Price per token is .0625
 
-      const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, totalSupply, bidSize);
+      const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, bidSize);
 
-      // At a market cap of 8.0 for 1000 tokens, price per token is 0.0008 and a bid size of 100 should 
-      // yield 12500
-      expect(proceeds).to.equal(800);
+      // For a bid of 1000, should receive 1000 * .0625 = 62.5, rounded down to 62
+      expect(proceeds).to.equal(625);
     });
+
+    it("rounds down", async () => {
+        const bidSize = BigNumber.from(1000);
+        const level = 60 * 32; // Price per token is .0625
+  
+        const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, bidSize);
+  
+        // For a bid of 1000, should receive 1000 * .0625 = 62.5, rounded down to 62
+        expect(proceeds).to.equal(62);
+      });
+  
   });
 
   describe("Pro Rata Calculations", () => {
+    const ONE = BigNumber.from(1).shl(64);
+
     it("should calculate pro rata shrink with no level bids", async () => {
       const cumBids = BigNumber.from(500);
       const levelBids = BigNumber.from(0);
       const totalSupply = BigNumber.from(1000);
 
       const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
-      expect(proRata).to.equal(0);
+      expect(proRata).to.equal(ONE);
     });
 
-    it("should calculate pro rata shrink with partial fill", async () => {
-      const cumBids = BigNumber.from(500);
+    it("no shrink filled above", async () => {
+        const cumBids = BigNumber.from(1000);
+        const levelBids = BigNumber.from(0);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE);
+    });
+
+    it("no shrink split fill above", async () => {
+        const cumBids = BigNumber.from(300);
+        const levelBids = BigNumber.from(700);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE);
+    });
+
+    it("oversized fill", async () => {
+        const cumBids = BigNumber.from(300);
+        const levelBids = BigNumber.from(400);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE);
+    });
+
+    it("shrink partial fill", async () => {
+      const cumBids = BigNumber.from(750);
       const levelBids = BigNumber.from(1000);
       const totalSupply = BigNumber.from(1000);
 
       const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
-      // Available capacity is 500, levelBids is 1000, so shrink factor should be 0.5 in X64.64
-      expect(proRata).to.equal(BigNumber.from(1).shl(63));
+      expect(proRata).to.equal(ONE.div(4));
     });
 
-    it("should calculate pro rata shrink with full fill", async () => {
-      const cumBids = BigNumber.from(500);
-      const levelBids = BigNumber.from(500);
-      const totalSupply = BigNumber.from(1000);
+    it("shrink partial fill (2)", async () => {
+        const cumBids = BigNumber.from(250);
+        const levelBids = BigNumber.from(1000);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE.div(4).mul(3));
+    });  
 
-      const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
-      // Available capacity equals levelBids, so shrink factor should be 1.0 in X64.64
-      expect(proRata).to.equal(BigNumber.from(1).shl(64));
-    });
+    it("shrink partial fill (3)", async () => {
+        const cumBids = BigNumber.from(750);
+        const levelBids = BigNumber.from(2000);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE.div(8));
+    });  
+
+    it("partial fill round down", async () => {
+        const cumBids = BigNumber.from(700);
+        const levelBids = BigNumber.from(1000);
+        const totalSupply = BigNumber.from(1000);
+  
+        const proRata = await testAuctionLogic.testDeriveProRataShrink(cumBids, levelBids, totalSupply);
+        expect(proRata).to.equal(ONE.mul(3).div(10));
+    });  
   });
 });

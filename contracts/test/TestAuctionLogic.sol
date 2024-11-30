@@ -16,14 +16,19 @@ contract TestAuctionLogic {
         return AuctionLogic.hashAuctionBid(auctionKey, bidder, bidSalt);
     }
 
-    function testGetMcapForLevel(uint16 level)
+    function testGetMcapForLevel(uint16 level, uint256 totalSupply)
         public pure returns (uint256) {
-        return AuctionLogic.getMcapForLevel(level);
+        return AuctionLogic.getMcapForLevel(level, totalSupply);
     }
 
-    function testCalcAuctionProceeds(uint16 level, uint256 totalSupply, uint128 bidSize)
+    function testGetPriceForLevel(uint16 level)
+        public pure returns (uint256) {
+        return AuctionLogic.getPriceForLevel(level);
+    }
+
+    function testCalcAuctionProceeds(uint16 level, uint128 bidSize)
         public pure returns (uint128) {
-        return AuctionLogic.calcAuctionProceeds(level, totalSupply, bidSize);
+        return AuctionLogic.calcAuctionProceeds(level, bidSize);
     }
 
     function testDeriveProRataShrink(uint256 cumBids, uint256 levelBids, uint256 totalSupply)
@@ -31,8 +36,8 @@ contract TestAuctionLogic {
         return AuctionLogic.deriveProRataShrink(cumBids, levelBids, totalSupply);
     }
 
-    function testCalcClearingLevelShares(uint16 level, uint256 totalSupply, uint128 bidSize, uint256 proRata)
+    function testCalcClearingLevelShares(uint16 level, uint128 bidSize, uint256 proRata)
         public pure returns (uint128 shares, uint128 bidRefund) {
-        return AuctionLogic.calcClearingLevelShares(level, totalSupply, bidSize, proRata);
+        return AuctionLogic.calcClearingLevelShares(level, bidSize, proRata);
     }
 }

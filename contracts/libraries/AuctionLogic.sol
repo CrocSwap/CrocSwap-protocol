@@ -74,35 +74,39 @@ library AuctionLogic {
      *      For levels that are multiples of 32, price is a power of 2 shift.
      *      For other levels within a 32-step window, price is linearly interpolated using (1 + N/32).
      * @param level The level index to get the price for
-     * @return The market cap of the total fixed supply in X192.64 fixed point format */
-    function getMcapForLevel(uint16 level) internal pure returns (uint256) {
+     * @return The price per token in X64.64 fixed point format */
+    function getPriceForLevel(uint16 level) internal pure returns (uint256) {
         uint16 baseShift = level >> 5;  // Divide by 32
         uint16 remainder = level & 0x1f;  // Mod 32
 
         uint256 x64One = 1 << 64;
-        uint256 minMcap = x64One >> 16;
-        uint256 base = minMcap << baseShift;
+        uint256 minPrice = 1 << 8;
+        uint256 base = minPrice << baseShift;
 
         require(base > 0 && base < (1 << 191));
 
         uint256 remainderStep = 3125 * x64One / 100000;         
         return base * (x64One + remainder * remainderStep) >> 64;
     }
+    /* @notice Calculates the total market cap at a given level
+     * @dev Multiplies the price per token at the level by the total supply
+     * @param level The level index to calculate market cap for
+     * @param totalSupply The total supply of tokens
+     * @return The total market cap in X64.64 fixed point format */
+    function getMcapForLevel(uint16 level, uint256 totalSupply) internal pure returns (uint128) {
+        uint256 pricePerToken = getPriceForLevel(level);
+        return (pricePerToken * totalSupply).toUint128();
+    }
 
     /* @notice Calculates the amount of supply tokens received for a given bid size at a price level
      * @dev Converts bid size in demand tokens to supply tokens based on the level's price
      * @param level The level index that determines the price
-     * @param totalSupply The total supply tokens in the auction
      * @param bidSize The size of the bid in demand tokens
      * @return The amount of supply tokens received for the bid */
-    function calcAuctionProceeds(uint16 level, uint256 totalSupply, uint128 bidSize) 
+    function calcAuctionProceeds(uint16 level, uint128 bidSize) 
         internal pure returns (uint128) {
         // Get the total market cap at this level
-        uint256 mcap = getMcapForLevel(level);
-        
-        // Calculate price per token by dividing mcap by total supply
-        // Note: mcap is in X192.64 format, so result will be in X64.64
-        uint256 pricePerToken = mcap / totalSupply;
+        uint256 pricePerToken = getPriceForLevel(level);       
         
         // Calculate tokens received by dividing bid size by price per token
         // Note: bidSize is raw value, pricePerToken is X64.64, so shift left by 64 first
@@ -120,7 +124,8 @@ library AuctionLogic {
     function deriveProRataShrink(uint256 cumBids, uint256 levelBids, uint256 totalSupply) 
         internal pure returns (uint256) {
         uint256 levelCap = totalSupply - cumBids;
-        if (levelBids == 0) { return 0; }
+        if (levelBids == 0) { return 1 << 64; }
+        if (levelCap > levelBids) { return 1 << 64; }
         return (levelCap << 64) / levelBids;
     }
 
@@ -129,15 +134,14 @@ library AuctionLogic {
      *      need to be scaled down proportionally. This function calculates both the
      *      shares received and demand tokens refunded.
      * @param level The clearing level
-     * @param totalSupply The total supply tokens in the auction
      * @param bidSize The size of the bid in demand tokens
      * @param cumBids The cumulative size of all bids at levels above the clearing level
      * @param levelBids The total size of all bids at the clearing level
      * @return shares The amount of supply tokens received
      * @return bidRefund The amount of demand tokens refunded */
-    function calcClearingLevelShares(uint16 level, uint256 totalSupply, uint128 bidSize, uint256 proRata)
+    function calcClearingLevelShares(uint16 level, uint128 bidSize, uint256 proRata)
         internal pure returns (uint128 shares, uint128 bidRefund) {
-        shares = calcAuctionProceeds(level, totalSupply, bidSize);
+        shares = calcAuctionProceeds(level, bidSize);
         shares = (uint256(shares) * proRata >> 64).toUint128();
         bidRefund = (uint256(bidSize) * ((1 << 64) - proRata) >> 64).toUint128();
         return (shares, bidRefund);
