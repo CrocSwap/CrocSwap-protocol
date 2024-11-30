@@ -675,5 +675,11 @@ describe("AuctionLedger", function() {
         expect(bid.bidSize_).to.equal(0);
         expect(bid.limitLevel_).to.equal(0);
         expect(bid.bidTime_).to.equal(0);
+
+        // Verify canceled bid size matches original bid size
+        const canceledBidSize = await auction.lastCanceledBidSize();
+        expect(canceledBidSize).to.equal(10000);
     });
+
+
 });
