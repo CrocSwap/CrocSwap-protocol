@@ -129,9 +129,10 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
 
-        require(bid.limitLevel_ > state.clearingLevel_, "AFCA");
+        require(bid.limitLevel_ > state.clearingLevel_, "AFCB");
 
         state.cumLiftingBids_ += deltaSize;
+        bid.bidSize_ += deltaSize;
         auctionLevelSizes_[auctionKey][bid.limitLevel_] += deltaSize;
         updateAuctionLevel(auctionKey, bid.limitLevel_);
     }
@@ -152,6 +153,8 @@ contract AuctionLedger is StorageLayout {
 
         auctionLevelSizes_[auctionKey][newLimitLevel] += bid.bidSize_;
         auctionLevelSizes_[auctionKey][bid.limitLevel_] -= bid.bidSize_;
+        bid.limitLevel_ = newLimitLevel;
+
         updateAuctionLevel(auctionKey, newLimitLevel);
     }
 }
