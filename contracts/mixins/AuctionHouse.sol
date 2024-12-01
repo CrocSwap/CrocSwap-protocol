@@ -29,6 +29,7 @@ contract AuctionLedger is StorageLayout {
     function recordBid(bytes32 auctionKey, bytes32 bidKey, uint128 bidSize, uint16 limitLevel) private {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
+
         require(limitLevel > state.clearingLevel_, "AFPL");
         require(auctionBids_[bidKey].bidSize_ == 0 && bidSize > 0, "AFBI");
         require(limitLevel % context.stepSize_ == 0, "AFSS");
@@ -52,12 +53,9 @@ contract AuctionLedger is StorageLayout {
             state.clearingLevel_ += context.stepSize_;
         }
 
+        uint128 filledAt = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][state.clearingLevel_];
+        require(filledAt <= AuctionLogic.getMcapForLevel(bidLevel, context.auctionSupply_), "AFOS");
         require(bidLevel >= state.clearingLevel_, "AFAL");
-
-        if (state.clearingLevel_ == bidLevel) {
-            uint128 filledAt = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][bidLevel];
-            require(filledAt <= AuctionLogic.getMcapForLevel(bidLevel, context.auctionSupply_), "AFOS");
-        }
 
         return state.clearingLevel_;
     }
@@ -144,7 +142,7 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
 
-        require(newLimitLevel > state.clearingLevel_, "AFCA");
+        require(newLimitLevel > bid.limitLevel_ && newLimitLevel > state.clearingLevel_, "AFML");
         require(newLimitLevel % context.stepSize_ == 0, "AFSS");
 
         if (bid.limitLevel_ == state.clearingLevel_) {
