@@ -33,7 +33,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -61,7 +62,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -98,7 +100,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -133,7 +136,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -178,7 +182,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -223,7 +228,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -275,7 +281,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -310,7 +317,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -351,7 +359,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -386,7 +395,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -419,7 +429,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -481,7 +492,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -521,7 +533,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -559,7 +572,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -592,7 +606,9 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
+
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -636,7 +652,9 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
+
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -686,7 +704,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -735,7 +754,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -779,7 +799,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -824,7 +845,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -872,7 +894,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -914,7 +937,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -940,7 +964,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -985,7 +1010,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -1027,7 +1053,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(
@@ -1107,7 +1134,8 @@ describe("AuctionLedger", function() {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
             startLevel_: 100,
-            stepSize_: 10
+            stepSize_: 10,
+            protocolFee_: 100
         };
 
         await auction.connect(auctioneer).testInitAuctionLedger(

@@ -212,7 +212,13 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
             refundLedger(supplyToken, demandToken, auctionIndex);
         requireAuctionClosed(auctionKey);
         payoutSupply(auctionKey, supplyToken, supplyRefund);
-        payoutDemand(auctionKey, demandToken, demandRefund);
+
+        uint128 protocolFee = (demandRefund * auctionContexts_[auctionKey].protocolFee_) / 10000;
+        if (protocolFee > 0) {
+            payoutProtocol(auctionKey, demandToken, protocolFee);
+        }
+        payoutDemand(auctionKey, demandToken, demandRefund - protocolFee);
+        
         emit AuctionRefund(auctionKey, lockHolder_, supplyRefund, demandRefund);
     }
 
@@ -270,5 +276,10 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         if (amount > 0) {
             creditTransfer(lockHolder_, amount, demandToken, 0);
         }
+    }
+
+    function payoutProtocol (bytes32 auctionKey, address demandToken, uint128 amount) private {
+        auctionReserves_[auctionKey].reserveDemand_ -= amount;
+        feesAccum_[demandToken] += amount;
     }
 }

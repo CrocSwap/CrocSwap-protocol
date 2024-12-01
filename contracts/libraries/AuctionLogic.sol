@@ -12,11 +12,17 @@ library AuctionLogic {
      * @param auctionEndTime_ The timestamp when the auction ends and bids can be claimed
      * @param startLevel_ The initial price level where the auction begins
      * @param auctionSupply_ The total amount of supply tokens being auctioned */
+    /* @notice Stores the immutable parameters that define an auction
+     * @param auctionEndTime_ The timestamp when the auction ends and bids can be claimed
+     * @param startLevel_ The initial price level where the auction begins
+     * @param auctionSupply_ The total amount of supply tokens being auctioned
+     * @param protocolFee_ Protocol fee represented as 1/100 of a basis point (e.g. 100 = 1 bps) */
     struct PricedAuctionContext {
         uint32 auctionEndTime_;
         uint16 startLevel_;
         uint16 stepSize_;
         uint128 auctionSupply_;
+        uint16 protocolFee_;
     }
 
     /* @notice Tracks the current state of an active auction
