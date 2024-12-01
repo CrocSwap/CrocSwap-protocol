@@ -40,7 +40,7 @@ contract AuctionLedger is StorageLayout {
             bidTime_: uint32(block.timestamp)
         });
 
-        auctionStates_[auctionKey].cumLiftingBids_ += bidSize;
+        state.cumLiftingBids_ += bidSize;
         auctionLevelSizes_[auctionKey][limitLevel] += bidSize;
     }
 
