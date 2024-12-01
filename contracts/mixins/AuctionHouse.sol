@@ -70,26 +70,38 @@ contract AuctionLedger is StorageLayout {
 
         // Auction failed to fill, return full bid
         if (state.clearingLevel_ <= context.startLevel_) {
-            bidRefund = auctionBids_[bidKey].bidSize_;
-            shares = 0;
-            delete auctionBids_[bidKey];
-            return (shares, bidRefund);
+            (shares, bidRefund) = claimWeakAuction(auctionKey, bidKey);
+        } else {
+            (shares, bidRefund) = claimStrongAuction(auctionKey, bidKey);
         }
 
-        AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
-        require(bid.bidSize_ > 0, "AFCC");
-        
-        (shares, bidRefund) = deriveFillShare(state, bid, context.auctionSupply_, auctionLevelSizes_[auctionKey][state.clearingLevel_]);
         delete auctionBids_[bidKey];
     }
 
-    function deriveFillShare(AuctionLogic.PricedAuctionState memory state, AuctionLogic.PricedAuctionBid memory bid, 
-        uint128 totalSupply, uint128 levelBids) internal pure returns (uint128 shares, uint128 bidRefund) {
+    function claimWeakAuction(bytes32 auctionKey, bytes32 bidKey) internal view returns (uint128 shares, uint128 bidRefund) {
+        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
+        AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+
+        uint128 totalBids = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][context.startLevel_];
+        (shares, bidRefund) = AuctionLogic.calcReserveShares(context.startLevel_, auctionBids_[bidKey].bidSize_, 
+            totalBids, context.auctionSupply_);
+    }
+
+    function claimStrongAuction(bytes32 auctionKey, bytes32 bidKey) internal view returns (uint128 shares, uint128 bidRefund) {
+        AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
+        AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
+
+        require(bid.bidSize_ > 0, "AFCC");
+        
         if (bid.limitLevel_ > state.clearingLevel_) {
             shares = AuctionLogic.calcAuctionProceeds(state.clearingLevel_, bid.bidSize_);
+        
         } else if (bid.limitLevel_ == state.clearingLevel_) {
-            uint proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, totalSupply);
+            uint128 levelBids = auctionLevelSizes_[auctionKey][state.clearingLevel_];
+            uint256 proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, context.auctionSupply_);
             (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.clearingLevel_, bid.bidSize_, proRata);
+        
         } else {
             bidRefund = bid.bidSize_;
         }
@@ -106,7 +118,8 @@ contract AuctionLedger is StorageLayout {
         if (auctionCleared) {
             demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_);
         } else {
-            supplyReturn = context.auctionSupply_;
+            uint128 totalBids = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][context.startLevel_];
+            (supplyReturn, demandReturn) = AuctionLogic.calcReservePayout(context.startLevel_, totalBids, context.auctionSupply_);
         }
     }
 
@@ -142,7 +155,9 @@ contract AuctionLedger is StorageLayout {
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
 
-        require(newLimitLevel > bid.limitLevel_ && newLimitLevel > state.clearingLevel_, "AFML");
+        require(bid.bidSize_ > 0, "AFMC");
+        require(bid.limitLevel_ >= state.clearingLevel_, "AFMK");
+        require(newLimitLevel > bid.limitLevel_, "AFML");
         require(newLimitLevel % context.stepSize_ == 0, "AFSS");
 
         if (bid.limitLevel_ == state.clearingLevel_) {
@@ -156,7 +171,6 @@ contract AuctionLedger is StorageLayout {
         updateAuctionLevel(auctionKey, newLimitLevel);
     }
 }
-
 
 
 contract AuctionHouse is AuctionLedger, SettleLayer {
