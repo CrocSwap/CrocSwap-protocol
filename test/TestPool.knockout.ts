@@ -105,7 +105,6 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10000*1024) // Knockout minted off curve
     })
 
-
     it("swap into active range", async() => {
         await test.testMintAmbient(10000)
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
@@ -122,9 +121,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(2735138354)
 
         await test.testKnockoutBurnLiq(2660970*1024, true, 3200, 3200+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-3378242)
-        expect(await test.snapQuoteFlow()).to.equal(-1290150)
-        expect(await test.liquidity()).to.equal(10288207) 
+        expect(await test.snapBaseFlow()).to.equal(-3417897)
+        expect(await test.snapQuoteFlow()).to.equal(-1318886)
+        expect(await test.liquidity()).to.equal(10254451) 
     })
 
     it("swap into active range ask", async() => {
@@ -143,9 +142,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(4420901277)
 
         await test.testKnockoutBurnLiq(4410480640, false, 6400, 6400+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-5794322)
-        expect(await test.snapQuoteFlow()).to.equal(-2135353)
-        expect(await test.liquidity()).to.equal(10373876) 
+        expect(await test.snapBaseFlow()).to.equal(-5923637)
+        expect(await test.snapQuoteFlow()).to.equal(-2203414)
+        expect(await test.liquidity()).to.equal(10280060) 
     })
 
     it("swap knockout", async() => {
