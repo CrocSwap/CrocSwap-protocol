@@ -259,17 +259,17 @@ const swellTestnet: CrocAddrs = {
 }
 
 const swellMainnet: CrocAddrs = {
-  dex: '',
-  cold: '',
-  warm: '',
-  long: '',
-  micro: '',
-  hot: '',
-  knockout: '',
-  koCross: '',
-  policy: '',
-  query: '',
-  impact: '',
+  dex: '0xaAAaAaaa82812F0a1f274016514ba2cA933bF24D',
+  cold: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  warm: '0x6A699AB45ADce02891E6115b81Dfb46CAa5efDb9',
+  long: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  micro: '0xA3BD3bE19012De72190c885FB270beb93e36a8A7',
+  hot: '0x646929453E753565467f330110850885eAd93fA9',
+  knockout: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  koCross: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  policy: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  query: '0xaab17419F062bB28CdBE82f9FC05E7C47C3F6194',
+  impact: '0xd83eF4d0e968A96329aC297bBf049CDdaC7E0362',
   shell: '',
   policyShell: '',
   deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
@@ -280,7 +280,9 @@ const swellMainnet: CrocAddrs = {
     timelockTreasury: '',
     timelockOps: '',
     timelockEmergency: ''
-  }
+  },
+  swapRouter: '0x983a06261aE018FEFA16e1E95c7fda13a2eB1038',
+  swapBypass: '0x471232BCB9ed0eBcDA395C2266AEabC1B8031B68'
 }
 
 
