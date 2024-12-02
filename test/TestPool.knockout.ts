@@ -105,6 +105,7 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10000*1024) // Knockout minted off curve
     })
 
+
     it("swap into active range", async() => {
         await test.testMintAmbient(10000)
         await test.testKnockoutMint(5000*1024, true, 3200, 3200+32, true)
