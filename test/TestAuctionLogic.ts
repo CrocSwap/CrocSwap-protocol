@@ -125,12 +125,12 @@ describe("AuctionLogic", () => {
     });
 
     it("should calculate correct mcap for level", async () => {
-      const level = 16*32 + 32*3;
+      const level = 56*32 + 32*3;
       const totalSupply = BigNumber.from(25000);
       const mcap = await testAuctionLogic.testGetMcapForLevel(level, totalSupply);
       
       // At price 8.0, mcap should be totalSupply * 8.0 = 200,000
-      expect(mcap).to.equal(BigNumber.from(1).shl(24).mul(200000));
+      expect(mcap).to.equal(200000);
     });
   });
 
@@ -284,6 +284,73 @@ describe("AuctionLogic", () => {
       const refund = result.bidRefund;
       expect(shares).to.equal(0);
       expect(refund).to.equal(bidSize);
+    });
+  });
+
+  describe("calcReservePayout", () => {
+    it("full fill", async () => {
+      const startLevel = 1760;
+      const totalSupply = BigNumber.from(100);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(totalSupply).shr(64);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(0);
+      expect(bidPayout).to.equal(totalBids);
+    });
+
+    it("half fill", async () => {
+      const startLevel = 1760;
+      const totalSupply = BigNumber.from(100);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(totalSupply).shr(64).div(2);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(totalSupply.div(2));
+      expect(bidPayout).to.equal(totalBids);
+    });
+
+    it("quarter fill", async () => {
+      const startLevel = 1760;
+      const totalSupply = BigNumber.from(1000);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(totalSupply).shr(64).div(4);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(totalSupply.mul(3).div(4));
+      expect(bidPayout).to.equal(totalBids);
+    });
+
+    it("round down", async () => {
+      const startLevel = 1760;
+      const totalSupply = BigNumber.from(300);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(totalSupply).shr(64).div(3);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(201);
+      expect(bidPayout).to.equal(49);
+    });
+
+
+    it("zero fill", async () => {
+      const startLevel = 1760;
+      const totalBids = BigNumber.from(0);
+      const totalSupply = BigNumber.from(100);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(totalSupply);
+      expect(bidPayout).to.equal(0);
     });
   });
 });

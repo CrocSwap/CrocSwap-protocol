@@ -40,4 +40,9 @@ contract TestAuctionLogic {
         public pure returns (uint128 shares, uint128 bidRefund) {
         return AuctionLogic.calcClearingLevelShares(level, bidSize, proRata);
     }
+
+    function testCalcReservePayout(uint16 level, uint128 totalBids, uint16 totalSupply)
+        public pure returns (uint128 supplyReturn, uint128 demandReturn) {
+        return AuctionLogic.calcReservePayout(level, totalBids, totalSupply);
+    }
 }

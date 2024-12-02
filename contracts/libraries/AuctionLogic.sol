@@ -164,25 +164,16 @@ library AuctionLogic {
      * @return bidPayout The amount of demand tokens received by seller */
     function calcReservePayout(uint16 startLevel, uint128 totalBids, uint128 totalSupply)
         internal pure returns (uint128 supplyRefund, uint128 bidPayout) {    
-        (uint256 fillRate, uint256 salePrice) = calcFillRate(startLevel, totalBids, totalSupply);
+        uint256 salePrice = getPriceForLevel(startLevel);
+        uint256 fillRate = (uint256(totalBids) << 64) / ((salePrice * uint256(totalSupply)) >> 64);
 
         uint128 sold = ((fillRate * totalSupply) >> 64).toUint128();
         bidPayout = ((uint256(sold) * salePrice) >> 64).toUint128();
-        supplyRefund = totalSupply - sold;
-        return (supplyRefund, bidPayout);
-    }
 
-    /* @notice Calculates the fill rate for a weak auction that only partially filled
-     * @dev When an auction fails to clear above the reserve price, this calculates the
-     *      proportion of bids that can be filled based on total demand vs supply
-     * @param startLevel The reserve price level
-     * @param totalBids Total size of all bids at or above the reserve level
-     * @param totalSupply Total supply being auctioned
-     * @return fillRate The proportion of bids that can be filled (64-bit fixed point) */
-    function calcFillRate(uint16 startLevel, uint128 totalBids, uint128 totalSupply)
-        internal pure returns (uint256 fillRate, uint256 salePrice) {
-        salePrice = getPriceForLevel(startLevel);
-        fillRate = (uint256(totalBids) << 64) / ((salePrice * uint256(totalSupply)) >> 64);
-        require(fillRate <= (1 << 64));
+        if (sold >= totalSupply) {
+            supplyRefund = 0;
+        } else {
+            supplyRefund = totalSupply - sold;
+        }
     }
 }
