@@ -79,12 +79,12 @@ contract AuctionLedger is StorageLayout {
     }
 
     function claimWeakAuction(bytes32 auctionKey, bytes32 bidKey) internal view returns (uint128 shares, uint128 bidRefund) {
-        AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+        AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
 
-        uint128 totalBids = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][context.startLevel_];
-        (shares, bidRefund) = AuctionLogic.calcReserveShares(context.startLevel_, auctionBids_[bidKey].bidSize_, 
-            totalBids, context.auctionSupply_);
+        // Weak auction means all bids fully fill at clearing level price
+        shares = AuctionLogic.calcAuctionProceeds(state.clearingLevel_, bid.bidSize_);
+        bidRefund = 0;
     }
 
     function claimStrongAuction(bytes32 auctionKey, bytes32 bidKey) internal view returns (uint128 shares, uint128 bidRefund) {
@@ -110,10 +110,13 @@ contract AuctionLedger is StorageLayout {
 
 
     function refundLedger (address supplyToken, address demandToken, uint256 auctionSalt) 
-        internal view returns (bytes32 auctionKey, uint128 supplyReturn, uint128 demandReturn) {
+        internal returns (bytes32 auctionKey, uint128 supplyReturn, uint128 demandReturn) {
         auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionSalt);
         AuctionLogic.PricedAuctionContext storage context = auctionContexts_[auctionKey];
         AuctionLogic.PricedAuctionState storage state = auctionStates_[auctionKey];
+
+        require(!state.hasRefunded_, "AFMR");
+        state.hasRefunded_ = true;
 
         bool auctionCleared = state.clearingLevel_ > context.startLevel_;
         if (auctionCleared) {

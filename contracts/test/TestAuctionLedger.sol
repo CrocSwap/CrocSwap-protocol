@@ -32,9 +32,9 @@ contract TestAuctionLedger is AuctionLedger {
         (lastShares, lastBidRefund) = claimBidLedger(auctionKey, bidId);
     }
 
-    function testRefundFailedLedger(address supplyToken, address demandToken, uint256 auctionSalt)
-        public view returns (bytes32 auctionKey, uint128 supplyReturn, uint128 demandReturn) {
-        return refundLedger(supplyToken, demandToken, auctionSalt);
+    function testRefundLedger(address supplyToken, address demandToken, uint256 auctionSalt) public {
+        lockHolder_ = msg.sender;
+        (lastAuctionKey, lastSupplyReturn, lastDemandReturn) = refundLedger(supplyToken, demandToken, auctionSalt);
     }
 
     function testCancelBidLedger(bytes32 auctionKey, uint256 bidIndex) public {
