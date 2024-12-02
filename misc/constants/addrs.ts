@@ -258,6 +258,32 @@ const swellTestnet: CrocAddrs = {
   swapBypass: '0x3d7baE85731D056889383b5765C37530deAA98A2'
 }
 
+const swellMainnet: CrocAddrs = {
+  dex: '',
+  cold: '',
+  warm: '',
+  long: '',
+  micro: '',
+  hot: '',
+  knockout: '',
+  koCross: '',
+  policy: '',
+  query: '',
+  impact: '',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  }
+}
+
+
 const baseSepolia: CrocAddrs = {
   dex: '0xD553d97EfD5faAB29Dc92CC87d5259ff59278176',
   cold: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
@@ -295,6 +321,7 @@ export let CROC_ADDRS = {
     '0x80D': beraTestnet,
     '0x784': swellTestnet,
     '0x14a34': baseSepolia,
+    '0x6435': swellMainnet,
     'mock': mockAddrs,
 }
 
@@ -316,6 +343,7 @@ export let POOL_IDXS = {
     '0x80D': 36000,
     '0x784': 36000,
     '0x14a34': 36000,
+    '0x6435': 420
 }
 
 export const BOOT_PROXY_IDX = 0;
