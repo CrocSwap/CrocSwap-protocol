@@ -616,4 +616,45 @@ describe('Pool', () => {
         expect(await test.snapBaseOwed()).to.equal(-6291057)
     })
 
+    it("swap low liq range", async() => {
+        await test.testMintAmbient(10000)
+        await test.testMint(3200, 3200+32, 2660970)
+
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
+        expect(await test.liquidity()).to.equal(2735095007) // Liquidity comes in range
+
+        // Goes out of range
+        await test.testSwap(true, true, 100000000, toSqrtPrice(1.5))
+        expect(await test.liquidity()).to.equal(10283326) // Most drops out, but some ambient liq rewards active
+
+        // Back in range (shouldn't knock out because didn't hit bottom point)
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
+        expect(await test.liquidity()).to.equal(2735138354)
+
+        await test.testBurn(3200, 3200+32, 2660970) // Liquidity for full position
+        expect(await test.snapBaseFlow()).to.equal(-3417897)
+        expect(await test.snapQuoteFlow()).to.equal(-1318886)
+        expect(await test.liquidity()).to.equal(10254451) 
+    })
+
+    it("swap low liq range below", async() => {
+        await test.testMintAmbient(10000)
+        await test.testMint(3200, 3200+32, 2660970)
+
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
+        expect(await test.liquidity()).to.equal(2735095007) // Liquidity comes in range
+
+        // Goes out of range
+        await test.testSwap(false, true, 100000000, toSqrtPrice(1.25))
+        expect(await test.liquidity()).to.equal(10299752) // Most drops out, but some ambient liq rewards active
+
+        // Back in range (shouldn't knock out because didn't hit bottom point)
+        await test.testSwap(true, true, 100000000, toSqrtPrice(1.38)) // Inside the conc range
+        expect(await test.liquidity()).to.equal(2735170805)
+
+        await test.testBurn(3200, 3200+32, 2660970) // Liquidity for full position
+        expect(await test.snapBaseFlow()).to.equal(-3453903)
+        expect(await test.snapQuoteFlow()).to.equal(-1344977)
+        expect(await test.liquidity()).to.equal(10256251) 
+    })
 })
