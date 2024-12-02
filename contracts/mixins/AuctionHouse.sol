@@ -178,7 +178,43 @@ contract AuctionLedger is StorageLayout {
 }
 
 
-contract AuctionHouse is AuctionLedger, SettleLayer {
+contract AuctionClearing is StorageLayout, SettleLayer {
+    function collectSupplyAuction (bytes32 auctionKey, address supplyToken, uint128 amount) internal {
+        auctionReserves_[auctionKey].reserveSupply_ += amount;
+        if (amount > 0) {
+            debitTransfer(lockHolder_, amount, supplyToken, popMsgVal());
+        }
+    }
+
+    function collectDemandAuction (bytes32 auctionKey, address demandToken, uint128 amount) internal {
+        auctionReserves_[auctionKey].reserveDemand_ += amount;
+        if (amount > 0) {
+            debitTransfer(lockHolder_, amount, demandToken, popMsgVal());
+        }
+    }
+
+    function payoutSupplyAuction (bytes32 auctionKey, address supplyToken, uint128 amount) internal {
+        auctionReserves_[auctionKey].reserveSupply_ -= amount;
+        if (amount > 0) {
+            creditTransfer(lockHolder_, amount, supplyToken, 0);
+        }
+    }
+
+    function payoutDemandAuction (bytes32 auctionKey, address demandToken, uint128 amount) internal {
+        auctionReserves_[auctionKey].reserveDemand_ -= amount;
+        if (amount > 0) {
+            creditTransfer(lockHolder_, amount, demandToken, 0);
+        }
+    }
+
+    function payoutProtocolAuction (bytes32 auctionKey, address demandToken, uint128 amount) internal {
+        auctionReserves_[auctionKey].reserveDemand_ -= amount;
+        feesAccum_[demandToken] += amount;
+    }
+}
+
+
+contract AuctionHouse is AuctionLedger, AuctionClearing {
 
     event AuctionHash (address indexed supplyToken, address indexed demandToken, 
         uint256 indexed auctionIndex, bytes32 auctionKey);
@@ -202,7 +238,7 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
 
         bytes32 auctionKey = initAuctionLedger(supplyToken, demandToken, auctionIndex, context);
         requireAuctionOpen(auctionKey);
-        collectSupply(auctionKey, supplyToken, context.auctionSupply_);
+        collectSupplyAuction(auctionKey, supplyToken, context.auctionSupply_);
 
         emit AuctionHash(supplyToken, demandToken, auctionIndex, auctionKey);
         emit AuctionInit(auctionKey, context.auctionEndTime_, context.auctionSupply_, context.startLevel_);
@@ -212,15 +248,15 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         uint128 bidSize, uint16 limitLevel, uint256 bidIndex) internal {
         requireAuctionOpen(auctionKey);
         uint16 clearingLevel = placeBidLedger(auctionKey, bidSize, limitLevel, bidIndex);
-        collectDemand(auctionKey, demandToken, bidSize);
+        collectDemandAuction(auctionKey, demandToken, bidSize);
         emit AuctionBid(auctionKey, lockHolder_, bidIndex, bidSize, limitLevel, clearingLevel);
     }
 
     function claimBid (bytes32 auctionKey, address demandToken, address supplyToken, uint256 bidId) internal {
         requireAuctionClosed(auctionKey);
         (uint128 supplyPaid, uint128 demandPaid) = claimBidLedger(auctionKey, bidId);
-        payoutDemand(auctionKey, demandToken, demandPaid);
-        payoutSupply(auctionKey, supplyToken, supplyPaid);
+        payoutDemandAuction(auctionKey, demandToken, demandPaid);
+        payoutSupplyAuction(auctionKey, supplyToken, supplyPaid);
         emit AuctionClaim(auctionKey, lockHolder_, bidId, supplyPaid, demandPaid);
     }
 
@@ -228,13 +264,13 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
         (bytes32 auctionKey, uint128 supplyRefund, uint128 demandRefund) = 
             refundLedger(supplyToken, demandToken, auctionIndex);
         requireAuctionClosed(auctionKey);
-        payoutSupply(auctionKey, supplyToken, supplyRefund);
+        payoutSupplyAuction(auctionKey, supplyToken, supplyRefund);
 
         uint128 protocolFee = (demandRefund * auctionContexts_[auctionKey].protocolFee_) / 10000;
         if (protocolFee > 0) {
-            payoutProtocol(auctionKey, demandToken, protocolFee);
+            payoutProtocolAuction(auctionKey, demandToken, protocolFee);
         }
-        payoutDemand(auctionKey, demandToken, demandRefund - protocolFee);
+        payoutDemandAuction(auctionKey, demandToken, demandRefund - protocolFee);
         
         emit AuctionRefund(auctionKey, lockHolder_, supplyRefund, demandRefund);
     }
@@ -242,14 +278,14 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
     function cancelBid (bytes32 auctionKey, address demandToken, uint256 bidIndex) internal {
         requireAuctionOpen(auctionKey);
         uint128 bidSize = cancelBidLedger(auctionKey, bidIndex);
-        payoutDemand(auctionKey, demandToken, bidSize);
+        payoutDemandAuction(auctionKey, demandToken, bidSize);
         emit AuctionBidRemove(auctionKey, lockHolder_, bidIndex);
     }
 
     function increaseBid (bytes32 auctionKey, address demandToken, uint256 bidIndex, uint128 deltaSize) internal {
         requireAuctionOpen(auctionKey);
         increaseBidLedger(auctionKey, bidIndex, deltaSize);
-        collectDemand(auctionKey, demandToken, deltaSize);
+        collectDemandAuction(auctionKey, demandToken, deltaSize);
         emit AuctionBidIncrease(auctionKey, lockHolder_, bidIndex, deltaSize);
     }
 
@@ -266,37 +302,5 @@ contract AuctionHouse is AuctionLedger, SettleLayer {
     function requireAuctionClosed (bytes32 auctionKey) private view {
         require(block.timestamp >= auctionContexts_[auctionKey].auctionEndTime_, "AFC");
     }
-
-    function collectSupply (bytes32 auctionKey, address supplyToken, uint128 amount) private {
-        auctionReserves_[auctionKey].reserveSupply_ += amount;
-        if (amount > 0) {
-            debitTransfer(lockHolder_, amount, supplyToken, popMsgVal());
-        }
-    }
-
-    function collectDemand (bytes32 auctionKey, address demandToken, uint128 amount) private {
-        auctionReserves_[auctionKey].reserveDemand_ += amount;
-        if (amount > 0) {
-            debitTransfer(lockHolder_, amount, demandToken, popMsgVal());
-        }
-    }
-
-    function payoutSupply (bytes32 auctionKey, address supplyToken, uint128 amount) private {
-        auctionReserves_[auctionKey].reserveSupply_ -= amount;
-        if (amount > 0) {
-            creditTransfer(lockHolder_, amount, supplyToken, 0);
-        }
-    }
-
-    function payoutDemand (bytes32 auctionKey, address demandToken, uint128 amount) private {
-        auctionReserves_[auctionKey].reserveDemand_ -= amount;
-        if (amount > 0) {
-            creditTransfer(lockHolder_, amount, demandToken, 0);
-        }
-    }
-
-    function payoutProtocol (bytes32 auctionKey, address demandToken, uint128 amount) private {
-        auctionReserves_[auctionKey].reserveDemand_ -= amount;
-        feesAccum_[demandToken] += amount;
-    }
 }
+
