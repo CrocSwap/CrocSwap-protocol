@@ -99,7 +99,8 @@ contract AuctionLedger is StorageLayout {
         
         } else if (bid.limitLevel_ == state.clearingLevel_) {
             uint128 levelBids = auctionLevelSizes_[auctionKey][state.clearingLevel_];
-            uint256 proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, context.auctionSupply_);
+            uint256 levelMcap = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_);
+            uint256 proRata = AuctionLogic.deriveProRataShrink(state.cumLiftingBids_, levelBids, levelMcap);
             (shares, bidRefund) = AuctionLogic.calcClearingLevelShares(state.clearingLevel_, bid.bidSize_, proRata);
         
         } else {
@@ -128,6 +129,7 @@ contract AuctionLedger is StorageLayout {
         bytes32 bidKey = AuctionLogic.hashAuctionBid(auctionKey, lockHolder_, bidIndex);
 
         AuctionLogic.PricedAuctionBid storage bid = auctionBids_[bidKey];
+        require(bid.bidSize_ > 0, "AFCC");
         require(bid.limitLevel_ < auctionStates_[auctionKey].clearingLevel_, "AFCA");
 
         bidSize = bid.bidSize_;

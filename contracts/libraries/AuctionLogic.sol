@@ -123,13 +123,13 @@ library AuctionLogic {
      * @dev When the auction clears at a level with partial fill, bids at that level
      *      need to be scaled down proportionally. This function calculates that scale
      *      factor in X64.64 fixed point format.
-     * @param cumBids The cumulative size of all bids at levels above the clearing level
+     * @param liftingBids The cumulative size of all bids at levels above the clearing level
      * @param levelBids The total size of all bids at the clearing level
-     * @param totalSupply The total supply tokens in the auction
+     * @param levelMcap The market cap at the clearing level
      * @return The pro-rata shrink factor in X64.64 fixed point format */
-    function deriveProRataShrink(uint256 cumBids, uint256 levelBids, uint256 totalSupply) 
+    function deriveProRataShrink(uint256 liftingBids, uint256 levelBids, uint256 levelMcap) 
         internal pure returns (uint256) {
-        uint256 levelCap = totalSupply - cumBids;
+        uint256 levelCap = levelMcap - liftingBids;
         if (levelBids == 0) { return 1 << 64; }
         if (levelCap > levelBids) { return 1 << 64; }
         return (levelCap << 64) / levelBids;

@@ -697,6 +697,11 @@ describe("AuctionLedger", function() {
         // Verify canceled bid size matches original bid size
         const canceledBidSize = await auction.lastCancelledBidSize();
         expect(canceledBidSize).to.equal(10000);
+
+        // Try to cancel bid again
+        await expect(
+            auction.connect(bidder).testCancelBidLedger(auctionKey, 0)
+        ).to.be.revertedWith("AFCC");
     });
 
     it("should increase bid size without changing clearing level", async function() {
@@ -1442,5 +1447,249 @@ describe("AuctionLedger", function() {
         ).to.be.revertedWith("AFMK");
     });
 
-    
+    it("should allow claiming bid above clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10,
+            protocolFee_: 100
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place bid above clearing level
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            100000,
+            2000,
+            0
+        );
+
+        // Place second bid that sets clearing level lower
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            500000,
+            1800,
+            1
+        );
+
+        // Verify clearing level
+        const state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(1760);
+
+        // Should be able to claim first bid since it's above clearing
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
+        const bid = await auction.getAuctionBid(bidKey);
+        expect(bid.limitLevel_).to.equal(2000);
+        expect(bid.bidSize_).to.equal(100000);
+
+        // Claim the bid
+        await auction.connect(bidder).testClaimBidLedger(
+            auctionKey,
+            0
+        );
+
+        // Verify bid was claimed
+        const claimedBid = await auction.getAuctionBid(bidKey);
+        expect(claimedBid.bidSize_).to.equal(0);
+        expect(claimedBid.limitLevel_).to.equal(0);
+
+        let claimPrice = await auctionLib.testGetPriceForLevel(1760);
+        expect(claimPrice).to.equal(BigNumber.from(1).shl(63)) // Claim price should be 0.5
+
+        expect(await auction.lastBidRefund()).to.equal(0);
+        expect(await auction.lastShares()).to.equal(200000);
+
+        // Try to cancel claimed bid
+        await expect(
+            auction.connect(bidder).testCancelBidLedger(auctionKey, 0)
+        ).to.be.revertedWith("AFCC");
+
+        // Try to increase size of claimed bid
+        await expect(
+            auction.connect(bidder).testIncreaseBidLedger(auctionKey, 0, 50000)
+        ).to.be.revertedWith("AFCB");
+
+        // Try to modify level of claimed bid
+        await expect(
+            auction.connect(bidder).testModifyBidLevelLedger(auctionKey, 0, 1900)
+        ).to.be.revertedWith("AFMC");
+    });
+
+    it("claim below clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10,
+            protocolFee_: 100
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        // Place first bid at clearing level
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            100000,
+            1690,
+            0
+        );
+
+        // Place large bid at higher level that pushes clearing level up
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            500000,
+            1800,
+            1
+        );
+
+        // Verify clearing level
+        const state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(1760);
+
+        // Should be able to claim first bid since it's at clearing
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
+        const bid = await auction.getAuctionBid(bidKey);
+        expect(bid.limitLevel_).to.equal(1690);
+        expect(bid.bidSize_).to.equal(100000);
+
+        // Claim the bid
+        await auction.connect(bidder).testClaimBidLedger(
+            auctionKey,
+            0
+        );
+
+        // Verify bid was claimed
+        const claimedBid = await auction.getAuctionBid(bidKey);
+        expect(claimedBid.bidSize_).to.equal(0);
+        expect(claimedBid.limitLevel_).to.equal(0);
+
+        // Verify full refund since bid was below clearing
+        expect(await auction.lastBidRefund()).to.equal(100000);
+        expect(await auction.lastShares()).to.equal(0);
+    });
+
+    it("claim at clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10,
+            protocolFee_: 100
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        let fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+
+        // Place bid
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            fillAmount,
+            1760,
+            0
+        );
+
+        // Verify clearing level
+        const state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(1760);
+
+        // Claim the bid
+        await auction.connect(bidder).testClaimBidLedger(
+            auctionKey,
+            0
+        );
+
+        // Verify bid was claimed
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
+        const claimedBid = await auction.getAuctionBid(bidKey);
+        expect(claimedBid.bidSize_).to.equal(0);
+        expect(claimedBid.limitLevel_).to.equal(0);
+
+        // Fills at price of 0.5
+        expect(await auction.lastBidRefund()).to.equal(0);
+        expect(await auction.lastShares()).to.equal(fillAmount.mul(2));
+    });
+
+    it("partial fill at clearing level", async function() {
+        const context = {
+            auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
+            auctionSupply_: 1000*1000,
+            startLevel_: 100,
+            stepSize_: 10,
+            protocolFee_: 100
+        };
+
+        await auction.connect(auctioneer).testInitAuctionLedger(
+            ZERO_ADDR,
+            ADDR_TWO,
+            0,
+            context
+        );
+        const auctionKey = await auction.lastAuctionKey();
+
+        let fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+
+        // Place bid above at clearing level for half size
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            fillAmount.div(2),
+            1760,
+            1
+        );
+
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            fillAmount.div(2),
+            1760,
+            2
+        );
+
+        // Place bid above for larger size
+        await auction.connect(bidder).testPlaceBidLedger(
+            auctionKey,
+            fillAmount.div(4),
+            2000,
+            0
+        );
+
+        // Verify clearing level
+        const state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(1760);
+
+        // Claim the bid
+        await auction.connect(bidder).testClaimBidLedger(
+            auctionKey,
+            1
+        );
+
+        // Verify bid was claimed
+        const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 1);
+        const claimedBid = await auction.getAuctionBid(bidKey);
+        expect(claimedBid.bidSize_).to.equal(0);
+        expect(claimedBid.limitLevel_).to.equal(0);
+
+        // Since 1/4 was filled above level, the refund rate should be 1/4 (on a size of 1/2)
+        expect(await auction.lastBidRefund()).to.equal(fillAmount.div(2).div(4));
+        expect(await auction.lastShares()).to.equal(fillAmount.div(2).div(4).mul(3).mul(2));
+    });
 });
