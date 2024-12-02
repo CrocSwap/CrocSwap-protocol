@@ -374,7 +374,15 @@ contract CrocQuery {
             }
 
             uint64 accumFees = uint64(odometer - feeStart);
+            if (accumFees > curve.concGrowth_) {
+                return (0, 0, 0);
+            }
+            
             uint128 seeds = FixedPoint.mulQ48(liq, accumFees).toUint128By144();
+            if (seeds > curve.ambientSeeds_) {
+                return (0, 0, 0);
+            }
+
             return convertSeedsToLiq(curve, seeds);
         }
     }
