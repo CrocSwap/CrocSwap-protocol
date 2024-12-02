@@ -287,10 +287,10 @@ library KnockoutLiq {
         // have the entire range above the curve price.
         if (loc.isBid_) {
             int24 refTick = inside ? loc.lowerTick_ : loc.upperTick_;
-            return refTick < priceTick;
+            return refTick <= priceTick;
         } else {
             int24 refTick = inside ? loc.upperTick_ : loc.lowerTick_;
-            return refTick >= priceTick;
+            return refTick > priceTick;
         }
     }
 

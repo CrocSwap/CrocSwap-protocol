@@ -106,9 +106,9 @@ describe('CrocQuery', () => {
         let result = await query.queryConcRewards(trader, 
             baseToken.address, quoteToken.address, POOL_IDX, 6000, 8000)
         
-        expect(result.liqRewards).to.eq(415)
-        expect(result.baseRewards).to.eq(508)
-        expect(result.quoteRewards).to.eq(338)
+        expect(result.liqRewards).to.eq(520)
+        expect(result.baseRewards).to.eq(636)
+        expect(result.quoteRewards).to.eq(424)
     })
 
     it("knockout pivot tokens", async() => {
