@@ -340,6 +340,19 @@ describe("AuctionLogic", () => {
       expect(bidPayout).to.equal(49);
     });
 
+    it("round down bid payout", async () => {
+      const startLevel = 1770;
+      const totalSupply = BigNumber.from(1000);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(totalSupply).shr(64).div(2);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(500);
+      expect(bidPayout).to.equal(328);
+    });
+
 
     it("zero fill", async () => {
       const startLevel = 1760;
