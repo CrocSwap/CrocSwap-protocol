@@ -13,7 +13,6 @@ import { MockPermit } from '../typechain/MockPermit';
 import { QueryHelper } from '../typechain/QueryHelper';
 import { TestSettleLayer } from "../typechain/TestSettleLayer";
 import { CrocQuery } from "../typechain/CrocQuery";
-import { BootPath } from "../contracts/typechain";
 import { BOOT_PROXY_IDX, COLD_PROXY_IDX, KNOCKOUT_LP_PROXY_IDX, LONG_PROXY_IDX, LP_PROXY_IDX, SAFE_MODE_PROXY_PATH, SWAP_PROXY_IDX, buildCrocSwapSex } from "./SetupDex";
 import { CrocSwapRouter, CrocSwapRouterBypass } from "../typechain";
 
@@ -32,7 +31,7 @@ export async function makeTokenPool(): Promise<TestPool> {
     return makePoolFrom(tokenX, tokenY)
 }
 
-export async function makeTokenSeq(): Promise<TestPool[]> {
+export async function makeTokenSeq(dex?: CrocSwapDex): Promise<TestPool[]> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let tokenW = new ERC20Token((await factory.deploy() as MockERC20))
     let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
@@ -42,13 +41,13 @@ export async function makeTokenSeq(): Promise<TestPool[]> {
     let tokens = [tokenW, tokenX, tokenY, tokenZ]
     tokens.sort((x,y) => (x.address.localeCompare(y.address)))
 
-    let poolM = await makePoolFrom(tokens[0], tokens[1])
+    let poolM = await makePoolFrom(tokens[0], tokens[1], dex ? dex : undefined)
     let poolN = await makePoolFrom(tokens[1], tokens[2], await poolM.dex)
     let poolO = await makePoolFrom(tokens[2], tokens[3], await poolM.dex)
-    return [poolM, poolN, poolO] 
+    return [poolM, poolN, poolO]
 }
 
-export async function makeTokenTriangle(): Promise<TestPool[]> {
+export async function makeTokenTriangle(dex?: CrocSwapDex): Promise<TestPool[]> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let tokenX = new ERC20Token((await factory.deploy() as MockERC20))
     let tokenY = new ERC20Token((await factory.deploy() as MockERC20))
@@ -57,17 +56,17 @@ export async function makeTokenTriangle(): Promise<TestPool[]> {
     let tokens = [tokenX, tokenY, tokenZ]
     tokens.sort((x,y) => (x.address.localeCompare(y.address)))
 
-    let poolM = await makePoolFrom(tokens[0], tokens[1])
+    let poolM = await makePoolFrom(tokens[0], tokens[1], dex ? dex : undefined)
     let poolN = await makePoolFrom(tokens[1], tokens[2], await poolM.dex)
     let poolO = await makePoolFrom(tokens[2], tokens[0], await poolM.dex)
-    return [poolM, poolN, poolO] 
+    return [poolM, poolN, poolO]
 }
 
-export async function makeTokenNext (pool: TestPool): Promise<TestPool> {
+export async function makeTokenNext (pool: TestPool, dex?: CrocSwapDex): Promise<TestPool> {
     let factory = await ethers.getContractFactory("MockERC20") as ContractFactory
     let tokenZ = new ERC20Token((await factory.deploy() as MockERC20))
 
-    return makePoolFrom(pool.quote, tokenZ)
+    return makePoolFrom(pool.quote, tokenZ, dex)
 }
 
 export async function makePoolFrom (tokenX: Token, tokenY: Token, dex?: CrocSwapDex): Promise<TestPool> {
@@ -182,7 +181,7 @@ export class TestPool {
         this.trader = accts.then(a => a[0])
         this.auth = accts.then(a => a[1])
         this.other = accts.then(a => a[2])
-        this.third = accts.then(a => a[3])        
+        this.third = accts.then(a => a[3])
         this.liqQty = false
         this.liqBase = true
         this.initTemplBefore = true
@@ -206,7 +205,7 @@ export class TestPool {
         factory = ethers.getContractFactory("CrocSwapRouterBypass")
         this.routerBypass = factory.then(f => this.dex.then(
             d => f.deploy(d.address))) as Promise<CrocSwapRouterBypass>
-    
+
         this.baseSnap = Promise.resolve(BigNumber.from(0))
         this.quoteSnap = Promise.resolve(BigNumber.from(0))
 
@@ -236,7 +235,7 @@ export class TestPool {
 
     async initPoolIdx (poolIdx: BigNumberish, feeRate: number, protoTake: number, tickSize: number,
         price: number | BigNumber, noOverrides?: boolean): Promise<ContractTransaction> {
-        let overrides = noOverrides ? {} : this.overrides 
+        let overrides = noOverrides ? {} : this.overrides
 
         await this.setProtocolTake(protoTake)
 
@@ -247,7 +246,7 @@ export class TestPool {
         let gasTx = await (await this.dex)
             .connect(await this.trader)
             .userCmd(this.COLD_PROXY, await this.encodeInitPool(poolIdx, price), overrides)
-        
+
         this.baseSnap = this.base.balanceOf(await (await this.trader).getAddress())
         this.quoteSnap = this.quote.balanceOf(await (await this.trader).getAddress())
         return gasTx
@@ -296,7 +295,7 @@ export class TestPool {
         await (await this.dex)
             .connect(await this.auth)
             .protocolCmd(this.COLD_PROXY, cmd, false)
-    }    
+    }
 
     async encodeSwap (isBuy: boolean, inBase: boolean, qty: BigNumber, limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
@@ -305,7 +304,7 @@ export class TestPool {
         let quote = (await this.quote).address
         const tip = 0
         return abiCoder.encode(
-            [ "address", "address", "uint256", "bool",    "bool",   "uint128", "uint24", "uint128", "uint128", "uint8"], 
+            [ "address", "address", "uint256", "bool",    "bool",   "uint128", "uint24", "uint128", "uint128", "uint8"],
             [ base,      quote,     this.poolIdx, isBuy,     inBase,    qty,      tip,      limitLow, limitHigh, useSurplus]);
     }
 
@@ -316,7 +315,7 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = this.lpCallCode(1, 11, 12);
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ],
             [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
@@ -327,7 +326,7 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = this.lpCallCode(2, 21, 22);
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ],
             [ callCode, base, quote, this.poolIdx, lower, upper, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
@@ -338,7 +337,7 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = 5
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ],
             [ callCode, base, quote, this.poolIdx, lower, upper, 0, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
@@ -349,24 +348,24 @@ export class TestPool {
         let quote = (await this.quote).address
         const callCode = this.lpCallCode(3, 31, 32);
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ], 
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address" ],
             [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit  ]);
     }
 
-    async encodeBurnAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber, 
+    async encodeBurnAmbientPath (liq: number,  limitLow: BigNumber, limitHigh: BigNumber,
         useSurplus: number): Promise<BytesLike> {
         let abiCoder = new ethers.utils.AbiCoder()
         let base = (await this.base).address
         let quote = (await this.quote).address
         const callCode = this.lpCallCode(4, 41, 42);
         return abiCoder.encode(
-            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"], 
+            [ "uint8", "address", "address", "uint256", "int24", "int24", "uint128", "uint128", "uint128", "uint8", "address"],
             [ callCode, base, quote, this.poolIdx, 0, 0, liq, limitLow, limitHigh, useSurplus, this.lpConduit ]);
     }
 
     lpCallCode (liqCode: number, baseCode: number, quoteCode: number): number {
-        if (this.liqQty) { 
-            return this.liqBase ? 
+        if (this.liqQty) {
+            return this.liqBase ?
                 baseCode : quoteCode
         } else {
             return liqCode
@@ -445,17 +444,17 @@ export class TestPool {
         return this.testBurnFrom(await this.other, lower, upper, liq)
     }
 
-    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: BigNumberish, price: BigNumber): 
+    async testSwap (isBuy: boolean, inBaseQty: boolean, qty: BigNumberish, price: BigNumber):
         Promise<ContractTransaction> {
         return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price)
     }
 
-    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber, 
+    async testSwapSurplus (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber,
         surplusFlag: number = 1 + 2): Promise<ContractTransaction> {
         return this.testSwapFrom(await this.trader, isBuy, inBaseQty, qty, price, surplusFlag)
     }
 
-    async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber): 
+    async testSwapOther (isBuy: boolean, inBaseQty: boolean, qty: number, price: BigNumber):
         Promise<ContractTransaction> {
         return this.testSwapFrom(await this.other, isBuy, inBaseQty, qty, price)
     }
@@ -574,16 +573,16 @@ export class TestPool {
 
         let tx;
         if (this.useSwapProxy.router) {
-            tx = (await this.router).connect(from).swap((await this.base).address, (await this.quote).address, 
+            tx = (await this.router).connect(from).swap((await this.base).address, (await this.quote).address,
                 this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
         } else if (this.useSwapProxy.bypass) {
-            tx = (await this.routerBypass).connect(from).swap((await this.base).address, (await this.quote).address, 
+            tx = (await this.routerBypass).connect(from).swap((await this.base).address, (await this.quote).address,
                 this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
         } else if (this.useSwapProxy.base) {
             let encoded = await this.encodeSwap(isBuy, inBaseQty, BigNumber.from(qty), price, slippage, useSurplus)
             tx = (await this.dex).connect(from).userCmd(this.HOT_PROXY, encoded, this.overrides)
         } else if (this.useHotPath) {
-            tx = (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address, 
+            tx = (await this.dex).connect(from).swap((await this.base).address, (await this.quote).address,
                 this.poolIdx, isBuy, inBaseQty, qty, 0, price, slippage, useSurplus, this.overrides)
         } else {
             let directive = singleHop((await this.base).address,
@@ -617,7 +616,7 @@ export class TestPool {
             await this.setProtocolTake(protoTake)
             let takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
                 [115, (await this.base).address, (await this.quote).address, this.poolIdx]);
-            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)              
+            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)
         }
 
         let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
@@ -643,7 +642,7 @@ export class TestPool {
 
             takeCmd = abiCoder.encode(["uint8", "address", "address", "uint256"],
                 [115, (await this.base).address, (await this.quote).address, idx]);
-            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)              
+            (await this.dex).connect(await this.auth).protocolCmd(this.COLD_PROXY, takeCmd, false)
         }
 
         let cmd = abiCoder.encode(["uint8", "address", "address", "uint256", "uint16", "uint16", "uint8", "uint8"],
@@ -698,7 +697,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
                     [73, recv, value, token])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -707,7 +706,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint128", "address", "uint256", "uint8", "uint256", "uint256"],
                     [83, recv, value, token, deadline, v, r, s])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -716,7 +715,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
                     [74, recv, value, token])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -725,7 +724,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "int128", "address"],
                     [75, recv, value, token])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -734,7 +733,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "uint256", "uint256", "int128", "address"],
                     [76, fromSalt, toSalt, value, token])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -743,7 +742,7 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint256", "int128", "bytes"],
                     [77, tracker, salt, value, args])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 
@@ -752,10 +751,10 @@ export class TestPool {
         let abiCoder = new ethers.utils.AbiCoder()
         let cmd = abiCoder.encode(["uint8", "address", "uint256", "int128", "bytes"],
                     [78, tracker, salt, value, args])
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
-    
+
     async testCollectSurplus (from: Signer, recv: string, value: number | BigNumber, token: string, isTransfer: boolean,
         overrides?: PayableOverrides): Promise<ContractTransaction> {
         let abiCoder = new ethers.utils.AbiCoder()
@@ -770,7 +769,7 @@ export class TestPool {
             cmd = abiCoder.encode(["uint8", "address", "uint128", "address"],
                     [74, recv, value, token])
         }
-        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd, 
+        return (await this.dex).connect(from).userCmd(this.COLD_PROXY, cmd,
             overrides ? overrides : this.overrides)
     }
 

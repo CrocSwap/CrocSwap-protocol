@@ -1,5 +1,6 @@
 import { AbiCoder } from '@ethersproject/abi';
 import { BigNumber, BytesLike, ethers, BigNumberish } from 'ethers';
+import { simpleSettle } from './EncodeSimple';
 
 export function encodeOrderDirective (directive: OrderDirective): BytesLike {
     let schema = encodeWord(directive.schemaType)
@@ -8,8 +9,57 @@ export function encodeOrderDirective (directive: OrderDirective): BytesLike {
     return ethers.utils.concat([schema, open, hops])
 }
 
+const LONG_FORM_SCHEMA_TYPE: number = 1
+
 export interface OrderDirective {
-    schemaType: 1
+    schemaType: number
+    open: SettlementDirective
+    hops: HopDirective[]
+}
+
+export class OrderDirectiveObj {
+
+    constructor (openToken: string) {
+        this.open = simpleSettle(openToken)
+        this.hops = []
+    }
+
+    encodeBytes(): BytesLike {
+        let schema = encodeWord(LONG_FORM_SCHEMA_TYPE)
+        let open = encodeSettlement(this.open)
+        let hops = listEncoding(this.hops, encodeHop)
+        return ethers.utils.concat([schema, open, hops])
+    }
+
+    appendHop (nextToken: string): HopDirective {
+        const hop = { settlement: simpleSettle(nextToken),
+            pools: [],
+            improve: { isEnabled: false, useBaseSide: false } }
+        this.hops.push(hop)
+        return hop
+    }
+
+    appendPool (poolIdx: number): PoolDirective {
+        const pool = {
+            poolIdx: BigNumber.from(poolIdx),
+            passive: {
+                ambient: { isAdd: false, rollType: 0, liquidity: BigNumber.from(0) },
+                concentrated: []
+            },
+            swap: {
+                isBuy: false,
+                inBaseQty: false,
+                rollType: 0,
+                qty: BigNumber.from(0),
+                limitPrice: BigNumber.from(0)
+            },
+            chain: { rollExit: false, swapDefer: false, offsetSurplus: false}
+        };
+        (this.hops[this.hops.length - 1] as HopDirective).pools.push(pool)
+        return pool
+    }
+
+    schemaType: number = LONG_FORM_SCHEMA_TYPE
     open: SettlementDirective
     hops: HopDirective[]
 }
@@ -137,7 +187,7 @@ function listEncoding<T> (elems: T[], encoderFn: (x: T) => BytesLike): BytesLike
     return ethers.utils.concat([count].concat(vals))
 }
 
-function encodeToken (tokenAddr: BytesLike): BytesLike {    
+function encodeToken (tokenAddr: BytesLike): BytesLike {
     return ethers.utils.hexZeroPad(tokenAddr, 32)
 }
 
