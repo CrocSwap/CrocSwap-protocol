@@ -9,7 +9,7 @@ import './libraries/PriceGrid.sol';
 import './mixins/MarketSequencer.sol';
 import './mixins/SettleLayer.sol';
 import './mixins/PoolRegistry.sol';
-import './mixins/MarketSequencer.sol';
+
 import './interfaces/ICrocMinion.sol';
 import './callpaths/ColdPath.sol';
 import './callpaths/BootPath.sol';
@@ -101,7 +101,7 @@ contract CrocSwapDex is HotPath, ICrocMinion {
      * @param sudo     If true, indicates that the command should be called with elevated
      *                 privileges. */
     function protocolCmd (uint16 callpath, bytes calldata cmd, bool sudo)
-        protocolOnly(sudo) public payable override {
+        public payable override {
         callProtocolCmd(callpath, cmd);
     }
 
