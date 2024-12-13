@@ -119,6 +119,8 @@ contract CrocMultiImpact {
             nextQty = isFixedOutput ? nextQty : uint128(-int128(nextQty));
             prevToken = nextHop.token;
         }
+
+        require(isFixedOutput ? uint128(-outputFlow) == qty : uint128(inputFlow) == qty, "IQ");
     }
 
     struct SwapHopDirective {
