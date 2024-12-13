@@ -105,6 +105,9 @@ contract CrocMultiImpact {
 
             (int128 baseFlow, int128 quoteFlow) = calcOneHopImpact(dir, curves);
 
+            // Invalid flows should terminate calculation
+            require((baseFlow >= 0) != (quoteFlow >= 0), "IL");
+
             if (hopIdx - (isFixedOutput ? 1 : 0) == 0) {
                 inputFlow = hops[0].token < hops[1].token ? baseFlow : quoteFlow;
             }
