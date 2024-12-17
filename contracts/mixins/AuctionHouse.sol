@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import './StorageLayout.sol';
 import './SettleLayer.sol';
 import '../libraries/AuctionLogic.sol';
-import "hardhat/console.sol";
 
 /* @title Fixed Price Auction Mixin
  * @notice Mixin contract that implements the fixed price auction mechanism. */

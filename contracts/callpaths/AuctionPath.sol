@@ -9,36 +9,52 @@ contract AuctionPath is AuctionHouse {
     function userCmd (bytes calldata cmd) external payable {
         uint8 code = uint8(cmd[0]);
 
-        if (code == 0) {
+        if (code == 129) {
             initAuctionCmd(cmd);
-        } else if (code == 1) {
+        } else if (code == 130) {
             placeBidCmd(cmd);
-        } else if (code == 2) {
+        } else if (code == 131) {
             claimBidCmd(cmd);
-        } else if (code == 3) {
+        } else if (code == 132) {
             cancelBidCmd(cmd);
-        } else if (code == 4) {
+        } else if (code == 133) {
             increaseBidCmd(cmd);
-        } else if (code == 5) {
+        } else if (code == 134) {
             modifyBidLevelCmd(cmd);
-        } else if (code == 6) {
+        } else if (code == 135) {
+            modifyAndIncreaseBidCmd(cmd);
+        } else if (code == 136) {
             refundAuctionCmd(cmd);
         } else {
             revert("Invalid code");
         }
     }
 
+    function protocolCmd (bytes calldata cmd) private {
+        uint8 code = uint8(cmd[0]);
+        if (code == 95) {
+            setAuctionProtocolFeeCmd(cmd);
+        } else {
+            revert("Invalid code");
+        }
+    }
+
+    function setAuctionProtocolFeeCmd (bytes calldata cmd) private {
+        (, uint16 protocolFee) = abi.decode(cmd, (uint8, uint16));
+        auctionProtocolFee_ = protocolFee;
+    }
+
     function initAuctionCmd (bytes calldata cmd) private {
         (, address supplyToken, address demandToken, uint256 auctionIndex,
-            uint32 auctionEndTime, uint128 auctionSupply, uint16 startLevel, uint16 stepSize, uint16 protocolFee) = 
-            abi.decode(cmd, (uint8, address, address, uint256, uint32, uint128, uint16, uint16, uint16));
+            uint32 auctionEndTime, uint128 auctionSupply, uint16 startLevel, uint16 stepSize) = 
+            abi.decode(cmd, (uint8, address, address, uint256, uint32, uint128, uint16, uint16));
 
         AuctionLogic.PricedAuctionContext memory context = AuctionLogic.PricedAuctionContext({
             auctionEndTime_: auctionEndTime,
             auctionSupply_: auctionSupply,
             startLevel_: startLevel,
             stepSize_: stepSize,
-            protocolFee_: protocolFee
+            protocolFee_: auctionProtocolFee_
         });
 
         initAuction(supplyToken, demandToken, auctionIndex, context);
@@ -84,6 +100,15 @@ contract AuctionPath is AuctionHouse {
         bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
         modifyBidLevelLedger(auctionKey, bidIndex, newLevel);
         emit AuctionBidLevelModify(auctionKey, lockHolder_, bidIndex, newLevel);
+    }
+
+    function modifyAndIncreaseBidCmd (bytes calldata cmd) private {
+        (, address supplyToken, address demandToken, uint256 bidIndex, uint16 newLevel, uint128 deltaSize) =
+            abi.decode(cmd, (uint8, address, address, uint256, uint16, uint128));
+
+        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
+        modifyBidLevelLedger(auctionKey, bidIndex, newLevel);
+        increaseBidLedger(auctionKey, bidIndex, deltaSize);
     }
 
     function refundAuctionCmd (bytes calldata cmd) private {

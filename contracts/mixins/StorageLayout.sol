@@ -171,6 +171,7 @@ contract StorageLayout {
     mapping(bytes32 => AuctionLogic.PricedAuctionBid) internal auctionBids_;
     mapping(bytes32 => AuctionLogic.PricedAuctionReserves) internal auctionReserves_;
     mapping(bytes32 => uint128[65536]) internal auctionLevelSizes_;
+    uint16 internal auctionProtocolFee_;
     /**************************************************************/
 }
 
