@@ -1,7 +1,7 @@
 import { JsonRpcProvider, Provider, TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
-import { CrocAddrs, CROC_ADDRS } from "../constants/addrs";
+import { CROC_ADDRS } from "../constants/addrs";
 import { CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
 import { RPC_URLS } from "../constants/rpcs";
 
