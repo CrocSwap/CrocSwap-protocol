@@ -17,6 +17,7 @@ export interface CrocAddrs {
     swapBypass?: string,
     policyShell: string,
     deployer: string,
+    auction?: CrocAuctionAddrs,
     govern: CrocGovAddrs,
 }
 
@@ -27,6 +28,12 @@ export interface CrocGovAddrs {
     timelockTreasury: string,
     timelockOps: string,
     timelockEmergency: string,
+}
+
+export interface CrocAuctionAddrs {
+    dex: string,
+    query: string,
+    auctionPath: string,
 }
 
 export const emptryGovAddrs: CrocGovAddrs = {

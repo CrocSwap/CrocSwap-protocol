@@ -10,7 +10,7 @@ import "../libraries/AuctionLogic.sol";
  * @dev Nothing in this contract can't be done by directly accessing readSlot() on the 
  *      CrocSwapDex contrct. However this provides a more convienent interface with ergonomic
  *      that parse the raw data. */
-contract CrocQuery {
+contract CrocAuctionQuery {
     using CurveMath for CurveMath.CurveState;
     using SafeCast for uint256;
     
@@ -28,7 +28,7 @@ contract CrocQuery {
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.AUCTION_STATE_MAP_SLOT));
 
         state.clearingLevel_ = uint16(CrocSwapDex(dex_).readSlot(uint256(slot)));
-        state.hasRefunded_ = CrocSwapDex(dex_).readSlot(uint256(slot)+1) != 0;
+        state.hasRefunded_ = CrocSwapDex(dex_).readSlot(uint256(slot)+1) != 0; 
         state.cumLiftingBids_ = uint128(CrocSwapDex(dex_).readSlot(uint256(slot)+2));
     }
 
