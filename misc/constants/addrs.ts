@@ -254,9 +254,13 @@ const baseSepolia: CrocAddrs = {
     timelockEmergency: ''
   },
   swapRouter: '0x3d7baE85731D056889383b5765C37530deAA98A2',
-  swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483'
+  swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483',
+  auction: {
+    dex: '0xf3B9cFF6B8192Cc0F34b07DA051Ae520F5bCaf87',
+    query: '0x71a43A24489ED728C09134D2f8a7C2b3132353AD',
+    auctionPath: '0x02EE6aa17e4a4EFbE164D28dE1aA61F60DFFfb59'
+  }
 }
-
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
@@ -290,6 +294,7 @@ export const COLD_PROXY_IDX = 3;
 export const LONG_PROXY_IDX = 130;
 export const MICRO_PROXY_IDX = 131;
 export const KNOCKOUT_LP_PROXY_IDX = 7;
+export const AUCTION_PROXY_IDX = 8750;
 export const FLAG_CROSS_PROXY_IDX = 3500;
 export const SAFE_MODE_PROXY_PATH = 9999;
 

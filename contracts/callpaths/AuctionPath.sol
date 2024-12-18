@@ -118,6 +118,12 @@ contract AuctionPath is AuctionHouse {
 
         refundAuction(supplyToken, demandToken, auctionIndex);
     }
+
+    /* @notice Used at upgrade time to verify that the contract is a valid Croc sidecar proxy and used
+     *         in the correct slot. */
+    function acceptCrocProxyRole (address, uint16 slot) public pure returns (bool) {
+        return slot == CrocSlots.AUCTION_PROXY_PATH;
+    }
 }
 
 
