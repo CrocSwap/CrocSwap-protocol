@@ -258,6 +258,34 @@ const swellTestnet: CrocAddrs = {
   swapBypass: '0x3d7baE85731D056889383b5765C37530deAA98A2'
 }
 
+const swellMainnet: CrocAddrs = {
+  dex: '0xaAAaAaaa82812F0a1f274016514ba2cA933bF24D',
+  cold: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  warm: '0x6A699AB45ADce02891E6115b81Dfb46CAa5efDb9',
+  long: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  micro: '0xA3BD3bE19012De72190c885FB270beb93e36a8A7',
+  hot: '0x646929453E753565467f330110850885eAd93fA9',
+  knockout: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  koCross: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  policy: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  query: '0xaab17419F062bB28CdBE82f9FC05E7C47C3F6194',
+  impact: '0xd83eF4d0e968A96329aC297bBf049CDdaC7E0362',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x983a06261aE018FEFA16e1E95c7fda13a2eB1038',
+  swapBypass: '0x471232BCB9ed0eBcDA395C2266AEabC1B8031B68'
+}
+
+
 const baseSepolia: CrocAddrs = {
   dex: '0xD553d97EfD5faAB29Dc92CC87d5259ff59278176',
   cold: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
@@ -295,6 +323,7 @@ export let CROC_ADDRS = {
     '0x80D': beraTestnet,
     '0x784': swellTestnet,
     '0x14a34': baseSepolia,
+    '0x6435': swellMainnet,
     'mock': mockAddrs,
 }
 
@@ -316,6 +345,7 @@ export let POOL_IDXS = {
     '0x80D': 36000,
     '0x784': 36000,
     '0x14a34': 36000,
+    '0x6435': 420
 }
 
 export const BOOT_PROXY_IDX = 0;

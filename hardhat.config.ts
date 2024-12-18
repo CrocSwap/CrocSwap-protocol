@@ -85,13 +85,19 @@ module.exports = {
       beraTestnet: {
         url: "https://rpc.berachain-internal.com/",
         chainId: 2061,
+      },
+
+      swell: {
+        url: "https://swell-mainnet.alt.technology",
+        chainId: 1923
       }
     },
 
     etherscan: {
       apiKey: {
         scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
-        beraTestnet: "xxxxx"
+        beraTestnet: "xxxxx",
+        swell: "xxxxx"
       },
       customChains: [
         {
@@ -110,7 +116,17 @@ module.exports = {
             apiURL: "https://scan-api.berachain-internal.com/api/",
             browserURL: "https://scan.berachain-internal.com"
           }
-        }
+        },
+
+        {
+          network: "swell",
+          chainId: 1923,
+          urls: {
+            apiURL: "https://explorer.swellnetwork.io/api",
+            browserURL: "https://explorer.swellnetwork.io"
+          }
+        },
+
       ]
     }
 };
