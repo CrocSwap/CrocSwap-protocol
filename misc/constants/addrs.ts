@@ -1,61 +1,5 @@
-import { ethers } from "hardhat"
-
-// Convention is to use empty string for pre-deployed contract
-export interface CrocAddrs {
-    dex: string,
-    cold: string,
-    warm: string,
-    long: string,
-    micro: string,
-    hot: string,
-    knockout: string,
-    koCross: string,
-    policy: string,
-    query: string,
-    impact: string,
-    shell: string,
-    swapRouter?: string,
-    swapBypass?: string,
-    policyShell: string,
-    deployer: string,
-    govern: CrocGovAddrs,
-}
-
-export interface CrocGovAddrs {
-    multisigTreasury: string,
-    multisigOps: string,
-    multisigEmergency: string,
-    timelockTreasury: string,
-    timelockOps: string,
-    timelockEmergency: string,
-}
-
-const emptryGovAddrs: CrocGovAddrs = {
-    multisigTreasury: "",
-    multisigOps: "",
-    multisigEmergency: "",
-    timelockTreasury: "",
-    timelockOps: "",
-    timelockEmergency: "",
-}
-
-const emptyAddrs: CrocAddrs = {
-    dex: "",
-    cold: "",
-    warm: "",
-    long: "",
-    micro: "",
-    hot: "",
-    knockout: "",
-    koCross: "",
-    policy: "",
-    query: "",
-    impact: "",
-    shell: "",
-    policyShell: "",
-    deployer: "",
-    govern: emptryGovAddrs
-}
+import { ethers } from "ethers"
+import { CrocAddrs, emptryGovAddrs } from "../types/addrs"
 
 // Mock used in local forks
 const mockAddrs: CrocAddrs = {
@@ -325,15 +269,6 @@ export let CROC_ADDRS = {
     '0x14a34': baseSepolia,
     '0x6435': swellMainnet,
     'mock': mockAddrs,
-}
-
-// Goerli
-export let TOKEN_ADDRS = {
-    '0x5': {
-        eth: ethers.constants.AddressZero,
-        dai: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
-        usdc: "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C"
-    }
 }
 
 export let POOL_IDXS = {
