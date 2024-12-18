@@ -34,6 +34,7 @@ export interface CrocAuctionAddrs {
     dex: string,
     query: string,
     auctionPath: string,
+    futa?: string
 }
 
 export const emptryGovAddrs: CrocGovAddrs = {
