@@ -197,7 +197,11 @@ library CrocSlots {
     uint constant public CURVE_MAP_SLOT = 65551;
     uint constant public BAL_MAP_SLOT = 65552;
     uint constant public POS_MAP_SLOT_72 = 65554;
-
+    uint constant public AUCTION_CNTX_MAP_SLOT = 65555;
+    uint constant public AUCTION_STATE_MAP_SLOT = 65556;
+    uint constant public AUCTION_BID_MAP_SLOT = 65557;
+    uint constant public AUCTION_RESERVES_MAP_SLOT = 65558;
+    uint constant public AUCTION_LEVEL_SIZES_MAP_SLOT = 65559;
         
     // The slots of the currently attached sidecar proxy contracts. These are set by
     // covention and should be expanded over time as more sidecars are installed. For

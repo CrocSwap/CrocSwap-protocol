@@ -75,7 +75,7 @@ library AuctionLogic {
         return keccak256(abi.encodePacked(auctionKey, bidder, bidSalt));
     }
 
-    /* @notice Converts a level index to its corresponding price in X64.64 fixed point format
+    /* @notice Converts a level index to its corresponding price in X192.64 fixed point format
      * @dev Each level increases price by a factor of approximately 1 + 2^(1/32), meaning prices double every 32 levels.
      *      The base price at level 0 is 2^-16 in X64.64 format (2^48).
      *      For levels that are multiples of 32, price is a power of 2 shift.
