@@ -212,6 +212,7 @@ library CrocSlots {
     uint16 constant MULTICALL_PROXY_IDX = 6;
     uint16 constant KNOCKOUT_LP_PROXY_IDX = 7;
     uint16 constant FLAG_CROSS_PROXY_IDX = 3500;
+    uint16 constant AUCTION_PROXY_PATH = 8750;
     uint16 constant SAFE_MODE_PROXY_PATH = 9999;
 
     // Used as proxy contracts by previous deployments. These slots should not be re-used

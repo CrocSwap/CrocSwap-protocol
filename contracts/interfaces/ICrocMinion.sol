@@ -2,8 +2,6 @@
 
 pragma solidity 0.8.19;
 
-import '../libraries/CurveCache.sol';
-
 /* @notice Simple interface that defines the surface between the CrocSwapDex
  *         itself and protocol governance and policy. All governance actions are
  *         are executed through the single protocolCmd() method. */
@@ -20,6 +18,15 @@ interface ICrocMinion {
      *                  true should be reserved for privileged callpaths in the governance
      *                  controller contract. */
     function protocolCmd (uint16 proxyPath, bytes calldata cmd, bool sudo)
+        payable external;
+
+    /* @notice Calls a general user authorized command on the CrocSwapDex contract.
+     *
+     * @param proxyPath The proxy callpath sidecar to execute the command within. (Will
+     *                  call userCmd
+     * @param cmd       The underlying command content to pass to the proxy sidecar call.
+     *                  Will DELEGATECALL (userCmd(cmd) on the sidecar proxy. */
+    function userCmd(uint16 proxyPath, bytes calldata cmd) 
         payable external;
 }
 

@@ -3,27 +3,28 @@
 pragma solidity 0.8.19;
 
 import '../mixins/AuctionHouse.sol';
+import '../libraries/ProtocolCmd.sol';
 
 contract AuctionPath is AuctionHouse {
 
     function userCmd (bytes calldata cmd) external payable {
         uint8 code = uint8(cmd[0]);
 
-        if (code == 129) {
+        if (code == UserCmd.INIT_AUCTION) {
             initAuctionCmd(cmd);
-        } else if (code == 130) {
+        } else if (code == UserCmd.PLACE_BID) {
             placeBidCmd(cmd);
-        } else if (code == 131) {
+        } else if (code == UserCmd.CLAIM_BID) {
             claimBidCmd(cmd);
-        } else if (code == 132) {
+        } else if (code == UserCmd.CANCEL_BID) {
             cancelBidCmd(cmd);
-        } else if (code == 133) {
+        } else if (code == UserCmd.INCREASE_BID) {
             increaseBidCmd(cmd);
-        } else if (code == 134) {
+        } else if (code == UserCmd.MODIFY_BID) {
             modifyBidLevelCmd(cmd);
-        } else if (code == 135) {
+        } else if (code == UserCmd.MODIFY_AND_INCREASE_BID) {
             modifyAndIncreaseBidCmd(cmd);
-        } else if (code == 136) {
+        } else if (code == UserCmd.REFUND_AUCTION) {
             refundAuctionCmd(cmd);
         } else {
             revert("Invalid code");

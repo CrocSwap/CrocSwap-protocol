@@ -109,4 +109,16 @@ library UserCmd {
     uint8 constant BURN_KNOCKOUT = 92;
     uint8 constant CLAIM_KNOCKOUT = 93;
     uint8 constant RECOVER_KNOCKOUT = 94;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Auction command codes
+    ////////////////////////////////////////////////////////////////////////////
+    uint8 constant INIT_AUCTION = 129;
+    uint8 constant PLACE_BID = 130;
+    uint8 constant CLAIM_BID = 131;
+    uint8 constant CANCEL_BID = 132;
+    uint8 constant INCREASE_BID = 133;
+    uint8 constant MODIFY_BID = 134;
+    uint8 constant MODIFY_AND_INCREASE_BID = 135;
+    uint8 constant REFUND_AUCTION = 136;
 }
