@@ -2,7 +2,7 @@
 import { inflateAddr, initChain, initProvider, refContract, traceContractTx, traceTxResp } from '../../libs/chain';
 import { AbiCoder } from '@ethersproject/abi';
 import { CrocPolicy, ERC20, TimelockAccepts } from '../../../typechain';
-import { BOOT_PROXY_IDX, COLD_PROXY_IDX, LP_PROXY_IDX, TOKEN_ADDRS } from '../../constants/addrs';
+import { BOOT_PROXY_IDX, COLD_PROXY_IDX, LP_PROXY_IDX } from '../../constants/addrs';
 import { BigNumber, BytesLike, ethers } from 'ethers';
 import { MockERC20 } from '../../../contracts/typechain';
 import { CrocProtocolCmd, INIT_TIMELOCK_DELAY, opsResolution, populateTimelockCalls, treasuryResolution } from '../../libs/governance';
