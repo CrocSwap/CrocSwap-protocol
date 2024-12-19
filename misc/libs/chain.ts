@@ -4,6 +4,7 @@ import { ethers } from "hardhat"
 import { CROC_ADDRS } from "../constants/addrs";
 import { CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
 import { RPC_URLS } from "../constants/rpcs";
+import { CrocAddrs } from "../types/addrs";
 
 export async function traceContractDeploy 
     (deployTx: Promise<Contract>, tag: string): Promise<Contract> {
