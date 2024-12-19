@@ -31,7 +31,7 @@ contract AuctionLedger is StorageLayout {
 
         require(limitLevel > state.clearingLevel_, "AFPL");
         require(auctionBids_[bidKey].bidSize_ == 0 && bidSize > 0, "AFBI");
-        require(limitLevel % context.stepSize_ == 0, "AFSS");
+        require(limitLevel % context.stepSize_ == 0 || limitLevel == type(uint16).max, "AFSS");
 
         auctionBids_[bidKey] = AuctionLogic.PricedAuctionBid({
             bidSize_: bidSize,
@@ -52,8 +52,10 @@ contract AuctionLedger is StorageLayout {
             state.clearingLevel_ += context.stepSize_;
         }
 
-        uint128 filledAt = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][state.clearingLevel_];
-        require(filledAt <= AuctionLogic.getMcapForLevel(bidLevel, context.auctionSupply_), "AFOS");
+        if (bidLevel == state.clearingLevel_) {
+            uint128 filledAt = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][state.clearingLevel_];
+            require(filledAt <= AuctionLogic.getMcapForLevel(bidLevel, context.auctionSupply_), "AFOS");            
+        }
         require(bidLevel >= state.clearingLevel_, "AFAL");
 
         return state.clearingLevel_;
@@ -119,7 +121,7 @@ contract AuctionLedger is StorageLayout {
 
         bool auctionCleared = state.clearingLevel_ > context.startLevel_;
         if (auctionCleared) {
-            demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_);
+            demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_).toUint128();
         } else {
             uint128 totalBids = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][context.startLevel_];
             (supplyReturn, demandReturn) = AuctionLogic.calcReservePayout(context.startLevel_, totalBids, context.auctionSupply_);
