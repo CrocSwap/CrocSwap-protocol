@@ -41,11 +41,11 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
         emit FutaAdminSet(newOwner);
     }
 
-    function initializeTickerAuction (string memory ticker) public reEntrantLock {
+    function initializeTickerAuction (string memory ticker) public payable reEntrantLock {
         bytes32 tickerHash =claimTicker(ticker);
         (address token, uint256 auctionSupply) = mintPreAuction(ticker);
         initiateAuctionETH(token, auctionSupply);
-        //lockCreatorBid(token);
+        lockCreatorBid(token);
 
         emit FutaAuctionOpen(tickerHash, token, auctionSupply);
     }
