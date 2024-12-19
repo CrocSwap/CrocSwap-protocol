@@ -31,8 +31,6 @@ contract AuctionPath is AuctionHouse {
         } else {
             revert("Invalid code user 2");
         }
-
-        emit AuctionCmd(code);
     }
 
     function protocolCmd (bytes calldata cmd) private {
