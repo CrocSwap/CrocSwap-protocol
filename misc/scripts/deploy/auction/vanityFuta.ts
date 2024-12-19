@@ -12,6 +12,7 @@ import { AuctionPath, ColdPath, CrocAuctionQuery, CrocDeployer, CrocPolicy, Croc
 import { AUCTION_PROXY_IDX, BOOT_PROXY_IDX, COLD_PROXY_IDX } from '../../../constants/addrs';
 import { inflateAddr, initChain, refContract, traceContractTx, traceTxResp } from '../../../libs/chain';
 import { CrocAuctionAddrs } from '../../../types/addrs';
+import { BigNumber } from 'ethers';
 
 const abi = new AbiCoder()
 
@@ -28,7 +29,8 @@ async function vanityDeploy() {
 
     await traceContractTx(futa.setAuctionDuration(10), "Set Auction Duration")
     await traceContractTx(futa.setAuctionSteps(10, 100), "Set Auction Steps")
-    await traceContractTx(futa.setTokenSupply(69_000_000_000, 13_800_000_000), "Set Token Supply")
+    await traceContractTx(futa.setTokenSupply(BigNumber.from(10).pow(27).mul(69),
+        BigNumber.from(10).pow(26).mul(138)), "Set Token Supply")
 }
 
 vanityDeploy()

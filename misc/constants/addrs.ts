@@ -258,8 +258,8 @@ const baseSepolia: CrocAddrs = {
   auction: {
     dex: '0xf3B9cFF6B8192Cc0F34b07DA051Ae520F5bCaf87',
     query: '0x71a43A24489ED728C09134D2f8a7C2b3132353AD',
-    auctionPath: '0xdD402a41A30417C04C6732adAD21B2a86120fA78',
-    futa: '0xdBf702A7036Ef2C01BDaab627D577CE4CF2a71A7'
+    auctionPath: '',
+    futa: '0x3dc6e4A46025F897f7cce3E9a78A827AE7CcCD5F'
   }
 }
 
