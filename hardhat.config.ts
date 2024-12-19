@@ -90,6 +90,11 @@ module.exports = {
       swell: {
         url: "https://swell-mainnet.alt.technology",
         chainId: 1923
+      },
+
+      baseSepolia: {
+        url: "https://base-sepolia.g.alchemy.com/v2/demo",
+        chainId: 84532,
       }
     },
 
@@ -97,7 +102,8 @@ module.exports = {
       apiKey: {
         scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
         beraTestnet: "xxxxx",
-        swell: "xxxxx"
+        swell: "xxxxx",
+        baseSepolia: "xxxx"
       },
       customChains: [
         {
@@ -127,6 +133,14 @@ module.exports = {
           }
         },
 
+        {
+          network: "baseSepolia",
+          chainId: 84532,
+          urls: {
+            apiURL: "https://api-sepolia.basescan.org/api",
+            browserURL: "https://sepolia.basescan.org"
+          }
+        }
       ]
     }
 };

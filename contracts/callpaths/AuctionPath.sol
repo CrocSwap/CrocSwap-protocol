@@ -7,8 +7,10 @@ import '../libraries/ProtocolCmd.sol';
 
 contract AuctionPath is AuctionHouse {
 
+    event AuctionCmd(uint8 code);
+
     function userCmd (bytes calldata cmd) external payable {
-        uint8 code = uint8(cmd[0]);
+        uint8 code = uint8(cmd[31]);
 
         if (code == UserCmd.INIT_AUCTION) {
             initAuctionCmd(cmd);
@@ -27,8 +29,10 @@ contract AuctionPath is AuctionHouse {
         } else if (code == UserCmd.REFUND_AUCTION) {
             refundAuctionCmd(cmd);
         } else {
-            revert("Invalid code");
+            revert("Invalid code user 2");
         }
+
+        emit AuctionCmd(code);
     }
 
     function protocolCmd (bytes calldata cmd) private {
@@ -36,7 +40,7 @@ contract AuctionPath is AuctionHouse {
         if (code == 95) {
             setAuctionProtocolFeeCmd(cmd);
         } else {
-            revert("Invalid code");
+            revert("Invalid protocol code");
         }
     }
 

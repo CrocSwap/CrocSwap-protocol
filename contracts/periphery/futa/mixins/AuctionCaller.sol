@@ -9,6 +9,7 @@ import "../../../lens/CrocAuctionQuery.sol";
 import "../../../libraries/AuctionLogic.sol";
 import "../../../interfaces/IERC20Minimal.sol";
 import "../../../libraries/TransferHelper.sol";
+import "../../../libraries/ProtocolCmd.sol";
 
 contract AuctionCaller is FutaBase {
 
@@ -33,14 +34,15 @@ contract AuctionCaller is FutaBase {
         auctionCreators_[token] = lockHolder_;
 
         uint256 endTime = block.timestamp + auctionDuration_;
-        bytes memory callCmd = abi.encode(129, token, address(0), AUCTION_INDEX, 
+        bytes memory callCmd = abi.encode(UserCmd.INIT_AUCTION, token, address(0), AUCTION_INDEX, 
             endTime, auctionSupply, auctionStepSize_, auctionStartStep_);
+
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
     }
 
     function refundAuctionETH (address tickerToken) internal returns (uint128 auctionPrice) {
         uint256 startBal = address(this).balance;
-        bytes memory callCmd = abi.encode(136, tickerToken, address(0), AUCTION_INDEX);
+        bytes memory callCmd = abi.encode(UserCmd.REFUND_AUCTION, tickerToken, address(0), AUCTION_INDEX);
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
 
         uint256 endBal = address(this).balance;
@@ -71,7 +73,7 @@ contract AuctionCaller is FutaBase {
 
         uint16 MAX_LIMIT_LEVEL = type(uint16).max;
 
-        bytes memory callCmd = abi.encode(130, auctionKey, address(0), ethVal, 
+        bytes memory callCmd = abi.encode(UserCmd.PLACE_BID, auctionKey, address(0), ethVal, 
             MAX_LIMIT_LEVEL, CREATOR_BID_INDEX);
         CrocSwapDex(auctionDex_).userCmd{value: ethVal}(CrocSlots.AUCTION_PROXY_PATH, callCmd);
     }
@@ -79,7 +81,7 @@ contract AuctionCaller is FutaBase {
     function claimCreatorBid(address token) internal {
         uint256 startBal = IERC20Minimal(auctionDex_).balanceOf(address(this));
 
-        bytes memory callCmd = abi.encode(131, token, address(0), CREATOR_BID_INDEX);
+        bytes memory callCmd = abi.encode(UserCmd.CLAIM_BID, token, address(0), CREATOR_BID_INDEX);
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
 
         uint256 endBal = IERC20Minimal(auctionDex_).balanceOf(address(this));

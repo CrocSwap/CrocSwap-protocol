@@ -14,23 +14,26 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
     event FutaAuctionOpen(bytes32 indexed tickerHash, address indexed token, uint256 auctionSupply);
     event FutaAuctionClosed(address indexed tickerToken, uint128 auctionPrice);
 
-    event FutaCrocSet(address auctionDex, address tradingDex, address crocQuery, address crocAuctionQuery);
+    event FutaCrocSet(address auctionDex, address tradingDex, address crocAuctionQuery, address crocQuery, uint256 poolIdx);
 
-    constructor (address auctionDex, address tradingDex, address crocQuery, address crocAuctionQuery, 
-        uint256 poolIdx) {
+    constructor (address crocAuctionQuery, address crocQuery, uint256 poolIdx) {
         authority_ = msg.sender;
-        auctionDex_ = auctionDex;
-        tradingDex_ = tradingDex;
-        crocQuery_ = crocQuery;
-        crocAuctionQuery_ = crocAuctionQuery;
-
-        poolIdx_ = poolIdx;
-
         FutaToken proxy = new FutaToken();
         tokenFactory_ = address(new TokenFactory(address(proxy)));
+        setCrocInternal(crocAuctionQuery, crocQuery, poolIdx);
+    }
 
-        emit FutaCrocSet(auctionDex, tradingDex, crocQuery, crocAuctionQuery);
-        emit FutaTokenFactorySet(tokenFactory_);
+    function setCroc (address crocAuctionQuery, address crocQuery, uint256 poolIdx) public protocolOnly(true) {
+        setCrocInternal(crocAuctionQuery, crocQuery, poolIdx);
+    }
+
+    function setCrocInternal (address crocAuctionQuery, address crocQuery, uint256 poolIdx) internal {
+        auctionDex_ = CrocAuctionQuery(crocAuctionQuery).dex_();
+        tradingDex_ = CrocQuery(crocQuery).dex_();
+        crocAuctionQuery_ = crocAuctionQuery;
+        crocQuery_ = crocQuery;
+        poolIdx_ = poolIdx;
+        emit FutaCrocSet(auctionDex_, tradingDex_, crocAuctionQuery, crocQuery, poolIdx);
     }
 
     function setAdmin(address newOwner) public protocolOnly(true) {
@@ -42,7 +45,7 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
         bytes32 tickerHash =claimTicker(ticker);
         (address token, uint256 auctionSupply) = mintPreAuction(ticker);
         initiateAuctionETH(token, auctionSupply);
-        lockCreatorBid(token);
+        //lockCreatorBid(token);
 
         emit FutaAuctionOpen(tickerHash, token, auctionSupply);
     }
