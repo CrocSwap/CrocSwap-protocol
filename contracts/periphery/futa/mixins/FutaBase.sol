@@ -24,6 +24,7 @@ contract FutaBase is AgentMask {
     uint16 public creatorFee_;
 
     mapping(bytes32 => bool) public tickerUsed_;
+    mapping(bytes32 => address) public tokenTickers_;
     mapping(bytes32 => bool) public blacklist_;
     bytes32 public tickerChain_;
 

@@ -65,7 +65,7 @@ contract AuctionCaller is FutaBase {
     }
 
     function lockCreatorBid(address token) internal {
-        uint128 minBidSize = AuctionLogic.getMcapForLevel(auctionStartStep_, auctionSupply_); 
+        uint256 minBidSize = AuctionLogic.getMcapForLevel(auctionStartStep_, auctionSupply_); 
         bytes32 auctionKey = AuctionLogic.hashAuctionPool(token, address(0), address(this), AUCTION_INDEX);
 
         uint256 ethVal = popMsgVal();
@@ -79,12 +79,12 @@ contract AuctionCaller is FutaBase {
     }
 
     function claimCreatorBid(address token) internal {
-        uint256 startBal = IERC20Minimal(auctionDex_).balanceOf(address(this));
+        uint256 startBal = IERC20Minimal(token).balanceOf(address(this));
 
         bytes memory callCmd = abi.encode(UserCmd.CLAIM_BID, token, address(0), CREATOR_BID_INDEX);
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
 
-        uint256 endBal = IERC20Minimal(auctionDex_).balanceOf(address(this));
+        uint256 endBal = IERC20Minimal(token).balanceOf(address(this));
         
         address creator = auctionCreators_[token];
         TransferHelper.safeTransfer(creator, msg.sender, endBal - startBal);

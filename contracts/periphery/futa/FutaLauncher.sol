@@ -23,6 +23,10 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
         setCrocInternal(crocAuctionQuery, crocQuery, poolIdx);
     }
 
+    receive() external payable {
+        // Accept ETH
+    }
+
     function setCroc (address crocAuctionQuery, address crocQuery, uint256 poolIdx) public protocolOnly(true) {
         setCrocInternal(crocAuctionQuery, crocQuery, poolIdx);
     }
@@ -42,8 +46,8 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
     }
 
     function initializeTickerAuction (string memory ticker) public payable reEntrantLock {
-        bytes32 tickerHash =claimTicker(ticker);
-        (address token, uint256 auctionSupply) = mintPreAuction(ticker);
+        bytes32 tickerHash = claimTicker(ticker);
+        (address token, uint256 auctionSupply) = mintPreAuction(ticker, tickerHash);
         initiateAuctionETH(token, auctionSupply);
         lockCreatorBid(token);
 
@@ -51,6 +55,10 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
     }
 
     function finalizeAuction(address tickerToken) public reEntrantLock {
+        finalizeAuctionInternal(tickerToken);
+    }
+
+    function finalizeAuctionInternal (address tickerToken) internal {
         uint128 auctionPrice = refundAuctionETH(tickerToken);
         claimCreatorBid(tickerToken);
         lockLiquidity(tickerToken, auctionPrice);
@@ -59,9 +67,35 @@ contract FutaLauncher is  AuctionCaller, TickerRegistry, TokenMinter, LiquidityV
         emit FutaAuctionClosed(tickerToken, auctionPrice);
     }
 
+    function finalizeAuctionHash(bytes32 tickerHash) public reEntrantLock {
+        address token = tokenTickers_[tickerHash];
+        finalizeAuctionInternal(token);
+    }
+
+    function finalizeAuctionTicker(string memory ticker) public reEntrantLock {
+        bytes32 tickerHash = hashTicker(ticker);
+        address token = tokenTickers_[tickerHash];
+        finalizeAuctionInternal(token);
+    }
+
     function finalizeAuctions (address[] memory tickerTokens) public reEntrantLock {
         for (uint256 i = 0; i < tickerTokens.length; i++) {
-            finalizeAuction(tickerTokens[i]);
+            finalizeAuctionInternal(tickerTokens[i]);
+        }
+    }
+
+    function finalizeAuctionTickers(string[] memory tickers) public reEntrantLock {
+        for (uint256 i = 0; i < tickers.length; i++) {
+            bytes32 tickerHash = hashTicker(tickers[i]);
+            address token = tokenTickers_[tickerHash];
+            finalizeAuctionInternal(token);
+        }
+    }
+
+    function finalizeAuctionHashes(bytes32[] memory tickerHashes) public reEntrantLock {
+        for (uint256 i = 0; i < tickerHashes.length; i++) {
+            address token = tokenTickers_[tickerHashes[i]];
+            finalizeAuctionInternal(token);
         }
     }
 
