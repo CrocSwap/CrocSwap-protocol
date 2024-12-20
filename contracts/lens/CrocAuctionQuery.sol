@@ -22,14 +22,21 @@ contract CrocAuctionQuery {
         dex_ = dex;
     }
 
+    function queryAuctionSlot (address supplyToken, address demandToken, address owner, uint256 auctionIndex)
+        public view returns (bytes32 slot) {
+        bytes32 key = AuctionLogic.hashAuctionPool(supplyToken, demandToken, owner, auctionIndex);
+        return bytes32(CrocSwapDex(dex_).readSlot(uint256(keccak256(abi.encode(key, CrocSlots.AUCTION_STATE_MAP_SLOT)))));
+    }
+
     function queryAuctionState (address supplyToken, address demandToken, address owner, uint256 auctionIndex)
         public view returns (AuctionLogic.PricedAuctionState memory state) {
         bytes32 key = AuctionLogic.hashAuctionPool(supplyToken, demandToken, owner, auctionIndex);
         bytes32 slot = keccak256(abi.encode(key, CrocSlots.AUCTION_STATE_MAP_SLOT));
+        uint256 raw = CrocSwapDex(dex_).readSlot(uint256(slot));
 
-        state.clearingLevel_ = uint16(CrocSwapDex(dex_).readSlot(uint256(slot)));
-        state.hasRefunded_ = CrocSwapDex(dex_).readSlot(uint256(slot)+1) != 0; 
-        state.cumLiftingBids_ = uint128(CrocSwapDex(dex_).readSlot(uint256(slot)+2));
+        state.clearingLevel_ = uint16(raw);
+        state.cumLiftingBids_ = uint128(raw >> 16);
+        state.hasRefunded_ = uint8(raw >> (16 + 128)) != 0;
     }
 
     function queryAuctionPrice (address supplyToken, address demandToken, address owner, uint256 auctionIndex)
