@@ -99,7 +99,7 @@ library AuctionLogic {
      * @dev Multiplies the price per token at the level by the total supply
      * @param level The level index to calculate market cap for
      * @param totalSupply The total supply of tokens
-     * @return The total market cap of the auction for that lev */
+     * @return The total market cap of the auction for that level */
     function getMcapForLevel(uint16 level, uint256 totalSupply) internal pure returns (uint256) {
         uint256 pricePerToken = getPriceForLevel(level);
         return (pricePerToken * totalSupply >> 64);
