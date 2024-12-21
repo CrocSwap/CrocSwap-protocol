@@ -75,34 +75,37 @@ library AuctionLogic {
         return keccak256(abi.encodePacked(auctionKey, bidder, bidSalt));
     }
 
-    /* @notice Converts a level index to its corresponding price in X192.64 fixed point format
+    /* @notice Converts a level index to its corresponding price in X128.128 fixed point format
      * @dev Each level increases price by a factor of approximately 1 + 2^(1/32), meaning prices double every 32 levels.
-     *      The base price at level 0 is 2^-16 in X64.64 format (2^48).
+     *      The base price at level 0 is 2^-128 in X128.128 format.
      *      For levels that are multiples of 32, price is a power of 2 shift.
      *      For other levels within a 32-step window, price is linearly interpolated using (1 + N/32).
      * @param level The level index to get the price for
-     * @return The price per token in X192.64 fixed point format */
-    function getPriceForLevel(uint16 level) internal pure returns (uint256) {
-        uint16 baseShift = level >> 5;  // Divide by 32
-        uint16 remainder = level & 0x1f;  // Mod 32
+     * @return The sqrt price per token in X64.64 fixed point format */
+    function getPriceForLevel(uint16 level) internal pure returns (uint128) {
+        uint16 baseShift = level >> 6;  // Divide by 64 (twice the 32 needed to double sqrt price)
+        uint16 remainder = level & 0x3f;  // Mod 64
 
         uint256 x64One = 1 << 64;
-        uint256 minPrice = 1 << 8;
+        uint256 minPrice = 1;
         uint256 base = minPrice << baseShift;
 
-        require(base > 0 && base < (1 << 191));
+        require(base > 0 && base < (1 << 127));
 
-        uint256 remainderStep = 3125 * x64One / 100000;         
-        return base * (x64One + remainder * remainderStep) >> 64;
+        uint256 remainderStep = 15625 * x64One / 1000000;         
+        return (base * (x64One + remainder * remainderStep) >> 64).toUint128();
     }
+
     /* @notice Calculates the total market cap at a given level
      * @dev Multiplies the price per token at the level by the total supply
      * @param level The level index to calculate market cap for
      * @param totalSupply The total supply of tokens
      * @return The total market cap of the auction for that level */
-    function getMcapForLevel(uint16 level, uint256 totalSupply) internal pure returns (uint256) {
-        uint256 pricePerToken = getPriceForLevel(level);
-        return (pricePerToken * totalSupply >> 64);
+    function getMcapForLevel(uint16 level, uint128 totalSupply) internal pure returns (uint128) {
+        uint128 sqrtPricePerToken = getPriceForLevel(level);
+        uint256 x = (totalSupply * sqrtPricePerToken) >> 64;
+        uint y = (x * sqrtPricePerToken) >> 64;
+        return y.toUint128();
     }
 
     /* @notice Calculates the amount of supply tokens received for a given bid size at a price level
@@ -113,11 +116,13 @@ library AuctionLogic {
     function calcAuctionProceeds(uint16 level, uint128 bidSize) 
         internal pure returns (uint128) {
         // Get the total market cap at this level
-        uint256 pricePerToken = getPriceForLevel(level);       
+        uint128 pricePerToken = getPriceForLevel(level);       
         
         // Calculate tokens received by dividing bid size by price per token
         // Note: bidSize is raw value, pricePerToken is X64.64, so shift left by 64 first
-        return ((uint256(bidSize) << 64) / pricePerToken).toUint128();
+        uint256 x = (uint256(bidSize) << 64) / pricePerToken;
+        uint256 y = (x << 64) / pricePerToken;
+        return y.toUint128();
     }
 
     /* @notice Calculates the pro-rata shrink factor for bids at the clearing level
@@ -164,11 +169,16 @@ library AuctionLogic {
      * @return bidPayout The amount of demand tokens received by seller */
     function calcReservePayout(uint16 startLevel, uint128 totalBids, uint128 totalSupply)
         internal pure returns (uint128 supplyRefund, uint128 bidPayout) {    
-        uint256 salePrice = getPriceForLevel(startLevel);
-        uint256 fillRate = (uint256(totalBids) << 64) / ((salePrice * uint256(totalSupply)) >> 64);
+
+        uint128 totalSold = getMcapForLevel(startLevel, totalSupply);
+        if (totalBids >= totalSold) {
+            return (0, totalSold);
+        }
+
+        uint256 fillRate = (uint256(totalBids) << 64) / uint256(totalSold);
 
         uint128 sold = ((fillRate * totalSupply) >> 64).toUint128();
-        bidPayout = ((uint256(sold) * salePrice) >> 64).toUint128();
+        bidPayout = getMcapForLevel(startLevel, sold);
 
         if (sold >= totalSupply) {
             supplyRefund = 0;

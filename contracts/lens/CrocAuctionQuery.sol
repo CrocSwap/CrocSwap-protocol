@@ -42,6 +42,6 @@ contract CrocAuctionQuery {
     function queryAuctionPrice (address supplyToken, address demandToken, address owner, uint256 auctionIndex)
         public view returns (uint128 price) {
         AuctionLogic.PricedAuctionState memory state = queryAuctionState(supplyToken, demandToken, owner, auctionIndex);
-        return AuctionLogic.getPriceForLevel(state.clearingLevel_).toUint128();
+        return AuctionLogic.getPriceForLevel(state.clearingLevel_);
     }
 }

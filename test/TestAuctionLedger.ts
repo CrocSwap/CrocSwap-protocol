@@ -75,7 +75,7 @@ describe("AuctionLedger", function() {
         const auctionKey = await auction.lastAuctionKey();
 
         const bidSize = 500;
-        const limitLevel = 4000;
+        const limitLevel = 5000;
         const bidIndex = 0;
 
         await auction.connect(bidder).testPlaceBidLedger(
@@ -116,7 +116,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500,
-            4000,
+            5000,
             0 // bidIndex
         );
 
@@ -125,7 +125,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testPlaceBidLedger(
                 auctionKey,
                 600,
-                4000,
+                5000,
                 0 // Same bidIndex
             )
         ).to.be.revertedWith("AFBI");
@@ -152,7 +152,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500,
-            4000,
+            5000,
             0
         );
 
@@ -160,7 +160,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             600,
-            3000,
+            5500,
             1 // Different bidIndex
         );
 
@@ -172,9 +172,9 @@ describe("AuctionLedger", function() {
         const bid2 = await auction.getAuctionBid(bidKey2);
 
         expect(bid1.bidSize_).to.equal(500);
-        expect(bid1.limitLevel_).to.equal(4000);
+        expect(bid1.limitLevel_).to.equal(5000);
         expect(bid2.bidSize_).to.equal(600);
-        expect(bid2.limitLevel_).to.equal(3000);
+        expect(bid2.limitLevel_).to.equal(5500);
     });
 
     it("should allow different bidders to use same bid index", async function() {
@@ -198,7 +198,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500,
-            4000,
+            5000,
             0 // Same bidIndex
         );
 
@@ -206,7 +206,7 @@ describe("AuctionLedger", function() {
         await auction.connect(auctioneer).testPlaceBidLedger(
             auctionKey,
             700,
-            3900,
+            4900,
             0 // Same bidIndex
         );
 
@@ -218,9 +218,9 @@ describe("AuctionLedger", function() {
         const bid2 = await auction.getAuctionBid(bidKey2);
 
         expect(bid1.bidSize_).to.equal(500);
-        expect(bid1.limitLevel_).to.equal(4000);
+        expect(bid1.limitLevel_).to.equal(5000);
         expect(bid2.bidSize_).to.equal(700);
-        expect(bid2.limitLevel_).to.equal(3900);
+        expect(bid2.limitLevel_).to.equal(4900);
     });
 
     it("should allow multiple bids at same level without level change", async function() {
@@ -244,7 +244,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             300,
-            4000,
+            5000,
             0
         );
 
@@ -254,13 +254,13 @@ describe("AuctionLedger", function() {
         await auction.connect(auctioneer).testPlaceBidLedger(
             auctionKey,
             200,
-            4000, 
+            5000, 
             1
         );
 
         // Verify state hasn't changed
         const state2 = await auction.getAuctionState(auctionKey);
-        expect(state2.clearingLevel_).to.equal(1760); // Still at start level
+        expect(state2.clearingLevel_).to.equal(4050); // Still at start level
         expect(state2.cumLiftingBids_).to.equal(500); // Sum of both bids
 
         // Verify both bids stored correctly
@@ -271,9 +271,9 @@ describe("AuctionLedger", function() {
         const bid2 = await auction.getAuctionBid(bidKey2);
 
         expect(bid1.bidSize_).to.equal(300);
-        expect(bid1.limitLevel_).to.equal(4000);
+        expect(bid1.limitLevel_).to.equal(5000);
         expect(bid2.bidSize_).to.equal(200);
-        expect(bid2.limitLevel_).to.equal(4000);
+        expect(bid2.limitLevel_).to.equal(5000);
     });
 
     it("bid pushes to level", async function() {
@@ -303,7 +303,7 @@ describe("AuctionLedger", function() {
 
         let state = await auction.getAuctionState(auctionKey);
 
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100000);
 
         let mcapLower = await auctionLib.testGetMcapForLevel(state.clearingLevel_ , context.auctionSupply_);
@@ -332,20 +332,20 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000, // Just under the 1000 supply
-            4000,
+            5000,
             0
         );
 
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             200000, // Just under the 1000 supply
-            4000,
+            5000,
             1
         );
 
         let state = await auction.getAuctionState(auctionKey);
 
-        expect(state.clearingLevel_).to.equal(1730);
+        expect(state.clearingLevel_).to.equal(4030);
         expect(state.cumLiftingBids_).to.equal(300000);
 
         let mcapLower = await auctionLib.testGetMcapForLevel(state.clearingLevel_ , context.auctionSupply_);
@@ -375,13 +375,13 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000, // Just under the 1000 supply
-            1690,
+            3990,
             0
         );
 
         let state = await auction.getAuctionState(auctionKey);
 
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100000);
 
         let mcapLower = await auctionLib.testGetMcapForLevel(state.clearingLevel_ , context.auctionSupply_);
@@ -407,19 +407,22 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Will push to level 1680 with all in lifting bids
+        // Will push to level 3980 with all in lifting bids
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            2000,
+            4000,
             0
         );
 
-        // 1690 is the open level but this will overflow that level
+        let state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(3980);
+
+        // 3980 is the open level but this will overflow that level
         await expect(auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             2
         )).to.be.revertedWith("AFOS");
     });
@@ -445,16 +448,19 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690, // Valid level
+            4000, // Valid level
             0
         );
+
+        let state = await auction.getAuctionState(auctionKey);
+        expect(state.clearingLevel_).to.equal(3980);
 
         // Try to place bid with level not divisible by step size
         await expect(
             auction.connect(bidder).testPlaceBidLedger(
                 auctionKey,
                 100,
-                1695, // Not divisible by 10
+                3995, // Not divisible by 10
                 1
             )
         ).to.be.revertedWith("AFSS");
@@ -464,7 +470,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testPlaceBidLedger(
                 auctionKey,
                 100,
-                1680, 
+                3970, 
                 2
             )
         ).to.be.revertedWith("AFPL");
@@ -474,7 +480,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testPlaceBidLedger(
                 auctionKey,
                 0,
-                1690, // Valid level
+                3990, // Valid level
                 2
             )
         ).to.be.revertedWith("AFBI");
@@ -482,7 +488,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             10,
-            1690, // Valid level
+            3990, // Valid level
             3
         );
     });
@@ -508,24 +514,24 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690, // Valid level
+            4000, // Valid level
             0
         );
 
-        const marketCap = await auctionLib.testGetMcapForLevel(1690, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(3990, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber()
 
         // Place bid that exactly fills the level
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             exactFillAmount,
-            1690, // Same level as first bid
+            3990, // Same level as first bid
             1
         );
 
         // Verify auction state
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1690);
+        expect(state.clearingLevel_).to.equal(3990);
     });
 
     it("should handle bid that pushes clearing level above previous bid level", async function() {
@@ -549,7 +555,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             0
         );
 
@@ -557,14 +563,14 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            3000,
+            5000,
             1
         );
 
         // Verify clearing level moved above 1690
         const state = await auction.getAuctionState(auctionKey);
         expect(state.cumLiftingBids_).to.equal(500000);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
     });
 
     it("should not allow canceling bid above clearing level", async function() {
@@ -588,7 +594,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             0
         );
 
@@ -623,18 +629,18 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             0
         );
 
-        const marketCap = await auctionLib.testGetMcapForLevel(1690, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(3990, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber();
 
         // Place bid that exactly fills the level
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             exactFillAmount,
-            1690,
+            3990,
             1
         );
 
@@ -665,11 +671,11 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Place first bid at 1690
+        // Place first bid at 3990
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             10000,
-            1690,
+            3990,
             0
         );
 
@@ -677,7 +683,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            1760,
+            5000,
             1
         );
 
@@ -725,7 +731,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             0
         );
 
@@ -747,10 +753,10 @@ describe("AuctionLedger", function() {
 
         // Verify clearing level stayed the same
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
 
         // Verify level size increased correctly
-        const levelSize = await auction.getLevelSize(auctionKey, 1760);
+        const levelSize = await auction.getLevelSize(auctionKey, 4050);
         expect(levelSize).to.equal(101000);
     });
 
@@ -771,11 +777,11 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Place first bid at 1760
+        // Place first bid at 4050
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             0
         );
 
@@ -783,7 +789,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             1
         );
 
@@ -795,7 +801,7 @@ describe("AuctionLedger", function() {
         );
 
         // Verify total level size is 201000
-        const levelSize = await auction.getLevelSize(auctionKey, 1760);
+        const levelSize = await auction.getLevelSize(auctionKey, 4050);
         expect(levelSize).to.equal(201000);
     });
     
@@ -820,7 +826,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            5000,
             0
         );
 
@@ -842,7 +848,7 @@ describe("AuctionLedger", function() {
 
         // Verify clearing level increased
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
     });
 
     it("increase bid size to exact clearing level", async function() {
@@ -866,7 +872,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             0
         );
 
@@ -875,7 +881,7 @@ describe("AuctionLedger", function() {
         const initialBid = await auction.getAuctionBid(bidKey);
         expect(initialBid.bidSize_).to.equal(100000);
 
-        const marketCap = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber()
 
         // Increase bid size
@@ -887,11 +893,11 @@ describe("AuctionLedger", function() {
 
         // Verify bid size increased
         const updatedBid = await auction.getAuctionBid(bidKey);
-        expect(updatedBid.bidSize_).to.equal(500000);
+        expect(updatedBid.bidSize_).to.equal(exactFillAmount + 100000);
 
         // Verify clearing level increased
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
     });
 
     it("should reject bid increase that oversizes clearing level", async function() {
@@ -915,7 +921,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1750,
+            4200,
             0
         );
 
@@ -924,7 +930,7 @@ describe("AuctionLedger", function() {
         const initialBid = await auction.getAuctionBid(bidKey);
         expect(initialBid.bidSize_).to.equal(100000);
 
-        const marketCap = await auctionLib.testGetMcapForLevel(1750, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(4200, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber()
 
         // Attempt to increase bid size beyond level capacity
@@ -981,22 +987,22 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Place initial bid at 1760
+        // Place initial bid at 4050
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             0
         );
 
         // Place second bid to move clearing level to 1760
-        const marketCap = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber();
 
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             exactFillAmount,
-            1760,
+            4050,
             1
         );
 
@@ -1027,11 +1033,11 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Place first bid at 1690
+        // Place first bid at 3990
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             0
         );
 
@@ -1039,7 +1045,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            3000,
+            5000,
             1
         );
 
@@ -1070,11 +1076,11 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        // Place initial bid at level 3000
+        // Place initial bid at level 5000
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            3000,
+            5000,
             0
         );
 
@@ -1082,55 +1088,55 @@ describe("AuctionLedger", function() {
         const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
         let bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(3000);
-        let levelSize = await auction.getLevelSize(auctionKey, 3000);
+        expect(bid.limitLevel_).to.equal(5000);
+        let levelSize = await auction.getLevelSize(auctionKey, 5000);
         expect(levelSize).to.equal(100000);
 
         // Verify initial auction state
         let state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100000);
 
-        // Modify bid level to 2000
+        // Modify bid level to 5100
         await auction.connect(bidder).testModifyBidLevelLedger(
             auctionKey,
             0,
-            3100
+            5100
         );
 
         // Verify state after first modification
         bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(3100);
+        expect(bid.limitLevel_).to.equal(5100);
         
-        levelSize = await auction.getLevelSize(auctionKey, 3000);
+        levelSize = await auction.getLevelSize(auctionKey, 5000);
         expect(levelSize).to.equal(0);
-        levelSize = await auction.getLevelSize(auctionKey, 3100);
+        levelSize = await auction.getLevelSize(auctionKey, 5100);
         expect(levelSize).to.equal(100000);
 
         state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100000);
 
-        // Modify bid level to 4000
+        // Modify bid level to 5200
         await auction.connect(bidder).testModifyBidLevelLedger(
             auctionKey,
             0,
-            4000
+            5200
         );
 
         // Verify final state
         bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(4000);
+        expect(bid.limitLevel_).to.equal(5200);
 
-        levelSize = await auction.getLevelSize(auctionKey, 3100);
+        levelSize = await auction.getLevelSize(auctionKey, 5100);
         expect(levelSize).to.equal(0);
-        levelSize = await auction.getLevelSize(auctionKey, 4000);
+        levelSize = await auction.getLevelSize(auctionKey, 5200);
         expect(levelSize).to.equal(100000);
 
         state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100000);
     });
 
@@ -1155,21 +1161,21 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             15,
-            2500,
+            4500,
             0
         );
 
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             20,
-            3000,
+            5000,
             1
         );
 
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             25,
-            4000,
+            5500,
             2
         );
 
@@ -1177,73 +1183,73 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             3
         );
 
         const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 3);
         let bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(1760);
+        expect(bid.limitLevel_).to.equal(4050);
 
-        let levelSize = await auction.getLevelSize(auctionKey, 1760);
+        let levelSize = await auction.getLevelSize(auctionKey, 4050);
         expect(levelSize).to.equal(100000);
 
         // Verify initial auction state
         let state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100060);
 
-        // Modify bid level to 2000
+        // Modify bid level to 4070
         await auction.connect(bidder).testModifyBidLevelLedger(
             auctionKey,
             3,
-            2000
+            4070
         );
 
         // Verify state after first modification
         bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(2000);
+        expect(bid.limitLevel_).to.equal(4070);
         
-        levelSize = await auction.getLevelSize(auctionKey, 1760);
+        levelSize = await auction.getLevelSize(auctionKey, 4020);
         expect(levelSize).to.equal(0);
-        levelSize = await auction.getLevelSize(auctionKey, 2000);
+        levelSize = await auction.getLevelSize(auctionKey, 4070);
         expect(levelSize).to.equal(100000);
-        levelSize = await auction.getLevelSize(auctionKey, 2500);
+        levelSize = await auction.getLevelSize(auctionKey, 4500);
         expect(levelSize).to.equal(15);
-        levelSize = await auction.getLevelSize(auctionKey, 3000);
+        levelSize = await auction.getLevelSize(auctionKey, 5000);
         expect(levelSize).to.equal(20);
-        levelSize = await auction.getLevelSize(auctionKey, 4000);
+        levelSize = await auction.getLevelSize(auctionKey, 5500);
         expect(levelSize).to.equal(25);
 
         state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100060);
 
-        // Modify bid level to 4000
+        // Modify bid level to 5000
         await auction.connect(bidder).testModifyBidLevelLedger(
             auctionKey,
             3,
-            4000
+            5500
         );
 
         // Verify final state
         bid = await auction.getAuctionBid(bidKey);
         expect(bid.bidSize_).to.equal(100000);
-        expect(bid.limitLevel_).to.equal(4000);
+        expect(bid.limitLevel_).to.equal(5500);
 
-        levelSize = await auction.getLevelSize(auctionKey, 2000);
+        levelSize = await auction.getLevelSize(auctionKey, 4070);
         expect(levelSize).to.equal(0);
-        levelSize = await auction.getLevelSize(auctionKey, 2500);
+        levelSize = await auction.getLevelSize(auctionKey, 4500);
         expect(levelSize).to.equal(15);
-        levelSize = await auction.getLevelSize(auctionKey, 3000);
+        levelSize = await auction.getLevelSize(auctionKey, 5000);
         expect(levelSize).to.equal(20);
-        levelSize = await auction.getLevelSize(auctionKey, 4000);
+        levelSize = await auction.getLevelSize(auctionKey, 5500);
         expect(levelSize).to.equal(100025);
 
         state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1680);
+        expect(state.clearingLevel_).to.equal(3980);
         expect(state.cumLiftingBids_).to.equal(100060);
     });
 
@@ -1268,7 +1274,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500,
-            2000, // Valid level
+            5000, // Valid level
             0
         );
 
@@ -1277,7 +1283,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testModifyBidLevelLedger(
                 auctionKey,
                 0,
-                2505 // Not divisible by 10
+                5055 // Not divisible by 10
             )
         ).to.be.revertedWith("AFSS");
     });
@@ -1303,7 +1309,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500,
-            2000,
+            4500,
             0
         );
 
@@ -1312,7 +1318,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testModifyBidLevelLedger(
                 auctionKey,
                 0,
-                1990
+                4490
             )
         ).to.be.revertedWith("AFML");
 
@@ -1321,7 +1327,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testModifyBidLevelLedger(
                 auctionKey,
                 0,
-                2000
+                4500
             )
         ).to.be.revertedWith("AFML");
 
@@ -1330,7 +1336,7 @@ describe("AuctionLedger", function() {
             auction.connect(bidder).testModifyBidLevelLedger(
                 auctionKey,
                 999,
-                2100
+                4600
             )
         ).to.be.revertedWith("AFMC");
     });
@@ -1356,7 +1362,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1760,
+            4050,
             0
         );
 
@@ -1365,7 +1371,7 @@ describe("AuctionLedger", function() {
         const initialBid = await auction.getAuctionBid(bidKey);
         expect(initialBid.bidSize_).to.equal(100000);
 
-        const marketCap = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const marketCap = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
         const exactFillAmount = marketCap.sub(100000).toNumber()
 
         // Increase bid size
@@ -1376,24 +1382,24 @@ describe("AuctionLedger", function() {
         );
 
         let state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
         expect(state.cumLiftingBids_).to.equal(0);
 
         // Modify bid to higher level
         await auction.connect(bidder).testModifyBidLevelLedger(
             auctionKey,
             0,
-            2000
+            4200
         );
 
         // Verify bid was modified
         const bid = await auction.getAuctionBid(bidKey);
-        expect(bid.limitLevel_).to.equal(2000);
+        expect(bid.limitLevel_).to.equal(4200);
 
         // Verify auction state
         state = await auction.getAuctionState(auctionKey);
         expect(state.cumLiftingBids_).to.equal(bid.bidSize_); // Bid size now included in lifting bids
-        expect(state.clearingLevel_).to.equal(1760); // Level stays same since no new bids below
+        expect(state.clearingLevel_).to.equal(4050); // Level stays same since no new bids below
     });
 
     it("Should revert when modifying bid level below clearing level", async () => {
@@ -1417,32 +1423,32 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1720,
+            4030,
             0
         );
 
         // Verify initial clearing level is 1680
         const initialState = await auction.getAuctionState(auctionKey);
-        expect(initialState.clearingLevel_).to.equal(1680);
+        expect(initialState.clearingLevel_).to.equal(3980);
 
         // Place second bid that pushes clearing level up
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            2050,
+            4500,
             1
         );
 
         // Verify clearing level is 1760
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Attempt to modify bid that's currently below clearing level
         await expect(
             auction.connect(bidder).testModifyBidLevelLedger(
                 auctionKey,
                 0,
-                3000
+                4020
             )
         ).to.be.revertedWith("AFMK");
     });
@@ -1468,7 +1474,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            2000,
+            4500,
             0
         );
 
@@ -1476,26 +1482,26 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             1000,
-            2000,
+            4500,
             1
         );
 
-        // Place second bid that sets clearing level lower
+        // Place second bid that sets clearing level higher
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            1800,
+            4300,
             2
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4060);
 
         // Should be able to claim first bid since it's above clearing
         const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
         const bid = await auction.getAuctionBid(bidKey);
-        expect(bid.limitLevel_).to.equal(2000);
+        expect(bid.limitLevel_).to.equal(4500);
         expect(bid.bidSize_).to.equal(100000);
 
         // Claim the bid
@@ -1509,11 +1515,11 @@ describe("AuctionLedger", function() {
         expect(claimedBid.bidSize_).to.equal(0);
         expect(claimedBid.limitLevel_).to.equal(0);
 
-        let claimPrice = await auctionLib.testGetPriceForLevel(1760);
-        expect(claimPrice).to.equal(BigNumber.from(1).shl(63)) // Claim price should be 0.5
+        let claimPrice = await auctionLib.testGetPriceForLevel(4050);
+        //expect(claimPrice).to.equal(BigNumber.from(1).div(63).mul(41)) // Claim price should be 0.5
 
         expect(await auction.lastBidRefund()).to.equal(0);
-        expect(await auction.lastShares()).to.equal(200000);
+        expect(await auction.lastShares()).to.equal(193572);
 
         // Try to cancel claimed bid
         await expect(
@@ -1557,7 +1563,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100000,
-            1690,
+            3990,
             0
         );
 
@@ -1565,7 +1571,7 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             100,
-            1690,
+            3990,
             1
         );
 
@@ -1573,18 +1579,18 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             500000,
-            1800,
+            4200,
             2
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Should be able to claim first bid since it's at clearing
         const bidKey = await auctionLib.testHashAuctionBid(auctionKey, bidder.address, 0);
         const bid = await auction.getAuctionBid(bidKey);
-        expect(bid.limitLevel_).to.equal(1690);
+        expect(bid.limitLevel_).to.equal(3990);
         expect(bid.bidSize_).to.equal(100000);
 
         // Claim the bid
@@ -1620,13 +1626,15 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        let fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
-
+        let fillAmount = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
+        let price = await auctionLib.testGetPriceForLevel(4050);
+        let fillShares = fillAmount.shl(64).div(price).shl(64).div(price)
+        
         // Place bid
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4).mul(3),
-            1760,
+            4050,
             0
         );
 
@@ -1634,13 +1642,13 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4),
-            1760,
+            4050,
             1
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Claim the bid
         await auction.connect(bidder).testClaimBidLedger(
@@ -1656,7 +1664,7 @@ describe("AuctionLedger", function() {
 
         // Fills at price of 0.5
         expect(await auction.lastBidRefund()).to.equal(0);
-        expect(await auction.lastShares()).to.equal(fillAmount.div(4).mul(3).mul(2));
+        expect(await auction.lastShares()).to.equal(fillShares.mul(3).div(4));
     });
 
     it("partial fill at clearing level", async function() {
@@ -1676,13 +1684,15 @@ describe("AuctionLedger", function() {
         );
         const auctionKey = await auction.lastAuctionKey();
 
-        let fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        let fillAmount = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
+        let price = await auctionLib.testGetPriceForLevel(4050);
+        let fillShares = fillAmount.shl(64).div(price).shl(64).div(price)
 
         // Place bid above at clearing level for half size
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(2),
-            1760,
+            4050,
             1
         );
 
@@ -1690,20 +1700,20 @@ describe("AuctionLedger", function() {
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(2),
-            1760,
+            4050,
             2
         );
 
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4),
-            2000,
+            4300,
             0
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Claim the bid
         await auction.connect(bidder).testClaimBidLedger(
@@ -1719,14 +1729,14 @@ describe("AuctionLedger", function() {
 
         // Since 1/4 was filled above level, the refund rate should be 1/4 (on a size of 1/2)
         expect(await auction.lastBidRefund()).to.equal(fillAmount.div(2).div(4));
-        expect(await auction.lastShares()).to.equal(fillAmount.div(2).div(4).mul(3).mul(2));
+        expect(await auction.lastShares()).to.equal(fillShares.mul(3).div(2).div(4));
     });
 
     it("weak auction with half fill", async function() {
         const context = {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
-            startLevel_: 1760, // Set high start level as reserve price
+            startLevel_: 3980, // Set high start level as reserve price
             stepSize_: 10,
             protocolFee_: 100
         };
@@ -1740,19 +1750,23 @@ describe("AuctionLedger", function() {
         const auctionKey = await auction.lastAuctionKey();
 
         // Calculate expected fill amount at reserve level
-        let fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        let fillAmount = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
+
+        let price = await auctionLib.testGetPriceForLevel(3980);
+        let fillShares = fillAmount.shl(64).div(price).shl(64).div(price)
+
 
         // Place bid at reserve level for half the fill amount
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4),
-            1770,
+            4060,
             0
         );
 
         // Verify clearing level stays at start level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(3980);
 
         // Claim the bid
         await auction.connect(bidder).testClaimBidLedger(
@@ -1767,7 +1781,7 @@ describe("AuctionLedger", function() {
         expect(claimedBid.limitLevel_).to.equal(0);
 
         // Full claim should be filled since its a weak auction
-        expect(await auction.lastShares()).to.equal(fillAmount.div(4).mul(2));
+        expect(await auction.lastShares()).to.equal(fillShares.div(4));
         expect(await auction.lastBidRefund()).to.equal(0);
     });
 
@@ -1789,17 +1803,17 @@ describe("AuctionLedger", function() {
         const auctionKey = await auction.lastAuctionKey();
 
         // Place bid that fully clears auction
-        const fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const fillAmount = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount,
-            1760,
+            4050,
             0
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Refund the auction
         await auction.connect(auctioneer).testRefundLedger(ZERO_ADDR, ADDR_TWO, 0);
@@ -1833,35 +1847,35 @@ describe("AuctionLedger", function() {
         const auctionKey = await auction.lastAuctionKey();
 
         // Place bid that fully clears auction
-        const fillAmount = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const fillAmount = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(10),
-            1680,
+            3980,
             0
         );
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4),
-            1760,
+            4050,
             1
         );
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(2),
-            1760,
+            4050,
             2
         );
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             fillAmount.div(4),
-            2500,
+            5000,
             3
         );
 
         // Verify clearing level
         const state = await auction.getAuctionState(auctionKey);
-        expect(state.clearingLevel_).to.equal(1760);
+        expect(state.clearingLevel_).to.equal(4050);
 
         // Refund the auction
         await auction.connect(auctioneer).testRefundLedger(ZERO_ADDR, ADDR_TWO, 0);
@@ -1876,7 +1890,7 @@ describe("AuctionLedger", function() {
         const context = {
             auctionEndTime_: Math.floor(Date.now()/1000) + 3600,
             auctionSupply_: 1000*1000,
-            startLevel_: 1760,
+            startLevel_: 4050,
             stepSize_: 10,
             protocolFee_: 100
         };
@@ -1890,27 +1904,33 @@ describe("AuctionLedger", function() {
         const auctionKey = await auction.lastAuctionKey();
 
         // Calculate expected fill at start level
-        const expectedFill = await auctionLib.testGetMcapForLevel(1760, context.auctionSupply_);
+        const expectedFill = await auctionLib.testGetMcapForLevel(4050, context.auctionSupply_);
 
         // Place bids totaling 75% of needed fill
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             expectedFill.div(2),
-            1770,
+            4060,
             0
         );
         await auction.connect(bidder).testPlaceBidLedger(
             auctionKey,
             expectedFill.div(4),
-            2100,
+            4200,
             1
         );
+
+        let clearingLevel = (await auction.getAuctionState(auctionKey)).clearingLevel_;
+        let price = await auctionLib.testGetPriceForLevel(clearingLevel);
+        let fillShares = expectedFill.shl(64).div(price).shl(64).div(price)
+
+        expect(clearingLevel).to.equal(4050);
 
         // Refund the auction
         await auction.connect(auctioneer).testRefundLedger(ZERO_ADDR, ADDR_TWO, 0);
 
         // Verify refund amounts - should get back 75% of mcap and 25% of supply
-        expect(await auction.lastDemandReturn()).to.equal(expectedFill.mul(3).div(4));
+        expect(await auction.lastDemandReturn()).to.equal(expectedFill.mul(3).div(4).sub(1));
         expect(await auction.lastSupplyReturn()).to.equal(context.auctionSupply_/4);
         expect(await auction.lastAuctionKey()).to.equal(auctionKey);
 

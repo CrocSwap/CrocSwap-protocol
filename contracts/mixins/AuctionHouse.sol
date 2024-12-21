@@ -121,7 +121,7 @@ contract AuctionLedger is StorageLayout {
 
         bool auctionCleared = state.clearingLevel_ > context.startLevel_;
         if (auctionCleared) {
-            demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_).toUint128();
+            demandReturn = AuctionLogic.getMcapForLevel(state.clearingLevel_, context.auctionSupply_);
         } else {
             uint128 totalBids = state.cumLiftingBids_ + auctionLevelSizes_[auctionKey][context.startLevel_];
             (supplyReturn, demandReturn) = AuctionLogic.calcReservePayout(context.startLevel_, totalBids, context.auctionSupply_);

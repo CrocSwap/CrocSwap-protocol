@@ -85,69 +85,69 @@ describe("AuctionLogic", () => {
   describe("Level to Price Calculations", () => {
     it("should calculate correct mcap for level 0", async () => {
       const mcap = await testAuctionLogic.testGetPriceForLevel(0);
-      expect(mcap).to.equal(BigNumber.from(1).shl(8)); // 2^-16 in X64.64 format
+      expect(mcap).to.equal(BigNumber.from(1)); // 2^-128 in X128.128 format
     });
 
     it("should calculate correct price for level 32 (price doubles)", async () => {
-      const price = await testAuctionLogic.testGetPriceForLevel(32);
-      expect(price).to.equal(BigNumber.from(2).shl(8)); // 2.0 * 2^8 in X64.64 format
+      const price = await testAuctionLogic.testGetPriceForLevel(64);
+      expect(price).to.equal(BigNumber.from(2)); // 2.0 * 2^-127 in X128.128 format
     });
 
-    it("should calculate correct price for X64.64", async () => {
-        const price = await testAuctionLogic.testGetPriceForLevel(16*32);
-        expect(price).to.equal(BigNumber.from(1).shl(24)); // 1 in X64.64 format
+    it("should calculate correct price for X128.128", async () => {
+        const price = await testAuctionLogic.testGetPriceForLevel(64*64);
+        expect(price).to.equal(BigNumber.from(1).shl(64)); // 1 in X128.128 format
     });
   
     it("should calculate correct price for 8 * X64.64", async () => {
-        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3);
-        expect(price).to.equal(BigNumber.from(8).shl(24)); // 8 in X64.64 format
+        const price = await testAuctionLogic.testGetPriceForLevel(64*64 + 64 * 3);
+        expect(price).to.equal(BigNumber.from(8).shl(64)); // 8 in X64.64 format
     });
 
     it("calculates decimal step", async () => {
-        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 1);
-        const one = BigNumber.from(8).shl(24);
+        const price = await testAuctionLogic.testGetPriceForLevel(64*64 + 64 * 3 + 2);
+        const one = BigNumber.from(8).shl(64);
         const fraction = one.div(32)
         expect(price).to.equal(one.add(fraction)); // 8.03125 in X64.64 format
     });
     
     it("calculates decimal steps", async () => {
-        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 21);
-        const one = BigNumber.from(8).shl(24);
+        const price = await testAuctionLogic.testGetPriceForLevel(64*64 + 64 * 3 + 21*2);
+        const one = BigNumber.from(8).shl(64);
         const fraction = one.div(32).mul(21)
         expect(price).to.equal(one.add(fraction));
     });
 
     it("calculates decimal steps end", async () => {
-        const price = await testAuctionLogic.testGetPriceForLevel(16*32 + 32 * 3 + 31);
-        const one = BigNumber.from(8).shl(24);
+        const price = await testAuctionLogic.testGetPriceForLevel(64*64 + 64 * 3 + 31*2);
+        const one = BigNumber.from(8).shl(64);
         const fraction = one.div(32)
         expect(price).to.equal(one.mul(2).sub(fraction));
     });
 
     it("should calculate correct mcap for level", async () => {
-      const level = 56*32 + 32*3;
+      const level = 64*64 + 64*3;
       const totalSupply = BigNumber.from(25000);
       const mcap = await testAuctionLogic.testGetMcapForLevel(level, totalSupply);
       
-      // At price 8.0, mcap should be totalSupply * 8.0 = 200,000
-      expect(mcap).to.equal(200000);
+      // At sqrtp rice 8.0, mcap should be totalSupply * 64.0 = 1,600,000
+      expect(mcap).to.equal(1600000);
     });
   });
 
   describe("Auction Proceeds", () => {
     it("should calculate auction proceeds at base level", async () => {
       const bidSize = BigNumber.from(10000);
-      const level = 60 * 32; // Price per token is .0625
+      const level = 62 * 64; // Price per token is .0625
 
       const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, bidSize);
 
       // For a bid of 1000, should receive 1000 * .0625 = 62.5, rounded down to 62
-      expect(proceeds).to.equal(625);
+      expect(proceeds).to.equal(160000);
     });
 
     it("rounds down", async () => {
         const bidSize = BigNumber.from(1000);
-        const level = 60 * 32; // Price per token is .0625
+        const level = 66 * 64; // Price per token is .0625
   
         const proceeds = await testAuctionLogic.testCalcAuctionProceeds(level, bidSize);
   
@@ -237,7 +237,7 @@ describe("AuctionLogic", () => {
     const ONE = BigNumber.from(1).shl(64);
 
     it("full fill", async () => {
-      const level = 32;
+      const level = 64*32;
       const bidSize = BigNumber.from(1000);
       const proRata = ONE;
 
@@ -249,7 +249,7 @@ describe("AuctionLogic", () => {
     });
 
     it("half fill", async () => {
-      const level = 32;
+      const level = 64*32;
       const bidSize = BigNumber.from(1000);
       const proRata = ONE.div(2);
 
@@ -262,7 +262,7 @@ describe("AuctionLogic", () => {
     });
 
     it("quarter fill", async () => {
-      const level = 32;
+      const level = 64*32;
       const bidSize = BigNumber.from(1000);
       const proRata = ONE.div(4);
 
@@ -275,7 +275,7 @@ describe("AuctionLogic", () => {
     });
 
     it("zero fill", async () => {
-      const level = 32;
+      const level = 64*32;
       const bidSize = BigNumber.from(1000);
       const proRata = BigNumber.from(0);
 
@@ -289,7 +289,7 @@ describe("AuctionLogic", () => {
 
   describe("calcReservePayout", () => {
     it("full fill", async () => {
-      const startLevel = 1760;
+      const startLevel = 64*64;
       const totalSupply = BigNumber.from(100);
       const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
       const totalBids = price.mul(totalSupply).shr(64);
@@ -302,7 +302,7 @@ describe("AuctionLogic", () => {
     });
 
     it("half fill", async () => {
-      const startLevel = 1760;
+      const startLevel = 64*64;
       const totalSupply = BigNumber.from(100);
       const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
       const totalBids = price.mul(totalSupply).shr(64).div(2);
@@ -314,8 +314,34 @@ describe("AuctionLogic", () => {
       expect(bidPayout).to.equal(totalBids);
     });
 
+    it("price over 1", async () => {
+      const startLevel = 65*64; // Price will be 4.0
+      const totalSupply = BigNumber.from(100);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(price).mul(totalSupply).shr(128).div(2);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(totalSupply.div(2));
+      expect(bidPayout).to.equal(totalBids);
+    });
+
+    it("price unser 1", async () => {
+      const startLevel = 63*64; // Price will be 0.5
+      const totalSupply = BigNumber.from(1000);
+      const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
+      const totalBids = price.mul(price).mul(totalSupply).shr(128).div(2);
+
+      const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
+      const supplyRefund = result.supplyReturn;
+      const bidPayout = result.demandReturn;
+      expect(supplyRefund).to.equal(totalSupply.div(2));
+      expect(bidPayout).to.equal(totalBids);
+    });
+
     it("quarter fill", async () => {
-      const startLevel = 1760;
+      const startLevel = 64*64;
       const totalSupply = BigNumber.from(1000);
       const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
       const totalBids = price.mul(totalSupply).shr(64).div(4);
@@ -328,7 +354,7 @@ describe("AuctionLogic", () => {
     });
 
     it("round down", async () => {
-      const startLevel = 1760;
+      const startLevel = 64*64;
       const totalSupply = BigNumber.from(300);
       const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
       const totalBids = price.mul(totalSupply).shr(64).div(3);
@@ -337,25 +363,25 @@ describe("AuctionLogic", () => {
       const supplyRefund = result.supplyReturn;
       const bidPayout = result.demandReturn;
       expect(supplyRefund).to.equal(201);
-      expect(bidPayout).to.equal(49);
+      expect(bidPayout).to.equal(99);
     });
 
     it("round down bid payout", async () => {
-      const startLevel = 1770;
-      const totalSupply = BigNumber.from(1000);
+      const startLevel = 64*64;
+      const totalSupply = BigNumber.from(999);
       const price = await testAuctionLogic.testGetPriceForLevel(startLevel);
       const totalBids = price.mul(totalSupply).shr(64).div(2);
 
       const result = await testAuctionLogic.testCalcReservePayout(startLevel, totalBids, totalSupply);
       const supplyRefund = result.supplyReturn;
       const bidPayout = result.demandReturn;
-      expect(supplyRefund).to.equal(500);
-      expect(bidPayout).to.equal(328);
+      expect(supplyRefund).to.equal(501);
+      expect(bidPayout).to.equal(498);
     });
 
 
     it("zero fill", async () => {
-      const startLevel = 1760;
+      const startLevel = 64*64;
       const totalBids = BigNumber.from(0);
       const totalSupply = BigNumber.from(100);
 
