@@ -31,7 +31,7 @@ contract TokenMinter is FutaBase {
         emit FutaTokenFactorySet(factory);
     }
 
-    function setTokenSupply(uint256 supply, uint256 auctionSupply) public protocolOnly(false) {
+    function setTokenSupply(uint128 supply, uint128 auctionSupply) public protocolOnly(false) {
         tokenSupply_ = supply;
         auctionSupply_ = auctionSupply;
         require(auctionSupply_ <= supply, "Auction supply too large");

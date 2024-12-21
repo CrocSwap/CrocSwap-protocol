@@ -65,7 +65,7 @@ contract AuctionCaller is FutaBase {
     }
 
     function lockCreatorBid(address token) internal {
-        uint256 minBidSize = AuctionLogic.getMcapForLevel(auctionStartStep_, auctionSupply_); 
+        uint128 minBidSize = AuctionLogic.getMcapForLevel(auctionStartStep_, auctionSupply_); 
         bytes32 auctionKey = AuctionLogic.hashAuctionPool(token, address(0), address(this), AUCTION_INDEX);
 
         uint256 ethVal = popMsgVal();

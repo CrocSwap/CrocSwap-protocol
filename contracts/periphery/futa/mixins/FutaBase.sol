@@ -17,8 +17,8 @@ contract FutaBase is AgentMask {
     address public tokenFactory_;
     uint256 public poolIdx_;
     
-    uint256 public tokenSupply_;
-    uint256 public auctionSupply_;
+    uint128 public tokenSupply_;
+    uint128 public auctionSupply_;
 
     uint16 public protocolFee_;
     uint16 public creatorFee_;
