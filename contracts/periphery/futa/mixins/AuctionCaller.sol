@@ -13,7 +13,7 @@ import "../../../libraries/ProtocolCmd.sol";
 
 contract AuctionCaller is FutaBase {
 
-    function setAuctionSteps(uint16 auctionStepSize, uint16 auctionStartStep) public protocolOnly(false) {
+    function setAuctionSteps(uint16 auctionStartStep, uint16 auctionStepSize) public protocolOnly(false) {
         auctionStepSize_ = auctionStepSize;
         auctionStartStep_ = auctionStartStep;
     }
@@ -81,7 +81,7 @@ contract AuctionCaller is FutaBase {
     function claimCreatorBid(address token) internal {
         uint256 startBal = IERC20Minimal(token).balanceOf(address(this));
 
-        bytes memory callCmd = abi.encode(UserCmd.CLAIM_BID, token, address(0), CREATOR_BID_INDEX);
+        bytes memory callCmd = abi.encode(UserCmd.CLAIM_BID, token, address(0), AUCTION_INDEX, CREATOR_BID_INDEX);
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
 
         uint256 endBal = IERC20Minimal(token).balanceOf(address(this));
