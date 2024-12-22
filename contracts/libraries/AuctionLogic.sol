@@ -75,11 +75,12 @@ library AuctionLogic {
         return keccak256(abi.encodePacked(auctionKey, bidder, bidSalt));
     }
 
-    /* @notice Converts a level index to its corresponding price in X128.128 fixed point format
-     * @dev Each level increases price by a factor of approximately 1 + 2^(1/32), meaning prices double every 32 levels.
-     *      The base price at level 0 is 2^-128 in X128.128 format.
-     *      For levels that are multiples of 32, price is a power of 2 shift.
-     *      For other levels within a 32-step window, price is linearly interpolated using (1 + N/32).
+    /* @notice Converts a level index to its corresponding square root price in X64.64 fixed point format
+     * @dev Each level increases root price by a factor of approximately 1 + 2^(1/64), meaning 
+     *      root price doubles (price quadruples) every 64 levels.
+     *      The base root price at level 0 is 2^-128 in X128.128 format.
+     *      For levels that are multiples of 64, root price is a power of 2 shift.
+     *      For other levels within a 64-step window, price is linearly interpolated using (1 + N/64).
      * @param level The level index to get the price for
      * @return The sqrt price per token in X64.64 fixed point format */
     function getPriceForLevel(uint16 level) internal pure returns (uint128) {
@@ -103,8 +104,8 @@ library AuctionLogic {
      * @return The total market cap of the auction for that level */
     function getMcapForLevel(uint16 level, uint128 totalSupply) internal pure returns (uint128) {
         uint128 sqrtPricePerToken = getPriceForLevel(level);
-        uint256 x = (totalSupply * sqrtPricePerToken) >> 64;
-        uint y = (x * sqrtPricePerToken) >> 64;
+        uint256 x = (uint256(totalSupply) * uint256(sqrtPricePerToken)) >> 64;
+        uint256 y = (x * uint256(sqrtPricePerToken)) >> 64;
         return y.toUint128();
     }
 
