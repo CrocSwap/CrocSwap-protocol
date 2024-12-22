@@ -72,44 +72,40 @@ contract AuctionPath is AuctionHouse {
     }
 
     function claimBidCmd (bytes calldata cmd) private {
-        (, address supplyToken, address demandToken, uint256 bidId) = 
-            abi.decode(cmd, (uint8, address, address, uint256));
+        (, address supplyToken, address demandToken, uint256 auctionId, uint256 bidId) = 
+            abi.decode(cmd, (uint8, address, address, uint256, uint256));
 
-        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidId);
+        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, auctionId);
         claimBid(auctionKey, demandToken, supplyToken, bidId);
     }
 
     function cancelBidCmd (bytes calldata cmd) private {
-        (, address supplyToken, address demandToken, uint256 bidIndex) = 
-            abi.decode(cmd, (uint8, address, address, uint256));
+        (, bytes32 auctionKey, address demandToken, uint256 bidIndex) = 
+            abi.decode(cmd, (uint8, bytes32, address, uint256));
 
-        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
         cancelBid(auctionKey, demandToken, bidIndex);
     }
 
     function increaseBidCmd (bytes calldata cmd) private {
-        (, address supplyToken, address demandToken, uint256 bidIndex, uint128 deltaSize) =
-            abi.decode(cmd, (uint8, address, address, uint256, uint128));
+        (, bytes32 auctionKey, uint256 bidIndex, uint128 deltaSize) =
+            abi.decode(cmd, (uint8, bytes32, uint256, uint128));
 
-        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
         increaseBidLedger(auctionKey, bidIndex, deltaSize);
         emit AuctionBidIncrease(auctionKey, lockHolder_, bidIndex, deltaSize);
     }
 
     function modifyBidLevelCmd (bytes calldata cmd) private {
-        (, address supplyToken, address demandToken, uint256 bidIndex, uint16 newLevel) =
-            abi.decode(cmd, (uint8, address, address, uint256, uint16));
+        (, bytes32 auctionKey, uint256 bidIndex, uint16 newLevel) =
+            abi.decode(cmd, (uint8, bytes32, uint256, uint16));
 
-        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
         modifyBidLevelLedger(auctionKey, bidIndex, newLevel);
         emit AuctionBidLevelModify(auctionKey, lockHolder_, bidIndex, newLevel);
     }
 
     function modifyAndIncreaseBidCmd (bytes calldata cmd) private {
-        (, address supplyToken, address demandToken, uint256 bidIndex, uint16 newLevel, uint128 deltaSize) =
-            abi.decode(cmd, (uint8, address, address, uint256, uint16, uint128));
+        (, bytes32 auctionKey, uint256 bidIndex, uint16 newLevel, uint128 deltaSize) =
+            abi.decode(cmd, (uint8, bytes32 , uint256, uint16, uint128));
 
-        bytes32 auctionKey = AuctionLogic.hashAuctionPool(supplyToken, demandToken, lockHolder_, bidIndex);
         modifyBidLevelLedger(auctionKey, bidIndex, newLevel);
         increaseBidLedger(auctionKey, bidIndex, deltaSize);
     }
