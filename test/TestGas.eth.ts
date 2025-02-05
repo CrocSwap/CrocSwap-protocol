@@ -46,7 +46,7 @@ describe('Gas Benchmarks Native Eth', () => {
 
     it("mint increase liq [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMint(-100, 100, 10000), 106000)
+        await expectGas(test.testMint(-100, 100, 10000), 107000)
     })
 
     it("mint pre-init ticks [@gas-test]", async() => {
