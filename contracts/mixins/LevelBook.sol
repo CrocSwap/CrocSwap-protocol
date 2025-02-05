@@ -62,9 +62,7 @@ contract LevelBook is TickCensus {
         
         liqDelta = isBuy ? crossDelta : -crossDelta;
 
-        if (feeGlobal != lvl.feeOdometer_) {
-            lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
-        }                
+        lvl.feeOdometer_ = feeGlobal - lvl.feeOdometer_;
 
         knockoutFlag = isBuy ?
             lvl.askLots_.hasKnockoutLiq() :
