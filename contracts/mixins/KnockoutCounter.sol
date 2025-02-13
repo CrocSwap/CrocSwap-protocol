@@ -282,6 +282,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         private returns (uint96 lots, uint64 feeRewards) {
         bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
+        assertJitSafe(pos.timestamp_, pool);
 
         lots = pos.lots_;
         if (feeRange > 0) {
