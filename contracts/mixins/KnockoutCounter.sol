@@ -174,6 +174,16 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
 
     /* @notice Claims the collateral and rewards for a position that has been fully 
      *         knocked out. (I.e. is no longer active because knockout tick was crossed)
+     *
+     * @dev Note that this relies on the user calculating a Merkle proof before submitting the
+     *      the transaction. There is the possibility in a very active market that the pivot could
+     *      could be knocked out again with a new cohort before the transaction lands, and therefore
+     *      the Merkle proof would be no longer valid. It is unlikely to ever be economically rational
+     *      because of the cost, but a very active attacker could even use this functionality to
+     *      to try to deny a user's ability to claim their post-knockout liquidity position. This
+     *      limitation does not apply to recoverPostKnockout() though (see below). Therefore all
+     *      users, particularly external protocols, that use knockout liquidity should support a fallback
+     *      to recocerPostKnockout() for this possibility.
      * 
      * @param pool The cursor for the pool knockout liquidity is being added to.
      * @param loc       The position on the curve the knockout liquidity is being claimed
@@ -200,7 +210,12 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *         all claims to the accumulated rewards.
      *
      * @dev    This might be used when the calldata cost of the Merkle proof exceeds
-     *         the value of the accumulated rewards.
+     *         the value of the accumulated rewards. This function also provides a backup
+     *         in a possible scenario where a malicious attacker is trying to deny a user's
+     *         ability to claim their knocked out position by repeatedly updating the Merkle
+     *         root. Because this isn't dependent on the Merkle proof, the user can always
+     *         recover the capital in a knocked position (by forfeiting the accumulated rewards), 
+     *         even in a highly adversarial environment. 
      *
      * @param pool The cursor for the pool knockout liquidity is being added to.
      * @param loc       The position on the curve the knockout liquidity is being claimed
