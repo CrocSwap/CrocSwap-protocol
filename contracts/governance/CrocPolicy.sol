@@ -244,14 +244,13 @@ contract CrocPolicy is ICrocMaster {
         emit CrocPolicyForce(conduit, proxyPath, policy);
     }
 
-    /* @notice Called by emergency authority to set or update a new policy rules. Only
-     *         difference with setPolicy is this can revoke policies even inside the 
-     *         mandate time. As such this should only be called in unusual circumstances.
+    /* @notice Called by emergency authority to remove and reset policy rule. Unlike with setPolicy 
+     *         this can be called inside the mandate time (but only to delete a policy). 
+     *         As such this should only be called in unusual circumstances.
      *
      * @param conduit The address of the conduit oracle this policy rule applies to.
      * @param proxyPath The proxy sidecar index the policy calls
-     * @param policy  The content of the updated policy rule. This will fully overwrite
-     *                the previous policy rule. */
+     * @param reason Arbitrary comment for why the policy was reset */
     function emergencyReset (address conduit, uint16 proxyPath,
                              string calldata reason) emergencyAuth public {
         bytes32 key = rulesKey(conduit, proxyPath);

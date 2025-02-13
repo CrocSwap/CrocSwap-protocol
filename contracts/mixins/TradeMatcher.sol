@@ -332,7 +332,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     }
     
     /* @notice Converts the unsigned flow associated with a mint operation to a pair
-     *         net settlement flow. (Will always be positive because a mint requires use
+     *         net settlement flow. (Will always be positive because a mint requires the user
      *         to pay collateral to the pool.) */
     function signMintFlow (uint128 base, uint128 quote) private pure
         returns (int128, int128) {
@@ -340,8 +340,8 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
     }
 
     /* @notice Converts the unsigned flow associated with a burn operation to a pair
-     *         net settlement flow. (Will always be negative because a burn requires use
-     *         to pay collateral to the pool.) */
+     *         net settlement flow. (Will always be negative because a burn pays the user
+     *         collateral from the pool.) */
     function signBurnFlow (uint128 base, uint128 quote) private pure
         returns (int128, int128){
         return (-(base.toInt128Sign()), -(quote.toInt128Sign()));

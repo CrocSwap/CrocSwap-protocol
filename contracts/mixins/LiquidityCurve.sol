@@ -180,7 +180,7 @@ contract LiquidityCurve is StorageLayout {
      *
      * @param curve The liquidity curve object that ambient liquidity will be 
      *              removed from.
-     * @param seeds The number of ambient seeds being added. Note that this is 
+     * @param seeds The number of ambient seeds being removed. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) 

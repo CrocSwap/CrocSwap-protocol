@@ -340,7 +340,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *         already knocked out, do not use this function.
      * @param pool The pool the knockout liquidity applies to.
      * @param loc The context/location of the newly minted knockout liquidity.
-     * @param liq The amount of liquidity being minted to the position.
+     * @param liq The amount of liquidity being removted from the position.
      * @return bookLiq The amount of liquidity that shoudl be removed from the book. 
      *                 This amount could possibly be different than liq, so it's very 
      *                 important that this value is used to adjust the AMM curve. 
