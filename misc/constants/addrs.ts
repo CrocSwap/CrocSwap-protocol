@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import { CrocAddrs, emptryGovAddrs } from "../types/addrs"
+import { CrocAddrs, emptryGovAddrs, emptyAddrs } from "../types/addrs"
 
 // Mock used in local forks
 const mockAddrs: CrocAddrs = {
@@ -257,6 +257,33 @@ const baseSepolia: CrocAddrs = {
   swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483'
 }
 
+const monadTestnet: CrocAddrs = {
+  dex: '0x88B96aF200c8a9c35442C8AC6cd3D22695AaE4F0',
+  cold: '0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C',
+  warm: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+  long: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  micro: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  hot: '0xFe14B967666D998Eb062166Ba8B1524Bb8D25AF6',
+  knockout: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+  koCross: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+  policy: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
+  query: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+  impact: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+  shell: '',
+  policyShell: '',
+  deployer: '0x44d74f8808F2BD4DB026b13125e69e12a356bc59',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+  swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483'
+}
+
 
 export let CROC_ADDRS = {
     '0x1': mainnetAddrs,
@@ -268,6 +295,7 @@ export let CROC_ADDRS = {
     '0x784': swellTestnet,
     '0x14a34': baseSepolia,
     '0x6435': swellMainnet,
+    '0x279f': monadTestnet,
     'mock': mockAddrs,
 }
 
@@ -280,7 +308,8 @@ export let POOL_IDXS = {
     '0x80D': 36000,
     '0x784': 36000,
     '0x14a34': 36000,
-    '0x6435': 420
+    '0x6435': 420,
+    '0x279f': 36000,
 }
 
 export const BOOT_PROXY_IDX = 0;

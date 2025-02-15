@@ -10,5 +10,6 @@ export const RPC_URLS = {
     '0x80D': 'https://rpc.berachain-internal.com/',
     '0x784': 'https://swell-testnet.alt.technology',
     '0x14a34': 'https://sepolia.base.org',
-    '0x6435': 'https://swell-mainnet.alt.technology'
+    '0x6435': 'https://swell-mainnet.alt.technology',
+    '0x279f': 'https://testnet-rpc2.monad.xyz/52227f026fa8fac9e2014c58fbf5643369b3bfc6'
 }
