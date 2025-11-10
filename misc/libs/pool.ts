@@ -115,7 +115,7 @@ export function blastClaimUSDBMainnet (recv: string, qty: number): CrocProtocolC
 }
 
 export function blastClaimEthMainnet (recv: string, qty: number): CrocProtocolCmd {
-    let wei = BigNumber.from(qty).mul(BigNumber.from(10).pow(18))
+    let wei = BigNumber.from(qty * 1000).mul(BigNumber.from(10).pow(18 - 3))
     let abiCoder = new AbiCoder()
     return {
         callpath: BLAST_PROXY_PATH,
