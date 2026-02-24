@@ -34,8 +34,8 @@ contract AuctionCaller is FutaBase {
         auctionCreators_[token] = lockHolder_;
 
         uint256 endTime = block.timestamp + auctionDuration_;
-        bytes memory callCmd = abi.encode(UserCmd.INIT_AUCTION, token, address(0), AUCTION_INDEX, 
-            endTime, auctionSupply, auctionStepSize_, auctionStartStep_);
+        bytes memory callCmd = abi.encode(UserCmd.INIT_AUCTION, token, address(0), AUCTION_INDEX,
+            endTime, auctionSupply, auctionStartStep_, auctionStepSize_);
 
         CrocSwapDex(auctionDex_).userCmd(CrocSlots.AUCTION_PROXY_PATH, callCmd);
     }
@@ -87,6 +87,6 @@ contract AuctionCaller is FutaBase {
         uint256 endBal = IERC20Minimal(token).balanceOf(address(this));
         
         address creator = auctionCreators_[token];
-        TransferHelper.safeTransfer(creator, msg.sender, endBal - startBal);
+        TransferHelper.safeTransfer(token, creator, endBal - startBal);
     }
 }
