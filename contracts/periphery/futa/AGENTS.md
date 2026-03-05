@@ -248,8 +248,9 @@ These are arbitrary unique values that prevent collision with manually-placed bi
 Tests live in the **parent repo**, not in this directory:
 
 ```
-test/TestAuctionLogic.ts   — Unit tests for AuctionLogic math (price levels, pro-rata, clearing)
+test/TestAuctionLogic.ts    — Unit tests for AuctionLogic math (price levels, pro-rata, clearing)
 test/TestAuctionLedger.ts  — Integration tests for AuctionHouse ledger (bid/cancel/claim/refund flows)
+test/TestFutaLauncher.ts   — Regression tests for FutaLauncher (auction param ordering, creator bid transfer)
 ```
 
 Run with Hardhat from the repo root:
@@ -278,28 +279,6 @@ futa.setTokenSupply(69 × 10^27, 138 × 10^26)                  // 69B total, 13
 ---
 
 ## Known Issues / Open Questions
-
-### Bug: `claimCreatorBid` transfers to wrong address
-In `AuctionCaller.sol:90`:
-```solidity
-TransferHelper.safeTransfer(creator, msg.sender, endBal - startBal);
-```
-`TransferHelper.safeTransfer` signature is `(token, to, amount)`. Here `creator` is being passed as the token address and `msg.sender` as the recipient, which is incorrect. It should be:
-```solidity
-TransferHelper.safeTransfer(token, creator, endBal - startBal);
-```
-This means **creator tokens from the opening bid are currently not transferred correctly**.
-
-### Potential confusion: `auctionStepSize_` / `auctionStartStep_` parameter order
-In `AuctionCaller.initiateAuctionETH`, the encode call is:
-```solidity
-abi.encode(..., auctionStepSize_, auctionStartStep_)
-```
-But `AuctionPath.initAuctionCmd` decodes the same positions as:
-```solidity
-..., uint16 startLevel, uint16 stepSize
-```
-Meaning `auctionStepSize_` maps to `startLevel` and `auctionStartStep_` maps to `stepSize`. Verify against the intended behavior before changing auction step configuration.
 
 ### `creatorFee_` not set
 `creatorFee_` in FutaBase has no setter and is never initialized. It defaults to 0, meaning creators receive no ETH cut from auction proceeds. This is a placeholder for future functionality.
