@@ -78,8 +78,9 @@ module.exports = {
       },
 
       scroll: {
-        url: "https://rpc.scroll.io",
+        url: process.env.SCROLL_RPC_URL || "https://rpc.scroll.io",
         chainId: 534352,
+        accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       },
 
       beraTestnet: {
