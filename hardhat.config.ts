@@ -57,8 +57,9 @@ module.exports = {
         accounts: ["0x7c5e2cfbba7b00ba95e5ed7cd80566021da709442e147ad3e08f23f5044a3d5a"]      
       },
       mainnet: {
-        url: 'https://mainnet.infura.io/v3/360ea5fda45b4a22883de8522ebd639e',
-        chainId: 1
+        url: process.env.MAINNET_RPC_URL || 'https://mainnet.infura.io/v3/360ea5fda45b4a22883de8522ebd639e',
+        chainId: 1,
+        accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
       },
 
 
@@ -67,5 +68,11 @@ module.exports = {
         chainId: 43113,
       },
 
+    },
+
+    etherscan: {
+      apiKey: {
+        mainnet: process.env.ETHERSCAN_API_KEY || ""
+      }
     }
 };
