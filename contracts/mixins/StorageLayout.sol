@@ -42,8 +42,9 @@ contract StorageLayout {
 
     bool internal msgValSpent_;
 
-    // If set to false, then the embedded hot-path (swap()) is not enabled and
-    // users must use the hot proxy for the hot-path. By default set to true.
+    // This variable has no effect in the current codebase but is kept for legacy
+    // compatibility with previous proxy contracts. Do *not* remove, or storage slot
+    // layout for everything past this point will be shifted and break all functionality
     bool internal hotPathOpen_;
     
     bool internal inSafeMode_;

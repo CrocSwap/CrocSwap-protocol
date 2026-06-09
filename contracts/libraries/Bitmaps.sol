@@ -187,7 +187,7 @@ library Bitmaps {
      *   infinity range. We have to reserve these bits as non-standard range for when
      *   price shifts past the last representable tick.
      * @param tick The tick index value being tested
-     * @return True if the tick index represents a positive or negative infinity. */
+     * @return False if the tick index represents a positive or negative infinity. */
     function isTickFinite (int24 tick) internal pure returns (bool) {
         return tick > type(int24).min &&
             tick < type(int24).max;
