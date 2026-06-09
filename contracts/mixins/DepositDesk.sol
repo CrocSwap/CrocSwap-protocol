@@ -46,7 +46,8 @@ contract DepositDesk is SettleLayer {
     function depositSurplusPermit (address recv, uint128 value, address token,
                                    uint256 deadline, uint8 v, bytes32 r, bytes32 s)
         internal {
-        IERC20Permit(token).permit(recv, address(this), value, deadline, v, r, s);
+        try IERC20Permit(token).permit(recv, address(this), value, deadline, v, r, s) {}
+		catch {}
         depositSurplus(recv, value, token);
     }
 
