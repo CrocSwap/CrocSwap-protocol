@@ -42,9 +42,12 @@ contract StorageLayout {
 
     bool internal msgValSpent_;
 
-    // This variable has no effect in the current codebase but is kept for legacy
-    // compatibility with previous proxy contracts. Do *not* remove, or storage slot
-    // layout for everything past this point will be shifted and break all functionality
+    // Gates the embedded hot-path swap() compiled directly into the immutable
+    // CrocSwapDex contract (see require() in CrocSwapDex.swap()). *Must* remain false
+    // on mainnet: the embedded path predates the Feb 2024/2025 swap and rewards
+    // patches and can never be upgraded. While false, all swaps route through the
+    // upgradeable proxy paths. Do *not* remove this variable, or storage slot layout
+    // for everything past this point will be shifted and break all functionality.
     bool internal hotPathOpen_;
     
     bool internal inSafeMode_;
