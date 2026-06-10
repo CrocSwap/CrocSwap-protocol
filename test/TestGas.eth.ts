@@ -131,7 +131,7 @@ describe('Gas Benchmarks Native Eth', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 101000)
+        await expectGas(test.testBurn(-100, 100, 100), 102000)
     })
 
     it("harvest fees [@gas-test]", async() => {

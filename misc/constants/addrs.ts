@@ -1,63 +1,5 @@
-import { ethers } from "hardhat"
-
-// Convention is to use empty string for pre-deployed contract
-export interface CrocAddrs {
-    dex: string,
-    cold: string,
-    warm: string,
-    long: string,
-    micro: string,
-    hot: string,
-    knockout: string,
-    koCross: string,
-    policy: string,
-    blast?: string,
-    blastPointsOps?: string
-    query: string,
-    impact: string,
-    shell: string,
-    swapRouter?: string,
-    swapBypass?: string,
-    policyShell: string,
-    deployer: string,
-    govern: CrocGovAddrs,
-}
-
-export interface CrocGovAddrs {
-    multisigTreasury: string,
-    multisigOps: string,
-    multisigEmergency: string,
-    timelockTreasury: string,
-    timelockOps: string,
-    timelockEmergency: string,
-}
-
-const emptryGovAddrs: CrocGovAddrs = {
-    multisigTreasury: "",
-    multisigOps: "",
-    multisigEmergency: "",
-    timelockTreasury: "",
-    timelockOps: "",
-    timelockEmergency: "",
-}
-
-const emptyAddrs: CrocAddrs = {
-    dex: "",
-    cold: "",
-    warm: "",
-    long: "",
-    micro: "",
-    hot: "",
-    knockout: "",
-    koCross: "",
-    policy: "",
-    query: "",
-    impact: "",
-    shell: "",
-    policyShell: "",
-    deployer: "",
-    govern: emptryGovAddrs
-}
+import { ethers } from "ethers"
+import { CrocAddrs, emptryGovAddrs } from "../types/addrs"
 
 // Mock used in local forks
 const mockAddrs: CrocAddrs = {
@@ -128,28 +70,6 @@ const mantleTestAddrs: CrocAddrs = {
       timelockEmergency: ''
     }
   }
-  
-  
-
-
-// Goerli
-/* const goerliAddrs: CrocAddrs = {
-    dex: "0xfafcd1f5530827e7398b6d3c509f450b1b24a209",
-    cold: "0xb2ae163293c82dcf36b0ce704591edc2f9e2608d",
-    warm: "0x01B180D35125D31B4057d9ac7F46687dA1cAEFab",
-    long: "0x66d34e1486d0bad1a8ced5a8505a73d0cfd41a0a",
-    micro: "0x323172539b1b0d9eddffbd0318c4d6ab45292843",
-    hot: "0x141e224f461a85006b2ef051a7c1c290e449202a",
-    knockout: "0x806859d4C974F9dCBB5f77e027062a02fC965987",
-    koCross: "0xa7b87362b5b86f696a8027b409c20dba094744e2",
-    policy: "0xaa391ee82f0c6b406e98ccd76d637cac2f712228",
-    query: "0x93a4baFDd49dB0e06f3F3f9FddC1A67792F47518", 
-    impact: "0x142BE02F2A3A27ecD6e2f18a43c2C234F372C831",
-    shell: "0xdf2a97ae85e8ce33ad20ad2d3960fd92e8079861",
-    policyShell: "",
-    deployer: "",
-    govern: emptryGovAddrs
-}*/ 
 
 const goerliAddrsDryRun: CrocAddrs = {
     dex: '0xAaAaAAAaA24eEeb8d57D431224f73832bC34f688',
@@ -255,6 +175,89 @@ const beraTestnet: CrocAddrs = {
   }
 }
 
+const swellTestnet: CrocAddrs = {
+  dex: '0x4c722A53Cf9EB5373c655E1dD2dA95AcC10152D1',
+  cold: '0xE8a5ca1e74cb443D929f08eb37cF1B3B8480c18C',
+  warm: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+  long: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  micro: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  hot: '0xFe14B967666D998Eb062166Ba8B1524Bb8D25AF6',
+  knockout: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+  koCross: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+  policy: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
+  query: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+  impact: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+  shell: '',
+  policyShell: '',
+  deployer: '0x44d74f8808F2BD4DB026b13125e69e12a356bc59',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+  swapBypass: '0x3d7baE85731D056889383b5765C37530deAA98A2'
+}
+
+const swellMainnet: CrocAddrs = {
+  dex: '0xaAAaAaaa82812F0a1f274016514ba2cA933bF24D',
+  cold: '0xB5056C2F905B4155F726AEA0DFE8BAb3C023254d',
+  warm: '0x6A699AB45ADce02891E6115b81Dfb46CAa5efDb9',
+  long: '0xc2c301759B5e0C385a38e678014868A33E2F3ae3',
+  micro: '0xA3BD3bE19012De72190c885FB270beb93e36a8A7',
+  hot: '0x646929453E753565467f330110850885eAd93fA9',
+  knockout: '0xC58f7a96a3A8E82DA0747A6E1411c3A531220066',
+  koCross: '0x62223e90605845Cf5CC6DAE6E0de4CDA130d6DDf',
+  policy: '0x79Cf6E6aF136B04C145f330509AD547b0D7eF6e9',
+  query: '0xaab17419F062bB28CdBE82f9FC05E7C47C3F6194',
+  impact: '0xd83eF4d0e968A96329aC297bBf049CDdaC7E0362',
+  shell: '',
+  policyShell: '',
+  deployer: '0x754EEF5862082607184e7A3aB08CEA76EF928285',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x983a06261aE018FEFA16e1E95c7fda13a2eB1038',
+  swapBypass: '0x471232BCB9ed0eBcDA395C2266AEabC1B8031B68'
+}
+
+
+const baseSepolia: CrocAddrs = {
+  dex: '0xD553d97EfD5faAB29Dc92CC87d5259ff59278176',
+  cold: '0xE6e4F50aA165fAB319FfE50E10e68a02Ef333d44',
+  warm: '0x1C74Dd2DF010657510715244DA10ba19D1F3D2B7',
+  long: '0xc994A50f1421fb9AC86d3E1B9Cf271716698DC40',
+  micro: '0xd145c11C5d3D6b7B2422322CA7618fB6772Ac964',
+  hot: '0x69141De9cBC21148cE83dd1d6176aDa1227417F3',
+  knockout: '0xac0FC52fE3aB647328e4B0Af90De5a54c6825F5c',
+  koCross: '0x9092733d53d5ACa5B8A7245bb7e3765a2d1d2826',
+  policy: '0xE5B0b009e3aF251933A66E0B3BA9a25FeA0a4f89',
+  query: '0x70a6a0C905af5737aD73Ceba4e6158e995031d4B',
+  impact: '0x3108E20b0Da8b267DaA13f538964940C6eBaCCB2',
+  shell: '',
+  policyShell: '',
+  deployer: '0x4DB1A112aF2EB7e50F1ebd05f717456DD3bA0005',
+  govern: {
+    multisigTreasury: '',
+    multisigOps: '',
+    multisigEmergency: '',
+    timelockTreasury: '',
+    timelockOps: '',
+    timelockEmergency: ''
+  },
+  swapRouter: '0x3d7baE85731D056889383b5765C37530deAA98A2',
+  swapBypass: '0x8415bFC3b1ff76B804Ab8a6810a1810f9df32483'
+}
+
+
 const blastSepolia: CrocAddrs = {
   dex: '0xf65976C7f25b6320c7CD81b1db10cEe97F2bb7AC',
   cold: '0x568eA644AB4F4a6A310C748c424f50B831338CAE',
@@ -320,18 +323,12 @@ export let CROC_ADDRS = {
     '0x8274f': scrollSepolia,
     '0x82750': scrollMainnet,
     '0x80D': beraTestnet,
+    '0x784': swellTestnet,
+    '0x14a34': baseSepolia,
+    '0x6435': swellMainnet,
     '0xa0c71fd': blastSepolia,
     '0x13e31': blastMainnet,
     'mock': mockAddrs,
-}
-
-// Goerli
-export let TOKEN_ADDRS = {
-    '0x5': {
-        eth: ethers.constants.AddressZero,
-        dai: "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
-        usdc: "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C"
-    }
 }
 
 export let POOL_IDXS = {
@@ -341,6 +338,9 @@ export let POOL_IDXS = {
     '0x8274f': 36000,
     '0x82750': 420,
     '0x80D': 36000,
+    '0x784': 36000,
+    '0x14a34': 36000,
+    '0x6435': 420
     '0xa0c71fd': 36000,
 }
 

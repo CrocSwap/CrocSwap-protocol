@@ -148,13 +148,13 @@ contract LiquidityCurve is StorageLayout {
                            CurveMath.CurveState memory curve,
                            uint128 liquidity, uint64 rewardRate)
         internal pure returns (uint128, uint128) {
-        if (rewardRate > 0) {
+        if (rewardRate > 0 && rewardRate <= curve.concGrowth_) {
             // Round down reward sees on payout, in contrast to rounding them up on
             // incremental accumulation (see CurveAssimilate.sol). This mathematicaly
             // guarantees that we never try to burn more tokens than exist on the curve.
-            uint128 rewards = FixedPoint.mulQ48(liquidity, rewardRate).toUint128By144();
+            uint128 rewards = FixedPoint.mulQ48(liquidity, rewardRate).toUint128By144();   
             
-            if (rewards > 0) {
+            if (rewards > 0 && rewards < curve.ambientSeeds_) {
                 (uint128 baseRewards, uint128 quoteRewards) =
                     liquidityPayable(curve, rewards);
                 base += baseRewards;
@@ -180,7 +180,7 @@ contract LiquidityCurve is StorageLayout {
      *
      * @param curve The liquidity curve object that ambient liquidity will be 
      *              removed from.
-     * @param seeds The number of ambient seeds being added. Note that this is 
+     * @param seeds The number of ambient seeds being removed. Note that this is 
      *              denominated as seeds *not* liquidity. The amount of liquidity
      *              contributed will be based on the current seed->liquidity conversion
      *              rate on the curve. (See CurveMath.sol.) 

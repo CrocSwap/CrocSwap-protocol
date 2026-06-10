@@ -141,3 +141,38 @@ export function blastClaimGasMainnet (recv: string, qtyEth: number): CrocProtoco
         [179, BLAST_YIELD_MAINNET, recv, 0, weiToClaim, gasSeconds])
     }
 }
+export function poolStdReviseCmd (base: string, quote: string, 
+    params: CrocPoolParams): CrocProtocolCmd {
+    const abi = new AbiCoder()
+
+    const feeArgs = params.stdPoolParams.feeBps * 100
+    const jitThresh = params.stdPoolParams.jitThresh / 10
+
+    if (jitThresh != Math.floor(jitThresh)) {
+        throw new Error("JIT Thresh must be multiple of 10")
+    }
+
+    let knockoutFlag = 0
+    if (params.stdPoolParams.knockoutOn) {
+        const KNOCKOUT_ON_FLAG = 32
+
+
+        const ticks2Pow = Math.log(params.stdPoolParams.tickSize) / Math.log(2)
+        if (ticks2Pow != Math.floor(ticks2Pow) || ticks2Pow > 15) {
+            throw new Error("Tick size must be power of 2 and within 2^15");
+        }
+
+        knockoutFlag = KNOCKOUT_ON_FLAG + ticks2Pow
+    }
+
+    const templCmd = abi.encode(
+        ["uint8", "address", "address", "uint256", "uint16", "uint8", "uint8", "uint8"],
+        [111, base, quote, params.stdPoolIdx, feeArgs, params.stdPoolParams.tickSize, 
+            jitThresh, knockoutFlag])
+
+    return {
+        protocolCmd: templCmd,
+        callpath: COLD_PROXY_IDX,
+        sudo: false
+    }
+}

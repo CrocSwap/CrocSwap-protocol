@@ -98,7 +98,7 @@ describe('Gas Benchmarks', () => {
 
     it("burn outside [@gas-test]", async() => {
         await test.testMint(-200, -100, 100)
-        await expectGas(test.testBurn(-200, -100, 100), 88000)
+        await expectGas(test.testBurn(-200, -100, 100), 89000)
     })
 
     it("burn outside left [@gas-test]", async() => {
@@ -130,7 +130,7 @@ describe('Gas Benchmarks', () => {
         await test.testMint(-100, 100, 100)
         await test.testMintOther(-100, 100, 1000)
         await test.testSwapOther(true, true, 1000000, toSqrtPrice(1.1))
-        await expectGas(test.testBurn(-100, 100, 100), 110000)
+        await expectGas(test.testBurn(-100, 100, 100), 111000)
     })
 
     it("harvest fees [@gas-test]", async() => {

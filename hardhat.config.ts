@@ -10,6 +10,32 @@ import "@nomicfoundation/hardhat-verify";
 require("hardhat-storage-layout");
 require('solidity-coverage')
 
+// Workaround for a test-harness bug in the revert matchers: hardhat attaches a
+// `stackTrace` to SolidityError whose source-file graph is circular
+// (file -> contracts -> location -> file). ethers v5's JSON-RPC error spelunker
+// enumerates error properties recursively with no cycle detection, so any
+// reason-less revert on an eth_call blows the JS stack (RangeError) before the
+// chai revert matchers can classify it -- and the resulting unhandled rejection
+// aborts mocha mid-suite. Hiding the property from enumeration at the
+// hardhat->ethers boundary keeps the stack trace available to debuggers while
+// keeping the spelunker out of the cycle.
+const { EthersProviderWrapper } = require("@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper");
+const wrappedSend = EthersProviderWrapper.prototype.send;
+EthersProviderWrapper.prototype.send = async function (method: string, params?: any[]) {
+    try {
+        return await wrappedSend.call(this, method, params);
+    } catch (err) {
+        if (err !== null && typeof err === "object"
+            && Object.prototype.propertyIsEnumerable.call(err, "stackTrace")) {
+            Object.defineProperty(err, "stackTrace", {
+                value: (err as any).stackTrace,
+                enumerable: false, writable: true, configurable: true
+            });
+        }
+        throw err;
+    }
+};
+
 module.exports = {
     solidity: {
       compilers: [{
@@ -78,8 +104,9 @@ module.exports = {
       },
 
       scroll: {
-        url: "https://rpc.scroll.io",
+        url: process.env.SCROLL_RPC_URL || "https://rpc.scroll.io",
         chainId: 534352,
+        accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       },
 
       beraTestnet: {
@@ -95,6 +122,11 @@ module.exports = {
       blast: {
         url: "https://rpc.ankr.com/blast",
         chainId: 81457,
+      },
+
+      swell: {
+        url: "https://swell-mainnet.alt.technology",
+        chainId: 1923
       }
     },
 
@@ -103,7 +135,8 @@ module.exports = {
         scroll: "QYYYEVDHH56KXRW8DNCF6S1AYS9RTRZ1HF",
         beraTestnet: "xxxxx",
         blastSepolia: "xxxxx",
-        blast: "YJ2H4UVVK2Q783PVB2SJYN38D5D6HXE5BY"
+        blast: "YJ2H4UVVK2Q783PVB2SJYN38D5D6HXE5BY",
+        swell: "xxxxx"
       },
       customChains: [
         {
@@ -140,7 +173,17 @@ module.exports = {
             apiURL: "https://api.blastscan.io/api",
             browserURL: "https://blastscan.io"
           }
-        }
+        },
+
+        {
+          network: "swell",
+          chainId: 1923,
+          urls: {
+            apiURL: "https://explorer.swellnetwork.io/api",
+            browserURL: "https://explorer.swellnetwork.io"
+          }
+        },
+
       ]
     }
 };

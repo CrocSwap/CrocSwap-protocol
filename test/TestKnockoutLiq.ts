@@ -171,6 +171,20 @@ describe('Knockout Liquidity', () => {
       await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -10000, params)).to.be.reverted
    })
 
+   it("assert outside boundary", async() => {
+      let width = 10
+      let enabled = 1
+      let params = enabled * 16 + width
+
+      // Outside position
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10240+1024, params)).to.not.be.reverted
+      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10240-1, params)).to.not.be.reverted
+
+      // Inside position
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10240+1024-1, params)).to.be.reverted
+      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10240, params)).to.be.reverted
+   })
+
    it("assert inside", async() => {
       let width = 10
       let enabled = 2
@@ -188,4 +202,21 @@ describe('Knockout Liquidity', () => {
       await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10600, params)).to.not.be.reverted
       await expect(knockout.testAssertValid(false, -10240, -10240 + 1024, -10000, params)).to.not.be.reverted
    })
+
+   it("assert outside boundary", async() => {
+      let width = 10
+      let enabled = 2
+      let params = enabled * 16 + width
+
+      // Outside position
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10240+1024, params)).to.not.be.reverted
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10240, params)).to.not.be.reverted
+      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10240-1, params)).to.not.be.reverted
+      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10240 + 1024 - 1, params)).to.not.be.reverted
+
+      // Inside position
+      await expect(knockout.testAssertValid(true, 10240, 10240 + 1024, 10240 - 1, params)).to.be.reverted
+      await expect(knockout.testAssertValid(false, 10240, 10240 + 1024, 10240 + 1024, params)).to.be.reverted
+   })
+
 })

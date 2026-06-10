@@ -13,3 +13,6 @@ tenderly.yaml
 coverage.json
 coverage/
 layout.*.json
+.vscode/
+.vscode/
+work/
