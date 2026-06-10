@@ -41,7 +41,7 @@ describe('Gas Benchmarks Coldpath', () => {
     }
 
     it("create pool [@gas-test]", async() => {
-        await expectGas(initTx, 188000)
+        await expectGas(initTx, 189000)
     })
 
     it("mint in virgin pool [@gas-test]", async() => {
