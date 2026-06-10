@@ -3,27 +3,52 @@
  * before broadcasting; the submitting wallet only pays gas and does not need
  * to be an owner.
  *
- * env: CHAIN_ID, WALLET_KEY (any funded key),
+ * env: CHAIN_ID,
+ *      WALLET_KEY (any funded key; optional when PRINT_ONLY is set),
  *      SAFE_TO, SAFE_DATA (identical to what was signed),
- *      SAFE_SIGS (comma-separated 65-byte signatures from signSafeTx.ts),
+ *      SAFE_SIGS (comma-separated 65-byte signatures from signSafeTx.ts,
+ *          and/or "approved:0x<owner>" entries for the approveHash flow),
+ *      optional PRINT_ONLY (validate and print execTransaction fields for
+ *          submission through an explorer's Write-as-Proxy UI),
  *      optional SAFE_ADDR (default: treasury multisig from addrs.ts),
  *      optional SAFE_NONCE (must match what was signed if the Safe nonce
- *      has moved since). */
+ *      has moved since).
+ *
+ * NOTE: env vars must reach the child process -- either `export` them or
+ * prefix them on the same command line as `npx hardhat run`. */
 
-import { BigNumber, Contract } from 'ethers';
-import { initChain } from '../../libs/chain';
+import { BigNumber, Contract, Wallet, ethers } from 'ethers';
+import { initProvider } from '../../libs/chain';
 import { SAFE_ABI, buildSafeTx, packSignatures, safeTxDigest } from '../../libs/safe';
 
-async function exec() {
-    let { addrs, chainId, wallet } = initChain()
+const USAGE = `usage:
+  CHAIN_ID=0x13e31 \\
+  SAFE_TO=0x<target> SAFE_DATA=0x<calldata> \\
+  SAFE_SIGS="approved:0x<ownerA>,approved:0x<ownerB>" \\
+  [WALLET_KEY=0x<funded key> | PRINT_ONLY=1] \\
+  npx hardhat run misc/scripts/safe/execSafeTx.ts`
 
-    const to = process.env.SAFE_TO as string
-    const data = process.env.SAFE_DATA as string
-    const sigsRaw = process.env.SAFE_SIGS as string
-    if (!to || !data || !sigsRaw) { throw new Error("Set SAFE_TO, SAFE_DATA and SAFE_SIGS") }
+function requireEnv (name: string): string {
+    const val = process.env[name]
+    if (!val) { throw new Error(`Missing env var ${name}\n${USAGE}`) }
+    return val
+}
+
+async function exec() {
+    requireEnv("CHAIN_ID")
+    const to = requireEnv("SAFE_TO")
+    const data = requireEnv("SAFE_DATA")
+    const sigsRaw = requireEnv("SAFE_SIGS")
+    if (!process.env.WALLET_KEY && !process.env.PRINT_ONLY) {
+        throw new Error(`Set WALLET_KEY (to broadcast) or PRINT_ONLY=1 (to print calldata)\n${USAGE}`)
+    }
+
+    let { addrs, chainId, provider } = initProvider()
+    const wallet: Wallet | null = process.env.WALLET_KEY ?
+        new ethers.Wallet(process.env.WALLET_KEY.toLowerCase(), provider) : null
 
     const safeAddr = process.env.SAFE_ADDR || addrs.govern.multisigTreasury
-    const safe = new Contract(safeAddr, SAFE_ABI, wallet)
+    const safe = new Contract(safeAddr, SAFE_ABI, wallet ? wallet : provider)
 
     const nonce = process.env.SAFE_NONCE !== undefined ?
         BigNumber.from(process.env.SAFE_NONCE) : await safe.nonce()
@@ -51,7 +76,7 @@ async function exec() {
     for (const entry of sigs) {
         if (entry.toLowerCase().startsWith("approved:")) {
             const owner = entry.slice("approved:".length)
-            if (owner.toLowerCase() === wallet.address.toLowerCase()) { continue }
+            if (wallet && owner.toLowerCase() === wallet.address.toLowerCase()) { continue }
             const approved: BigNumber = await safe.approvedHashes(owner, digest)
             if (approved.isZero()) {
                 throw new Error(`Owner ${owner} has not called approveHash(${digest}) ` +
