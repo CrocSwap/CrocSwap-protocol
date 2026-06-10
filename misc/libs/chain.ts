@@ -27,6 +27,21 @@ export async function traceContractTx
     return traceTxResp(await tx, tag)
 }
 
+/* ethers v5's getFeeData() hardcodes a 1.5 gwei priority tip -- calibrated for
+ * 2021 Ethereum mainnet and wildly excessive on L2s where base fees run in
+ * micro-gwei (the June 2026 Blast sidecar deploys paid ~4 million times the
+ * base fee in tips). Set GAS_PRIORITY_GWEI / GAS_MAX_FEE_GWEI to override. */
+export function feeOverrides (): { maxPriorityFeePerGas?: any, maxFeePerGas?: any } {
+    const o: { maxPriorityFeePerGas?: any, maxFeePerGas?: any } = {}
+    if (process.env.GAS_PRIORITY_GWEI) {
+        o.maxPriorityFeePerGas = ethers.utils.parseUnits(process.env.GAS_PRIORITY_GWEI, "gwei")
+    }
+    if (process.env.GAS_MAX_FEE_GWEI) {
+        o.maxFeePerGas = ethers.utils.parseUnits(process.env.GAS_MAX_FEE_GWEI, "gwei")
+    }
+    return o
+}
+
 export async function inflateAddr (contractName: string, addr: string,
     authority: Signer, ...args: any[]): Promise<Contract> {
     
@@ -37,7 +52,7 @@ export async function inflateAddr (contractName: string, addr: string,
     if (addr) {
         return factory.attach(addr)
     } else {
-        const contract = factory.deploy(...args)
+        const contract = factory.deploy(...args, feeOverrides())
         return traceContractDeploy(contract, tag)
     }
 }

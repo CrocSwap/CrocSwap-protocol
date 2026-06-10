@@ -18,7 +18,7 @@
  * prefix them on the same command line as `npx hardhat run`. */
 
 import { BigNumber, Contract, Wallet, ethers } from 'ethers';
-import { initProvider } from '../../libs/chain';
+import { feeOverrides, initProvider } from '../../libs/chain';
 import { SAFE_ABI, buildSafeTx, packSignatures, safeTxDigest } from '../../libs/safe';
 
 const USAGE = `usage:
@@ -109,7 +109,7 @@ async function exec() {
     const resp = await safe.execTransaction(
         tx.to, tx.value, tx.data, tx.operation, tx.safeTxGas, tx.baseGas,
         tx.gasPrice, tx.gasToken, tx.refundReceiver, packed,
-        { gasLimit: 3000000 })
+        { gasLimit: 3000000, ...feeOverrides() })
     console.log(`submitted: ${resp.hash}`)
     const receipt = await resp.wait()
     console.log(`status: ${receipt.status === 1 ? "SUCCESS" : "FAILED"} (block ${receipt.blockNumber})`)
