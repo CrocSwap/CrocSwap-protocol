@@ -11,7 +11,8 @@
 
 import { BigNumber, Contract, ethers } from 'ethers';
 import { initChain } from '../../libs/chain';
-import { SAFE_ABI, buildSafeTx, safeTxDigest, safeTxTypedDataJson, signSafeTx } from '../../libs/safe';
+import { SAFE_ABI, approveHashCalldata, buildSafeTx, safeTxDigest,
+         safeTxTypedDataJson, signSafeTx } from '../../libs/safe';
 
 async function sign() {
     let { addrs, chainId, wallet } = initChain()
@@ -36,8 +37,16 @@ async function sign() {
     console.log(`safe nonce: ${nonce.toString()}`)
     console.log(`safeTxHash: ${digest}`)
     console.log()
-    console.log("typed data (for external signers):")
+    console.log("typed data (for external EIP-712 signers, e.g.")
+    console.log("  cast wallet sign --ledger --data '<json>'):")
     console.log(safeTxTypedDataJson(numericChain, safeAddr, tx))
+    console.log()
+    console.log("hardware-wallet alternative (no typed-data support needed):")
+    console.log("send a plain transaction from the owner device calling approveHash --")
+    console.log(`  to:       ${safeAddr}`)
+    console.log(`  calldata: ${approveHashCalldata(digest)}`)
+    console.log(`  e.g. cast send --ledger ${safeAddr} 'approveHash(bytes32)' ${digest} --rpc-url <rpc>`)
+    console.log(`then pass "approved:<ownerAddr>" in SAFE_SIGS to execSafeTx.ts`)
     console.log()
 
     const sig = await signSafeTx(wallet, numericChain, safeAddr, tx)

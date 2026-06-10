@@ -11,6 +11,8 @@ export const SAFE_ABI = [
     "function nonce() view returns (uint256)",
     "function getThreshold() view returns (uint256)",
     "function getOwners() view returns (address[])",
+    "function approveHash(bytes32 hashToApprove)",
+    "function approvedHashes(address owner, bytes32 hash) view returns (uint256)",
     "function execTransaction(address to, uint256 value, bytes data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address refundReceiver, bytes signatures) payable returns (bool)"
 ];
 
@@ -103,13 +105,37 @@ export async function signSafeTx (wallet: Wallet, chainId: number, safeAddr: str
     return wallet._signTypedData(safeDomain(chainId, safeAddr), SAFE_TX_TYPES, tx);
 }
 
-/* Safe requires signatures concatenated in ascending order of recovered owner
- * address. Returns the packed bytes and the recovered signers for display. */
+/* Calldata for safe.approveHash(digest) -- the hardware-wallet path. An owner
+ * sends this as a plain transaction (cast send --ledger, MetaMask, etc.); no
+ * EIP-712 / typed-data signing support is required from the device. */
+export function approveHashCalldata (digest: string): string {
+    const iface = new ethers.utils.Interface(SAFE_ABI);
+    return iface.encodeFunctionData("approveHash", [digest]);
+}
+
+/* Safe v1.3.0 pre-approved-hash pseudo-signature: v=1, owner address in r,
+ * s unused. Valid when approvedHashes[owner][digest] is set, or when the
+ * owner is the msg.sender of the execTransaction call itself. */
+export function approvedHashSig (owner: string): string {
+    return ethers.utils.hexZeroPad(owner, 32).toLowerCase()
+        + ethers.constants.HashZero.slice(2)
+        + "01";
+}
+
+/* Safe requires signatures concatenated in ascending order of owner address.
+ * Entries may be 65-byte ECDSA signatures from signSafeTx, or
+ * "approved:0x<owner>" markers for owners using the approveHash flow (or
+ * submitting execTransaction themselves). Returns the packed bytes and the
+ * resolved signers for display/validation. */
 export function packSignatures (chainId: number, safeAddr: string, tx: SafeTx,
                                 sigs: string[]): { packed: string, signers: string[] } {
     const digest = safeTxDigest(chainId, safeAddr, tx);
     const bySigner = sigs.map(s => {
-        return { signer: ethers.utils.recoverAddress(digest, s), sig: s };
+        if (s.toLowerCase().startsWith("approved:")) {
+            const owner = ethers.utils.getAddress(s.slice("approved:".length));
+            return { signer: owner, sig: approvedHashSig(owner), approved: true };
+        }
+        return { signer: ethers.utils.recoverAddress(digest, s), sig: s, approved: false };
     });
     bySigner.sort((a, b) =>
         a.signer.toLowerCase() < b.signer.toLowerCase() ? -1 : 1);

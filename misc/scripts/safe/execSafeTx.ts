@@ -45,6 +45,21 @@ async function exec() {
         throw new Error(`Have ${signers.length} signatures, threshold is ${threshold}`)
     }
 
+    // Approved-hash entries are only valid if the owner already called
+    // approveHash on-chain, or is the wallet submitting this transaction.
+    const digest = safeTxDigest(numericChain, safeAddr, tx)
+    for (const entry of sigs) {
+        if (entry.toLowerCase().startsWith("approved:")) {
+            const owner = entry.slice("approved:".length)
+            if (owner.toLowerCase() === wallet.address.toLowerCase()) { continue }
+            const approved: BigNumber = await safe.approvedHashes(owner, digest)
+            if (approved.isZero()) {
+                throw new Error(`Owner ${owner} has not called approveHash(${digest}) ` +
+                    `and is not the submitting wallet`)
+            }
+        }
+    }
+
     console.log(`safe: ${safeAddr} nonce: ${nonce.toString()}`)
     console.log(`safeTxHash: ${safeTxDigest(numericChain, safeAddr, tx)}`)
     console.log(`signers (sorted): ${signers}`)
