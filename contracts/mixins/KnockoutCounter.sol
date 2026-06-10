@@ -261,14 +261,16 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      * @param feeRange The cumulative fee mileage for the concentrated liquidity range
      *                 at current mint time.
      * @param pivotTime The time corresponding to the underlying pivot creation.
-     * @return feeRewards The accumulated fee rewards rate on the position. */
+     * @return feeRewards Always zero. Knockout positions do not pay fee rewards. */
     function removePosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                              uint96 lots, uint64 feeRange, uint32 pivotTime)
         private returns (uint64 feeRewards) {
         bytes32 posKey = loc.encodePosKey(pool, lockHolder_, pivotTime);
         KnockoutLiq.KnockoutPos storage pos = knockoutPos_[posKey];
 
-        feeRewards = feeRange.deltaRewardsRate(pos.feeMileage_);
+        // Remove fee rewards for knockout positions out of precaution for rewards
+        // accounting. Knockout positions pay out principal only.
+        feeRewards = 0;
         assertJitSafe(pos.timestamp_, pool);
         require(lots <= pos.lots_, "KB");
         
@@ -291,7 +293,7 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
      *                 at current mint time.
      * @param pivotTime The time corresponding to the underlying pivot creation.
      * @return lots The amount of liquidity lots in the underlying position. 
-     * @return feeRewards The accumulated fee rewards rate on the position. */
+     * @return feeRewards Always zero. Knockout positions do not pay fee rewards. */
     function claimPosition (bytes32 pool, KnockoutLiq.KnockoutPosLoc memory loc,
                             uint64 feeRange, uint32 pivotTime)
         private returns (uint96 lots, uint64 feeRewards) {
@@ -300,10 +302,11 @@ contract KnockoutCounter is LevelBook, PoolRegistry, AgentMask {
         assertJitSafe(pos.timestamp_, pool);
 
         lots = pos.lots_;
-        if (feeRange > 0) {
-            feeRewards = feeRange - pos.feeMileage_;
-        }
         
+        // Remove fee rewards for knockout positions out of precaution for rewards
+        // accounting. Knockout positions pay out principal only.
+        feeRewards = 0;
+
         // Get SSTORE refund on full burn
         pos.lots_ = 0;
         pos.feeMileage_ = 0;
