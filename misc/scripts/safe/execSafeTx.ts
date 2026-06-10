@@ -64,6 +64,23 @@ async function exec() {
     console.log(`safeTxHash: ${safeTxDigest(numericChain, safeAddr, tx)}`)
     console.log(`signers (sorted): ${signers}`)
 
+    if (process.env.PRINT_ONLY) {
+        console.log()
+        console.log("PRINT_ONLY set -- not broadcasting. To submit via an explorer's")
+        console.log("'Write as Proxy' UI, call execTransaction with:")
+        console.log(`  to:             ${tx.to}`)
+        console.log(`  value:          0`)
+        console.log(`  data:           ${tx.data}`)
+        console.log(`  operation:      0`)
+        console.log(`  safeTxGas:      0`)
+        console.log(`  baseGas:        0`)
+        console.log(`  gasPrice:       0`)
+        console.log(`  gasToken:       ${tx.gasToken}`)
+        console.log(`  refundReceiver: ${tx.refundReceiver}`)
+        console.log(`  signatures:     ${packed}`)
+        return
+    }
+
     const resp = await safe.execTransaction(
         tx.to, tx.value, tx.data, tx.operation, tx.safeTxGas, tx.baseGas,
         tx.gasPrice, tx.gasToken, tx.refundReceiver, packed,
