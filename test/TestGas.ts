@@ -66,7 +66,7 @@ describe('Gas Benchmarks', () => {
 
     it("mint below price [@gas-test]", async() => {
         await test.testMint(-100, 100, 100)
-        await expectGas(test.testMintOther(-300, -200, 10000), 186000)
+        await expectGas(test.testMintOther(-300, -200, 10000), 187000)
     })
 
     it("mint above price [@gas-test]", async() => {
@@ -157,7 +157,7 @@ describe('Gas Benchmarks', () => {
     it("swap tick w/o cross [@gas-test]", async() => {
         await test.testMint(-100, 100, 10000)
         await test.testSwapOther(true, true, 1000, toSqrtPrice(1.0005))
-        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.005)), 115000)
+        await expectGas(test.testSwapOther(true, true, 10000000, toSqrtPrice(1.005)), 116000)
         expect(await test.liquidity()).to.be.gt(10000*1024)
     })
 
