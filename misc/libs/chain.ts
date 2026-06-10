@@ -2,6 +2,7 @@ import { JsonRpcProvider, Provider, TransactionReceipt, TransactionResponse } fr
 import { Contract, ContractTransaction, Signer, Wallet } from "ethers";
 import { ethers } from "hardhat"
 import { CROC_ADDRS } from "../constants/addrs";
+import { CrocAddrs } from "../types/addrs";
 import { CrocPoolParams, CROC_POOL_PARAMS } from "../constants/poolParams";
 import { RPC_URLS } from "../constants/rpcs";
 
