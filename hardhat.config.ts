@@ -120,7 +120,7 @@ module.exports = {
       },
 
       blast: {
-        url: "https://rpc.ankr.com/blast",
+        url: "https://rpc.blast.io",
         chainId: 81457,
       },
 
