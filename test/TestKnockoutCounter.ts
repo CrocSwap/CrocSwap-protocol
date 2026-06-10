@@ -180,7 +180,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998) // Rounds down
+        expect(await test.rewards_()).to.equal(0) // Knockout rewards disabled
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -210,7 +210,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.true
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998) // Rounds down
+        expect(await test.rewards_()).to.equal(0) // Knockout rewards disabled
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -251,7 +251,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998) // Rounds down
+        expect(await test.rewards_()).to.equal(0) // Knockout rewards disabled
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -336,7 +336,7 @@ describe('Knockout Counter Mixin', () => {
 
         expect(await test.togglesPivot_()).to.be.false
         expect(await test.pivotTime_()).to.equal(pivotTime)
-        expect(await test.rewards_()).to.equal(9998)
+        expect(await test.rewards_()).to.equal(0) // Knockout rewards disabled
 
         let bid = await test.getLevelState(35000, 800)
         let ask = await test.getLevelState(35000, 928)
@@ -499,7 +499,7 @@ describe('Knockout Counter Mixin', () => {
         await test.testClaim(35000, true, 800, 928, 1, formProof([], []))
 
         expect(await test.bookLots_()).to.eq(500)
-        expect(await test.rewards_()).to.eq(40000)        
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled        
 
         // Position should be cleared
         let pos = await test.getPosition(35000, true, 800, 928, pivotTime)
@@ -519,7 +519,7 @@ describe('Knockout Counter Mixin', () => {
         await test.testClaim(35000, true, 800, 928, 1, formProof([], []))
 
         expect(await test.bookLots_()).to.eq(350)
-        expect(await test.rewards_()).to.eq(40000)        
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled        
 
         // Position should be cleared
         let pos = await test.getPosition(35000, true, 800, 928, pivotTime)
@@ -556,7 +556,7 @@ describe('Knockout Counter Mixin', () => {
         await test.testClaim(35000, true, 800, 928, rootOne, 
             formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))
         expect(await test.bookLots_()).to.eq(500)
-        expect(await test.rewards_()).to.eq(40000)        
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled        
 
         // Position should be cleared
         let pos = await test.getPosition(35000, true, 800, 928, pivotTime)
@@ -571,7 +571,7 @@ describe('Knockout Counter Mixin', () => {
         // Claim second pivot
         await test.testClaim(35000, true, 800, 928, rootTwo, formProof([pivotTimeTwo], [15000], [hashThree]))
         expect(await test.bookLots_()).to.eq(600)
-        expect(await test.rewards_()).to.eq(15000)        
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled        
 
         // Position should be cleared
         pos = await test.getPosition(35000, true, 800, 928, pivotTimeTwo)
@@ -593,7 +593,7 @@ describe('Knockout Counter Mixin', () => {
         await test.testClaim(35000, true, 800, 928, 1, formProof([], []))
 
         expect(await test.bookLots_()).to.eq(500)
-        expect(await test.rewards_()).to.eq(40000)        
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled        
 
         // Position should be cleared
         let pos = await test.getPosition(35000, true, 800, 928, pivotTime)
@@ -648,7 +648,7 @@ describe('Knockout Counter Mixin', () => {
         await test.testClaim(35000, true, 800, 928, rootOne, 
             formProof([pivotTime, pivotTimeTwo], [40000, 15000], [hashTwo, hashThree]))
         expect(await test.bookLots_()).to.eq(0)
-        expect(await test.rewards_()).to.eq(40000)     
+        expect(await test.rewards_()).to.eq(0) // Knockout rewards disabled     
 
         // Non-claimed user's position should be still be there
         await test.setLockholder(0)

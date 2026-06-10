@@ -121,9 +121,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(2735138354)
 
         await test.testKnockoutBurnLiq(2660970*1024, true, 3200, 3200+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-3417897)
-        expect(await test.snapQuoteFlow()).to.equal(-1318886)
-        expect(await test.liquidity()).to.equal(10254451) 
+        expect(await test.snapBaseFlow()).to.equal(-3358429)
+        expect(await test.snapQuoteFlow()).to.equal(-1275793)
+        expect(await test.liquidity()).to.equal(10305074) 
     })
 
     it("swap into active range ask", async() => {
@@ -142,9 +142,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(4420901277)
 
         await test.testKnockoutBurnLiq(4410480640, false, 6400, 6400+32, true) // Liquidity for full position
-        expect(await test.snapBaseFlow()).to.equal(-5923637)
-        expect(await test.snapQuoteFlow()).to.equal(-2203414)
-        expect(await test.liquidity()).to.equal(10280060) 
+        expect(await test.snapBaseFlow()).to.equal(-5729867)
+        expect(await test.snapQuoteFlow()).to.equal(-2101430)
+        expect(await test.liquidity()).to.equal(10420637) 
     })
 
     it("swap knockout", async() => {
@@ -186,9 +186,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10296479) // Liquidity knocked out
         
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
-        expect(await test.snapBaseFlow()).to.equal(-57668)
-        expect(await test.snapQuoteFlow()).to.equal(-3753782)
-        expect(await test.liquidity()).to.equal(10247387) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(0)
+        expect(await test.snapQuoteFlow()).to.equal(-3711993)
+        expect(await test.liquidity()).to.equal(10296479) // No rewards pulled, knockout rewards disabled
     })
 
     it("claim knockout ask", async() => {
@@ -202,9 +202,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10335201) // Liquidity knocked out
 
         await test.testKnockoutClaim(false, 6400, 6400+32, BigNumber.from(0), [])
-        expect(await test.snapBaseFlow()).to.equal(-9834569)
-        expect(await test.snapQuoteFlow()).to.equal(-57558) // Small payoff from ambient liquidity rewards
-        expect(await test.liquidity()).to.equal(10255861) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(-9725208)
+        expect(await test.snapQuoteFlow()).to.equal(0) // Knockout rewards disabled, no reward payoff
+        expect(await test.liquidity()).to.equal(10335201) // No rewards pulled, knockout rewards disabled
     })
 
     function hashToEntropy (hash: string): BigNumber {
@@ -245,9 +245,9 @@ describe('Pool Knockout Liq', () => {
 
         await test.testKnockoutClaim(true, 3200, 3200+32, merkleOne.root, 
             formProof([merkleOne.pivot, merkleTwo.pivot], [merkleOne.fee, merkleTwo.fee], [hashOne, hashTwo]))
-        expect(await test.snapBaseFlow()).to.equal(-60292) // Small claim from rewards
-        expect(await test.snapQuoteFlow()).to.equal(-3752188)
-        expect(await test.liquidity()).to.equal(10374503) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(0) // Knockout rewards disabled, no reward payout
+        expect(await test.snapQuoteFlow()).to.equal(-3711993)
+        expect(await test.liquidity()).to.equal(10423733) // No rewards pulled, knockout rewards disabled
     })
 
     it("bad proof", async() => {
@@ -290,7 +290,7 @@ describe('Pool Knockout Liq', () => {
         await test.testKnockoutRecover(true, 3200, 3200+32, pivot)
         expect(await test.snapBaseFlow()).to.equal(0) // Rewards not caimed
         expect(await test.snapQuoteFlow()).to.equal(-3711993)
-        expect(await test.liquidity()).to.equal(10296479) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10296479) // No rewards pulled, knockout rewards disabled
     })
 
     it("claim knockout twice", async() => {
@@ -308,7 +308,7 @@ describe('Pool Knockout Liq', () => {
         // No payout from a second claim
         expect(await test.snapBaseFlow()).to.equal(0)
         expect(await test.snapQuoteFlow()).to.equal(0)
-        expect(await test.liquidity()).to.equal(10247387) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10296479) // No rewards pulled, knockout rewards disabled
 
         await test.testKnockoutRecover(true, 3200, 3200+32, pivot)
         expect(await test.snapBaseFlow()).to.equal(0)
@@ -330,7 +330,7 @@ describe('Pool Knockout Liq', () => {
         // No payout from a second claim
         expect(await test.snapBaseFlow()).to.equal(0)
         expect(await test.snapQuoteFlow()).to.equal(0)
-        expect(await test.liquidity()).to.equal(10296479) // Slight decrease from pulling ambient rewards
+        expect(await test.liquidity()).to.equal(10296479) // No rewards pulled, knockout rewards disabled
 
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
         expect(await test.snapBaseFlow()).to.equal(0)
@@ -349,9 +349,9 @@ describe('Pool Knockout Liq', () => {
         expect(await test.liquidity()).to.equal(10299018) // Liquidity should only knockout once
 
         await test.testKnockoutClaim(true, 3200, 3200+32, BigNumber.from(0),  [])
-        expect(await test.snapBaseFlow()).to.equal(-57682)
-        expect(await test.snapQuoteFlow()).to.equal(-3753792)
-        expect(await test.liquidity()).to.equal(10249915) // Slight decrease from pulling ambient rewards
+        expect(await test.snapBaseFlow()).to.equal(0)
+        expect(await test.snapQuoteFlow()).to.equal(-3711993)
+        expect(await test.liquidity()).to.equal(10299018) // No rewards pulled, knockout rewards disabled
     })
 })
 
