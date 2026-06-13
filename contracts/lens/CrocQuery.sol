@@ -161,10 +161,10 @@ contract CrocQuery {
      * @return bidLots The amount of concentrated liquidity that becomes active if the pool
      *                 price falls below the level tick (and vice versa). Represented in units
      *                 of 1024 lots of sqrt(X*Y) liquidity.
-     * @return bidLots The amount of concentrated liquidity that becomes active if the pool
-     *                 price rises below the level (and vice versa). Represented in units
+     * @return askLots The amount of concentrated liquidity that becomes active if the pool
+     *                 price rises above the level (and vice versa). Represented in units
      *                 of 1024 lots of sqrt(X*Y) liquidity.
-     * @return odometer The currnet fee odomter snapshotted at the current tick boundary. */
+     * @return odometer The current fee odometer snapshotted at the current tick boundary. */
     function queryLevel (address base, address quote, uint256 poolIdx, int24 tick)
         public view returns (uint96 bidLots, uint96 askLots, uint64 odometer) {
         bytes32 poolHash = PoolSpecs.encodeKey(base, quote, poolIdx);
