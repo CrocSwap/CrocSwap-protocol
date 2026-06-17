@@ -226,7 +226,7 @@ contract TradeMatcher is PositionRegistrar, LiquidityCurve, KnockoutCounter,
      * @param poolHash The hash of the pool the curve applies to
      * @param knockoutBits The bitwise knockout parameters currently set on the pool.
      *
-     * @return The incrmental base and quote debit flows from this action. */
+     * @return The incremental base and quote debit flows from this action. */
     function mintKnockout (CurveMath.CurveState memory curve, int24 priceTick,
                            KnockoutLiq.KnockoutPosLoc memory loc,
                            uint128 liquidity, bytes32 poolHash, uint8 knockoutBits)
