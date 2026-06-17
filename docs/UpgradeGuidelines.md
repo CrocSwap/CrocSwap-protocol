@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The CrocSwap protocol, particularly the core `CrocSwapDex` contract is designed to be incrementally and modularly upgradeable, subject to protocol governance. The core smart contract is designed to support up to 65,000 attached proxy contracts. Any proxy contract can be directly invoked by and end-user with the `userCmd` or `protocolCmd` function call to the `CrocSwapDex` contract.
+The CrocSwap protocol, particularly the core `CrocSwapDex` contract is designed to be incrementally and modularly upgradeable, subject to protocol governance. The core smart contract is designed to support up to 65,000 attached proxy contracts. Any proxy contract can be directly invoked by an end-user with the `userCmd` or `protocolCmd` function call to the `CrocSwapDex` contract.
 
 Although the architecture is highly amenable to incremental upgrades, the upgrade process is still a highly risky operation and should be carefully considered and reviewed before being executed. In addition given the relatively unique architecture of the smart contract there are a set of specific considerations and guidelines that should be applied to any proposed upgrade.
 

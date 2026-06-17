@@ -26,7 +26,7 @@ Math and calculation libraries:
 * CompoundMath.sol - Calculators for compound growth and deflation rates
 * CurveMath.sol - Computes price and reserve changes across a constant product AMM curve.
 
-Libraries related to exeucting swaps and tracking LP positions
+Libraries related to executing swaps and tracking LP positions
 
 * CurveRoll.sol - Derives flow on a constant-product AMM curve based on targeted price or reserve changes
 * CurveAssimilate.sol - Converts collected fees into liquidity on the AMM curve. 

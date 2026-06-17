@@ -10,9 +10,9 @@ The below illustrates an example of how rewards would accumulate to a range orde
 
 Even though the whole pool accumulated 575 units of reward during the above timeline, the range order only accumulated 150 units of reward, representing the time and price range it was active at. 
 
-## Lifetime Rewards Rewards
+## Lifetime Range Rewards
 
-The first step to calculating accumulated rewards for a range order is to calculate the total cumulative rewards for a specific range. Regardless of the range, an order’s accumulative rewards is simply the growth in the cumulative rewards in that range from the begging to the end of the order’s lifetime.
+The first step to calculating accumulated rewards for a range order is to calculate the total cumulative rewards for a specific range. Regardless of the range, an order’s accumulative rewards is simply the growth in the cumulative rewards in that range from the beginning to the end of the order’s lifetime.
 
 The below illustrates an example of how an order’s accumulated rewards can be calculated based off the cumulative rewards for its corresponding range:
 
@@ -38,7 +38,7 @@ The odometer snapshots the global cumulative rewards that occured on the opposit
 
 The odometer flips its snapshot every time the curve crosses the tick price. Because rewards can’t accumulate on a given side until the curve price crosses the tick, the odometer always is up to date. 
 
-Calculating the cumulative rewards below the tick, when the curve price is below the tick just involves subtracting the up to date cumulative global rewards from the last snapshot of what the cumulative rewards above the rick were.
+Calculating the cumulative rewards below the tick, when the curve price is below the tick just involves subtracting the up to date cumulative global rewards from the last snapshot of what the cumulative rewards above the tick were.
 
 (By convention when a tick is first created, the odometer is setup to assume that all existing cumulative rewards occurred below the tick. Since we ultimately only care about the *change* of accumulated rewards when calculating rewards over an order lifetime, the initialization value doesn’t matter as long as it’s consistent over the lifetime of the order.)
 
