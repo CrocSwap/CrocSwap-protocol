@@ -35,7 +35,7 @@ contract BootPath is StorageLayout {
         revert("Invalid command");
     }
     
-    /* @notice Upgrades one of the existing proxy sidecar contracts.
+    /* @notice Upgrades one of the existing proxy sidecar 
      * @dev    Be extremely careful calling this, particularly when upgrading the
      *         cold path contract, since that contains the upgrade code itself.
      * @param proxy The address of the new proxy smart contract
