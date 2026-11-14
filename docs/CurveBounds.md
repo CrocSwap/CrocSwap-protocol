@@ -10,7 +10,7 @@ Beyond this, the protocol imposes a tighter limit of [2^-48, 2^60] on the curve 
 
 The Q64.64 representation of root price also means that the minimum precision of any price change is 2^-64 in square root space. In percentage terms that means pools with lower prices have lower precision. Since the protocol enforces a minimum value of 2^-48 on root price, all curves have a minimum percentage precision of 2^-16 in square root terms. Or 0.003% in price terms. 
 
-Any swap will have its price imapct rounded up in terms of minimum price precision. The floating side of the swap is rounded in favor of the pool to prevent under-collateralization. Practically this means that the swapper will "burn" a small percentage on every swap proportional to the curve's total liquidity and minimum price precision. 
+Any swap will have its price impact rounded up in terms of minimum price precision. The floating side of the swap is rounded in favor of the pool to prevent under-collateralization. Practically this means that the swapper will "burn" a small percentage on every swap proportional to the curve's total liquidity and minimum price precision. 
 
 ## Concentrated Liquidity
 
