@@ -4,7 +4,7 @@ To optimize gas, long-form CrocSwap calls rely on Solidity ABI encoding for prim
 based on specification described here. CrocSwap will also make available a TypeScript based SDK to support client-side encoding.
 
 The input argument for long-form orders is a binary encoding, with several nested variable length array fields. Each array field is preceded by a count field that
-must allign with the number of elements in the array. The nested structure is visualized below. 
+must align with the number of elements in the array. The nested structure is visualized below. 
 
 (*In the below and following diagrams all primitive type fields are marked with their Solidity type and byte size.*)
 

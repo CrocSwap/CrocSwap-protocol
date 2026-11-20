@@ -41,7 +41,7 @@ actually executed within a pre-loaded liquidity curve.
 ### Ambient Mints & Burns
 
 Ambient liquidity positions represent liquidity that's active at every price point along the curve. Because this liquidity never goes in or out of
-range there's less gas cost associated with these actions, and external staking contracts can be guaranteed that these positions continiously add
+range there's less gas cost associated with these actions, and external staking contracts can be guaranteed that these positions continuously add
 liquidity across their entire lifetime.
 
 A mint action is when the user adds liquidity to the pool by creating a new position or increasing the liquidity in a previous position:
@@ -55,7 +55,7 @@ A burn action is when the user removes liquidity from the pool by deleting or de
 ### Range Concentrated Mints & Burns
 
 Range concentrated liquidity positions are only active within an arbitrary user-specified price range. This gives the user control over when and where
-her position adds liquidity, and increases capital efficiency by removing the need for supporting collateral outside the price range.
+their position adds liquidity, and increases capital efficiency by removing the need for supporting collateral outside the price range.
 
 A mint occurs when the user adds range liquidity by creating a new position or increasing the liquidity in a previous position:
 
@@ -70,4 +70,4 @@ A burn occurs when the user removes range liquidity by deleting or decreasing th
 A swap occurs within a liquidity curve when one token is converted to the token from the opposite side. This adjusting the price within the invariant of the AMM,
 knocking liquidity in or out depending on the range-bound LPs whose boundaries were crossed, and assimilating the associated liquidity fees into the curve:
 
-![Burn Ambient](assets/SwapFlow.jpeg)
+![Swap](assets/SwapFlow.jpeg)
