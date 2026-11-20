@@ -41,7 +41,7 @@ actually executed within a pre-loaded liquidity curve.
 ### Ambient Mints & Burns
 
 Ambient liquidity positions represent liquidity that's active at every price point along the curve. Because this liquidity never goes in or out of
-range there's less gas cost associated with these actions, and external staking contracts can be guaranteed that these positions continiously add
+range there's less gas cost associated with these actions, and external staking contracts can be guaranteed that these positions continuously add
 liquidity across their entire lifetime.
 
 A mint action is when the user adds liquidity to the pool by creating a new position or increasing the liquidity in a previous position:
