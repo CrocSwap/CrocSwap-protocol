@@ -32,7 +32,7 @@ Additional technical documentation can be found
 
 ## Risks
 
-Users of the CrocSwap protocol should be aware of the implicit risks to the protocol design. Among other major risk sare
+Users of the CrocSwap protocol should be aware of the implicit risks to the protocol design. Among other major risks are
 
 * Protocol Risk - Although carefully reviewed the protocol could have an implementation error that leads to loss of funds
 * [Governance Risk](./docs/GovernanceRoles.md) - CrocSwap governance has fairly extensive powers, and users should fully trust the entities holding governance roles.
