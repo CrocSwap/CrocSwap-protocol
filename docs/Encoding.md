@@ -49,7 +49,7 @@ Describes the settlement directive from both the opening of the top-layer order 
 ![Swap directive](assets/Swap.jpg)
 * Flags: Bit flag field with two flags:
     * Is Buy: Indicates swap will convert base-side token to quote-side token. (By convention CrocSwap internally always defines the base side as the token with the lexically smaller address in the pair.)
-    * In Base Qty: The quantity field of the swa is denominated in the pair's base-side token.
+    * In Base Qty: The quantity field of the swap is denominated in the pair's base-side token.
 * Roll Type: A numeric code indicating how to apply (if any) an offset based on a previously accumulated rolling quantity in the long form order.
 * Qty: The quantity to swap (final result could be smaller if swap hits the limit price).
 * Limit Price: The worse price up to which the user is willing to trade. Note that this represents the price on the margin, for this reason the average fill price of the swap will always be better than this limit price.
